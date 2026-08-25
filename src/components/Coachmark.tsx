@@ -10,33 +10,38 @@ interface Step {
 
 const STEPS: Step[] = [
   {
-    titolo: '👋 Benvenuto nel Sistema Sostituzioni!',
-    descrizione: 'Questa guida rapida ti mostrerà in pochi secondi come pianificare le supplenze giornaliere, gestire le gite scolastiche e consentire ai docenti di firmare.',
+    titolo: '👋 Benvenuto in Gestione Sostituzioni v2.0!',
+    descrizione: 'Una piattaforma intelligente e intuitiva per gestire supplenze, uscite didattiche e firme digitali per la scuola.',
     posizione: 'center'
   },
   {
-    titolo: '📅 1. Scelta Data e Schede',
-    descrizione: 'Dalla barra in alto puoi selezionare il giorno di lavoro e navigare tra il Quadro Sostituzioni, l\'Inserimento Assenze/Gite, il Registro Storico permanente e l\'Anagrafica.',
+    titolo: '📋 1. Testata Unificata & Inserimento Rapido',
+    descrizione: 'Tutto a portata di mano in un unico riquadro: naviga velocemente tra i giorni con il calendario a frecce e usa i pulsanti "+ Aggiungi Assente" e "+ Aggiungi Gita" per registrare gli eventi.',
     posizione: 'bottom'
   },
   {
-    titolo: '✨ 2. Quadro Sostituzioni & Auto-Assegna',
-    descrizione: 'Le ore scoperte sono raggruppate per 1ª, 2ª, 3ª ora... Puoi cliccare su "Assegna Tutto" per generare una bozza automatica perfetta rispettando tutte le priorità normative.',
+    titolo: '📚 2. Docenti Multimateria & Orario Preciso',
+    descrizione: 'Il sistema riconosce per ogni singola ora la cattedra reale (Lettere, Alternativa, Potenziamento, Strumento). Niente duplicazioni nei nomi e massima precisione negli slot.',
+    posizione: 'center'
+  },
+  {
+    titolo: '👁️ 3. Modalità di Visualizzazione Slot',
+    descrizione: 'Scegli come visualizzare le ore da coprire: "A blocchi orari" (per 1ª, 2ª, 3ª ora...), "Per Docente Assente" con badge materia, oppure in "Elenco Compatto" a tabella.',
     posizione: 'bottom'
   },
   {
-    titolo: '🎯 3. Selezione Manuale Assistita (Human-in-the-Loop)',
-    descrizione: 'Cliccando su un\'ora scoperta si apre il popup con tutti i candidati ordinati per priorità con in cima i compresenti già presenti in aula.',
+    titolo: '✨ 4. Assegnazione Smart & Priorità Normative',
+    descrizione: 'Usa "Assegna Tutto" per generare una bozza automatica perfetta (priorità a compresenti, stessa disciplina, potenziamento, disposizioni e recupero ore). I casi gravi su sostegno sono sempre tutelati ed esclusi.',
     posizione: 'center'
   },
   {
-    titolo: '🚍 4. Uscite Didattiche & Gite Multi-Classe',
-    descrizione: 'Nel tab "Quadro & Inserimento" puoi registrare gite indicando la meta, selezionando più classi contemporaneamente e gli accompagnatori con dropdown rapido.',
+    titolo: '🚌 5. Gite & Uscite Didattiche Multiple',
+    descrizione: 'Registra uscite didattiche selezionando più classi con le scorciatoie (Tutte le Prime, Seconde, Terze...) e più accompagnatori. I docenti delle classi vengono subito liberati per le supplenze!',
     posizione: 'center'
   },
   {
-    titolo: '📱 5. Area Personale Docente & Firme',
-    descrizione: 'I docenti possono accedere all\'Area Personale con il proprio PIN (default: 1234), visualizzare il proprio orario e firmare digitalmente per presa visione.',
+    titolo: '📱 6. Firme Digitali & Portale Docente',
+    descrizione: 'Clicca su "Pubblica Firme" per notificare i docenti. Tramite l\'Area Personale Docente (PIN default: 1234), ogni insegnante visualizza le supplenze assegnate e appone la firma digitale.',
     posizione: 'bottom'
   }
 ];
