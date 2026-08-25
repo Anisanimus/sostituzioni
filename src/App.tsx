@@ -154,7 +154,7 @@ const MainApp: React.FC = () => {
                   }`}
                 >
                   <LayoutDashboard className="w-3.5 h-3.5" />
-                  <span>Quadro & Inserimento</span>
+                  <span>Sostituzioni</span>
                 </button>
                 <button
                   onClick={() => setTabVice('STORICO')}
@@ -197,7 +197,11 @@ const MainApp: React.FC = () => {
             {/* VISTA PRINCIPALE UNIFICATA */}
             {tabVice === 'GESTIONE_GIORNALIERA' && (
               <div className="space-y-4">
-                <GestioneAssenze selectedDate={selectedDate} selectedGiorno={selectedGiorno} />
+                <GestioneAssenze 
+                  selectedDate={selectedDate} 
+                  selectedGiorno={selectedGiorno} 
+                  onChangeDate={(newDate) => setSelectedDate(newDate)}
+                />
                 <TabelloneSostituzioni 
                   selectedDate={selectedDate} 
                   selectedGiorno={selectedGiorno} 

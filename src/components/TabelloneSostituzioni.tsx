@@ -329,139 +329,36 @@ export const TabelloneSostituzioni: React.FC<{
 
   return (
     <div className="space-y-3">
-      {/* TOOLBAR CONTROLLI TABELLONE CON DATA A VISTA E STATO */}
-      <div className="bg-white p-3.5 rounded-2xl shadow-2xs border border-slate-200 space-y-2.5">
-        
-        {/* RIGA SUPERIORE: TITOLO "SOSTITUZIONI DEL GIORNO" + CALENDARIO NAVIGATORE A VISTA */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-2.5">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-5 bg-indigo-600 rounded-full"></span>
-            <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
-              Sostituzioni del Giorno
-            </h3>
-          </div>
-
-          {/* CALENDARIO NAVIGATORE A VISTA PER CAMBIARE VELOCE DATA */}
-          <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-2xs">
-            <button
-              type="button"
-              onClick={() => {
-                const cur = new Date(selectedDate);
-                cur.setDate(cur.getDate() - 1);
-                if (cur.getDay() === 0) cur.setDate(cur.getDate() - 2); // Salta domenica
-                if (cur.getDay() === 6) cur.setDate(cur.getDate() - 1); // Salta sabato
-                onChangeDate?.(cur.toISOString().split('T')[0]);
-              }}
-              className="p-1 hover:bg-slate-200/80 rounded-lg text-slate-700 transition"
-              title="Giorno Precedente"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            <div className="flex items-center gap-1.5 px-2">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => onChangeDate?.(e.target.value)}
-                className="bg-transparent font-black text-xs sm:text-sm text-slate-800 outline-none cursor-pointer"
-              />
-              <span className="bg-indigo-100 text-indigo-800 text-[11px] font-black px-2 py-0.5 rounded">
-                {selectedGiorno}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                const cur = new Date(selectedDate);
-                cur.setDate(cur.getDate() + 1);
-                if (cur.getDay() === 6) cur.setDate(cur.getDate() + 2); // Salta sabato
-                if (cur.getDay() === 0) cur.setDate(cur.getDate() + 1); // Salta domenica
-                onChangeDate?.(cur.toISOString().split('T')[0]);
-              }}
-              className="p-1 hover:bg-slate-200/80 rounded-lg text-slate-700 transition"
-              title="Giorno Successivo"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onChangeDate?.(new Date().toISOString().split('T')[0])}
-              className="bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs px-2.5 py-1 rounded-lg transition border border-slate-200 shadow-2xs"
-            >
-              Oggi
-            </button>
+      {/* SOTTO-BARRA STATO E AZIONI SMART */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-700">Stato:</span>
+          <div className="flex items-center gap-1.5 text-xs font-bold">
+            <span className="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full">
+              {totaleDaCoprire - totaleCoperte} da assegnare
+            </span>
+            <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
+              {totaleCoperte} coperte
+            </span>
           </div>
         </div>
 
-        {/* RIGA INFERIORE: STATO, MODALITÀ DI VISTA E AZIONI SMART */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-700">Stato:</span>
-              <div className="flex items-center gap-1.5 text-xs font-bold">
-                <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
-                  {totaleDaCoprire - totaleCoperte} da assegnare
-                </span>
-                <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
-                  {totaleCoperte} coperte
-                </span>
-              </div>
-            </div>
-            <span className="hidden md:inline text-xs text-slate-400">|</span>
-            
-            {/* Selettore Modalità di Visualizzazione (A blocchi orari / Per Docente / Elenco Compatto) */}
-            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg text-xs">
-              <button
-                onClick={() => setVisualizzazione('GRUPPI_ORA')}
-                className={`px-2.5 py-1 rounded-md font-semibold flex items-center gap-1 transition ${
-                  visualizzazione === 'GRUPPI_ORA' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" /> 
-                <span>A blocchi orari</span>
-              </button>
-
-              <button
-                onClick={() => setVisualizzazione('PER_DOCENTE')}
-                className={`px-2.5 py-1 rounded-md font-semibold flex items-center gap-1 transition ${
-                  visualizzazione === 'PER_DOCENTE' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <UserMinus className="w-3.5 h-3.5 text-indigo-600" /> 
-                <span>Per Docente Assente</span>
-              </button>
-
-              <button
-                onClick={() => setVisualizzazione('TABELLA')}
-                className={`px-2.5 py-1 rounded-md font-semibold flex items-center gap-1 transition ${
-                  visualizzazione === 'TABELLA' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <List className="w-3.5 h-3.5" /> 
-                <span>Elenco Compatto</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <button
-              onClick={handleAutoAssegnaTutto}
-              className="flex-1 sm:flex-initial bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs border border-indigo-200 transition flex items-center justify-center gap-1.5"
-              title="Assegna automaticamente in base alle priorità (escludendo sempre i casi gravi)"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Assegna Tutto</span>
-            </button>
-            <button
-              onClick={() => pubblicaTutteSostituzioniData(selectedDate)}
-              className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs transition shadow-xs flex items-center justify-center gap-1.5"
-            >
-              <CheckCircle className="w-3.5 h-3.5" />
-              <span>Pubblica Firme</span>
-            </button>
-          </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button
+            onClick={handleAutoAssegnaTutto}
+            className="flex-1 sm:flex-initial bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs border border-indigo-200 transition flex items-center justify-center gap-1.5"
+            title="Assegna automaticamente in base alle priorità (escludendo sempre i casi gravi)"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Assegna Tutto</span>
+          </button>
+          <button
+            onClick={() => pubblicaTutteSostituzioniData(selectedDate)}
+            className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs transition shadow-xs flex items-center justify-center gap-1.5"
+          >
+            <CheckCircle className="w-3.5 h-3.5" />
+            <span>Pubblica Firme</span>
+          </button>
         </div>
       </div>
 
@@ -611,6 +508,49 @@ export const TabelloneSostituzioni: React.FC<{
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================================== */}
+      {/* BARRA SELETTORE MODALITÀ DI VISUALIZZAZIONE IN CIMA AGLI SLOT                    */}
+      {/* ============================================================================== */}
+      {oreScoperte.length > 0 && (
+        <div className="flex items-center justify-between gap-2 pt-1 pb-0.5">
+          <span className="text-[11px] font-black text-slate-700 uppercase tracking-wide">
+            Modalità Visualizzazione Slot:
+          </span>
+
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs">
+            <button
+              onClick={() => setVisualizzazione('GRUPPI_ORA')}
+              className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+                visualizzazione === 'GRUPPI_ORA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" /> 
+              <span>A blocchi orari</span>
+            </button>
+
+            <button
+              onClick={() => setVisualizzazione('PER_DOCENTE')}
+              className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+                visualizzazione === 'PER_DOCENTE' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <UserMinus className="w-3.5 h-3.5 text-indigo-600" /> 
+              <span>Per Docente Assente</span>
+            </button>
+
+            <button
+              onClick={() => setVisualizzazione('TABELLA')}
+              className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+                visualizzazione === 'TABELLA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <List className="w-3.5 h-3.5" /> 
+              <span>Elenco Compatto</span>
+            </button>
           </div>
         </div>
       )}

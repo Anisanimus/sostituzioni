@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { MotivoAssenza, GiornoSettimana } from '../types';
-import { UserMinus, Bus, Plus, Trash2, Calendar, Clock, MapPin, Users, ChevronDown, Check, X, Search, Ban, LayoutDashboard } from 'lucide-react';
+import { UserMinus, Bus, Plus, Trash2, Calendar, Clock, MapPin, Users, ChevronDown, Check, X, Search, Ban, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FASCE_ORARIE } from '../utils/fasceOrarie';
 import { getDocentiUnici, getDocentiCollegatiIds, getBaseNomeDocente, formatDataItaliana } from '../utils/docentiHelper';
 
-export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: any }> = ({ selectedDate, selectedGiorno }) => {
+export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: any; onChangeDate?: (newDate: string) => void }> = ({ selectedDate, selectedGiorno, onChangeDate }) => {
   const { docenti, assenze, addAssenza, removeAssenza, annullaAssenza, uscite, addUscitaConAccompagnatori, removeUscita, annullaUscita } = useApp();
 
   // Finestra aperta: null (chiusa), 'DOCENTE', o 'GITA'
@@ -199,20 +199,73 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
   return (
     <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
       
-      {/* HEADER DELLA SCHEDA CON TITOLO E SOTTOMENU UNIFORMATO */}
+      {/* HEADER DELLA SCHEDA CON TITOLO, SOTTOTITOLO, DATA E PULSANTI AZIONE */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
         <div>
           <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
             <LayoutDashboard className="w-5 h-5 text-indigo-600" />
-            <span>Quadro Giornaliero & Inserimento Eventi</span>
+            <span>Sostituzioni</span>
           </h3>
           <p className="text-xs text-slate-500">
             Registra assenze e uscite didattiche per la giornata di <strong>{selectedGiorno} {formatDataItaliana(selectedDate)}</strong> e gestisci le sostituzioni.
           </p>
         </div>
 
-        {/* Due Pulsanti Azione Compatti */}
-        <div className="flex items-center gap-2">
+        {/* DATA NAVIGATOR RAPIDO + PULSANTI AZIONE */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* SELETTORE DATA RAPIDO CON FRECCE */}
+          <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => {
+                const cur = new Date(selectedDate);
+                cur.setDate(cur.getDate() - 1);
+                if (cur.getDay() === 0) cur.setDate(cur.getDate() - 2); // Salta domenica
+                if (cur.getDay() === 6) cur.setDate(cur.getDate() - 1); // Salta sabato
+                onChangeDate?.(cur.toISOString().split('T')[0]);
+              }}
+              className="p-1 hover:bg-slate-200/80 rounded-lg text-slate-700 transition"
+              title="Giorno Precedente"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-1.5 px-2">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => onChangeDate?.(e.target.value)}
+                className="bg-transparent font-black text-xs sm:text-sm text-slate-800 outline-none cursor-pointer"
+              />
+              <span className="bg-indigo-100 text-indigo-800 text-[11px] font-black px-2 py-0.5 rounded">
+                {selectedGiorno}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const cur = new Date(selectedDate);
+                cur.setDate(cur.getDate() + 1);
+                if (cur.getDay() === 6) cur.setDate(cur.getDate() + 2); // Salta sabato
+                if (cur.getDay() === 0) cur.setDate(cur.getDate() + 1); // Salta domenica
+                onChangeDate?.(cur.toISOString().split('T')[0]);
+              }}
+              className="p-1 hover:bg-slate-200/80 rounded-lg text-slate-700 transition"
+              title="Giorno Successivo"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onChangeDate?.(new Date().toISOString().split('T')[0])}
+              className="bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs px-2.5 py-1 rounded-lg transition border border-slate-200 shadow-2xs"
+            >
+              Oggi
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'DOCENTE' ? null : 'DOCENTE')}
