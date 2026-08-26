@@ -1108,18 +1108,18 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
           {/* SEZIONE 3: POTENZIAMENTO */}
           {candidati.POTENZIAMENTO.length > 0 && (
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-slate-700 block uppercase tracking-wide">
-                3. Docenti in Potenziamento (P)
+              <span className="text-xs font-bold text-emerald-950 block uppercase tracking-wide flex items-center gap-1.5">
+                <span>⚡ Docenti in Potenziamento (P)</span>
               </span>
               {candidati.POTENZIAMENTO.map((cand, i) => (
-                <div key={i} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div key={i} className="flex items-center justify-between p-2.5 bg-emerald-50/90 rounded-xl border border-emerald-300 shadow-2xs">
                   <div>
-                    <strong className="text-xs font-bold text-slate-900 block">{cand.docente.nome}</strong>
-                    <span className="text-[11px] text-slate-500 block">{cand.dettagli}</span>
+                    <strong className="text-xs font-bold text-emerald-950 block">{cand.docente.nome}</strong>
+                    <span className="text-[11px] text-emerald-800 block font-medium">{cand.dettagli}</span>
                   </div>
                   <button
                     onClick={() => onAssegna(cand.docente.id, 'POTENZIAMENTO', false, false)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg transition"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-xs"
                   >
                     Assegna Potenziamento
                   </button>
