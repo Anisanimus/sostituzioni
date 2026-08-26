@@ -517,39 +517,42 @@ export const TabelloneSostituzioni: React.FC<{
       {/* ============================================================================== */}
       {oreScoperte.length > 0 && (
         <div className="flex items-center justify-between gap-2 pt-1 pb-0.5">
-          <span className="text-[11px] font-black text-slate-700 uppercase tracking-wide">
-            Modalità Visualizzazione Slot:
+          <span className="text-[10px] sm:text-[11px] font-black text-slate-700 uppercase tracking-wide truncate">
+            Visualizzazione:
           </span>
 
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs shrink-0">
             <button
               onClick={() => setVisualizzazione('GRUPPI_ORA')}
-              className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+              className={`p-2 sm:px-3 sm:py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
                 visualizzazione === 'GRUPPI_ORA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
               }`}
+              title="A blocchi orari"
             >
-              <LayoutGrid className="w-3.5 h-3.5" /> 
-              <span>A blocchi orari</span>
+              <LayoutGrid className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" /> 
+              <span className="hidden sm:inline">A blocchi orari</span>
             </button>
 
             <button
               onClick={() => setVisualizzazione('PER_DOCENTE')}
-              className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+              className={`p-2 sm:px-3 sm:py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
                 visualizzazione === 'PER_DOCENTE' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
               }`}
+              title="Per Docente Assente"
             >
-              <UserMinus className="w-3.5 h-3.5 text-indigo-600" /> 
-              <span>Per Docente Assente</span>
+              <UserMinus className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-indigo-600 shrink-0" /> 
+              <span className="hidden sm:inline">Per Docente Assente</span>
             </button>
 
             <button
               onClick={() => setVisualizzazione('TABELLA')}
-              className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
+              className={`p-2 sm:px-3 sm:py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
                 visualizzazione === 'TABELLA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
               }`}
+              title="Elenco Compatto"
             >
-              <List className="w-3.5 h-3.5" /> 
-              <span>Elenco Compatto</span>
+              <List className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" /> 
+              <span className="hidden sm:inline">Elenco Compatto</span>
             </button>
           </div>
         </div>
