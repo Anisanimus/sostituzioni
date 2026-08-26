@@ -415,19 +415,6 @@ export const TabelloneSostituzioni: React.FC<{
                 <span className="w-2 h-2 rounded-full bg-purple-600"></span>
                 <span>⏱️ Disposizioni (D)</span>
               </button>
-
-              <button
-                type="button"
-                onClick={() => setMostraGiaUsati(!mostraGiaUsati)}
-                className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
-                  mostraGiaUsati 
-                    ? 'bg-slate-200 text-slate-700 border-slate-300' 
-                    : 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-60'
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-                <span>Già Usati</span>
-              </button>
             </div>
           </div>
 
