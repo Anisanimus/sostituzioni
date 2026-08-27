@@ -201,10 +201,10 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
   return (
     <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-2xs border border-slate-200 space-y-3">
       
-      {/* HEADER DELLA SCHEDA CON TITOLO, SOTTOTITOLO, DATA SUBITO DOPO E PULSANTI AZIONE CENTRATI */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* HEADER DELLA SCHEDA CON TITOLO, SOTTOTITOLO, DATA SUBITO DOPO E PULSANTI AZIONE */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
         {/* GRUPPO SINISTRA: TITOLO + INFO + CASELLINA DATA & FRECCE */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-lg font-black border border-indigo-100 shrink-0">
               <LayoutDashboard className="w-5 h-5 text-indigo-600" />
@@ -233,8 +233,8 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
             </div>
           </div>
 
-          {/* SELETTORE DATA RAPIDO CON FRECCE (SUBITO DOPO IL TITOLO) */}
-          <div id="targetDataNavigator" className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-2xs">
+          {/* SELETTORE DATA RAPIDO CON FRECCE (FULL WIDTH SU MOBILE, AFFIANCATO SU DESKTOP) */}
+          <div id="targetDataNavigator" className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 p-1.5 sm:p-1 rounded-xl border border-slate-200 shadow-2xs">
             <button
               type="button"
               onClick={() => {
@@ -244,13 +244,13 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                 if (cur.getDay() === 6) cur.setDate(cur.getDate() - 1); // Salta sabato
                 onChangeDate?.(cur.toISOString().split('T')[0]);
               }}
-              className="w-7 h-7 flex items-center justify-center hover:bg-slate-200/80 rounded-lg text-slate-700 transition"
+              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-slate-200/80 rounded-lg text-slate-700 transition"
               title="Giorno Precedente"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <label className="flex items-center gap-2 px-1.5 cursor-pointer relative">
+            <label className="flex items-center gap-2 px-1 sm:px-1.5 cursor-pointer relative">
               <span className="font-black text-xs text-slate-900 tracking-tight">
                 {formatDataItaliana(selectedDate)}
               </span>
@@ -275,7 +275,7 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                 if (cur.getDay() === 0) cur.setDate(cur.getDate() + 1); // Salta domenica
                 onChangeDate?.(cur.toISOString().split('T')[0]);
               }}
-              className="w-7 h-7 flex items-center justify-center hover:bg-slate-200/80 rounded-lg text-slate-700 transition"
+              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-slate-200/80 rounded-lg text-slate-700 transition"
               title="Giorno Successivo"
             >
               <ChevronRight className="w-4 h-4" />
@@ -284,20 +284,20 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
             <button
               type="button"
               onClick={() => onChangeDate?.(new Date().toISOString().split('T')[0])}
-              className="bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs px-2.5 py-0.5 rounded-lg transition border border-slate-200 shadow-2xs ml-0.5"
+              className="bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs px-2.5 py-1 sm:py-0.5 rounded-lg transition border border-slate-200 shadow-2xs ml-0.5"
             >
               Oggi
             </button>
           </div>
         </div>
 
-        {/* RESTANTE SPAZIO: PULSANTI AZIONE CENTRATI / FLESSIBILI */}
-        <div className="flex-1 flex items-center justify-center sm:justify-end md:justify-center gap-2.5 min-w-[260px]">
+        {/* RESTANTE SPAZIO: PULSANTI AZIONE (GRID 2 COLONNE FULL WIDTH SU MOBILE, CENTRATI SU DESKTOP) */}
+        <div className="w-full lg:flex-1 grid grid-cols-2 sm:flex sm:w-auto items-center justify-center lg:justify-center gap-2.5">
           <button
             id="targetBtnAssente"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'DOCENTE' ? null : 'DOCENTE')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border ${
+            className={`w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border ${
               modalitaAperta === 'DOCENTE'
                 ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
                 : 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100 hover:text-indigo-900'
@@ -311,7 +311,7 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
             id="targetBtnGita"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'GITA' ? null : 'GITA')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border ${
+            className={`w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border ${
               modalitaAperta === 'GITA'
                 ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
                 : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100 hover:text-amber-950'
