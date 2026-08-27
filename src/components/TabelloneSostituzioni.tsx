@@ -27,9 +27,9 @@ export const TabelloneSostituzioni: React.FC<{
   const [visualizzazione, setVisualizzazione] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>('GRUPPI_ORA');
   const [mostraRisorseMobile, setMostraRisorseMobile] = useState<boolean>(false);
   
-  // Set per gestire gli accordion chiusi (se presente nel set = compresso)
-  const [oreChiuse, setOreChiuse] = useState<number[]>([]);
-  const [docentiChiusi, setDocentiChiusi] = useState<string[]>([]);
+  // Set per gestire gli accordion aperti (se presente nel set = aperto). Di default vuoti = TUTTO CHIUSO
+  const [oreAperte, setOreAperte] = useState<number[]>([]);
+  const [docentiAperti, setDocentiAperti] = useState<string[]>([]);
   // Chiuse di default per le risorse
   const [oreRisorseChiuse, setOreRisorseChiuse] = useState<number[]>([1, 2, 3, 4, 5, 6, 7, 8]);
 
@@ -189,21 +189,43 @@ export const TabelloneSostituzioni: React.FC<{
     });
   };
 
-  // 1. Raggruppamento per ora (fino a 9 ore per giorno)
+  // Helper priorità stato per ordinamento dinamico
+  const getStatoPriorita = (os: OraScoperta) => {
+    const s = getSostituzione(os.ora, os.classe);
+    if (!s) return 0; // In alto: Da assegnare (pulsante "Scegli Sostituto")
+    if (!s.firmata) return 1; // Al centro: Assegnati (In attesa presa visione / Invia per firma)
+    return 2; // In basso: Firmati
+  };
+
+  // 1. Raggruppamento per ora (fino a 9 ore per giorno) con ordinamento dinamico interno
   const oreRaggruppate = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(oraNum => {
+    const items = oreScoperte
+      .filter(os => os.ora === oraNum)
+      .sort((a, b) => {
+        const pA = getStatoPriorita(a);
+        const pB = getStatoPriorita(b);
+        if (pA !== pB) return pA - pB;
+        return a.classe.localeCompare(b.classe);
+      });
+
     return {
       ora: oraNum,
-      items: oreScoperte.filter(os => os.ora === oraNum)
+      items
     };
   }).filter(g => g.items.length > 0);
 
-  // 2. Raggruppamento per Docente Assente
+  // 2. Raggruppamento per Docente Assente con ordinamento dinamico interno
   const docentiAssentiRaggruppati = Array.from(
     new Set(oreScoperte.map(os => getBaseNomeDocente(os.docenteAssente.nome)))
   ).map(nomeDocente => {
     const items = oreScoperte
       .filter(os => getBaseNomeDocente(os.docenteAssente.nome) === nomeDocente)
-      .sort((a, b) => a.ora - b.ora);
+      .sort((a, b) => {
+        const pA = getStatoPriorita(a);
+        const pB = getStatoPriorita(b);
+        if (pA !== pB) return pA - pB;
+        return a.ora - b.ora;
+      });
 
     const docAssente = items[0].docenteAssente;
     const totOreDoc = items.length;
@@ -336,6 +358,34 @@ export const TabelloneSostituzioni: React.FC<{
     };
   }).filter(r => r.totDisponibili > 0);
 
+  // Calcolo totali giornalieri per tipo di risorsa per disabilitare/ingrigire i filtri se 0
+  const totPotenziamentoOggi = risorsePerOra.reduce((acc, r) => acc + r.potenziamentoList.length, 0);
+  const totGiteOggi = risorsePerOra.reduce((acc, r) => acc + r.liberatiGitaList.length, 0);
+  const totDisposizioniOggi = risorsePerOra.reduce((acc, r) => acc + r.disposizioniList.length, 0);
+
+  // Gestione click su filtro: attiva SOLO quel filtro e apre tutti gli accordion delle risorse per mostrare subito i risultati
+  const handleFiltroRisorseClick = (tipo: 'POTENZIAMENTO' | 'GITA' | 'DISPONIBILE') => {
+    // Se già solo questo è attivo, riattiva tutti i filtri disponibili
+    const soloQuestoAttivo = 
+      (tipo === 'POTENZIAMENTO' && mostraPotenziamento && !mostraLiberatiGita && !mostraDisposizioni) ||
+      (tipo === 'GITA' && mostraLiberatiGita && !mostraPotenziamento && !mostraDisposizioni) ||
+      (tipo === 'DISPONIBILE' && mostraDisposizioni && !mostraPotenziamento && !mostraLiberatiGita);
+
+    if (soloQuestoAttivo) {
+      setMostraPotenziamento(true);
+      setMostraLiberatiGita(true);
+      setMostraDisposizioni(true);
+      // Se riattiva tutto, li richiude di default
+      setOreRisorseChiuse([1, 2, 3, 4, 5, 6, 7, 8]);
+    } else {
+      setMostraPotenziamento(tipo === 'POTENZIAMENTO');
+      setMostraLiberatiGita(tipo === 'GITA');
+      setMostraDisposizioni(tipo === 'DISPONIBILE');
+      // Espandi tutto (oreRisorseChiuse = []) per mostrare subito le risorse filtrate
+      setOreRisorseChiuse([]);
+    }
+  };
+
   return (
     <div className="space-y-3">
       {/* ============================================================================== */}
@@ -369,33 +419,53 @@ export const TabelloneSostituzioni: React.FC<{
               {mostraRisorseMobile && (
                 <div className="pt-3 mt-2 border-t border-slate-100 space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
                 {/* FILTRI IN ACCORDION MOBILE */}
-                <div className="flex flex-wrap items-center gap-1 text-[10px] font-bold">
+                <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
                   <button
                     type="button"
-                    onClick={() => setMostraPotenziamento(!mostraPotenziamento)}
-                    className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
-                      mostraPotenziamento ? 'bg-emerald-100 text-emerald-950 border-emerald-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                    disabled={totPotenziamentoOggi === 0}
+                    onClick={() => handleFiltroRisorseClick('POTENZIAMENTO')}
+                    className={`px-2.5 py-1 rounded-full border transition flex items-center gap-1 ${
+                      totPotenziamentoOggi === 0
+                        ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                        : mostraPotenziamento
+                          ? 'bg-emerald-100 text-emerald-950 border-emerald-300 font-black shadow-2xs'
+                          : 'bg-slate-100 text-slate-400 line-through'
                     }`}
+                    title={totPotenziamentoOggi === 0 ? "Nessun docente di potenziamento disponibile oggi" : "Filtra solo Potenziamento"}
                   >
-                    ⚡ Potenziamento
+                    ⚡ Potenziamento ({totPotenziamentoOggi})
                   </button>
+
                   <button
                     type="button"
-                    onClick={() => setMostraLiberatiGita(!mostraLiberatiGita)}
-                    className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
-                      mostraLiberatiGita ? 'bg-amber-100 text-amber-950 border-amber-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                    disabled={totGiteOggi === 0}
+                    onClick={() => handleFiltroRisorseClick('GITA')}
+                    className={`px-2.5 py-1 rounded-full border transition flex items-center gap-1 ${
+                      totGiteOggi === 0
+                        ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                        : mostraLiberatiGita
+                          ? 'bg-amber-100 text-amber-950 border-amber-300 font-black shadow-2xs'
+                          : 'bg-slate-100 text-slate-400 line-through'
                     }`}
+                    title={totGiteOggi === 0 ? "Nessuna classe in gita oggi" : "Filtra solo Liberati da Gita"}
                   >
-                    🚌 Gita
+                    🚌 Gita ({totGiteOggi})
                   </button>
+
                   <button
                     type="button"
-                    onClick={() => setMostraDisposizioni(!mostraDisposizioni)}
-                    className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
-                      mostraDisposizioni ? 'bg-purple-100 text-purple-950 border-purple-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                    disabled={totDisposizioniOggi === 0}
+                    onClick={() => handleFiltroRisorseClick('DISPONIBILE')}
+                    className={`px-2.5 py-1 rounded-full border transition flex items-center gap-1 ${
+                      totDisposizioniOggi === 0
+                        ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                        : mostraDisposizioni
+                          ? 'bg-purple-100 text-purple-950 border-purple-300 font-black shadow-2xs'
+                          : 'bg-slate-100 text-slate-400 line-through'
                     }`}
+                    title={totDisposizioniOggi === 0 ? "Nessun docente a disposizione oggi" : "Filtra solo Disponibile"}
                   >
-                    ⏱️ Disponibile
+                    ⏱️ Disponibile ({totDisposizioniOggi})
                   </button>
                 </div>
 
@@ -549,7 +619,7 @@ export const TabelloneSostituzioni: React.FC<{
         /* VISTA 1: RAGGRUPPATA PER ORA */
         <div className="space-y-3">
           {oreRaggruppate.map(gruppo => {
-            const isChiuso = oreChiuse.includes(gruppo.ora);
+            const isAperto = oreAperte.includes(gruppo.ora);
             const totCoperteGruppo = gruppo.items.filter(item => getSostituzione(item.ora, item.classe)).length;
 
             return (
@@ -557,7 +627,7 @@ export const TabelloneSostituzioni: React.FC<{
                 <button
                   type="button"
                   onClick={() => {
-                    setOreChiuse(prev => 
+                    setOreAperte(prev => 
                       prev.includes(gruppo.ora) ? prev.filter(o => o !== gruppo.ora) : [...prev, gruppo.ora]
                     );
                   }}
@@ -580,11 +650,11 @@ export const TabelloneSostituzioni: React.FC<{
                     }`}>
                       {totCoperteGruppo} / {gruppo.items.length} Coperte
                     </span>
-                    <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isChiuso ? '' : 'rotate-180 text-indigo-600'}`} />
+                    <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isAperto ? 'rotate-180 text-indigo-600' : ''}`} />
                   </div>
                 </button>
 
-                {!isChiuso && (
+                {isAperto && (
                   <div className="divide-y divide-slate-100 animate-in fade-in duration-150">
                 {gruppo.items.map((os, idx) => {
                   const sost = getSostituzione(os.ora, os.classe);
@@ -728,7 +798,7 @@ export const TabelloneSostituzioni: React.FC<{
         /* VISTA 2: RAGGRUPPATA PER DOCENTE ASSENTE CON LE SUE ORE SOTTO */
         <div className="space-y-4">
           {docentiAssentiRaggruppati.map((gruppoDoc, gIdx) => {
-            const isChiuso = docentiChiusi.includes(gruppoDoc.docAssente.id);
+            const isAperto = docentiAperti.includes(gruppoDoc.docAssente.id);
 
             return (
               <div key={gIdx} className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden">
@@ -736,7 +806,7 @@ export const TabelloneSostituzioni: React.FC<{
                 <button
                   type="button"
                   onClick={() => {
-                    setDocentiChiusi(prev => 
+                    setDocentiAperti(prev => 
                       prev.includes(gruppoDoc.docAssente.id)
                         ? prev.filter(id => id !== gruppoDoc.docAssente.id)
                         : [...prev, gruppoDoc.docAssente.id]
@@ -772,12 +842,12 @@ export const TabelloneSostituzioni: React.FC<{
                     }`}>
                       {gruppoDoc.totCoperteDoc} / {gruppoDoc.totOreDoc} Ore Coperte
                     </span>
-                    <ChevronDown className={`w-4 h-4 text-slate-300 transition-transform duration-200 ${isChiuso ? '' : 'rotate-180 text-white'}`} />
+                    <ChevronDown className={`w-4 h-4 text-slate-300 transition-transform duration-200 ${isAperto ? 'rotate-180 text-white' : ''}`} />
                   </div>
                 </button>
 
                 {/* Elenco delle ore del docente sotto l'intestazione */}
-                {!isChiuso && (
+                {isAperto && (
                   <div className="divide-y divide-slate-100 p-2 sm:p-3 bg-slate-50/40 space-y-1.5 animate-in fade-in duration-150">
                 {gruppoDoc.items.map((os, idx) => {
                   const sost = getSostituzione(os.ora, os.classe);
@@ -934,33 +1004,53 @@ export const TabelloneSostituzioni: React.FC<{
               </div>
 
               {/* FILTRI IN LEGENDA DESKTOP */}
-              <div className="flex flex-wrap items-center gap-1 text-[10px] font-bold">
+              <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
                 <button
                   type="button"
-                  onClick={() => setMostraPotenziamento(!mostraPotenziamento)}
-                  className={`px-2 py-0.5 rounded-md border transition flex items-center gap-1 ${
-                    mostraPotenziamento ? 'bg-emerald-100 text-emerald-950 border-emerald-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                  disabled={totPotenziamentoOggi === 0}
+                  onClick={() => handleFiltroRisorseClick('POTENZIAMENTO')}
+                  className={`px-2.5 py-1 rounded-md border transition flex items-center gap-1 cursor-pointer ${
+                    totPotenziamentoOggi === 0
+                      ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                      : mostraPotenziamento
+                        ? 'bg-emerald-100 text-emerald-950 border-emerald-300 font-black shadow-2xs'
+                        : 'bg-slate-100 text-slate-400 line-through'
                   }`}
+                  title={totPotenziamentoOggi === 0 ? "Nessun docente di potenziamento disponibile oggi" : "Filtra solo Potenziamento"}
                 >
-                  ⚡ Potenziamento
+                  ⚡ Potenziamento ({totPotenziamentoOggi})
                 </button>
+
                 <button
                   type="button"
-                  onClick={() => setMostraLiberatiGita(!mostraLiberatiGita)}
-                  className={`px-2 py-0.5 rounded-md border transition flex items-center gap-1 ${
-                    mostraLiberatiGita ? 'bg-amber-100 text-amber-950 border-amber-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                  disabled={totGiteOggi === 0}
+                  onClick={() => handleFiltroRisorseClick('GITA')}
+                  className={`px-2.5 py-1 rounded-md border transition flex items-center gap-1 cursor-pointer ${
+                    totGiteOggi === 0
+                      ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                      : mostraLiberatiGita
+                        ? 'bg-amber-100 text-amber-950 border-amber-300 font-black shadow-2xs'
+                        : 'bg-slate-100 text-slate-400 line-through'
                   }`}
+                  title={totGiteOggi === 0 ? "Nessuna classe in gita oggi" : "Filtra solo Liberati da Gita"}
                 >
-                  🚌 Gita
+                  🚌 Gita ({totGiteOggi})
                 </button>
+
                 <button
                   type="button"
-                  onClick={() => setMostraDisposizioni(!mostraDisposizioni)}
-                  className={`px-2 py-0.5 rounded-md border transition flex items-center gap-1 ${
-                    mostraDisposizioni ? 'bg-purple-100 text-purple-950 border-purple-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                  disabled={totDisposizioniOggi === 0}
+                  onClick={() => handleFiltroRisorseClick('DISPONIBILE')}
+                  className={`px-2.5 py-1 rounded-md border transition flex items-center gap-1 cursor-pointer ${
+                    totDisposizioniOggi === 0
+                      ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                      : mostraDisposizioni
+                        ? 'bg-purple-100 text-purple-950 border-purple-300 font-black shadow-2xs'
+                        : 'bg-slate-100 text-slate-400 line-through'
                   }`}
+                  title={totDisposizioniOggi === 0 ? "Nessun docente a disposizione oggi" : "Filtra solo Disponibile"}
                 >
-                  ⏱️ Disponibile
+                  ⏱️ Disponibile ({totDisposizioniOggi})
                 </button>
               </div>
 
