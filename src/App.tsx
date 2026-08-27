@@ -9,13 +9,15 @@ import { AnagraficaOrario, ImpostazioniPriorita } from './components/AnagraficaO
 import { Coachmark } from './components/Coachmark';
 import { 
   School, Calendar, Users, History, Lock, Smartphone, 
-  ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings
+  ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
+  Menu, X, Sliders
 } from 'lucide-react';
 
 const MainApp: React.FC = () => {
   const { docenti, orariDocenti, assenze, uscite, sostituzioni } = useApp();
   const [ruoloAttivo, setRuoloAttivo] = useState<'VICEPRESIDENZA' | 'PORTALE_DOCENTE'>('VICEPRESIDENZA');
   const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'STORICO' | 'DOCENTI' | 'IMPOSTAZIONI'>('GESTIONE_GIORNALIERA');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -82,10 +84,22 @@ const MainApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-300/80 text-slate-800 font-sans flex flex-col antialiased">
-      {/* HEADER COMPATTO */}
+      {/* HEADER COMPATTO CON BURGER MENU IN ALTO A SINISTRA */}
       <header className="bg-slate-900 text-white shadow-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
+            {/* PULSANTE BURGER IN ALTO A SINISTRA (SOLO IN MODALITA VICEPRESIDENZA) */}
+            {ruoloAttivo === 'VICEPRESIDENZA' && (
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-1.5 hover:bg-slate-800 rounded-xl text-slate-300 hover:text-white transition border border-slate-700 flex items-center justify-center mr-1"
+                title="Apri Menu Principale"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
+
             <div className="p-1.5 bg-indigo-600 rounded-lg shadow-sm">
               <School className="w-4 h-4 text-white" />
             </div>
@@ -136,63 +150,158 @@ const MainApp: React.FC = () => {
         </div>
       </header>
 
+      {/* ========================================================= */}
+      {/* SIDEBAR DRAWER LATERALE A SCOMPARSA (BURGER MENU)         */}
+      {/* ========================================================= */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-50 flex animate-in fade-in duration-200">
+          {/* BACKDROP SFOCATO SCURO */}
+          <div 
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+
+          {/* PANNELLO LATERALE SLIDE-IN */}
+          <div className="relative w-80 max-w-[85vw] bg-white h-full shadow-2xl z-10 flex flex-col justify-between animate-in slide-in-from-left duration-200 border-r border-slate-200">
+            {/* HEADER SIDEBAR */}
+            <div>
+              <div className="bg-slate-900 text-white p-4 flex items-center justify-between border-b border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-indigo-600 rounded-xl">
+                    <School className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-black text-white">Menu Principale</h2>
+                    <p className="text-[11px] text-slate-400">Pannello Vicepresidenza</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                  title="Chiudi Menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* LISTA VOCI DI NAVIGAZIONE */}
+              <div className="p-3 space-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTabVice('GESTIONE_GIORNALIERA');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left ${
+                    tabVice === 'GESTIONE_GIORNALIERA'
+                      ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${tabVice === 'GESTIONE_GIORNALIERA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <LayoutDashboard className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block font-black text-sm">Sostituzioni</span>
+                      <span className="text-[11px] text-slate-500 font-normal">Tabellone giornaliero e coperture</span>
+                    </div>
+                  </div>
+                  {tabVice === 'GESTIONE_GIORNALIERA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTabVice('STORICO');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left ${
+                    tabVice === 'STORICO'
+                      ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${tabVice === 'STORICO' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <History className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block font-black text-sm">Registro Storico</span>
+                      <span className="text-[11px] text-slate-500 font-normal">Storico assenze, uscite e debiti</span>
+                    </div>
+                  </div>
+                  {tabVice === 'STORICO' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTabVice('DOCENTI');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left ${
+                    tabVice === 'DOCENTI'
+                      ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${tabVice === 'DOCENTI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block font-black text-sm">Anagrafica & Orario</span>
+                      <span className="text-[11px] text-slate-500 font-normal">Gestione docenti e quadro orario</span>
+                    </div>
+                  </div>
+                  {tabVice === 'DOCENTI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTabVice('IMPOSTAZIONI');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left ${
+                    tabVice === 'IMPOSTAZIONI'
+                      ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${tabVice === 'IMPOSTAZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <Settings className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block font-black text-sm">Impostazioni</span>
+                      <span className="text-[11px] text-slate-500 font-normal">Priorità algoritmi e recupero debiti</span>
+                    </div>
+                  </div>
+                  {tabVice === 'IMPOSTAZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                </button>
+              </div>
+            </div>
+
+            {/* FOOTER SIDEBAR */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+              <span className="font-mono text-[11px]">Sistema Sostituzioni v2.0</span>
+              <span className="font-bold text-emerald-600 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Operativo
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CONTENUTO PRINCIPALE */}
       <main className="max-w-7xl mx-auto px-3 sm:px-6 py-4 w-full flex-1 space-y-4">
         {ruoloAttivo === 'PORTALE_DOCENTE' ? (
           <PortaleDocente />
         ) : (
           <>
-            {/* MENU PRINCIPALE DI NAVIGAZIONE */}
-            <div className="bg-white rounded-2xl p-2.5 sm:p-3 shadow-xs border border-slate-200 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
-                <button
-                  onClick={() => setTabVice('GESTIONE_GIORNALIERA')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                    tabVice === 'GESTIONE_GIORNALIERA'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
-                  }`}
-                >
-                  <LayoutDashboard className="w-3.5 h-3.5" />
-                  <span>Sostituzioni</span>
-                </button>
-                <button
-                  onClick={() => setTabVice('STORICO')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                    tabVice === 'STORICO'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
-                  }`}
-                >
-                  <History className="w-3.5 h-3.5" />
-                  <span>Registro Storico</span>
-                </button>
-                <button
-                  onClick={() => setTabVice('DOCENTI')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                    tabVice === 'DOCENTI'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
-                  }`}
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  <span>Anagrafica & Orario</span>
-                </button>
-
-                <button
-                  onClick={() => setTabVice('IMPOSTAZIONI')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                    tabVice === 'IMPOSTAZIONI'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
-                  }`}
-                  title="Impostazioni Priorità Sostituzioni Smart"
-                >
-                  <Settings className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Impostazioni</span>
-                </button>
-              </div>
-            </div>
 
             {/* VISTA PRINCIPALE A 2 COLONNE CON TABELLONE IN PRIMO PIANO */}
             {tabVice === 'GESTIONE_GIORNALIERA' && (

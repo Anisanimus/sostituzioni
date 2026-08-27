@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --brand-dark: #0f172a;
+  }
+}
+
 @media print {
   body {
     background: white !important;

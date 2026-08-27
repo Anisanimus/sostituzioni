@@ -4,7 +4,7 @@ import { OraScoperta, SostituzioneAssegnata, CandidatoSostituto, CategoriaSostit
 import { trovaCandidatiSostituzione } from '../utils/substitutionEngine';
 import { 
   Users, AlertCircle, CheckCircle, Clock, ArrowRight, UserPlus, 
-  HelpCircle, Trash2, Bus, ShieldAlert, Sparkles, Filter, ChevronRight, ChevronLeft,
+  HelpCircle, Trash2, Bus, ShieldAlert, Sparkles, Filter, ChevronRight, ChevronLeft, ChevronDown,
   Printer, LayoutGrid, List, MessageSquare, AlertTriangle, Accessibility, Lock,
   UserCheck, UserX, UserMinus
 } from 'lucide-react';
@@ -25,6 +25,7 @@ export const TabelloneSostituzioni: React.FC<{
   const [selectedOraScoperta, setSelectedOraScoperta] = useState<OraScoperta | null>(null);
   // Due modalità di visualizzazione: A blocchi orari, Per Docente Assente
   const [visualizzazione, setVisualizzazione] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>('GRUPPI_ORA');
+  const [mostraRisorseMobile, setMostraRisorseMobile] = useState<boolean>(false);
 
   // Filtri attivi per la legenda dello specchietto risorse (Disposizioni D di default nascoste, a meno che non ci siano recuperi da fare)
   const [mostraDisposizioni, setMostraDisposizioni] = useState(false);
@@ -339,21 +340,28 @@ export const TabelloneSostituzioni: React.FC<{
         {/* DA MOBILE: BARRA ACCORDION RISORSE DISPONIBILI ESPANDIBILE (< LG) */}
         {risorsePerOra.length > 0 && (
           <div className="block lg:hidden col-span-1 bg-white rounded-2xl p-3 shadow-2xs border border-slate-200">
-            <details className="group">
-              <summary className="flex items-center justify-between cursor-pointer list-none font-bold text-xs text-slate-800">
+            <div>
+              <button
+                type="button"
+                onClick={() => setMostraRisorseMobile(prev => !prev)}
+                className="w-full flex items-center justify-between cursor-pointer font-bold text-xs text-slate-800 text-left"
+              >
                 <span id="targetSpecchiettoRisorseMobile" className="flex items-center gap-2">
                   <span className="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs">
                     ⚡
                   </span>
                   <span>Risorse Disponibili Oggi ({risorsePerOra.reduce((acc, r) => acc + r.totDisponibili, 0)})</span>
                 </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-400 font-normal">Tocca per dettagli</span>
-                  <span className="text-slate-400 text-xs group-open:rotate-180 transition-transform">▼</span>
+                <div className="flex items-center gap-1.5 text-slate-400 hover:text-slate-600">
+                  <span className="text-[10px] text-slate-400 font-normal">
+                    {mostraRisorseMobile ? 'Nascondi dettagli' : 'Tocca per dettagli'}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${mostraRisorseMobile ? 'rotate-180 text-slate-600' : ''}`} />
                 </div>
-              </summary>
+              </button>
 
-              <div className="pt-3 mt-2 border-t border-slate-100 space-y-2.5">
+              {mostraRisorseMobile && (
+                <div className="pt-3 mt-2 border-t border-slate-100 space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
                 {/* FILTRI IN ACCORDION MOBILE */}
                 <div className="flex flex-wrap items-center gap-1 text-[10px] font-bold">
                   <button
@@ -385,53 +393,54 @@ export const TabelloneSostituzioni: React.FC<{
                   </button>
                 </div>
 
-                {/* LISTA RISORSE PER ORA */}
-                <div className="space-y-1.5">
-                  {risorsePerOra.map(r => {
-                    const potVisibili = mostraPotenziamento ? (mostraGiaUsati ? r.potenziamentoList : r.potenziamentoList.filter(p => !p.usata)) : [];
-                    const giteVisibili = mostraLiberatiGita ? (mostraGiaUsati ? r.liberatiGitaList : r.liberatiGitaList.filter(g => !g.usata)) : [];
-                    const dispVisibili = (mostraDisposizioni ? r.disposizioniList : r.disposizioniList.filter(d => d.debito > 0))
-                      .filter(d => mostraGiaUsati ? true : !d.usata);
-                    const totFiltrati = potVisibili.length + giteVisibili.length + dispVisibili.length;
-                    if (totFiltrati === 0) return null;
+                  {/* LISTA RISORSE PER ORA */}
+                  <div className="space-y-1.5">
+                    {risorsePerOra.map(r => {
+                      const potVisibili = mostraPotenziamento ? (mostraGiaUsati ? r.potenziamentoList : r.potenziamentoList.filter(p => !p.usata)) : [];
+                      const giteVisibili = mostraLiberatiGita ? (mostraGiaUsati ? r.liberatiGitaList : r.liberatiGitaList.filter(g => !g.usata)) : [];
+                      const dispVisibili = (mostraDisposizioni ? r.disposizioniList : r.disposizioniList.filter(d => d.debito > 0))
+                        .filter(d => mostraGiaUsati ? true : !d.usata);
+                      const totFiltrati = potVisibili.length + giteVisibili.length + dispVisibili.length;
+                      if (totFiltrati === 0) return null;
 
-                    return (
-                      <div key={r.ora} className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-wrap items-center justify-between gap-1.5 text-xs">
-                        <span className="font-black text-slate-800">{r.ora}ª Ora</span>
-                        <div className="flex flex-wrap gap-1">
-                          {potVisibili.map(p => (
-                            <span key={p.docenteId} className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                              ⚡ {p.nome}
-                            </span>
-                          ))}
-                          {giteVisibili.map(g => (
-                            <span key={g.docenteId} className="text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                              🚌 {g.nome}
-                            </span>
-                          ))}
-                          {dispVisibili.map(d => (
-                            <span key={d.docenteId} className="text-[10px] text-purple-800 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
-                              ⏱️ {d.nome}
-                            </span>
-                          ))}
+                      return (
+                        <div key={r.ora} className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-wrap items-center justify-between gap-1.5 text-xs">
+                          <span className="font-black text-slate-800">{r.ora}ª Ora</span>
+                          <div className="flex flex-wrap gap-1">
+                            {potVisibili.map(p => (
+                              <span key={p.docenteId} className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                ⚡ {p.nome}
+                              </span>
+                            ))}
+                            {giteVisibili.map(g => (
+                              <span key={g.docenteId} className="text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                🚌 {g.nome}
+                              </span>
+                            ))}
+                            {dispVisibili.map(d => (
+                              <span key={d.docenteId} className="text-[10px] text-purple-800 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                                ⏱️ {d.nome}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            </details>
+              )}
+            </div>
           </div>
         )}
 
         {/* COLONNA TABELLONE PRINCIPALE (LG: 8/12) */}
         <div className="lg:col-span-8 bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
           
-          {/* HEADER UNIFICATO TABELLONE: SELETTORE VISTE + REPORT (RIGA 1) E AZIONI RAPIDE (RIGA 2) */}
-          <div className="space-y-3 border-b border-slate-100 pb-3">
+          {/* HEADER UNIFICATO TABELLONE: TUTTO SU UNA RIGA SU DESKTOP, 2 RIGHE SU MOBILE */}
+          <div className="space-y-2.5 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-2 border-b border-slate-100 pb-3">
             
-            {/* RIGA 1: SELETTORE VISTE (SINISTRA) + MINI BADGE REPORT STATO (DESTRA) */}
-            <div className="flex items-center justify-between gap-2 w-full">
+            {/* SELETTORE VISTE (SINISTRA) + MINI BADGE REPORT STATO (DESTRA SU MOBILE) */}
+            <div className="flex items-center justify-between sm:justify-start gap-2">
               {/* SELETTORE VISTE */}
               <div id="targetSelettoreViste" className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs">
                 <button
@@ -457,7 +466,7 @@ export const TabelloneSostituzioni: React.FC<{
                 </button>
               </div>
 
-              {/* MINI BADGE REPORT STATO: DA FARE / FATTO */}
+              {/* MINI BADGE REPORT STATO: DA FARE / FATTO (SU MOBILE DENTRO RIGA 1, SU DESKTOP AL CENTRO) */}
               <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-2xs shrink-0">
                 <div className="flex items-center gap-1 bg-amber-100/90 text-amber-950 px-2 py-0.5 rounded-lg text-[11px] font-black border border-amber-300 shadow-2xs">
                   <span className="text-[10px] font-bold text-amber-800 uppercase">Da fare:</span>
@@ -470,13 +479,13 @@ export const TabelloneSostituzioni: React.FC<{
               </div>
             </div>
 
-            {/* RIGA 2: PULSANTI DI AZIONE SUBITO SOTTO */}
-            <div className="grid grid-cols-2 sm:flex sm:justify-end items-center gap-2 w-full">
+            {/* PULSANTI DI AZIONE: AFFIANCATI SU DESKTOP (RIGA 1), SOTTO 50%-50% SU MOBILE */}
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
               {/* TARGET STEP 5: ASSEGNA TUTTO */}
               <button
                 id="targetBtnAssegnaTutto"
                 onClick={handleAutoAssegnaTutto}
-                className="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3.5 py-2 rounded-xl text-xs border border-indigo-200 flex items-center justify-center gap-1.5 shadow-2xs transition whitespace-nowrap"
+                className="w-full sm:w-auto bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-xl text-xs border border-indigo-200 flex items-center justify-center gap-1.5 shadow-2xs transition whitespace-nowrap"
                 title="Assegna automaticamente in base alle priorità"
               >
                 <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
@@ -487,7 +496,7 @@ export const TabelloneSostituzioni: React.FC<{
               <button
                 id="targetBtnPubblicaFirme"
                 onClick={() => pubblicaTutteSostituzioniData(selectedDate)}
-                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition whitespace-nowrap"
+                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs transition whitespace-nowrap"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
                 <span>Pubblica Firme</span>
@@ -508,7 +517,7 @@ export const TabelloneSostituzioni: React.FC<{
             <div key={gruppo.ora} className="bg-white rounded-xl shadow-2xs border border-slate-200 overflow-hidden">
               <div className="bg-slate-50/80 px-3.5 py-1.5 border-b border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="bg-slate-800 text-white font-black text-xs px-2 py-0.5 rounded">
+                  <span className="bg-slate-900 text-white font-black text-xs px-2 py-0.5 rounded shadow-2xs">
                     {gruppo.ora}ª ORA
                   </span>
                   <span className="text-xs font-bold text-slate-600">
@@ -554,7 +563,7 @@ export const TabelloneSostituzioni: React.FC<{
                             )}
                           </div>
                           <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-2 mt-0.5">
-                            <span>Motivo: <strong className="text-slate-700">{os.motivo}</strong></span>
+                            <span>Tipologia: <strong className="text-slate-700">{os.motivo}</strong></span>
                             {os.isUscita && (
                               <span className="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded text-[10px] flex items-center gap-1">
                                 <Bus className="w-2.5 h-2.5" /> Accompagnatore
@@ -676,7 +685,7 @@ export const TabelloneSostituzioni: React.FC<{
                       )}
                     </div>
                     <span className="text-[11px] text-slate-300 block">
-                      Motivo assenza: {gruppoDoc.items[0]?.motivo}
+                      Tipologia assenza: {gruppoDoc.items[0]?.motivo}
                     </span>
                   </div>
                 </div>
@@ -711,7 +720,7 @@ export const TabelloneSostituzioni: React.FC<{
                     >
                       {/* Ora e Classe */}
                       <div className="flex items-center gap-3">
-                        <span className="bg-slate-800 text-white font-black text-xs px-2.5 py-1.5 rounded-lg shrink-0">
+                        <span className="bg-slate-900 text-white font-black text-xs px-2.5 py-1.5 rounded-lg shrink-0 shadow-2xs">
                           {os.ora}ª ORA
                         </span>
                         

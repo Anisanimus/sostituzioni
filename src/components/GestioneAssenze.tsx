@@ -11,6 +11,7 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
   // Finestra aperta: null (chiusa), 'DOCENTE', o 'GITA'
   const [modalitaAperta, setModalitaAperta] = useState<'DOCENTE' | 'GITA' | null>(null);
   const [mostraInfo, setMostraInfo] = useState<boolean>(false);
+  const [mostraDettagliEventi, setMostraDettagliEventi] = useState<boolean>(false);
 
   // --- STATO ASSENZA DOCENTE ---
   const [dataDocente, setDataDocente] = useState<string>(selectedDate);
@@ -784,82 +785,101 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
       {/* 3. LISTA EVENTI REGISTRATI PER LA DATA SELEZIONATA        */}
       {/* ========================================================= */}
       {(assenzeOggiDeduplicate.length > 0 || usciteOggi.length > 0) && (
-        <div className="pt-3 border-t border-slate-100 space-y-2">
-          <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">
-            Eventi Registrati per {selectedGiorno} {formatDataItaliana(selectedDate)}:
-          </span>
+        <div className="pt-2.5 border-t border-slate-100 space-y-2">
+          {/* BARRA COLLAPSIBILE / ACCORDION CON "TOCCA PER DETTAGLI" E TRIANGOLINO */}
+          <button
+            type="button"
+            onClick={() => setMostraDettagliEventi(prev => !prev)}
+            className="w-full flex items-center justify-between text-left p-1 rounded-xl hover:bg-slate-50 transition cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">
+                Eventi Registrati ({assenzeOggiDeduplicate.length + usciteOggi.length})
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-1.5 text-slate-400 hover:text-slate-600">
+              <span className="text-[10px] text-slate-400 font-normal">
+                {mostraDettagliEventi ? 'Nascondi dettagli' : 'Tocca per dettagli'}
+              </span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${mostraDettagliEventi ? 'rotate-180 text-slate-600' : ''}`} />
+            </div>
+          </button>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {/* Gite con Accompagnatori inclusi nello slot */}
-            {usciteOggi.map(u => {
-              const isGiornaliera = (u.ore.length >= 5) || (u.note?.includes('Intera Giornata')) || (!u.oraInizio && !u.oraFine);
-              const labelDurata = isGiornaliera 
-                ? 'Giornaliera' 
-                : (u.note?.includes(':00') ? `Oraria (${u.note})` : `Oraria (${u.ore.map(o => `${o}ª`).join(', ')} ora)`);
+          {/* CONTENUTO ESPANDIBILE */}
+          {mostraDettagliEventi && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-1 duration-150 pt-1">
+              {/* Gite con Accompagnatori inclusi nello slot */}
+              {usciteOggi.map(u => {
+                const isGiornaliera = (u.ore.length >= 5) || (u.note?.includes('Intera Giornata')) || (!u.oraInizio && !u.oraFine);
+                const labelDurata = isGiornaliera 
+                  ? 'Giornaliera' 
+                  : (u.note?.includes(':00') ? `Oraria (${u.note})` : `Oraria (${u.ore.map(o => `${o}ª`).join(', ')} ora)`);
 
-              const nomiAccompagnatori = u.docentiAccompagnatoriIds.length > 0 
-                ? u.docentiAccompagnatoriIds.map(getDocenteNome).join(', ') 
-                : 'Nessuno';
+                const nomiAccompagnatori = u.docentiAccompagnatoriIds.length > 0 
+                  ? u.docentiAccompagnatoriIds.map(getDocenteNome).join(', ') 
+                  : 'Nessuno';
 
-              return (
-                <div key={u.id} className="bg-amber-50/80 border border-amber-200 rounded-xl p-2.5 flex items-start justify-between gap-2 text-xs">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-amber-950">
-                      <Bus className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span>{u.titoloMeta}</span>
-                      <span className="bg-amber-200/80 text-amber-900 font-bold text-[9px] px-1.5 py-0.2 rounded-full">
-                        {labelDurata}
-                      </span>
+                return (
+                  <div key={u.id} className="bg-amber-50/80 border border-amber-200 rounded-xl p-2.5 flex items-start justify-between gap-2 text-xs shadow-2xs">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-950">
+                        <Bus className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>{u.titoloMeta}</span>
+                        <span className="bg-amber-200/80 text-amber-900 font-bold text-[9px] px-1.5 py-0.2 rounded-full">
+                          {labelDurata}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-amber-900">
+                        <strong className="text-amber-950">Classi:</strong> {u.classi ? u.classi.join(', ') : (u as any).classe}
+                      </div>
+                      <div className="text-[11px] text-amber-900">
+                        <strong className="text-amber-950">Accompagnatori:</strong> {nomiAccompagnatori}
+                      </div>
                     </div>
-                    <div className="text-[11px] text-amber-900">
-                      <strong className="text-amber-950">Classi:</strong> {u.classi ? u.classi.join(', ') : (u as any).classe}
-                    </div>
-                    <div className="text-[11px] text-amber-900">
-                      <strong className="text-amber-950">Accompagnatori:</strong> {nomiAccompagnatori}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => annullaUscita(u.id)}
+                      className="text-amber-700 hover:text-red-600 p-1 hover:bg-amber-100 rounded transition shrink-0"
+                      title="Annulla gita"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => annullaUscita(u.id)}
-                    className="text-amber-700 hover:text-red-600 p-1 hover:bg-amber-100 rounded transition shrink-0"
-                    title="Annulla gita"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              );
-            })}
+                );
+              })}
 
-            {/* Assenze Docenti Deduplicate */}
-            {assenzeOggiDeduplicate.map(a => {
-              const isGiornaliera = !a.isOraria && (a.oreInteressate.length >= 5 || a.note?.includes('Intera Giornata'));
-              const dettaglioDurata = isGiornaliera 
-                ? 'Giornaliera (Intera giornata)' 
-                : (a.note?.includes('Fascia') ? a.note : `Oraria (${a.oreInteressate.map(o => `${o}ª`).join(', ')} ora)`);
+              {/* Assenze Docenti Deduplicate */}
+              {assenzeOggiDeduplicate.map(a => {
+                const isGiornaliera = !a.isOraria && (a.oreInteressate.length >= 5 || a.note?.includes('Intera Giornata'));
+                const dettaglioDurata = isGiornaliera 
+                  ? 'Giornaliera (Intera giornata)' 
+                  : (a.note?.includes('Fascia') ? a.note : `Oraria (${a.oreInteressate.map(o => `${o}ª`).join(', ')} ora)`);
 
-              return (
-                <div key={a.id} className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center justify-between text-xs">
-                  <div>
-                    <div className="flex items-center gap-1.5 font-bold text-slate-900">
-                      <UserMinus className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>{getDocenteNome(a.docenteId)}</span>
+                return (
+                  <div key={a.id} className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 flex items-center justify-between text-xs shadow-2xs">
+                    <div>
+                      <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                        <UserMinus className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>{getDocenteNome(a.docenteId)}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 font-medium">
+                        <span>{a.motivo}</span> • <span className="text-indigo-700 font-semibold">{dettaglioDurata}</span>
+                      </div>
                     </div>
-                    <div className="text-[11px] text-slate-500 font-medium">
-                      <span>{a.motivo}</span> • <span className="text-indigo-700 font-semibold">{dettaglioDurata}</span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => annullaAssenza(a.id)}
+                      className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition"
+                      title="Annulla assenza"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => annullaAssenza(a.id)}
-                    className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition"
-                    title="Annulla assenza"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
