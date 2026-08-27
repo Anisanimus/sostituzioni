@@ -26,9 +26,15 @@ export const TabelloneSostituzioni: React.FC<{
   // Due modalità di visualizzazione: A blocchi orari, Per Docente Assente
   const [visualizzazione, setVisualizzazione] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>('GRUPPI_ORA');
   const [mostraRisorseMobile, setMostraRisorseMobile] = useState<boolean>(false);
+  
+  // Set per gestire gli accordion chiusi (se presente nel set = compresso)
+  const [oreChiuse, setOreChiuse] = useState<number[]>([]);
+  const [docentiChiusi, setDocentiChiusi] = useState<string[]>([]);
+  // Chiuse di default per le risorse
+  const [oreRisorseChiuse, setOreRisorseChiuse] = useState<number[]>([1, 2, 3, 4, 5, 6, 7, 8]);
 
-  // Filtri attivi per la legenda dello specchietto risorse (Disposizioni D di default nascoste, a meno che non ci siano recuperi da fare)
-  const [mostraDisposizioni, setMostraDisposizioni] = useState(false);
+  // Tutti i filtri attivi di default
+  const [mostraDisposizioni, setMostraDisposizioni] = useState(true);
   const [mostraPotenziamento, setMostraPotenziamento] = useState(true);
   const [mostraLiberatiGita, setMostraLiberatiGita] = useState(true);
   const [mostraGiaUsati, setMostraGiaUsati] = useState(true);
@@ -389,12 +395,12 @@ export const TabelloneSostituzioni: React.FC<{
                       mostraDisposizioni ? 'bg-purple-100 text-purple-950 border-purple-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
                     }`}
                   >
-                    ⏱️ Disp.
+                    ⏱️ Disponibile
                   </button>
                 </div>
 
-                  {/* LISTA RISORSE PER ORA */}
-                  <div className="space-y-1.5">
+                  {/* LISTA RISORSE PER ORA (ACCORDION PER ORA) */}
+                  <div className="space-y-2">
                     {risorsePerOra.map(r => {
                       const potVisibili = mostraPotenziamento ? (mostraGiaUsati ? r.potenziamentoList : r.potenziamentoList.filter(p => !p.usata)) : [];
                       const giteVisibili = mostraLiberatiGita ? (mostraGiaUsati ? r.liberatiGitaList : r.liberatiGitaList.filter(g => !g.usata)) : [];
@@ -403,26 +409,47 @@ export const TabelloneSostituzioni: React.FC<{
                       const totFiltrati = potVisibili.length + giteVisibili.length + dispVisibili.length;
                       if (totFiltrati === 0) return null;
 
+                      const isOraRisorsaChiusa = oreRisorseChiuse.includes(r.ora);
+
                       return (
-                        <div key={r.ora} className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-wrap items-center justify-between gap-1.5 text-xs">
-                          <span className="font-black text-slate-800">{r.ora}ª Ora</span>
-                          <div className="flex flex-wrap gap-1">
-                            {potVisibili.map(p => (
-                              <span key={p.docenteId} className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                                ⚡ {p.nome}
+                        <div key={r.ora} className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOreRisorseChiuse(prev => 
+                                prev.includes(r.ora) ? prev.filter(o => o !== r.ora) : [...prev, r.ora]
+                              );
+                            }}
+                            className="w-full p-2.5 flex items-center justify-between hover:bg-slate-100/80 transition cursor-pointer text-left"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-slate-800 text-xs">{r.ora}ª Ora</span>
+                              <span className="text-[10px] bg-slate-200/80 text-slate-700 font-bold px-1.5 py-0.2 rounded-full">
+                                {totFiltrati} {totFiltrati === 1 ? 'docente' : 'docenti'}
                               </span>
-                            ))}
-                            {giteVisibili.map(g => (
-                              <span key={g.docenteId} className="text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                                🚌 {g.nome}
-                              </span>
-                            ))}
-                            {dispVisibili.map(d => (
-                              <span key={d.docenteId} className="text-[10px] text-purple-800 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
-                                ⏱️ {d.nome}
-                              </span>
-                            ))}
-                          </div>
+                            </div>
+                            <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isOraRisorsaChiusa ? '' : 'rotate-180 text-indigo-600'}`} />
+                          </button>
+
+                          {!isOraRisorsaChiusa && (
+                            <div className="p-2 pt-0 border-t border-slate-100 flex flex-wrap gap-1.5 animate-in fade-in duration-150 mt-1">
+                              {potVisibili.map(p => (
+                                <span key={p.docenteId} className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                                  ⚡ {p.nome}
+                                </span>
+                              ))}
+                              {giteVisibili.map(g => (
+                                <span key={g.docenteId} className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                                  🚌 {g.nome}
+                                </span>
+                              ))}
+                              {dispVisibili.map(d => (
+                                <span key={d.docenteId} className="text-[10px] text-purple-800 font-bold bg-purple-50 px-2 py-1 rounded-lg border border-purple-200">
+                                  ⏱️ {d.nome}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -466,16 +493,24 @@ export const TabelloneSostituzioni: React.FC<{
                 </button>
               </div>
 
-              {/* MINI BADGE REPORT STATO: DA FARE / FATTO (SU MOBILE DENTRO RIGA 1, SU DESKTOP AL CENTRO) */}
-              <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-2xs shrink-0">
-                <div className="flex items-center gap-1 bg-amber-100/90 text-amber-950 px-2 py-0.5 rounded-lg text-[11px] font-black border border-amber-300 shadow-2xs">
-                  <span className="text-[10px] font-bold text-amber-800 uppercase">Da fare:</span>
-                  <span>{totaleDaCoprire - totaleCoperte}</span>
-                </div>
-                <div className="flex items-center gap-1 bg-emerald-100/90 text-emerald-950 px-2 py-0.5 rounded-lg text-[11px] font-black border border-emerald-300 shadow-2xs">
-                  <span className="text-[10px] font-bold text-emerald-800 uppercase">Fatto:</span>
-                  <span>{totaleCoperte}</span>
-                </div>
+              {/* MINI BADGE REPORT STATO: PROGRESS X/Y (VERDE QUANDO COMPLETATO) */}
+              <div className="shrink-0">
+                {totaleDaCoprire === 0 ? (
+                  <div className="flex items-center gap-1.5 bg-emerald-100 text-emerald-950 px-2.5 py-1 rounded-xl text-xs font-black border border-emerald-300 shadow-2xs">
+                    <span className="text-[10px] font-bold text-emerald-800 uppercase">Progress:</span>
+                    <span>0/0 ✓</span>
+                  </div>
+                ) : totaleCoperte === totaleDaCoprire ? (
+                  <div className="flex items-center gap-1.5 bg-emerald-500 text-white px-3 py-1 rounded-xl text-xs font-black border border-emerald-600 shadow-2xs animate-in zoom-in-95">
+                    <span className="text-[10px] font-bold text-emerald-100 uppercase">Progress:</span>
+                    <span>{totaleCoperte}/{totaleDaCoprire} ✓</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 bg-amber-50 text-amber-950 px-2.5 py-1 rounded-xl text-xs font-black border border-amber-300 shadow-2xs">
+                    <span className="text-[10px] font-bold text-amber-800 uppercase">Progress:</span>
+                    <span>{totaleCoperte}/{totaleDaCoprire}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -513,20 +548,44 @@ export const TabelloneSostituzioni: React.FC<{
       ) : visualizzazione === 'GRUPPI_ORA' ? (
         /* VISTA 1: RAGGRUPPATA PER ORA */
         <div className="space-y-3">
-          {oreRaggruppate.map(gruppo => (
-            <div key={gruppo.ora} className="bg-white rounded-xl shadow-2xs border border-slate-200 overflow-hidden">
-              <div className="bg-slate-50/80 px-3.5 py-1.5 border-b border-slate-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="bg-slate-900 text-white font-black text-xs px-2 py-0.5 rounded shadow-2xs">
-                    {gruppo.ora}ª ORA
-                  </span>
-                  <span className="text-xs font-bold text-slate-600">
-                    {gruppo.items.length} {gruppo.items.length === 1 ? 'classe da coprire' : 'classi da coprire'}
-                  </span>
-                </div>
-              </div>
+          {oreRaggruppate.map(gruppo => {
+            const isChiuso = oreChiuse.includes(gruppo.ora);
+            const totCoperteGruppo = gruppo.items.filter(item => getSostituzione(item.ora, item.classe)).length;
 
-              <div className="divide-y divide-slate-100">
+            return (
+              <div key={gruppo.ora} className="bg-white rounded-xl shadow-2xs border border-slate-200 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOreChiuse(prev => 
+                      prev.includes(gruppo.ora) ? prev.filter(o => o !== gruppo.ora) : [...prev, gruppo.ora]
+                    );
+                  }}
+                  className="w-full bg-slate-50/80 hover:bg-slate-100/90 px-3.5 py-2 border-b border-slate-200 flex items-center justify-between transition cursor-pointer text-left"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="bg-slate-900 text-white font-black text-xs px-2 py-0.5 rounded shadow-2xs">
+                      {gruppo.ora}ª ORA
+                    </span>
+                    <span className="text-xs font-bold text-slate-700">
+                      {gruppo.items.length} {gruppo.items.length === 1 ? 'classe da coprire' : 'classi da coprire'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2.5">
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
+                      totCoperteGruppo === gruppo.items.length 
+                        ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' 
+                        : 'bg-amber-100 text-amber-900 border border-amber-300'
+                    }`}>
+                      {totCoperteGruppo} / {gruppo.items.length} Coperte
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isChiuso ? '' : 'rotate-180 text-indigo-600'}`} />
+                  </div>
+                </button>
+
+                {!isChiuso && (
+                  <div className="divide-y divide-slate-100 animate-in fade-in duration-150">
                 {gruppo.items.map((os, idx) => {
                   const sost = getSostituzione(os.ora, os.classe);
                   const isSelected = selectedOraScoperta?.ora === os.ora && selectedOraScoperta?.classe === os.classe;
@@ -660,49 +719,66 @@ export const TabelloneSostituzioni: React.FC<{
                   );
                 })}
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
       ) : (
         /* VISTA 2: RAGGRUPPATA PER DOCENTE ASSENTE CON LE SUE ORE SOTTO */
         <div className="space-y-4">
-          {docentiAssentiRaggruppati.map((gruppoDoc, gIdx) => (
-            <div key={gIdx} className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden">
-              {/* Intestazione del Docente Assente */}
-              <div className="bg-slate-900 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-black text-xs shadow-2xs">
-                    {gruppoDoc.nomeDocente.split(' ').map(n => n[0]).slice(0, 2).join('')}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <strong className="text-sm font-black tracking-wide">{gruppoDoc.nomeDocente}</strong>
-                      <span className="text-xs text-indigo-300 font-semibold">({gruppoDoc.docAssente.materia})</span>
-                      {gruppoDoc.docAssente.isCasoGraveSostegno && (
-                        <span className="bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
-                          ♿ GRAVE
-                        </span>
-                      )}
+          {docentiAssentiRaggruppati.map((gruppoDoc, gIdx) => {
+            const isChiuso = docentiChiusi.includes(gruppoDoc.docAssente.id);
+
+            return (
+              <div key={gIdx} className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden">
+                {/* Intestazione del Docente Assente come Accordion Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDocentiChiusi(prev => 
+                      prev.includes(gruppoDoc.docAssente.id)
+                        ? prev.filter(id => id !== gruppoDoc.docAssente.id)
+                        : [...prev, gruppoDoc.docAssente.id]
+                    );
+                  }}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-black text-xs shadow-2xs">
+                      {gruppoDoc.nomeDocente.split(' ').map(n => n[0]).slice(0, 2).join('')}
                     </div>
-                    <span className="text-[11px] text-slate-300 block">
-                      Tipologia assenza: {gruppoDoc.items[0]?.motivo}
-                    </span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <strong className="text-sm font-black tracking-wide">{gruppoDoc.nomeDocente}</strong>
+                        <span className="text-xs text-indigo-300 font-semibold">({gruppoDoc.docAssente.materia})</span>
+                        {gruppoDoc.docAssente.isCasoGraveSostegno && (
+                          <span className="bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
+                            ♿ GRAVE
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-slate-300 block">
+                        Tipologia assenza: {gruppoDoc.items[0]?.motivo}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-black px-2.5 py-1 rounded-xl ${
-                    gruppoDoc.totCoperteDoc === gruppoDoc.totOreDoc 
-                      ? 'bg-emerald-500 text-white' 
-                      : 'bg-amber-500 text-white'
-                  }`}>
-                    {gruppoDoc.totCoperteDoc} / {gruppoDoc.totOreDoc} Ore Coperte
-                  </span>
-                </div>
-              </div>
+                  <div className="flex items-center gap-2.5">
+                    <span className={`text-xs font-black px-2.5 py-1 rounded-xl shadow-2xs ${
+                      gruppoDoc.totCoperteDoc === gruppoDoc.totOreDoc 
+                        ? 'bg-emerald-500 text-white' 
+                        : 'bg-amber-500 text-white'
+                    }`}>
+                      {gruppoDoc.totCoperteDoc} / {gruppoDoc.totOreDoc} Ore Coperte
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-slate-300 transition-transform duration-200 ${isChiuso ? '' : 'rotate-180 text-white'}`} />
+                  </div>
+                </button>
 
-              {/* Elenco delle ore del docente sotto l'intestazione */}
-              <div className="divide-y divide-slate-100 p-2 sm:p-3 bg-slate-50/40 space-y-1.5">
+                {/* Elenco delle ore del docente sotto l'intestazione */}
+                {!isChiuso && (
+                  <div className="divide-y divide-slate-100 p-2 sm:p-3 bg-slate-50/40 space-y-1.5 animate-in fade-in duration-150">
                 {gruppoDoc.items.map((os, idx) => {
                   const sost = getSostituzione(os.ora, os.classe);
                   const isSelected = selectedOraScoperta?.ora === os.ora && selectedOraScoperta?.classe === os.classe;
@@ -835,9 +911,11 @@ export const TabelloneSostituzioni: React.FC<{
                   );
                 })}
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
       )}
 
         </div>
@@ -882,12 +960,12 @@ export const TabelloneSostituzioni: React.FC<{
                     mostraDisposizioni ? 'bg-purple-100 text-purple-950 border-purple-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
                   }`}
                 >
-                  ⏱️ Disp.
+                  ⏱️ Disponibile
                 </button>
               </div>
 
-              {/* LISTA RISORSE DESKTOP */}
-              <div className="space-y-1.5 text-xs">
+              {/* LISTA RISORSE DESKTOP (ACCORDION PER ORA) */}
+              <div className="space-y-2 text-xs">
                 {risorsePerOra.map(r => {
                   const potVisibili = mostraPotenziamento ? (mostraGiaUsati ? r.potenziamentoList : r.potenziamentoList.filter(p => !p.usata)) : [];
                   const giteVisibili = mostraLiberatiGita ? (mostraGiaUsati ? r.liberatiGitaList : r.liberatiGitaList.filter(g => !g.usata)) : [];
@@ -896,26 +974,47 @@ export const TabelloneSostituzioni: React.FC<{
                   const totFiltrati = potVisibili.length + giteVisibili.length + dispVisibili.length;
                   if (totFiltrati === 0) return null;
 
+                  const isOraRisorsaChiusa = oreRisorseChiuse.includes(r.ora);
+
                   return (
-                    <div key={r.ora} className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-wrap items-center justify-between gap-1.5">
-                      <span className="font-black text-slate-800">{r.ora}ª Ora</span>
-                      <div className="flex flex-wrap gap-1">
-                        {potVisibili.map(p => (
-                          <span key={p.docenteId} className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                            ⚡ {p.nome}
+                    <div key={r.ora} className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOreRisorseChiuse(prev => 
+                            prev.includes(r.ora) ? prev.filter(o => o !== r.ora) : [...prev, r.ora]
+                          );
+                        }}
+                        className="w-full p-2.5 flex items-center justify-between hover:bg-slate-100/80 transition cursor-pointer text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-slate-800 text-xs">{r.ora}ª Ora</span>
+                          <span className="text-[10px] bg-slate-200/80 text-slate-700 font-bold px-1.5 py-0.2 rounded-full">
+                            {totFiltrati} {totFiltrati === 1 ? 'docente' : 'docenti'}
                           </span>
-                        ))}
-                        {giteVisibili.map(g => (
-                          <span key={g.docenteId} className="text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                            🚌 {g.nome}
-                          </span>
-                        ))}
-                        {dispVisibili.map(d => (
-                          <span key={d.docenteId} className="text-[10px] text-purple-800 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
-                            ⏱️ {d.nome}
-                          </span>
-                        ))}
-                      </div>
+                        </div>
+                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isOraRisorsaChiusa ? '' : 'rotate-180 text-indigo-600'}`} />
+                      </button>
+
+                      {!isOraRisorsaChiusa && (
+                        <div className="p-2 pt-0 border-t border-slate-100 flex flex-wrap gap-1.5 animate-in fade-in duration-150 mt-1">
+                          {potVisibili.map(p => (
+                            <span key={p.docenteId} className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                              ⚡ {p.nome}
+                            </span>
+                          ))}
+                          {giteVisibili.map(g => (
+                            <span key={g.docenteId} className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                              🚌 {g.nome}
+                            </span>
+                          ))}
+                          {dispVisibili.map(d => (
+                            <span key={d.docenteId} className="text-[10px] text-purple-800 font-bold bg-purple-50 px-2 py-1 rounded-lg border border-purple-200">
+                              ⏱️ {d.nome}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
