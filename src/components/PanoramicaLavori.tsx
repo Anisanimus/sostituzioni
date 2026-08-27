@@ -20,12 +20,24 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Calcola 25 giorni lavorativi (Lun-Ven) a partire da OGGI (circa 5 settimane di scuola future) per lo scorrimento
-  const getGiorniFuturiScuola = (count: number = 25) => {
+  // Calcola una finestra di giorni scolastici (Lun-Ven) con 10 giorni passati e 25 futuri
+  const getFinestraGiorniScuola = (passati: number = 10, futuri: number = 25) => {
     const dates: string[] = [];
-    const cur = new Date();
+    
+    // Giorni passati
+    let curPast = new Date();
+    const tempPast: string[] = [];
+    while (tempPast.length < passati) {
+      curPast.setDate(curPast.getDate() - 1);
+      if (curPast.getDay() !== 0 && curPast.getDay() !== 6) {
+        tempPast.unshift(curPast.toISOString().split('T')[0]);
+      }
+    }
+    dates.push(...tempPast);
 
-    while (dates.length < count) {
+    // Oggi + Giorni futuri
+    let cur = new Date();
+    while (dates.length < passati + futuri) {
       if (cur.getDay() !== 0 && cur.getDay() !== 6) {
         dates.push(cur.toISOString().split('T')[0]);
       }
@@ -133,8 +145,8 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     };
   };
 
-  const datesFuturi = getGiorniFuturiScuola(25);
-  const statsGiorni = datesFuturi.map(d => getStatsGiorno(d));
+  const datesFinestra = getFinestraGiorniScuola(10, 25);
+  const statsGiorni = datesFinestra.map(d => getStatsGiorno(d));
 
   // Statistiche del giorno selezionato o di oggi
   const currentStat = getStatsGiorno(selectedDate);
@@ -143,6 +155,14 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
   const percentualeGiorno = totGiornoScoperte > 0 
     ? Math.round((totGiornoCoperte / totGiornoScoperte) * 100) 
     : 100;
+
+  // Effetto per centrare/scorrere la card attiva nel carosello all'avvio e quando cambia data
+  React.useEffect(() => {
+    const elActive = document.getElementById(`day_card_${selectedDate}`);
+    if (elActive) {
+      elActive.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [selectedDate, compresso]);
 
   // Funzione helper per scorrere il carosello orizzontale
   const scrollCarousel = (offset: number) => {
@@ -265,6 +285,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                 return (
                   <button
                     key={s.dataStr}
+                    id={`day_card_${s.dataStr}`}
                     type="button"
                     onClick={() => onSelectDate(s.dataStr)}
                     className={`min-w-[190px] sm:min-w-[210px] p-2.5 rounded-2xl text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2 shrink-0 ${
