@@ -6,6 +6,7 @@ import { TabelloneSostituzioni } from './components/TabelloneSostituzioni';
 import { PortaleDocente } from './components/PortaleDocente';
 import { RegistroStoricoAssenze } from './components/RegistroStoricoAssenze';
 import { AnagraficaOrario, ImpostazioniPriorita } from './components/AnagraficaOrario';
+import { PanoramicaLavori } from './components/PanoramicaLavori';
 import { Coachmark } from './components/Coachmark';
 import { 
   School, Calendar, Users, History, Lock, Smartphone, 
@@ -306,6 +307,12 @@ const MainApp: React.FC = () => {
             {/* VISTA PRINCIPALE A 2 COLONNE CON TABELLONE IN PRIMO PIANO */}
             {tabVice === 'GESTIONE_GIORNALIERA' && (
               <div className="space-y-4">
+                {/* PREVIEW SETTIMANALE / MENSILE CON AVANZAMENTO E GRAVITÀ */}
+                <PanoramicaLavori 
+                  selectedDate={selectedDate} 
+                  onSelectDate={(newDate) => setSelectedDate(newDate)} 
+                />
+
                 {/* TESTATA UNIFICATA PER DATA E INSERIMENTO RAPIDO */}
                 <GestioneAssenze 
                   selectedDate={selectedDate} 
