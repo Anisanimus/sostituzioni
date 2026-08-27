@@ -199,10 +199,10 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
   );
 
   return (
-    <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-2xs border border-slate-200 space-y-3">
+    <div className="bg-slate-50/70 rounded-2xl rounded-t-none p-2.5 sm:p-3 shadow-2xs border border-t border-slate-200 space-y-3">
       
-      {/* HEADER ULTRA-PULITO: SOLO I DUE PULSANTI AZIONE (+ AGGIUNGI ASSENTE & + AGGIUNGI GITA) */}
-      <div className="flex items-center justify-between sm:justify-end gap-2.5">
+      {/* HEADER ULTRA-PULITO: I DUE PULSANTI AZIONE A SINISTRA */}
+      <div className="flex items-center justify-between sm:justify-start gap-2.5">
         <button
           id="targetBtnAssente"
           type="button"

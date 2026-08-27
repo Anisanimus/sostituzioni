@@ -317,18 +317,18 @@ const MainApp: React.FC = () => {
             {/* VISTA PRINCIPALE A 2 COLONNE CON TABELLONE IN PRIMO PIANO */}
             {tabVice === 'GESTIONE_GIORNALIERA' && (
               <div className="space-y-4">
-                {/* PREVIEW SETTIMANALE / MENSILE CON AVANZAMENTO E GRAVITÀ */}
-                <PanoramicaLavori 
-                  selectedDate={selectedDate} 
-                  onSelectDate={(newDate) => setSelectedDate(newDate)} 
-                />
-
-                {/* TESTATA UNIFICATA PER DATA E INSERIMENTO RAPIDO */}
-                <GestioneAssenze 
-                  selectedDate={selectedDate} 
-                  selectedGiorno={selectedGiorno} 
-                  onChangeDate={(newDate) => setSelectedDate(newDate)}
-                />
+                {/* BLOCCO UNIFICATO: AVANZAMENTO LAVORI + PULSANTI RAPIDI SENZA SPAZIO */}
+                <div className="shadow-2xs rounded-2xl overflow-hidden mb-4">
+                  <PanoramicaLavori 
+                    selectedDate={selectedDate} 
+                    onSelectDate={(newDate) => setSelectedDate(newDate)} 
+                  />
+                  <GestioneAssenze 
+                    selectedDate={selectedDate} 
+                    selectedGiorno={selectedGiorno} 
+                    onChangeDate={(newDate) => setSelectedDate(newDate)}
+                  />
+                </div>
 
                 {/* AREA PRINCIPALE: TABELLONE IN PRIMO PIANO (A SINISTRA SU DESKTOP) */}
                 <TabelloneSostituzioni 

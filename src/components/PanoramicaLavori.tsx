@@ -13,9 +13,9 @@ interface PanoramicaLavoriProps {
 export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate, onSelectDate }) => {
   const { docenti, orariDocenti, assenze, uscite, sostituzioni } = useApp();
   
-  // Stato visibilità banner
+  // Stato visibilità banner - SU MOBILE default chiuso/compresso, su desktop aperto
   const [visibile, setVisibile] = useState(true);
-  const [compresso, setCompresso] = useState(false);
+  const [compresso, setCompresso] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const [vista, setVista] = useState<'GIORNO' | 'SETTIMANA'>('GIORNO');
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -156,18 +156,37 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     ? Math.round((totGiornoCoperte / totGiornoScoperte) * 100) 
     : 100;
 
-  // Effetto per centrare/scorrere la card attiva nel carosello all'avvio e quando cambia data
+  // Effetto per allineare la card attiva: CENTRATA su mobile, PRIMA A SINISTRA su desktop
   React.useEffect(() => {
     const elActive = document.getElementById(`day_card_${selectedDate}`);
-    if (elActive) {
-      elActive.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    const track = document.getElementById('panoramicaCarouselTrack');
+    if (elActive && track) {
+      const isMobile = window.innerWidth < 640;
+      if (isMobile) {
+        // Centrato su mobile
+        elActive.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      } else {
+        // Primo a sinistra su desktop
+        elActive.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+      }
     }
   }, [selectedDate, compresso]);
 
-  // Funzione helper per scorrere il carosello orizzontale
+  // Funzione helper per scorrere o cambiare giorno
   const scrollCarousel = (offset: number) => {
-    const el = document.getElementById('panoramicaCarouselTrack');
-    if (el) el.scrollBy({ left: offset, behavior: 'smooth' });
+    if (compresso) {
+      // Se compresso, le frecce cambiano direttamente il giorno selezionato
+      const curIndex = datesFinestra.indexOf(selectedDate);
+      if (offset > 0) {
+        if (curIndex < datesFinestra.length - 1) onSelectDate(datesFinestra[curIndex + 1]);
+      } else {
+        if (curIndex > 0) onSelectDate(datesFinestra[curIndex - 1]);
+      }
+    } else {
+      // Se aperto, scorre fluidamente il carosello
+      const el = document.getElementById('panoramicaCarouselTrack');
+      if (el) el.scrollBy({ left: offset, behavior: 'smooth' });
+    }
   };
 
   if (!visibile) {
@@ -186,79 +205,85 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
   }
 
   return (
-    <div className="bg-white text-slate-800 rounded-2xl p-3 sm:p-3.5 shadow-2xs border border-slate-200 mb-3 space-y-2.5 transition-all">
+    <div className="bg-white text-slate-800 rounded-2xl rounded-b-none p-3 sm:p-3.5 shadow-2xs border border-b-0 border-slate-200 space-y-2.5 transition-all">
       
       {/* HEADER PANORAMICA */}
-      <div className="flex items-center justify-between gap-2 flex-wrap border-b border-slate-100 pb-2.5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+        {/* TITOLO + DATA BEN VISIBILE */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs">
+          <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
             <TrendingUp className="w-4 h-4" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black tracking-wide text-slate-900">
-                Avanzamento Lavori
-              </span>
-              <span className="bg-indigo-100 text-indigo-900 text-[10px] font-black px-2 py-0.5 rounded-md">
-                {currentStat.giornoNome} {new Date(selectedDate).getDate()}/{new Date(selectedDate).getMonth() + 1}
-              </span>
-              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
-                totGiornoScoperte === 0 
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : percentualeGiorno === 100 
-                    ? 'bg-emerald-600 text-white border-emerald-700'
-                    : 'bg-amber-50 text-amber-900 border-amber-200'
-              }`}>
-                {totGiornoCoperte}/{totGiornoScoperte} Ore ({percentualeGiorno}%)
-              </span>
-            </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs sm:text-sm font-black tracking-tight text-slate-900">
+              Avanzamento Lavori
+            </span>
+            <span className="bg-indigo-600 text-white text-xs font-black px-2.5 py-0.5 rounded-lg shadow-2xs">
+              {currentStat.giornoNome} {new Date(selectedDate).getDate()}/{new Date(selectedDate).getMonth() + 1}
+            </span>
           </div>
         </div>
 
-        {/* CONTROLLI: VISTA (Giorno / Settimana / Mese) + FRECCE SCORRIMENTO + COMPRIMI + CHIUDI */}
-        <div className="flex items-center gap-1.5">
+        {/* CONTROLLI: CALENDARIO + FRECCE + BADGE ORE FATTE/PERCENTUALE + TOGGLE COMPRIMI */}
+        <div className="flex items-center justify-between sm:justify-end gap-2 pt-1 sm:pt-0">
           
-          {/* PULSANTE ICONA CALENDARIO PER SCEGLIERE QUALSIASI GIORNO */}
-          <label className="relative p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-indigo-900 border border-slate-200 shadow-2xs flex items-center justify-center cursor-pointer transition" title="Scegli giorno dal calendario">
-            <Calendar className="w-4 h-4 text-indigo-700" />
-            <input 
-              type="date"
-              value={selectedDate}
-              onChange={(e) => {
-                if (e.target.value) onSelectDate(e.target.value);
-              }}
-              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-            />
-          </label>
+          <div className="flex items-center gap-1.5">
+            {/* PULSANTE ICONA CALENDARIO */}
+            <label className="relative p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-indigo-900 border border-slate-200 shadow-2xs flex items-center justify-center cursor-pointer transition" title="Scegli giorno dal calendario">
+              <Calendar className="w-4 h-4 text-indigo-700" />
+              <input 
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  if (e.target.value) onSelectDate(e.target.value);
+                }}
+                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+              />
+            </label>
 
-          {/* FRECCE SCORRIMENTO CAROSELLO (INDIETRO / AVANTI) */}
-          <div className="flex items-center gap-0.5 bg-slate-50 p-0.5 rounded-lg border border-slate-200">
+            {/* FRECCE SCORRIMENTO CAROSELLO */}
+            <div className="flex items-center gap-0.5 bg-slate-50 p-0.5 rounded-lg border border-slate-200">
+              <button
+                type="button"
+                onClick={() => scrollCarousel(-220)}
+                className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+                title="Scorri indietro"
+              >
+                ❮
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollCarousel(220)}
+                className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+                title="Scorri avanti"
+              >
+                ❯
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* BADGE ORE FATTE / PERCENTUALE VICINO AI CONTROLLI */}
+            <span className={`text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full border ${
+              totGiornoScoperte === 0 
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : percentualeGiorno === 100 
+                  ? 'bg-emerald-600 text-white border-emerald-700'
+                  : 'bg-amber-50 text-amber-900 border-amber-200'
+            }`}>
+              {totGiornoCoperte}/{totGiornoScoperte} Ore ({percentualeGiorno}%)
+            </span>
+
             <button
               type="button"
-              onClick={() => scrollCarousel(-220)}
-              className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
-              title="Scorri indietro"
+              onClick={() => setCompresso(!compresso)}
+              className="text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 border border-slate-200 sm:border-transparent transition cursor-pointer"
+              title={compresso ? "Espandi" : "Comprimi"}
             >
-              ❮
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollCarousel(220)}
-              className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
-              title="Scorri avanti"
-            >
-              ❯
+              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${compresso ? '' : 'rotate-180'}`} />
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setCompresso(!compresso)}
-            className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-            title={compresso ? "Espandi" : "Comprimi"}
-          >
-            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${compresso ? '' : 'rotate-180'}`} />
-          </button>
         </div>
       </div>
 
@@ -337,23 +362,6 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
               })}
             </div>
           )}
-
-          {/* ========================================================================= */}
-          {/* LEGENDA A FASCIA CONTINUA DI COLORI (-) E (+) CON GRADIENTE               */}
-          {/* ========================================================================= */}
-          {/* LEGENDA A FASCIA CONTINUA DI COLORI (-) E (+) (VISIBILE SOLO SU DESKTOP)  */}
-          {/* ========================================================================= */}
-          <div className="hidden sm:flex flex-wrap items-center justify-between text-xs text-slate-600 pt-2 border-t border-slate-100 gap-2">
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="font-bold text-slate-700 text-xs shrink-0">Gravità:</span>
-              <span className="font-black text-slate-500 text-xs">−</span>
-              {/* Barra / Fascia continua di colori */}
-              <div className="h-3 w-40 sm:w-56 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 via-amber-400 to-rose-500 shadow-inner border border-slate-200" title="Scala gravità da Tranquilla (-) a Complicato (+)" />
-              <span className="font-black text-slate-500 text-xs">+</span>
-              <span className="text-[10px] text-slate-400 hidden sm:inline ml-1">(Verde: 0 doc • Azzurro: 1-3 • Giallo: 4-7 • Rosso: &gt;7)</span>
-            </div>
-            <span className="text-[10px] text-slate-400 italic">Usa ❮ ❯ per scorrere i giorni futuri</span>
-          </div>
 
         </div>
       )}
