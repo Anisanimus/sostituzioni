@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getBaseNomeDocente, getDocentiCollegatiIds } from '../utils/docentiHelper';
 import { 
-  ChevronDown, X, BarChart3, TrendingUp 
+  ChevronDown, X, BarChart3, TrendingUp, Calendar 
 } from 'lucide-react';
 
 interface PanoramicaLavoriProps {
@@ -13,36 +13,19 @@ interface PanoramicaLavoriProps {
 export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate, onSelectDate }) => {
   const { docenti, orariDocenti, assenze, uscite, sostituzioni } = useApp();
   
-  // Stato visibilità banner e tab vista (Settimanale / Mensile)
+  // Stato visibilità banner
   const [visibile, setVisibile] = useState(true);
   const [compresso, setCompresso] = useState(false);
-  const [vista, setVista] = useState<'SETTIMANA' | 'MESE'>('SETTIMANA');
+  const [vista, setVista] = useState<'GIORNO' | 'SETTIMANA'>('GIORNO');
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Calcola i prossimi 5 giorni lavorativi (Lun-Ven) a partire da OGGI (incluso)
-  const getProssimiGiorniSettimana = () => {
-    const dates: string[] = [];
-    let cur = new Date();
-    // Se oggi è sabato o domenica, parti dal prossimo lunedì
-    if (cur.getDay() === 6) cur.setDate(cur.getDate() + 2);
-    else if (cur.getDay() === 0) cur.setDate(cur.getDate() + 1);
-
-    while (dates.length < 5) {
-      if (cur.getDay() !== 0 && cur.getDay() !== 6) {
-        dates.push(cur.toISOString().split('T')[0]);
-      }
-      cur.setDate(cur.getDate() + 1);
-    }
-    return dates;
-  };
-
-  // Calcola 25 giorni lavorativi (Lun-Ven) a partire da OGGI (circa 5 settimane di scuola future)
-  const getGiorniMeseDaOggi = () => {
+  // Calcola 25 giorni lavorativi (Lun-Ven) a partire da OGGI (circa 5 settimane di scuola future) per lo scorrimento
+  const getGiorniFuturiScuola = (count: number = 25) => {
     const dates: string[] = [];
     const cur = new Date();
 
-    while (dates.length < 25) {
+    while (dates.length < count) {
       if (cur.getDay() !== 0 && cur.getDay() !== 6) {
         dates.push(cur.toISOString().split('T')[0]);
       }
@@ -150,17 +133,22 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     };
   };
 
-  const datesSettimana = getProssimiGiorniSettimana();
-  const statsSettimana = datesSettimana.map(d => getStatsGiorno(d));
-  const datesMese = getGiorniMeseDaOggi();
-  const statsMese = datesMese.map(d => getStatsGiorno(d));
+  const datesFuturi = getGiorniFuturiScuola(25);
+  const statsGiorni = datesFuturi.map(d => getStatsGiorno(d));
 
-  // Totali complessivi dei prossimi giorni
-  const totSettimanaScoperte = statsSettimana.reduce((acc, s) => acc + s.totOreScoperte, 0);
-  const totSettimanaCoperte = statsSettimana.reduce((acc, s) => acc + s.totCoperte, 0);
-  const percentualeCompletamento = totSettimanaScoperte > 0 
-    ? Math.round((totSettimanaCoperte / totSettimanaScoperte) * 100) 
+  // Statistiche del giorno selezionato o di oggi
+  const currentStat = getStatsGiorno(selectedDate);
+  const totGiornoScoperte = currentStat.totOreScoperte;
+  const totGiornoCoperte = currentStat.totCoperte;
+  const percentualeGiorno = totGiornoScoperte > 0 
+    ? Math.round((totGiornoCoperte / totGiornoScoperte) * 100) 
     : 100;
+
+  // Funzione helper per scorrere il carosello orizzontale
+  const scrollCarousel = (offset: number) => {
+    const el = document.getElementById('panoramicaCarouselTrack');
+    if (el) el.scrollBy({ left: offset, behavior: 'smooth' });
+  };
 
   if (!visibile) {
     return (
@@ -171,7 +159,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
           className="bg-white hover:bg-slate-50 text-indigo-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-indigo-200 shadow-2xs flex items-center gap-1.5 transition cursor-pointer"
         >
           <BarChart3 className="w-3.5 h-3.5" />
-          <span>Mostra Panoramica Lavori</span>
+          <span>Mostra Avanzamento Lavori</span>
         </button>
       </div>
     );
@@ -181,8 +169,8 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     <div className="bg-white text-slate-800 rounded-2xl p-3 sm:p-3.5 shadow-2xs border border-slate-200 mb-3 space-y-2.5 transition-all">
       
       {/* HEADER PANORAMICA */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2 flex-wrap border-b border-slate-100 pb-2.5">
+        <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
             <TrendingUp className="w-4 h-4" />
           </div>
@@ -192,34 +180,51 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                 Avanzamento Lavori
               </span>
               <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
-                totSettimanaScoperte === 0 
+                totGiornoScoperte === 0 
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : percentualeCompletamento === 100 
+                  : percentualeGiorno === 100 
                     ? 'bg-emerald-600 text-white border-emerald-700'
                     : 'bg-amber-50 text-amber-900 border-amber-200'
               }`}>
-                {totSettimanaCoperte}/{totSettimanaScoperte} Ore ({percentualeCompletamento}%)
+                {totGiornoCoperte}/{totGiornoScoperte} Ore ({percentualeGiorno}%)
               </span>
             </div>
           </div>
         </div>
 
-        {/* CONTROLLI: VISTA + COMPRIMI + CHIUDI */}
+        {/* CONTROLLI: VISTA (Giorno / Settimana / Mese) + FRECCE SCORRIMENTO + COMPRIMI + CHIUDI */}
         <div className="flex items-center gap-1.5">
-          <div className="bg-slate-100 p-0.5 rounded-xl border border-slate-200 flex items-center text-[10px] font-bold">
+          
+          {/* PULSANTE ICONA CALENDARIO PER SCEGLIERE QUALSIASI GIORNO */}
+          <label className="relative p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-indigo-900 border border-slate-200 shadow-2xs flex items-center justify-center cursor-pointer transition" title="Scegli giorno dal calendario">
+            <Calendar className="w-4 h-4 text-indigo-700" />
+            <input 
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                if (e.target.value) onSelectDate(e.target.value);
+              }}
+              className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+            />
+          </label>
+
+          {/* FRECCE SCORRIMENTO CAROSELLO (INDIETRO / AVANTI) */}
+          <div className="flex items-center gap-0.5 bg-slate-50 p-0.5 rounded-lg border border-slate-200">
             <button
               type="button"
-              onClick={() => setVista('SETTIMANA')}
-              className={`px-2.5 py-0.5 rounded-lg transition ${vista === 'SETTIMANA' ? 'bg-white text-indigo-900 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-800'}`}
+              onClick={() => scrollCarousel(-220)}
+              className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+              title="Scorri indietro"
             >
-              Settimana
+              ❮
             </button>
             <button
               type="button"
-              onClick={() => setVista('MESE')}
-              className={`px-2.5 py-0.5 rounded-lg transition ${vista === 'MESE' ? 'bg-white text-indigo-900 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-800'}`}
+              onClick={() => scrollCarousel(220)}
+              className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+              title="Scorri avanti"
             >
-              Mese
+              ❯
             </button>
           </div>
 
@@ -231,25 +236,23 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
           >
             <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${compresso ? '' : 'rotate-180'}`} />
           </button>
-
-          <button
-            type="button"
-            onClick={() => setVisibile(false)}
-            className="text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition cursor-pointer"
-            title="Chiudi banner"
-          >
-            <X className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
       {/* CONTENUTO ESPANSO */}
       {!compresso && (
-        <div className="pt-1 animate-in fade-in duration-150">
-          {vista === 'SETTIMANA' ? (
-            /* VISTA SETTIMANALE: 5 GIORNI (LUN - VEN) */
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-              {statsSettimana.map((s) => {
+        <div className="pt-0.5 animate-in fade-in duration-150 space-y-2">
+          
+          {/* ========================================================================= */}
+          {/* 1. VISTA GIORNO (DEFAULT): FOCUS SU OGGI + CAROSELLO PROSSIMI GIORNI      */}
+          {/* ========================================================================= */}
+          {vista === 'GIORNO' && (
+            <div 
+              id="panoramicaCarouselTrack"
+              className="flex gap-2.5 overflow-x-auto py-1 scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {statsGiorni.map((s) => {
                 const badgeGravita = 
                   s.totDocentiAssenti === 0 
                     ? { label: 'Tranquilla', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' }
@@ -264,15 +267,15 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                     key={s.dataStr}
                     type="button"
                     onClick={() => onSelectDate(s.dataStr)}
-                    className={`p-2 rounded-xl text-left transition border cursor-pointer flex flex-col justify-between gap-1.5 ${
+                    className={`min-w-[190px] sm:min-w-[210px] p-2.5 rounded-2xl text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2 shrink-0 ${
                       s.isSelezionata 
-                        ? 'bg-indigo-50/70 border-indigo-300 ring-2 ring-indigo-400/60 shadow-2xs' 
-                        : 'bg-slate-50/70 hover:bg-slate-100/90 border-slate-200/80'
+                        ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-4 ring-indigo-200/80 shadow-md scale-[1.01]' 
+                        : 'bg-slate-50/70 hover:bg-slate-100/90 border border-slate-200/80 shadow-2xs'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-black text-xs text-slate-800">
-                        {s.giornoNome.slice(0, 3)} {new Date(s.dataStr).getDate()}
+                        {s.giornoNome.slice(0, 3)} {new Date(s.dataStr).getDate()} {new Date(s.dataStr).toLocaleDateString('it-IT', { month: 'short' })}
                       </span>
                       {s.isOggi && (
                         <span className="text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.2 rounded-md shadow-2xs">
@@ -309,66 +312,25 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                 );
               })}
             </div>
-          ) : (
-            /* VISTA MENSILE ULTRA-COMPATTA (PROSSIMI 25 GIORNI DI SCUOLA) */
-            <div className="bg-slate-50/70 p-2.5 rounded-xl border border-slate-200 space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                <span className="text-[11px] font-black uppercase tracking-wider text-slate-800">
-                  Prossimi 25 Giorni di Scuola (da Oggi in poi)
-                </span>
-                <span className="text-[10px] text-slate-500 font-normal">Clicca su una casella per saltare a quella data</span>
-              </div>
-
-              <div className="grid grid-cols-5 sm:grid-cols-10 md:grid-cols-13 lg:grid-cols-25 gap-1 text-center">
-                {statsMese.map((st) => {
-                  const dObj = new Date(st.dataStr);
-                  const giornoMeseNum = dObj.getDate();
-                  const meseAbbr = dObj.toLocaleDateString('it-IT', { month: 'short' });
-
-                  const bgCol = 
-                    st.totDocentiAssenti === 0 
-                      ? 'bg-white text-emerald-700 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40' 
-                      : st.totRimanenti === 0 
-                        ? 'bg-emerald-500 text-white border-emerald-600 font-black shadow-2xs'
-                        : st.gravita === 'COMPLICATO'
-                          ? 'bg-rose-500 text-white border-rose-600 font-black animate-pulse shadow-2xs'
-                          : st.gravita === 'DISCRETA'
-                            ? 'bg-amber-100 text-amber-950 border-amber-300 font-black shadow-2xs'
-                            : 'bg-sky-50 text-sky-900 border-sky-200 hover:bg-sky-100/60';
-
-                  return (
-                    <button
-                      key={st.dataStr}
-                      type="button"
-                      onClick={() => onSelectDate(st.dataStr)}
-                      className={`py-1 px-1 rounded-lg border text-center transition cursor-pointer flex flex-col items-center justify-center min-w-[32px] ${bgCol} ${
-                        st.isSelezionata ? 'ring-2 ring-indigo-500 scale-105 shadow-2xs font-black' : 'hover:scale-105'
-                      }`}
-                      title={`${st.giornoNome} ${giornoMeseNum} ${meseAbbr}: ${st.totDocentiAssenti} assenti (${st.totCoperte}/${st.totOreScoperte} ore coperte)`}
-                    >
-                      <span className="text-[8px] text-slate-500 leading-none uppercase">{st.giornoNome.slice(0, 2)}</span>
-                      <span className="font-black text-[11px] leading-tight my-0.5">{giornoMeseNum}</span>
-                      <span className="text-[7px] leading-none font-bold opacity-90">
-                        {st.totDocentiAssenti > 0 ? `${st.totDocentiAssenti}d` : '✓'}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
           )}
 
-          {/* LEGENDA GRAVITÀ SOTTOSTANTE */}
-          <div className="flex flex-wrap items-center justify-between text-[10px] text-slate-500 pt-2 border-t border-slate-100 gap-2">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-bold text-slate-700">Stima gravità:</span>
-              <span className="flex items-center gap-1 text-emerald-700 font-bold">🟢 Tranquilla (0 assenti)</span>
-              <span className="flex items-center gap-1 text-sky-700 font-bold">🔵 Semplice (1-3 assenti)</span>
-              <span className="flex items-center gap-1 text-amber-700 font-bold">🟡 Discreta (4-7 assenti)</span>
-              <span className="flex items-center gap-1 text-rose-600 font-black">🔴 Complicato (&gt;7 assenti)</span>
+          {/* ========================================================================= */}
+          {/* LEGENDA A FASCIA CONTINUA DI COLORI (-) E (+) CON GRADIENTE               */}
+          {/* ========================================================================= */}
+          {/* LEGENDA A FASCIA CONTINUA DI COLORI (-) E (+) (VISIBILE SOLO SU DESKTOP)  */}
+          {/* ========================================================================= */}
+          <div className="hidden sm:flex flex-wrap items-center justify-between text-xs text-slate-600 pt-2 border-t border-slate-100 gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="font-bold text-slate-700 text-xs shrink-0">Gravità:</span>
+              <span className="font-black text-slate-500 text-xs">−</span>
+              {/* Barra / Fascia continua di colori */}
+              <div className="h-3 w-40 sm:w-56 rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 via-amber-400 to-rose-500 shadow-inner border border-slate-200" title="Scala gravità da Tranquilla (-) a Complicato (+)" />
+              <span className="font-black text-slate-500 text-xs">+</span>
+              <span className="text-[10px] text-slate-400 hidden sm:inline ml-1">(Verde: 0 doc • Azzurro: 1-3 • Giallo: 4-7 • Rosso: &gt;7)</span>
             </div>
-            <span className="text-slate-400 italic">Clicca su qualsiasi giorno per selezionarlo</span>
+            <span className="text-[10px] text-slate-400 italic">Usa ❮ ❯ per scorrere i giorni futuri</span>
           </div>
+
         </div>
       )}
     </div>

@@ -201,113 +201,37 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
   return (
     <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-2xs border border-slate-200 space-y-3">
       
-      {/* HEADER DELLA SCHEDA CON TITOLO, SOTTOTITOLO, DATA SUBITO DOPO E PULSANTI AZIONE */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        {/* GRUPPO SINISTRA: TITOLO + INFO + CASELLINA DATA & FRECCE */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-lg font-black border border-indigo-100 shrink-0">
-              <LayoutDashboard className="w-5 h-5 text-indigo-600" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-slate-900 leading-none">Sostituzioni del Giorno</h2>
-                <button
-                  type="button"
-                  onClick={() => setMostraInfo(prev => !prev)}
-                  className={`w-5 h-5 rounded-full flex items-center justify-center transition border ${
-                    mostraInfo 
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' 
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border-slate-300'
-                  }`}
-                  title={mostraInfo ? "Nascondi informazioni" : "Mostra informazioni"}
-                >
-                  <Info className="w-3 h-3" />
-                </button>
-              </div>
-              {mostraInfo && (
-                <p className="text-xs text-slate-500 mt-1 animate-in fade-in">
-                  Gestisci assenze, gite e risorse disponibili per la giornata
-                </p>
-              )}
-            </div>
+      {/* HEADER PULITO: SU MOBILE SOLO I DUE PULSANTI, SU DESKTOP GIORNO SELEZIONATO + PULSANTI */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-2.5">
+        
+        {/* BLOCCO GIORNO SELEZIONATO (VISIBILE SOLO SU DESKTOP, SU MOBILE BASTA IL CAROSELLO EVIDENZIATO IN ALTO) */}
+        <div className="hidden sm:flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-base font-black border border-indigo-100 shrink-0">
+            <LayoutDashboard className="w-5 h-5 text-indigo-600" />
           </div>
-
-          {/* SELETTORE DATA RAPIDO CON FRECCE (FULL WIDTH SU MOBILE, AFFIANCATO SU DESKTOP) */}
-          <div id="targetDataNavigator" className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1.5 bg-slate-50 p-1.5 sm:p-1 rounded-xl border border-slate-200 shadow-2xs">
-            <button
-              type="button"
-              onClick={() => {
-                const cur = new Date(selectedDate);
-                cur.setDate(cur.getDate() - 1);
-                if (cur.getDay() === 0) cur.setDate(cur.getDate() - 2); // Salta domenica
-                if (cur.getDay() === 6) cur.setDate(cur.getDate() - 1); // Salta sabato
-                onChangeDate?.(cur.toISOString().split('T')[0]);
-              }}
-              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-slate-200/80 rounded-lg text-slate-700 transition"
-              title="Giorno Precedente"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            <label className="flex items-center gap-2 px-1 sm:px-1.5 cursor-pointer relative">
-              <span className="font-black text-xs text-slate-900 tracking-tight">
+          <div>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Giorno Selezionato</span>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-black text-slate-900 leading-tight">
                 {formatDataItaliana(selectedDate)}
-              </span>
-              <span className="bg-indigo-100 text-indigo-800 text-[10px] font-black px-2 py-0.5 rounded-md">
+              </h2>
+              <span className="bg-indigo-100 text-indigo-900 font-black text-xs px-2 py-0.5 rounded-md">
                 {selectedGiorno}
               </span>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => onChangeDate?.(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                title="Seleziona data dal calendario"
-              />
-            </label>
-
-            <button
-              type="button"
-              onClick={() => {
-                const cur = new Date(selectedDate);
-                cur.setDate(cur.getDate() + 1);
-                if (cur.getDay() === 6) cur.setDate(cur.getDate() + 2); // Salta sabato
-                if (cur.getDay() === 0) cur.setDate(cur.getDate() + 1); // Salta domenica
-                onChangeDate?.(cur.toISOString().split('T')[0]);
-              }}
-              className="w-8 h-8 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-slate-200/80 rounded-lg text-slate-700 transition"
-              title="Giorno Successivo"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                const nextDay = new Date();
-                nextDay.setDate(nextDay.getDate() + 1);
-                if (nextDay.getDay() === 6) nextDay.setDate(nextDay.getDate() + 2); // Se domani è sabato -> salta a lunedì
-                if (nextDay.getDay() === 0) nextDay.setDate(nextDay.getDate() + 1); // Se domani è domenica -> salta a lunedì
-                onChangeDate?.(nextDay.toISOString().split('T')[0]);
-              }}
-              className="bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs px-2.5 py-1 sm:py-0.5 rounded-lg transition border border-slate-200 shadow-2xs ml-0.5"
-              title="Passa a domani (o lunedì successivo)"
-            >
-              Domani
-            </button>
+            </div>
           </div>
         </div>
 
-        {/* RESTANTE SPAZIO: PULSANTI AZIONE (GRID 2 COLONNE FULL WIDTH SU MOBILE, CENTRATI SU DESKTOP) */}
-        <div className="w-full lg:flex-1 grid grid-cols-2 sm:flex sm:w-auto items-center justify-center lg:justify-center gap-2.5">
+        {/* I DUE PULSANTI AZIONE (+ Assente & + Gita) SU MOBILE FULL-WIDTH COMPATTI */}
+        <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center justify-end gap-2 sm:gap-2.5">
           <button
             id="targetBtnAssente"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'DOCENTE' ? null : 'DOCENTE')}
-            className={`w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border ${
+            className={`w-full sm:w-auto px-3.5 sm:px-4 py-2 sm:py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 sm:gap-2 shadow-2xs border cursor-pointer ${
               modalitaAperta === 'DOCENTE'
                 ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
-                : 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100 hover:text-indigo-900'
+                : 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100'
             }`}
           >
             <UserMinus className="w-4 h-4 text-indigo-600" />
@@ -319,14 +243,14 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
             id="targetBtnGita"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'GITA' ? null : 'GITA')}
-            className={`w-full sm:w-auto px-3.5 py-2.5 sm:py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border ${
+            className={`w-full sm:w-auto px-3.5 sm:px-4 py-2 sm:py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 sm:gap-2 shadow-2xs border cursor-pointer ${
               modalitaAperta === 'GITA'
                 ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
-                : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100 hover:text-amber-950'
+                : 'bg-amber-50 text-amber-950 border-amber-200 hover:bg-amber-100'
             }`}
           >
             <Bus className="w-4 h-4 text-amber-600" />
-            <span className="sm:hidden">+ Uscita</span>
+            <span className="sm:hidden">+ Gita</span>
             <span className="hidden sm:inline">+ Aggiungi Gita</span>
           </button>
         </div>
