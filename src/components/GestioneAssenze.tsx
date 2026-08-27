@@ -283,10 +283,17 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
 
             <button
               type="button"
-              onClick={() => onChangeDate?.(new Date().toISOString().split('T')[0])}
+              onClick={() => {
+                const nextDay = new Date();
+                nextDay.setDate(nextDay.getDate() + 1);
+                if (nextDay.getDay() === 6) nextDay.setDate(nextDay.getDate() + 2); // Se domani è sabato -> salta a lunedì
+                if (nextDay.getDay() === 0) nextDay.setDate(nextDay.getDate() + 1); // Se domani è domenica -> salta a lunedì
+                onChangeDate?.(nextDay.toISOString().split('T')[0]);
+              }}
               className="bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs px-2.5 py-1 sm:py-0.5 rounded-lg transition border border-slate-200 shadow-2xs ml-0.5"
+              title="Passa a domani (o lunedì successivo)"
             >
-              Oggi
+              Domani
             </button>
           </div>
         </div>
@@ -304,7 +311,8 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
             }`}
           >
             <UserMinus className="w-4 h-4 text-indigo-600" />
-            <span>+ Aggiungi Assente</span>
+            <span className="sm:hidden">+ Assente</span>
+            <span className="hidden sm:inline">+ Aggiungi Assente</span>
           </button>
 
           <button
@@ -318,7 +326,8 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
             }`}
           >
             <Bus className="w-4 h-4 text-amber-600" />
-            <span>+ Aggiungi Gita</span>
+            <span className="sm:hidden">+ Uscita</span>
+            <span className="hidden sm:inline">+ Aggiungi Gita</span>
           </button>
         </div>
       </div>
