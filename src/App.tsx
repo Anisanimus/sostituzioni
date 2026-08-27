@@ -1,3 +1,13 @@
+/**
+ * ============================================================================
+ * GESTIONE SOSTITUZIONI SCOLASTICHE - RELEASE CANDIDATE 2 (RC2)
+ * Tag Git: RC2
+ * Data: 27/08/2026
+ * Note: Include drawer laterale, banner panoramica lavori chiaro da oggi in poi,
+ *       tabellone chiuso di default con ordinamento per stato e filtri risorse smart.
+ * ============================================================================
+ */
+
 import React, { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { GiornoSettimana } from './types';
@@ -288,7 +298,7 @@ const MainApp: React.FC = () => {
 
             {/* FOOTER SIDEBAR */}
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
-              <span className="font-mono text-[11px]">Sistema Sostituzioni v2.0</span>
+              <span className="font-mono text-[11px] font-bold text-slate-600">Sistema Sostituzioni v2.0-RC2</span>
               <span className="font-bold text-emerald-600 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Operativo
               </span>
