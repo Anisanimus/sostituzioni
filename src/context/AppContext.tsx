@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, CategoriaSostituto } from '../types';
+import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, CategoriaSostituto, NotificaDocente } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente } from '../utils/docentiHelper';
 
@@ -38,6 +38,8 @@ interface AppContextType {
   setSostituzioni: React.Dispatch<React.SetStateAction<SostituzioneAssegnata[]>>;
   movimentiDebito: MovimentoDebito[];
   setMovimentiDebito: React.Dispatch<React.SetStateAction<MovimentoDebito[]>>;
+  notifiche: NotificaDocente[];
+  setNotifiche: React.Dispatch<React.SetStateAction<NotificaDocente[]>>;
   impostazioniPriorita: ImpostazioniPriorita;
   setImpostazioniPriorita: React.Dispatch<React.SetStateAction<ImpostazioniPriorita>>;
   updateImpostazioniPriorita: (nuove: ImpostazioniPriorita) => void;
@@ -47,13 +49,16 @@ interface AppContextType {
   removeAssenza: (id: string) => void;
   annullaAssenza: (id: string, motivo?: string) => void;
   eliminaDefinitivamenteAssenza: (id: string) => void;
+  rimuoviSingolaOraAssenza: (docenteId: string, data: string, ora: number, classe?: string) => void;
   addUscitaConAccompagnatori: (uscita: Omit<UscitaClasse, 'id' | 'createdAt'>) => void;
   removeUscita: (id: string) => void;
   annullaUscita: (id: string) => void;
   assegnaSostituzione: (sostituzione: Omit<SostituzioneAssegnata, 'id'>) => void;
   rimuoviSostituzione: (id: string) => void;
   pubblicaTutteSostituzioniData: (data: string) => void;
+  pubblicaSingolaSostituzione: (sostituzioneId: string) => void;
   firmaSostituzione: (sostituzioneId: string) => void;
+  segnaNotificheLette: (docenteId: string) => void;
   updateDocente: (docente: Docente) => void;
   updateOrarioDocente: (docenteId: string, nuoveOre: any[]) => void;
   modificaDebitoManuale: (docenteId: string, deltaOre: number, descrizione: string) => void;
@@ -381,6 +386,75 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  // Rimuovi o escludi una singola ora da un'assenza o da un'uscita (senza cancellare l'intero blocco del giorno se ci sono altre ore)
+  const rimuoviSingolaOraAssenza = (docenteId: string, data: string, ora: number, classe?: string) => {
+    const collegatiIds = getDocentiCollegatiIds(docenteId, docenti);
+
+    // 1. Rimuovi eventuale sostituzione assegnata per quell'ora/classe
+    const sostEsistente = sostituzioni.find(s => 
+      s.data === data && 
+      s.ora === ora && 
+      (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === docenteId) &&
+      (!classe || s.classe === classe)
+    );
+
+    if (sostEsistente) {
+      rimuoviSostituzione(sostEsistente.id);
+    }
+
+    // 2. Modifica le assenze del docente per quella data: rimuovi l'ora dalla lista oreInteressate
+    setAssenze(prev => {
+      return prev.map(a => {
+        if (a.data === data && (collegatiIds.includes(a.docenteId) || a.docenteId === docenteId)) {
+          const nuoveOre = a.oreInteressate.filter(o => o !== ora);
+          // Se aveva debito ed era oraria, ricalcola/storna 1 ora di debito
+          if (a.oreDebitoGenerate && a.oreDebitoGenerate > 0 && a.oreInteressate.includes(ora)) {
+            setDocenti(prevDocs => prevDocs.map(d => {
+              if (collegatiIds.includes(d.id)) {
+                return { ...d, oreDebitoPermesso: Math.max(0, (d.oreDebitoPermesso || 0) - 1) };
+              }
+              return d;
+            }));
+
+            const mov: MovimentoDebito = {
+              id: 'mov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+              docenteId: a.docenteId,
+              data: a.data,
+              giorno: a.giorno,
+              tipo: 'MODIFICA_MANUALE',
+              deltaOre: 1,
+              descrizione: `Storno 1h debito per rimozione ${ora}ª ora assenza del ${a.data}`,
+              createdAt: new Date().toISOString()
+            };
+            setMovimentiDebito(prevMovs => [mov, ...prevMovs]);
+          }
+
+          if (nuoveOre.length === 0) {
+            return { ...a, annullata: true, annullataIl: new Date().toISOString(), oreInteressate: [] };
+          }
+          return {
+            ...a,
+            oreInteressate: nuoveOre,
+            oreDebitoGenerate: Math.max(0, (a.oreDebitoGenerate || 0) - 1)
+          };
+        }
+        return a;
+      }).filter(a => !(a.annullata && a.oreInteressate.length === 0));
+    });
+
+    // 3. Se l'assenza derivava da un'uscita/gita per cui il docente era accompagnatore, rimuovi l'ora o aggiorna
+    setUscite(prev => prev.map(u => {
+      if (u.data === data && u.docentiAccompagnatoriIds.some(dId => collegatiIds.includes(dId))) {
+        const nuoveOre = u.ore.filter(o => o !== ora);
+        if (nuoveOre.length === 0) {
+          return { ...u, annullata: true, annullataIl: new Date().toISOString(), ore: [] };
+        }
+        return { ...u, ore: nuoveOre };
+      }
+      return u;
+    }));
+  };
+
   const removeAssenza = (id: string) => {
     annullaAssenza(id);
   };
@@ -484,9 +558,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const [notifiche, setNotifiche] = useState<NotificaDocente[]>(() => {
+    try {
+      const saved = localStorage.getItem('scuola_notifiche');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('scuola_notifiche', JSON.stringify(notifiche));
+  }, [notifiche]);
+
   const rimuoviSostituzione = (id: string) => {
     const sost = sostituzioni.find(s => s.id === id);
-    if (sost && sost.consumaDebito) {
+    if (!sost) return;
+
+    // Se era già pubblicata o firmata, avvisa il sostituto con una notifica di annullamento
+    if (sost.pubblicata || sost.firmata) {
+      const docenteAssente = docenti.find(d => d.id === sost.docenteAssenteId);
+      const docenteAssenteNome = docenteAssente ? docenteAssente.nome : sost.docenteAssenteId;
+      const nuovaNotifica: NotificaDocente = {
+        id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        docenteId: sost.docenteSostitutoId,
+        data: sost.data,
+        ora: sost.ora,
+        classe: sost.classe,
+        tipo: 'SOSTITUZIONE_ANNULLATA',
+        titolo: 'Supplenza Annullata',
+        messaggio: `L'ora di sostituzione del ${sost.data} (${sost.ora}ª ora in ${sost.classe} per ${docenteAssenteNome}) è stata annullata dalla Vicepresidenza.`,
+        letta: false,
+        createdAt: new Date().toISOString()
+      };
+      setNotifiche(prev => [nuovaNotifica, ...prev]);
+    }
+
+    if (sost.consumaDebito) {
       const collegatiIds = getDocentiCollegatiIds(sost.docenteSostitutoId, docenti);
 
       setDocenti(prev => prev.map(d => {
@@ -546,12 +654,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  const pubblicaSingolaSostituzione = (sostituzioneId: string) => {
+    setSostituzioni(prev => prev.map(s => {
+      if (s.id === sostituzioneId) {
+        return { ...s, pubblicata: true };
+      }
+      return s;
+    }));
+  };
+
   const firmaSostituzione = (sostituzioneId: string) => {
     setSostituzioni(prev => prev.map(s => {
       if (s.id === sostituzioneId) {
         return { ...s, firmata: true, dataFirma: new Date().toISOString() };
       }
       return s;
+    }));
+  };
+
+  const segnaNotificheLette = (docenteId: string) => {
+    const collegatiIds = getDocentiCollegatiIds(docenteId, docenti);
+    setNotifiche(prev => prev.map(n => {
+      if (collegatiIds.includes(n.docenteId)) {
+        return { ...n, letta: true };
+      }
+      return n;
     }));
   };
 
@@ -626,6 +753,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSostituzioni,
       movimentiDebito,
       setMovimentiDebito,
+      notifiche,
+      setNotifiche,
       impostazioniPriorita,
       setImpostazioniPriorita,
       updateImpostazioniPriorita,
@@ -634,13 +763,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       removeAssenza,
       annullaAssenza,
       eliminaDefinitivamenteAssenza,
+      rimuoviSingolaOraAssenza,
       addUscitaConAccompagnatori,
       removeUscita,
       annullaUscita,
       assegnaSostituzione,
       rimuoviSostituzione,
       pubblicaTutteSostituzioniData,
+      pubblicaSingolaSostituzione,
       firmaSostituzione,
+      segnaNotificheLette,
       updateDocente,
       updateOrarioDocente,
       modificaDebitoManuale,

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { MotivoAssenza, GiornoSettimana } from '../types';
-import { UserMinus, Bus, Plus, Trash2, Calendar, Clock, MapPin, Users, ChevronDown, Check, X, Search, Ban, LayoutDashboard, ChevronLeft, ChevronRight } from 'lucide-react';
+import { UserMinus, Bus, Plus, Trash2, Calendar, Clock, MapPin, Users, ChevronDown, Check, X, Search, Ban, LayoutDashboard, ChevronLeft, ChevronRight, Info } from 'lucide-react';
 import { FASCE_ORARIE } from '../utils/fasceOrarie';
 import { getDocentiUnici, getDocentiCollegatiIds, getBaseNomeDocente, formatDataItaliana } from '../utils/docentiHelper';
 
@@ -10,6 +10,7 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
 
   // Finestra aperta: null (chiusa), 'DOCENTE', o 'GITA'
   const [modalitaAperta, setModalitaAperta] = useState<'DOCENTE' | 'GITA' | null>(null);
+  const [mostraInfo, setMostraInfo] = useState<boolean>(false);
 
   // --- STATO ASSENZA DOCENTE ---
   const [dataDocente, setDataDocente] = useState<string>(selectedDate);
@@ -208,9 +209,24 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-black text-slate-900 leading-none">Sostituzioni del Giorno</h2>
-              <span className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">Operativo</span>
+              <button
+                type="button"
+                onClick={() => setMostraInfo(prev => !prev)}
+                className={`w-5 h-5 rounded-full flex items-center justify-center transition border ${
+                  mostraInfo 
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' 
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 border-slate-300'
+                }`}
+                title={mostraInfo ? "Nascondi informazioni" : "Mostra informazioni"}
+              >
+                <Info className="w-3 h-3" />
+              </button>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">Gestisci assenze, gite e risorse disponibili per la giornata</p>
+            {mostraInfo && (
+              <p className="text-xs text-slate-500 mt-1 animate-in fade-in">
+                Gestisci assenze, gite e risorse disponibili per la giornata
+              </p>
+            )}
           </div>
         </div>
 

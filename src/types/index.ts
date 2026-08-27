@@ -155,3 +155,17 @@ export interface SostituzioneAssegnata {
   firmata: boolean;
   dataFirma?: string;
 }
+
+export interface NotificaDocente {
+  id: string;
+  docenteId: string;
+  data: string;
+  ora: number;
+  classe: string;
+  tipo: 'NUOVA_SOSTITUZIONE' | 'SOSTITUZIONE_ANNULLATA';
+  titolo: string;
+  messaggio: string;
+  letta: boolean;
+  createdAt: string;
+}
+

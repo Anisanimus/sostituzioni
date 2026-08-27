@@ -17,12 +17,14 @@ export const TabelloneSostituzioni: React.FC<{
 }> = ({ selectedDate, selectedGiorno, onChangeDate }) => {
   const { 
     docenti, orariDocenti, assenze, uscite, sostituzioni, 
-    impostazioniPriorita, assegnaSostituzione, rimuoviSostituzione, pubblicaTutteSostituzioniData 
+    impostazioniPriorita, assegnaSostituzione, rimuoviSostituzione, 
+    pubblicaTutteSostituzioniData, pubblicaSingolaSostituzione,
+    rimuoviSingolaOraAssenza
   } = useApp();
 
   const [selectedOraScoperta, setSelectedOraScoperta] = useState<OraScoperta | null>(null);
-  // Tre modalità di visualizzazione: A blocchi orari, Per Docente Assente, Elenco Compatto
-  const [visualizzazione, setVisualizzazione] = useState<'GRUPPI_ORA' | 'PER_DOCENTE' | 'TABELLA'>('GRUPPI_ORA');
+  // Due modalità di visualizzazione: A blocchi orari, Per Docente Assente
+  const [visualizzazione, setVisualizzazione] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>('GRUPPI_ORA');
 
   // Filtri attivi per la legenda dello specchietto risorse (Disposizioni D di default nascoste, a meno che non ci siano recuperi da fare)
   const [mostraDisposizioni, setMostraDisposizioni] = useState(false);
@@ -453,17 +455,6 @@ export const TabelloneSostituzioni: React.FC<{
                   <UserMinus className="w-3.5 h-3.5 text-indigo-600" /> 
                   <span className="hidden md:inline">Per Docente</span>
                 </button>
-
-                <button
-                  onClick={() => setVisualizzazione('TABELLA')}
-                  className={`px-2 py-1 sm:px-2.5 rounded-lg font-bold flex items-center gap-1 transition ${
-                    visualizzazione === 'TABELLA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                  title="Elenco"
-                >
-                  <List className="w-3.5 h-3.5" /> 
-                  <span className="hidden md:inline">Elenco</span>
-                </button>
               </div>
 
               {/* MINI BADGE REPORT STATO: DA FARE / FATTO */}
@@ -573,39 +564,87 @@ export const TabelloneSostituzioni: React.FC<{
                         </div>
                       </div>
 
-                      {/* Stato Assegnazione */}
+                      {/* Stato Assegnazione, Firma e Gestione Singola Ora */}
                       <div className="flex items-center gap-2 self-end sm:self-center">
                         {sost ? (
-                          <div className="flex items-center gap-2 bg-emerald-50/90 border border-emerald-200 rounded-lg px-2.5 py-1.5">
-                            <div>
-                              <span className="text-[10px] font-bold text-emerald-600 block leading-tight">Assegnato:</span>
-                              <div className="font-bold text-xs text-emerald-950 flex items-center gap-1">
-                                <span>{getDocenteNome(sost.docenteSostitutoId)}</span>
-                                <span className="text-[10px] font-normal text-emerald-700">({sost.categoria})</span>
+                          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 shadow-2xs">
+                            <div className="text-left">
+                              <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                                <span className="text-indigo-700">👤 {getDocenteNome(sost.docenteSostitutoId)}</span>
+                                <span className="text-[10px] font-normal text-slate-500">({sost.categoria.replace(/_/g, ' ')})</span>
+                              </div>
+
+                              {/* TRACKING STATO PRESA VISIONE */}
+                              <div className="mt-1 flex items-center gap-1.5">
+                                {sost.firmata ? (
+                                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
+                                    <CheckCircle className="w-3 h-3 text-emerald-600" />
+                                    <span>Presa visione {sost.dataFirma ? `(${new Date(sost.dataFirma).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}</span>
+                                  </span>
+                                ) : sost.pubblicata ? (
+                                  <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
+                                    <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                                    <span>In attesa presa visione</span>
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      pubblicaSingolaSostituzione(sost.id);
+                                    }}
+                                    className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[10px] px-2 py-0.5 rounded-md transition shadow-2xs"
+                                    title="Invia la richiesta di firma per presa visione a questo singolo docente"
+                                  >
+                                    <span>✉️ Invia per Firma</span>
+                                  </button>
+                                )}
                               </div>
                             </div>
+
+                            {/* CESTINO SOSTITUZIONE (SEMPRE DISPONIBILE) */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                rimuoviSostituzione(sost.id);
+                                const msg = sost.pubblicata || sost.firmata
+                                  ? `Attenzione: questa sostituzione è già stata inviata/firmata.\nVuoi cancellarla? Il docente ${getDocenteNome(sost.docenteSostitutoId)} riceverà una notifica di annullamento.`
+                                  : `Vuoi rimuovere l'assegnazione per ${getDocenteNome(sost.docenteSostitutoId)}?`;
+                                if (window.confirm(msg)) {
+                                  rimuoviSostituzione(sost.id);
+                                }
                               }}
-                              className="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition"
-                              title="Rimuovi sostituzione"
+                              className="text-slate-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-lg transition ml-1"
+                              title="Annulla sostituto assegnato (notifica il docente se già inviata)"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedOraScoperta(os);
-                            }}
-                            className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-2xs transition"
-                          >
-                            <span>Scegli Sostituto</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOraScoperta(os);
+                              }}
+                              className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-2xs transition"
+                            >
+                              <span>Scegli Sostituto</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* CANCELLA QUESTA SINGOLA ORA DAL TABELLONE */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Vuoi cancellare quest'ora di assenza dal tabellone (${os.ora}ª ora di ${getBaseNomeDocente(os.docenteAssente.nome)} in ${os.classe})?\n\nL'ora verrà rimossa dalle ore scoperte senza dover cancellare tutta l'assenza.`)) {
+                                  rimuoviSingolaOraAssenza(os.docenteAssente.id, selectedDate, os.ora, os.classe);
+                                }
+                              }}
+                              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg border border-transparent hover:border-rose-200 transition shadow-2xs"
+                              title="Cancella solo quest'ora dal tabellone"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -615,7 +654,7 @@ export const TabelloneSostituzioni: React.FC<{
             </div>
           ))}
         </div>
-      ) : visualizzazione === 'PER_DOCENTE' ? (
+      ) : (
         /* VISTA 2: RAGGRUPPATA PER DOCENTE ASSENTE CON LE SUE ORE SOTTO */
         <div className="space-y-4">
           {docentiAssentiRaggruppati.map((gruppoDoc, gIdx) => (
@@ -700,39 +739,87 @@ export const TabelloneSostituzioni: React.FC<{
                         </div>
                       </div>
 
-                      {/* Docente Sostituto o Bottone Assegnazione */}
+                      {/* Docente Sostituto, Firma e Gestione Singola Ora */}
                       <div className="flex items-center gap-2 self-end sm:self-center">
                         {sost ? (
-                          <div className="flex items-center gap-2 bg-emerald-50/90 border border-emerald-200 rounded-lg px-2.5 py-1.5">
-                            <div>
-                              <span className="text-[10px] font-bold text-emerald-600 block leading-tight">Docente Sostituto:</span>
-                              <div className="font-bold text-xs text-emerald-950 flex items-center gap-1">
-                                <span>{getDocenteNome(sost.docenteSostitutoId)}</span>
-                                <span className="text-[10px] font-normal text-emerald-700">({sost.categoria})</span>
+                          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 shadow-2xs">
+                            <div className="text-left">
+                              <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                                <span className="text-indigo-700">👤 {getDocenteNome(sost.docenteSostitutoId)}</span>
+                                <span className="text-[10px] font-normal text-slate-500">({sost.categoria.replace(/_/g, ' ')})</span>
+                              </div>
+
+                              {/* TRACKING STATO PRESA VISIONE */}
+                              <div className="mt-1 flex items-center gap-1.5">
+                                {sost.firmata ? (
+                                  <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
+                                    <CheckCircle className="w-3 h-3 text-emerald-600" />
+                                    <span>Presa visione {sost.dataFirma ? `(${new Date(sost.dataFirma).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}</span>
+                                  </span>
+                                ) : sost.pubblicata ? (
+                                  <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
+                                    <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                                    <span>In attesa presa visione</span>
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      pubblicaSingolaSostituzione(sost.id);
+                                    }}
+                                    className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[10px] px-2 py-0.5 rounded-md transition shadow-2xs"
+                                    title="Invia la richiesta di firma per presa visione a questo singolo docente"
+                                  >
+                                    <span>✉️ Invia per Firma</span>
+                                  </button>
+                                )}
                               </div>
                             </div>
+
+                            {/* CESTINO SOSTITUZIONE (SEMPRE DISPONIBILE) */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                rimuoviSostituzione(sost.id);
+                                const msg = sost.pubblicata || sost.firmata
+                                  ? `Attenzione: questa sostituzione è già stata inviata/firmata.\nVuoi cancellarla? Il docente ${getDocenteNome(sost.docenteSostitutoId)} riceverà una notifica di annullamento.`
+                                  : `Vuoi rimuovere l'assegnazione per ${getDocenteNome(sost.docenteSostitutoId)}?`;
+                                if (window.confirm(msg)) {
+                                  rimuoviSostituzione(sost.id);
+                                }
                               }}
-                              className="text-red-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition"
-                              title="Rimuovi sostituzione"
+                              className="text-slate-400 hover:text-red-600 p-1.5 hover:bg-red-50 rounded-lg transition ml-1"
+                              title="Annulla sostituzione (notifica il docente se già inviata)"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedOraScoperta(os);
-                            }}
-                            className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-2xs transition"
-                          >
-                            <span>Scegli Sostituto</span>
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOraScoperta(os);
+                              }}
+                              className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-2xs transition"
+                            >
+                              <span>Scegli Sostituto</span>
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* CANCELLA QUESTA SINGOLA ORA DAL TABELLONE */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Vuoi cancellare quest'ora di assenza dal tabellone (${os.ora}ª ora di ${getBaseNomeDocente(os.docenteAssente.nome)} in ${os.classe})?\n\nL'ora verrà rimossa dalle ore scoperte senza dover cancellare tutta l'assenza.`)) {
+                                  rimuoviSingolaOraAssenza(os.docenteAssente.id, selectedDate, os.ora, os.classe);
+                                }
+                              }}
+                              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg border border-transparent hover:border-rose-200 transition shadow-2xs"
+                              title="Cancella solo quest'ora dal tabellone"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -741,79 +828,6 @@ export const TabelloneSostituzioni: React.FC<{
               </div>
             </div>
           ))}
-        </div>
-      ) : (
-        /* VISTA 3: TABELLARE COMPATTA */
-        <div className="bg-white rounded-xl shadow-2xs border border-slate-200 overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-              <tr>
-                <th className="p-2.5 w-16">Ora</th>
-                <th className="p-2.5 w-20">Classe</th>
-                <th className="p-2.5">Docente Assente & Materia</th>
-                <th className="p-2.5">Motivo</th>
-                <th className="p-2.5">Sostituto Assegnato</th>
-                <th className="p-2.5 text-right">Azione</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {oreScoperte.map((os, idx) => {
-                const sost = getSostituzione(os.ora, os.classe);
-                const isGraveSostegno = isDocenteAssenteCasoGraveNellOra(os.docenteAssente.id, os.ora);
-
-                return (
-                  <tr key={idx} className="hover:bg-slate-50">
-                    <td className="p-2.5 font-bold">{os.ora}ª ora</td>
-                    <td className="p-2.5 font-black">{os.classe}</td>
-                    <td className="p-2.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-semibold">{getBaseNomeDocente(os.docenteAssente.nome)}</span>
-                        <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
-                          ({os.docenteAssente.materia})
-                        </span>
-                        {isGraveSostegno && (
-                          <span className="bg-rose-600 text-white text-[9px] font-black px-1 rounded">
-                            ♿ GRAVE
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-2.5">
-                      <span className="bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded text-[11px]">
-                        {os.motivo}
-                      </span>
-                    </td>
-                    <td className="p-2.5">
-                      {sost ? (
-                        <span className="font-bold text-emerald-700">
-                          {getDocenteNome(sost.docenteSostitutoId)} ({sost.categoria})
-                        </span>
-                      ) : (
-                        <span className="text-amber-600 font-bold italic">Da Assegnare</span>
-                      )}
-                    </td>
-                    <td className="p-2.5 text-right">
-                      {sost ? (
-                        <button
-                          onClick={() => rimuoviSostituzione(sost.id)}
-                          className="text-red-500 hover:text-red-700 font-bold p-1 rounded"
-                        >
-                          Rimuovi
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setSelectedOraScoperta(os)}
-                          className="bg-indigo-600 text-white font-bold px-2.5 py-1 rounded shadow-2xs hover:bg-indigo-700"
-                        >
-                          Assegna
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         </div>
       )}
 

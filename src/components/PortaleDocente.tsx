@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { CheckCircle2, Bell, User, Key, Calendar } from 'lucide-react';
+import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X } from 'lucide-react';
+import { getDocentiCollegatiIds } from '../utils/docentiHelper';
 
 export const PortaleDocente: React.FC = () => {
-  const { docenti, sostituzioni, firmaSostituzione } = useApp();
+  const { docenti, sostituzioni, notifiche, firmaSostituzione, segnaNotificheLette } = useApp();
   const [selectedDocenteId, setSelectedDocenteId] = useState<string>('');
   const [pin, setPin] = useState<string>('');
   const [isLogged, setIsLogged] = useState<boolean>(false);
   const [notificaAttiva, setNotificaAttiva] = useState<boolean>(false);
 
   const docente = docenti.find(d => d.id === selectedDocenteId);
+  const collegatiIds = selectedDocenteId ? getDocentiCollegatiIds(selectedDocenteId, docenti) : [];
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +29,7 @@ export const PortaleDocente: React.FC = () => {
       if (permission === 'granted') {
         setNotificaAttiva(true);
         new Notification('Notifiche Attivate', {
-          body: 'Riceverai un avviso ogni volta che ti viene assegnata una nuova sostituzione.'
+          body: 'Riceverai un avviso ogni volta che ti viene assegnata o modificata una sostituzione.'
         });
       }
     } else {
@@ -36,7 +38,11 @@ export const PortaleDocente: React.FC = () => {
   };
 
   const mieSostituzioni = sostituzioni.filter(
-    s => s.docenteSostitutoId === selectedDocenteId && s.pubblicata
+    s => collegatiIds.includes(s.docenteSostitutoId) && s.pubblicata
+  );
+
+  const mieNotificheNonLette = notifiche.filter(
+    n => collegatiIds.includes(n.docenteId) && !n.letta
   );
 
   const getDocenteNome = (id: string) => docenti.find(d => d.id === id)?.nome || id;
@@ -58,21 +64,20 @@ export const PortaleDocente: React.FC = () => {
             <select
               value={selectedDocenteId}
               onChange={(e) => setSelectedDocenteId(e.target.value)}
+              className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white font-semibold"
               required
-              className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white"
             >
-              <option value="">-- Seleziona Docente --</option>
-              {docenti
-                .filter(d => !d.isEducatore)
-                .sort((a, b) => a.nome.localeCompare(b.nome))
-                .map(d => (
-                  <option key={d.id} value={d.id}>{d.nome} ({d.materia})</option>
-                ))}
+              <option value="">-- Scegli Docente --</option>
+              {docenti.map(d => (
+                <option key={d.id} value={d.id}>
+                  {d.nome} ({d.materia})
+                </option>
+              ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">PIN di Accesso (Default: 1234)</label>
+            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">PIN Personale</label>
             <div className="relative">
               <input
                 type="password"
@@ -98,7 +103,39 @@ export const PortaleDocente: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4">
+      {/* BANNER NOTIFICHE ANNULLAMENTI/AVVISI */}
+      {mieNotificheNonLette.length > 0 && (
+        <div className="space-y-2">
+          {mieNotificheNonLette.map(n => (
+            <div key={n.id} className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-4 shadow-sm flex items-start justify-between gap-3 animate-in fade-in">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-rose-950 text-sm flex items-center gap-2">
+                    <span>{n.titolo}</span>
+                    <span className="text-[10px] bg-rose-200 text-rose-800 px-1.5 py-0.2 rounded font-mono">
+                      {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </h4>
+                  <p className="text-xs text-rose-900 mt-0.5">{n.messaggio}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => segnaNotificheLette(selectedDocenteId)}
+                className="text-xs font-bold text-rose-700 hover:text-rose-900 bg-rose-100/80 hover:bg-rose-200 px-2.5 py-1 rounded-lg transition shrink-0"
+              >
+                Ho Capito ✓
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* HEADER PROFILO DOCENTE */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold text-indigo-600 uppercase">Docente Collegato</span>
