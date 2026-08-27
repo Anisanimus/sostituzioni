@@ -191,13 +191,16 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
       {/* HEADER PANORAMICA */}
       <div className="flex items-center justify-between gap-2 flex-wrap border-b border-slate-100 pb-2.5">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+          <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs">
             <TrendingUp className="w-4 h-4" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black tracking-wide text-slate-800">
+              <span className="text-xs font-black tracking-wide text-slate-900">
                 Avanzamento Lavori
+              </span>
+              <span className="bg-indigo-100 text-indigo-900 text-[10px] font-black px-2 py-0.5 rounded-md">
+                {currentStat.giornoNome} {new Date(selectedDate).getDate()}/{new Date(selectedDate).getMonth() + 1}
               </span>
               <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
                 totGiornoScoperte === 0 

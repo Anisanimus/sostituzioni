@@ -201,59 +201,37 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
   return (
     <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-2xs border border-slate-200 space-y-3">
       
-      {/* HEADER PULITO: SU MOBILE SOLO I DUE PULSANTI, SU DESKTOP GIORNO SELEZIONATO + PULSANTI */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-2.5">
-        
-        {/* BLOCCO GIORNO SELEZIONATO (VISIBILE SOLO SU DESKTOP, SU MOBILE BASTA IL CAROSELLO EVIDENZIATO IN ALTO) */}
-        <div className="hidden sm:flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-base font-black border border-indigo-100 shrink-0">
-            <LayoutDashboard className="w-5 h-5 text-indigo-600" />
-          </div>
-          <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Giorno Selezionato</span>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-black text-slate-900 leading-tight">
-                {formatDataItaliana(selectedDate)}
-              </h2>
-              <span className="bg-indigo-100 text-indigo-900 font-black text-xs px-2 py-0.5 rounded-md">
-                {selectedGiorno}
-              </span>
-            </div>
-          </div>
-        </div>
+      {/* HEADER ULTRA-PULITO: SOLO I DUE PULSANTI AZIONE (+ AGGIUNGI ASSENTE & + AGGIUNGI GITA) */}
+      <div className="flex items-center justify-between sm:justify-end gap-2.5">
+        <button
+          id="targetBtnAssente"
+          type="button"
+          onClick={() => setModalitaAperta(modalitaAperta === 'DOCENTE' ? null : 'DOCENTE')}
+          className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs border cursor-pointer ${
+            modalitaAperta === 'DOCENTE'
+              ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
+              : 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100'
+          }`}
+        >
+          <UserMinus className="w-4 h-4 text-indigo-600" />
+          <span className="sm:hidden">+ Assente</span>
+          <span className="hidden sm:inline">+ Aggiungi Assente</span>
+        </button>
 
-        {/* I DUE PULSANTI AZIONE (+ Assente & + Gita) SU MOBILE FULL-WIDTH COMPATTI */}
-        <div className="w-full sm:w-auto grid grid-cols-2 sm:flex items-center justify-end gap-2 sm:gap-2.5">
-          <button
-            id="targetBtnAssente"
-            type="button"
-            onClick={() => setModalitaAperta(modalitaAperta === 'DOCENTE' ? null : 'DOCENTE')}
-            className={`w-full sm:w-auto px-3.5 sm:px-4 py-2 sm:py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 sm:gap-2 shadow-2xs border cursor-pointer ${
-              modalitaAperta === 'DOCENTE'
-                ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
-                : 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100'
-            }`}
-          >
-            <UserMinus className="w-4 h-4 text-indigo-600" />
-            <span className="sm:hidden">+ Assente</span>
-            <span className="hidden sm:inline">+ Aggiungi Assente</span>
-          </button>
-
-          <button
-            id="targetBtnGita"
-            type="button"
-            onClick={() => setModalitaAperta(modalitaAperta === 'GITA' ? null : 'GITA')}
-            className={`w-full sm:w-auto px-3.5 sm:px-4 py-2 sm:py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 sm:gap-2 shadow-2xs border cursor-pointer ${
-              modalitaAperta === 'GITA'
-                ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
-                : 'bg-amber-50 text-amber-950 border-amber-200 hover:bg-amber-100'
-            }`}
-          >
-            <Bus className="w-4 h-4 text-amber-600" />
-            <span className="sm:hidden">+ Gita</span>
-            <span className="hidden sm:inline">+ Aggiungi Gita</span>
-          </button>
-        </div>
+        <button
+          id="targetBtnGita"
+          type="button"
+          onClick={() => setModalitaAperta(modalitaAperta === 'GITA' ? null : 'GITA')}
+          className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs border cursor-pointer ${
+            modalitaAperta === 'GITA'
+              ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
+              : 'bg-amber-50 text-amber-950 border-amber-200 hover:bg-amber-100'
+          }`}
+        >
+          <Bus className="w-4 h-4 text-amber-600" />
+          <span className="sm:hidden">+ Gita</span>
+          <span className="hidden sm:inline">+ Aggiungi Gita</span>
+        </button>
       </div>
 
       {/* ========================================================= */}
