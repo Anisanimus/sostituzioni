@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -14,3 +14,13 @@
     display: block !important;
   }
 }
+
+/* SPOTLIGHT PER COACHMARK GUIDATO INTERATTIVO */
+.spotlight-active {
+  position: relative !important;
+  z-index: 50 !important;
+  box-shadow: 0 0 0 4px #6366f1, 0 10px 25px -5px rgba(99, 102, 241, 0.4) !important;
+  border-radius: 0.75rem;
+  transition: all 0.25s ease-in-out;
+}
+

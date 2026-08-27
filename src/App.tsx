@@ -194,14 +194,17 @@ const MainApp: React.FC = () => {
               </div>
             </div>
 
-            {/* VISTA PRINCIPALE UNIFICATA */}
+            {/* VISTA PRINCIPALE A 2 COLONNE CON TABELLONE IN PRIMO PIANO */}
             {tabVice === 'GESTIONE_GIORNALIERA' && (
               <div className="space-y-4">
+                {/* TESTATA UNIFICATA PER DATA E INSERIMENTO RAPIDO */}
                 <GestioneAssenze 
                   selectedDate={selectedDate} 
                   selectedGiorno={selectedGiorno} 
                   onChangeDate={(newDate) => setSelectedDate(newDate)}
                 />
+
+                {/* AREA PRINCIPALE: TABELLONE IN PRIMO PIANO (A SINISTRA SU DESKTOP) */}
                 <TabelloneSostituzioni 
                   selectedDate={selectedDate} 
                   selectedGiorno={selectedGiorno} 

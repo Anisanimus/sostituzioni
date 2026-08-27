@@ -329,221 +329,181 @@ export const TabelloneSostituzioni: React.FC<{
 
   return (
     <div className="space-y-3">
-      {/* SOTTO-BARRA STATO E AZIONI SMART */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-700">Stato:</span>
-          <div className="flex items-center gap-1.5 text-xs font-bold">
-            <span className="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full">
-              {totaleDaCoprire - totaleCoperte} da assegnare
-            </span>
-            <span className="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full">
-              {totaleCoperte} coperte
-            </span>
+      {/* ============================================================================== */}
+      {/* AREA A 2 COLONNE: TABELLONE IN PRIMO PIANO A SINISTRA (8/12) + RISORSE (4/12)   */}
+      {/* ============================================================================== */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+        {/* DA MOBILE: BARRA ACCORDION RISORSE DISPONIBILI ESPANDIBILE (< LG) */}
+        {risorsePerOra.length > 0 && (
+          <div className="block lg:hidden col-span-1 bg-white rounded-2xl p-3 shadow-2xs border border-slate-200">
+            <details className="group">
+              <summary className="flex items-center justify-between cursor-pointer list-none font-bold text-xs text-slate-800">
+                <span id="targetSpecchiettoRisorseMobile" className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs">
+                    ⚡
+                  </span>
+                  <span>Risorse Disponibili Oggi ({risorsePerOra.reduce((acc, r) => acc + r.totDisponibili, 0)})</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-slate-400 font-normal">Tocca per dettagli</span>
+                  <span className="text-slate-400 text-xs group-open:rotate-180 transition-transform">▼</span>
+                </div>
+              </summary>
+
+              <div className="pt-3 mt-2 border-t border-slate-100 space-y-2.5">
+                {/* FILTRI IN ACCORDION MOBILE */}
+                <div className="flex flex-wrap items-center gap-1 text-[10px] font-bold">
+                  <button
+                    type="button"
+                    onClick={() => setMostraPotenziamento(!mostraPotenziamento)}
+                    className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
+                      mostraPotenziamento ? 'bg-emerald-100 text-emerald-950 border-emerald-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                    }`}
+                  >
+                    ⚡ Potenziamento
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMostraLiberatiGita(!mostraLiberatiGita)}
+                    className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
+                      mostraLiberatiGita ? 'bg-amber-100 text-amber-950 border-amber-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                    }`}
+                  >
+                    🚌 Gita
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMostraDisposizioni(!mostraDisposizioni)}
+                    className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
+                      mostraDisposizioni ? 'bg-purple-100 text-purple-950 border-purple-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                    }`}
+                  >
+                    ⏱️ Disp.
+                  </button>
+                </div>
+
+                {/* LISTA RISORSE PER ORA */}
+                <div className="space-y-1.5">
+                  {risorsePerOra.map(r => {
+                    const potVisibili = mostraPotenziamento ? (mostraGiaUsati ? r.potenziamentoList : r.potenziamentoList.filter(p => !p.usata)) : [];
+                    const giteVisibili = mostraLiberatiGita ? (mostraGiaUsati ? r.liberatiGitaList : r.liberatiGitaList.filter(g => !g.usata)) : [];
+                    const dispVisibili = (mostraDisposizioni ? r.disposizioniList : r.disposizioniList.filter(d => d.debito > 0))
+                      .filter(d => mostraGiaUsati ? true : !d.usata);
+                    const totFiltrati = potVisibili.length + giteVisibili.length + dispVisibili.length;
+                    if (totFiltrati === 0) return null;
+
+                    return (
+                      <div key={r.ora} className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-wrap items-center justify-between gap-1.5 text-xs">
+                        <span className="font-black text-slate-800">{r.ora}ª Ora</span>
+                        <div className="flex flex-wrap gap-1">
+                          {potVisibili.map(p => (
+                            <span key={p.docenteId} className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                              ⚡ {p.nome}
+                            </span>
+                          ))}
+                          {giteVisibili.map(g => (
+                            <span key={g.docenteId} className="text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                              🚌 {g.nome}
+                            </span>
+                          ))}
+                          {dispVisibili.map(d => (
+                            <span key={d.docenteId} className="text-[10px] text-purple-800 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                              ⏱️ {d.nome}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </details>
           </div>
-        </div>
+        )}
 
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button
-            onClick={handleAutoAssegnaTutto}
-            className="flex-1 sm:flex-initial bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs border border-indigo-200 transition flex items-center justify-center gap-1.5"
-            title="Assegna automaticamente in base alle priorità (escludendo sempre i casi gravi)"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Assegna Tutto</span>
-          </button>
-          <button
-            onClick={() => pubblicaTutteSostituzioniData(selectedDate)}
-            className="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs transition shadow-xs flex items-center justify-center gap-1.5"
-          >
-            <CheckCircle className="w-3.5 h-3.5" />
-            <span>Pubblica Firme</span>
-          </button>
-        </div>
-      </div>
+        {/* COLONNA TABELLONE PRINCIPALE (LG: 8/12) */}
+        <div className="lg:col-span-8 bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+          
+          {/* HEADER UNIFICATO TABELLONE: SELETTORE VISTE, BADGE RIEPILOGO COMPATTO E AZIONI RAPIDE */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            
+            {/* SELETTORE VISTE */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-slate-800 uppercase tracking-wide">Tabellone:</span>
+              <div id="targetSelettoreViste" className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs">
+                <button
+                  onClick={() => setVisualizzazione('GRUPPI_ORA')}
+                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition ${
+                    visualizzazione === 'GRUPPI_ORA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="A blocchi orari"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" /> 
+                  <span className="hidden sm:inline">A blocchi</span>
+                </button>
 
-      {/* ============================================================================== */}
-      {/* SPECCHIETTO ULTRA-COMPATTO RISORSE DISPONIBILI CON FILTRI INTERATTIVI           */}
-      {/* ============================================================================== */}
-      {risorsePerOra.length > 0 && (
-        <div className="bg-white rounded-xl p-2.5 border border-slate-200 shadow-2xs space-y-2">
-          {/* HEADER SPECCHIETTO + FILTRI LEGENDA CLICCABILI */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-1.5">
-            <span className="text-[11px] font-black text-slate-800 uppercase tracking-wide flex items-center gap-1">
-              <span>⚡ Risorse Utilizzabili Oggi</span>
-            </span>
+                <button
+                  onClick={() => setVisualizzazione('PER_DOCENTE')}
+                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition ${
+                    visualizzazione === 'PER_DOCENTE' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="Per Docente Assente"
+                >
+                  <UserMinus className="w-3.5 h-3.5 text-indigo-600" /> 
+                  <span className="hidden sm:inline">Per Docente</span>
+                </button>
 
-            {/* FILTRI INTERATTIVI IN LEGENDA */}
-            <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
-              <span className="text-slate-400 font-semibold mr-1 hidden sm:inline">Filtra:</span>
+                <button
+                  onClick={() => setVisualizzazione('TABELLA')}
+                  className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition ${
+                    visualizzazione === 'TABELLA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="Elenco"
+                >
+                  <List className="w-3.5 h-3.5" /> 
+                  <span className="hidden sm:inline">Elenco</span>
+                </button>
+              </div>
+            </div>
+
+            {/* RIEPILOGO COMPATTO + AZIONI RAPIDE */}
+            <div className="flex flex-wrap items-center gap-2">
               
-              <button
-                type="button"
-                onClick={() => setMostraPotenziamento(!mostraPotenziamento)}
-                className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
-                  mostraPotenziamento 
-                    ? 'bg-emerald-100 text-emerald-950 border-emerald-300 shadow-2xs font-black' 
-                    : 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-60'
-                }`}
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-                <span>⚡ Potenziamento (P)</span>
-              </button>
+              {/* MINI BADGE RIEPILOGO COPERTURA */}
+              <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200 shadow-2xs">
+                <div className="flex items-center gap-1 bg-amber-100/90 text-amber-950 px-2 py-0.5 rounded-lg text-xs font-black border border-amber-300 shadow-2xs">
+                  <span className="text-[10px] font-bold text-amber-800 uppercase">Da assegnare:</span>
+                  <span>{totaleDaCoprire - totaleCoperte}</span>
+                </div>
+                <div className="flex items-center gap-1 bg-emerald-100/90 text-emerald-950 px-2 py-0.5 rounded-lg text-xs font-black border border-emerald-300 shadow-2xs">
+                  <span className="text-[10px] font-bold text-emerald-800 uppercase">Coperte:</span>
+                  <span>{totaleCoperte}</span>
+                </div>
+              </div>
 
+              {/* TARGET STEP 5: ASSEGNA TUTTO */}
               <button
-                type="button"
-                onClick={() => setMostraLiberatiGita(!mostraLiberatiGita)}
-                className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
-                  mostraLiberatiGita 
-                    ? 'bg-amber-100 text-amber-950 border-amber-300 shadow-2xs font-black' 
-                    : 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-60'
-                }`}
+                id="targetBtnAssegnaTutto"
+                onClick={handleAutoAssegnaTutto}
+                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-xl text-xs border border-indigo-200 flex items-center gap-1.5 shadow-2xs transition"
+                title="Assegna automaticamente in base alle priorità"
               >
-                <span className="w-2 h-2 rounded-full bg-amber-600"></span>
-                <span>🚌 Liberati Gita</span>
+                <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Assegna Tutto</span>
               </button>
-
+              
+              {/* TARGET STEP 7: PUBBLICA FIRME */}
               <button
-                type="button"
-                onClick={() => setMostraDisposizioni(!mostraDisposizioni)}
-                className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
-                  mostraDisposizioni 
-                    ? 'bg-purple-100 text-purple-950 border-purple-300 shadow-2xs font-black' 
-                    : 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-60'
-                }`}
+                id="targetBtnPubblicaFirme"
+                onClick={() => pubblicaTutteSostituzioniData(selectedDate)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition"
               >
-                <span className="w-2 h-2 rounded-full bg-purple-600"></span>
-                <span>⏱️ Disposizioni (D)</span>
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>Pubblica Firme</span>
               </button>
             </div>
           </div>
-
-          {/* GRIGLIA ORE COMPATTA A RIGHE O PILLOLE ORIZZONTALI */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-1.5">
-            {risorsePerOra.map(r => {
-              const potVisibili = mostraPotenziamento ? (mostraGiaUsati ? r.potenziamentoList : r.potenziamentoList.filter(p => !p.usata)) : [];
-              const giteVisibili = mostraLiberatiGita ? (mostraGiaUsati ? r.liberatiGitaList : r.liberatiGitaList.filter(g => !g.usata)) : [];
-              // Se mostraDisposizioni è attivo mostra tutte le D; altrimenti mostra SOLO chi ha debito/recuperi da fare (d.debito > 0)
-              const dispVisibili = (mostraDisposizioni ? r.disposizioniList : r.disposizioniList.filter(d => d.debito > 0))
-                .filter(d => mostraGiaUsati ? true : !d.usata);
-
-              const totFiltrati = potVisibili.length + giteVisibili.length + dispVisibili.length;
-              if (totFiltrati === 0) return null;
-
-              return (
-                <div key={r.ora} className="bg-slate-50/90 rounded-lg p-1.5 border border-slate-200 text-xs space-y-1">
-                  <div className="flex items-center justify-between text-[10px] font-black text-slate-700 border-b border-slate-200/60 pb-0.5">
-                    <span className="bg-slate-200 text-slate-800 px-1.5 py-0.2 rounded font-mono">
-                      {r.ora}ª ORA
-                    </span>
-                    <span className="text-slate-400 font-semibold">
-                      {totFiltrati} disp.
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1">
-                    {/* Potenziamento (P) - VERDE SMERALDO */}
-                    {potVisibili.map(p => (
-                      <span
-                        key={p.docenteId}
-                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded border transition flex items-center gap-1 ${
-                          p.usata 
-                            ? 'bg-slate-200 text-slate-400 border-slate-300 line-through opacity-60' 
-                            : 'bg-emerald-50 text-emerald-950 border-emerald-300'
-                        }`}
-                        title={p.usata ? `${p.nome} (P) - Già impiegato` : `${p.nome} (P - Potenziamento)`}
-                      >
-                        <span>⚡ {p.nome}</span>
-                        <span className="text-[8px] bg-emerald-200 text-emerald-900 font-black px-0.5 rounded">P</span>
-                      </span>
-                    ))}
-
-                    {/* Liberati da Gita - ARANCIONE CALDO */}
-                    {giteVisibili.map(g => (
-                      <span
-                        key={g.docenteId}
-                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded border transition flex items-center gap-1 ${
-                          g.usata 
-                            ? 'bg-slate-200 text-slate-400 border-slate-300 line-through opacity-60' 
-                            : 'bg-amber-50 text-amber-950 border-amber-300'
-                        }`}
-                        title={g.usata ? `${g.nome} - Già impiegato` : `${g.nome} (Liberato da ${g.classe})`}
-                      >
-                        <span>🚌 {g.nome}</span>
-                        <span className="text-[8px] bg-amber-200 text-amber-900 font-black px-0.5 rounded">{g.classe}</span>
-                      </span>
-                    ))}
-
-                    {/* Disposizioni (D) - VIOLA / PURPLE VIVACE */}
-                    {dispVisibili.map(d => (
-                      <span
-                        key={d.docenteId}
-                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded border transition flex items-center gap-1 ${
-                          d.usata 
-                            ? 'bg-slate-200 text-slate-400 border-slate-300 line-through opacity-60' 
-                            : 'bg-purple-50 text-purple-950 border-purple-300'
-                        }`}
-                        title={d.usata ? `${d.nome} (D) - Già impiegato` : `${d.nome} (D - Disposizione${d.debito > 0 ? ` - Debito: ${d.debito}h` : ''})`}
-                      >
-                        <span>⏱️ {d.nome}</span>
-                        <span className="text-[8px] bg-purple-200 text-purple-900 font-black px-0.5 rounded">
-                          {d.debito > 0 ? `-${d.debito}h` : 'D'}
-                        </span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================================== */}
-      {/* BARRA SELETTORE MODALITÀ DI VISUALIZZAZIONE IN CIMA AGLI SLOT                    */}
-      {/* ============================================================================== */}
-      {oreScoperte.length > 0 && (
-        <div className="flex items-center justify-between gap-2 pt-1 pb-0.5">
-          <span className="text-[10px] sm:text-[11px] font-black text-slate-700 uppercase tracking-wide truncate">
-            Visualizzazione:
-          </span>
-
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs shrink-0">
-            <button
-              onClick={() => setVisualizzazione('GRUPPI_ORA')}
-              className={`p-2 sm:px-3 sm:py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
-                visualizzazione === 'GRUPPI_ORA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="A blocchi orari"
-            >
-              <LayoutGrid className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" /> 
-              <span className="hidden sm:inline">A blocchi orari</span>
-            </button>
-
-            <button
-              onClick={() => setVisualizzazione('PER_DOCENTE')}
-              className={`p-2 sm:px-3 sm:py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
-                visualizzazione === 'PER_DOCENTE' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Per Docente Assente"
-            >
-              <UserMinus className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-indigo-600 shrink-0" /> 
-              <span className="hidden sm:inline">Per Docente Assente</span>
-            </button>
-
-            <button
-              onClick={() => setVisualizzazione('TABELLA')}
-              className={`p-2 sm:px-3 sm:py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition ${
-                visualizzazione === 'TABELLA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Elenco Compatto"
-            >
-              <List className="w-4 h-4 sm:w-3.5 sm:h-3.5 shrink-0" /> 
-              <span className="hidden sm:inline">Elenco Compatto</span>
-            </button>
-          </div>
-        </div>
-      )}
 
       {oreScoperte.length === 0 ? (
         <div className="bg-white p-8 text-center rounded-xl border border-dashed border-slate-300">
@@ -572,10 +532,12 @@ export const TabelloneSostituzioni: React.FC<{
                   const sost = getSostituzione(os.ora, os.classe);
                   const isSelected = selectedOraScoperta?.ora === os.ora && selectedOraScoperta?.classe === os.classe;
                   const isGraveSostegno = isDocenteAssenteCasoGraveNellOra(os.docenteAssente.id, os.ora);
+                  const isFirstUnassigned = !sost && idx === 0;
 
                   return (
                     <div
                       key={idx}
+                      id={isFirstUnassigned ? 'targetSlotOraScoperta' : undefined}
                       onClick={() => setSelectedOraScoperta(os)}
                       className={`px-3.5 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-indigo-50/30 transition cursor-pointer ${
                         isSelected ? 'bg-indigo-50 ring-1 ring-inset ring-indigo-300' : ''
@@ -855,6 +817,92 @@ export const TabelloneSostituzioni: React.FC<{
           </table>
         </div>
       )}
+
+        </div>
+
+        {/* COLONNA LATERALE: SPECCHIETTO RISORSE DISPONIBILI (LG: 4/12) VISIBILE SOLO SU DESKTOP / TABLET >= LG */}
+        {risorsePerOra.length > 0 && (
+          <div className="hidden lg:block lg:col-span-4 space-y-3">
+            <div className="bg-white rounded-2xl p-4 shadow-2xs border border-slate-200 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-1.5 border-b border-slate-100 pb-2">
+                <span id="targetSpecchiettoRisorse" className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                  <span className="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs">
+                    ⚡
+                  </span>
+                  <span>Risorse Oggi ({risorsePerOra.reduce((acc, r) => acc + r.totDisponibili, 0)})</span>
+                </span>
+              </div>
+
+              {/* FILTRI IN LEGENDA DESKTOP */}
+              <div className="flex flex-wrap items-center gap-1 text-[10px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setMostraPotenziamento(!mostraPotenziamento)}
+                  className={`px-2 py-0.5 rounded-md border transition flex items-center gap-1 ${
+                    mostraPotenziamento ? 'bg-emerald-100 text-emerald-950 border-emerald-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                  }`}
+                >
+                  ⚡ Potenziamento
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMostraLiberatiGita(!mostraLiberatiGita)}
+                  className={`px-2 py-0.5 rounded-md border transition flex items-center gap-1 ${
+                    mostraLiberatiGita ? 'bg-amber-100 text-amber-950 border-amber-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                  }`}
+                >
+                  🚌 Gita
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMostraDisposizioni(!mostraDisposizioni)}
+                  className={`px-2 py-0.5 rounded-md border transition flex items-center gap-1 ${
+                    mostraDisposizioni ? 'bg-purple-100 text-purple-950 border-purple-300 font-black' : 'bg-slate-100 text-slate-400 line-through'
+                  }`}
+                >
+                  ⏱️ Disp.
+                </button>
+              </div>
+
+              {/* LISTA RISORSE DESKTOP */}
+              <div className="space-y-1.5 text-xs">
+                {risorsePerOra.map(r => {
+                  const potVisibili = mostraPotenziamento ? (mostraGiaUsati ? r.potenziamentoList : r.potenziamentoList.filter(p => !p.usata)) : [];
+                  const giteVisibili = mostraLiberatiGita ? (mostraGiaUsati ? r.liberatiGitaList : r.liberatiGitaList.filter(g => !g.usata)) : [];
+                  const dispVisibili = (mostraDisposizioni ? r.disposizioniList : r.disposizioniList.filter(d => d.debito > 0))
+                    .filter(d => mostraGiaUsati ? true : !d.usata);
+                  const totFiltrati = potVisibili.length + giteVisibili.length + dispVisibili.length;
+                  if (totFiltrati === 0) return null;
+
+                  return (
+                    <div key={r.ora} className="bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-wrap items-center justify-between gap-1.5">
+                      <span className="font-black text-slate-800">{r.ora}ª Ora</span>
+                      <div className="flex flex-wrap gap-1">
+                        {potVisibili.map(p => (
+                          <span key={p.docenteId} className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            ⚡ {p.nome}
+                          </span>
+                        ))}
+                        {giteVisibili.map(g => (
+                          <span key={g.docenteId} className="text-[10px] text-amber-800 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                            🚌 {g.nome}
+                          </span>
+                        ))}
+                        {dispVisibili.map(d => (
+                          <span key={d.docenteId} className="text-[10px] text-purple-800 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                            ⏱️ {d.nome}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
 
       {/* POPUP MODALE SCELTA ASSISTITA SOSTITUTO */}
       {selectedOraScoperta && (
