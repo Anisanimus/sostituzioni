@@ -18,18 +18,19 @@ import { RegistroStoricoAssenze } from './components/RegistroStoricoAssenze';
 import { AnagraficaOrario, ImpostazioniPriorita } from './components/AnagraficaOrario';
 import { ReportStatistiche } from './components/ReportStatistiche';
 import { PersonalizzazioniScuola } from './components/PersonalizzazioniScuola';
+import { QuadroSostituzioniScuola } from './components/QuadroSostituzioniScuola';
 import { PanoramicaLavori } from './components/PanoramicaLavori';
 import { Coachmark } from './components/Coachmark';
 import { 
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
-  Menu, X, Sliders, BarChart3, Sparkles, Building2
+  Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound
 } from 'lucide-react';
 
 const MainApp: React.FC = () => {
   const { docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola } = useApp();
-  const [ruoloAttivo, setRuoloAttivo] = useState<'VICEPRESIDENZA' | 'PORTALE_DOCENTE'>('VICEPRESIDENZA');
-  const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'SOSTITUZIONI_SMART' | 'PERSONALIZZAZIONI'>('GESTIONE_GIORNALIERA');
+  const [ruoloAttivo, setRuoloAttivo] = useState<'VICEPRESIDENZA' | 'PORTALE_DOCENTE' | 'QUADRO_SCUOLA'>('VICEPRESIDENZA');
+  const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'QUADRO_SCUOLA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'SOSTITUZIONI_SMART' | 'PERSONALIZZAZIONI'>('GESTIONE_GIORNALIERA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
 
@@ -138,7 +139,7 @@ const MainApp: React.FC = () => {
             <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700">
               <button
                 onClick={() => setRuoloAttivo('VICEPRESIDENZA')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   ruoloAttivo === 'VICEPRESIDENZA'
                     ? 'bg-indigo-600 text-white shadow-2xs'
                     : 'text-slate-400 hover:text-white'
@@ -147,9 +148,10 @@ const MainApp: React.FC = () => {
                 <Lock className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Vicepresidenza</span>
               </button>
+
               <button
                 onClick={() => setRuoloAttivo('PORTALE_DOCENTE')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   ruoloAttivo === 'PORTALE_DOCENTE'
                     ? 'bg-emerald-600 text-white shadow-2xs'
                     : 'text-slate-400 hover:text-white'
@@ -157,6 +159,20 @@ const MainApp: React.FC = () => {
               >
                 <Smartphone className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Portale Docenti</span>
+              </button>
+
+              <button
+                onClick={() => setRuoloAttivo('QUADRO_SCUOLA')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  ruoloAttivo === 'QUADRO_SCUOLA'
+                    ? 'bg-amber-600 text-white shadow-2xs'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Quadro Sostituzioni protetto da PIN per Personale ATA e Segreteria"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Personale ATA & Segreteria</span>
+                <span className="sm:hidden">ATA</span>
               </button>
             </div>
           </div>
@@ -227,10 +243,34 @@ const MainApp: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    setTabVice('QUADRO_SCUOLA');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    tabVice === 'QUADRO_SCUOLA'
+                      ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${tabVice === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <LayoutGrid className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block font-black text-sm">Quadro Generale Sostituzioni</span>
+                      <span className="text-[11px] text-slate-500 font-normal">Prospetto pulito per ATA / Docenti</span>
+                    </div>
+                  </div>
+                  {tabVice === 'QUADRO_SCUOLA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
                     setTabVice('STORICO');
                     setIsSidebarOpen(false);
                   }}
-                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left ${
+                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                     tabVice === 'STORICO'
                       ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                       : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
@@ -361,6 +401,8 @@ const MainApp: React.FC = () => {
       <main className="max-w-7xl mx-auto px-3 sm:px-6 py-4 w-full flex-1 space-y-4">
         {ruoloAttivo === 'PORTALE_DOCENTE' ? (
           <PortaleDocente />
+        ) : ruoloAttivo === 'QUADRO_SCUOLA' ? (
+          <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={false} />
         ) : (
           <>
 
@@ -387,6 +429,10 @@ const MainApp: React.FC = () => {
                   onChangeDate={(newDate) => setSelectedDate(newDate)}
                 />
               </div>
+            )}
+
+            {tabVice === 'QUADRO_SCUOLA' && (
+              <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={true} />
             )}
 
             {tabVice === 'STORICO' && (

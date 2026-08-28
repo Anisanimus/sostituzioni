@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X } from 'lucide-react';
+import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, LayoutGrid } from 'lucide-react';
 import { getDocentiCollegatiIds } from '../utils/docentiHelper';
+import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
 
 export const PortaleDocente: React.FC = () => {
   const { docenti, sostituzioni, notifiche, firmaSostituzione, segnaNotificheLette } = useApp();
@@ -9,6 +10,7 @@ export const PortaleDocente: React.FC = () => {
   const [pin, setPin] = useState<string>('');
   const [isLogged, setIsLogged] = useState<boolean>(false);
   const [notificaAttiva, setNotificaAttiva] = useState<boolean>(false);
+  const [tabDocente, setTabDocente] = useState<'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA'>('MIE_SOSTITUZIONI');
 
   const docente = docenti.find(d => d.id === selectedDocenteId);
   const collegatiIds = selectedDocenteId ? getDocentiCollegatiIds(selectedDocenteId, docenti) : [];
@@ -166,70 +168,110 @@ export const PortaleDocente: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-indigo-600" />
-              <span>Le tue Sostituzioni Assegnate</span>
-            </h3>
-            <p className="text-xs text-slate-500">Firma per presa visione delle ore di supplenza a te affidate</p>
-          </div>
-          <span className="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">
-            {mieSostituzioni.length} Assegnazioni
+      {/* SELETTORE SCHEDE DOCENTE: MIE SOSTITUZIONI VS QUADRO SCUOLA */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+        <button
+          type="button"
+          onClick={() => setTabDocente('MIE_SOSTITUZIONI')}
+          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+            tabDocente === 'MIE_SOSTITUZIONI'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <Calendar className="w-4 h-4" />
+          <span>Le mie Sostituzioni Assegnate</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${tabDocente === 'MIE_SOSTITUZIONI' ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
+            {mieSostituzioni.length}
           </span>
-        </div>
+        </button>
 
-        {mieSostituzioni.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
-            <CheckCircle2 className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-            <p className="font-semibold text-slate-600">Nessuna sostituzione assegnata</p>
-            <p className="text-xs">Al momento non hai supplenze pubblicate per questa settimana.</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {mieSostituzioni.map(s => (
-              <div key={s.id} className="p-4 hover:bg-slate-50 transition flex flex-wrap items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-indigo-600 text-white font-bold text-xs px-2.5 py-0.5 rounded">
-                      {s.giorno} {s.data}
-                    </span>
-                    <span className="bg-slate-800 text-white font-bold text-xs px-2.5 py-0.5 rounded">
-                      {s.ora}ª Ora
-                    </span>
-                    <span className="font-black text-slate-900 text-base">
-                      Classe {s.classe}
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-600">
-                    Sostituzione del docente: <strong>{getDocenteNome(s.docenteAssenteId)}</strong>
-                  </div>
-                  <div className="text-[11px] text-indigo-700 font-medium">
-                    Tipologia: {s.categoria.replace(/_/g, ' ')}
-                  </div>
-                </div>
-
-                <div>
-                  {s.firmata ? (
-                    <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Firmato il {s.dataFirma}</span>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => firmaSostituzione(s.id)}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition shadow flex items-center gap-2"
-                    >
-                      <span>Firma per Presa Visione</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => setTabDocente('QUADRO_SCUOLA')}
+          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+            tabDocente === 'QUADRO_SCUOLA'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <LayoutGrid className="w-4 h-4" />
+          <span>📋 Quadro Generale Sostituzioni Scuola</span>
+        </button>
       </div>
+
+      {/* CONTENUTO SCHEDA 1: LE MIE SOSTITUZIONI */}
+      {tabDocente === 'MIE_SOSTITUZIONI' && (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-indigo-600" />
+                <span>Le tue Sostituzioni Assegnate</span>
+              </h3>
+              <p className="text-xs text-slate-500">Firma per presa visione delle ore di supplenza a te affidate</p>
+            </div>
+            <span className="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">
+              {mieSostituzioni.length} Assegnazioni
+            </span>
+          </div>
+
+          {mieSostituzioni.length === 0 ? (
+            <div className="p-12 text-center text-slate-400">
+              <CheckCircle2 className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+              <p className="font-semibold text-slate-600">Nessuna sostituzione assegnata</p>
+              <p className="text-xs">Al momento non hai supplenze pubblicate per questa settimana.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {mieSostituzioni.map(s => (
+                <div key={s.id} className="p-4 hover:bg-slate-50 transition flex flex-wrap items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-indigo-600 text-white font-bold text-xs px-2.5 py-0.5 rounded">
+                        {s.giorno} {s.data}
+                      </span>
+                      <span className="bg-slate-800 text-white font-bold text-xs px-2.5 py-0.5 rounded">
+                        {s.ora}ª Ora
+                      </span>
+                      <span className="font-black text-slate-900 text-base">
+                        Classe {s.classe}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-600">
+                      Sostituzione del docente: <strong>{getDocenteNome(s.docenteAssenteId)}</strong>
+                    </div>
+                    <div className="text-[11px] text-indigo-700 font-medium">
+                      Tipologia: {s.categoria.replace(/_/g, ' ')}
+                    </div>
+                  </div>
+
+                  <div>
+                    {s.firmata ? (
+                      <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Firmato il {s.dataFirma}</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => firmaSostituzione(s.id)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition shadow flex items-center gap-2"
+                      >
+                        <span>Firma per Presa Visione</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CONTENUTO SCHEDA 2: QUADRO GENERALE SCUOLA (ACCESSO DIRETTO GIÀ AUTENTICATO DAL DOCENTE) */}
+      {tabDocente === 'QUADRO_SCUOLA' && (
+        <QuadroSostituzioniScuola isEmbedInVicepresidenza={true} />
+      )}
     </div>
   );
 };

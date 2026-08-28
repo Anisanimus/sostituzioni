@@ -15,6 +15,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
   } = useApp();
   
   const [nomeScuola, setNomeScuola] = useState(impostazioniScuola.nomeScuola || 'I.C. Leonardo da Vinci');
+  const [pinPersonaleAta, setPinPersonaleAta] = useState(impostazioniScuola.pinPersonaleAta || '1234');
   const [tettoPermessi, setTettoPermessi] = useState(impostazioniScuola.tettoMaxPermessiBreviAnno || 12);
   const [tettoAssemblee, setTettoAssemblee] = useState(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
   const [vistaTabellone, setVistaTabellone] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>(impostazioniScuola.vistaTabellonePredefinita || 'GRUPPI_ORA');
@@ -44,6 +45,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
     e.preventDefault();
     updateImpostazioniScuola({
       nomeScuola: nomeScuola.trim() || 'Istituto Scolastico',
+      pinPersonaleAta: pinPersonaleAta.trim() || '1234',
       tettoMaxPermessiBreviAnno: Number(tettoPermessi) || 12,
       tettoMaxAssembleeSindacaliAnno: Number(tettoAssemblee) || 10,
       vistaTabellonePredefinita: vistaTabellone,
@@ -59,6 +61,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
     if (window.confirm('Vuoi ripristinare le personalizzazioni predefinite?')) {
       setImpostazioniScuola(DEFAULT_IMPOSTAZIONI_SCUOLA);
       setNomeScuola(DEFAULT_IMPOSTAZIONI_SCUOLA.nomeScuola);
+      setPinPersonaleAta(DEFAULT_IMPOSTAZIONI_SCUOLA.pinPersonaleAta || '1234');
       setTettoPermessi(DEFAULT_IMPOSTAZIONI_SCUOLA.tettoMaxPermessiBreviAnno);
       setTettoAssemblee(DEFAULT_IMPOSTAZIONI_SCUOLA.tettoMaxAssembleeSindacaliAnno);
       setVistaTabellone(DEFAULT_IMPOSTAZIONI_SCUOLA.vistaTabellonePredefinita);
@@ -168,33 +171,53 @@ export const PersonalizzazioniScuola: React.FC = () => {
       </div>
 
       <form onSubmit={handleSalva} className="space-y-4">
-        {/* SEZIONE 1: NOME DELLA SCUOLA (BARRA IN ALTO) */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-3">
+        {/* SEZIONE 1: NOME DELLA SCUOLA & SICUREZZA ACCESSI */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
           <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
             <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">Intestazione & Nome Istituto</h3>
-              <p className="text-xs text-slate-500">Compare in alto nella barra principale scura e nei report ufficiali.</p>
+              <h3 className="text-sm sm:text-base font-black text-slate-900">Intestazione & Sicurezza Accesso</h3>
+              <p className="text-xs text-slate-500">Denominazione istituto e PIN per l'accesso protetto del personale.</p>
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Denominazione Scuola / Istituto Comprensivo / IIS
-            </label>
-            <input
-              type="text"
-              value={nomeScuola}
-              onChange={(e) => setNomeScuola(e.target.value)}
-              placeholder="es. I.C. Leonardo da Vinci - Roma"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
-              required
-            />
-            <span className="text-[11px] text-slate-400 mt-1 block">
-              Anteprima barra superiore: <strong className="text-slate-700">{nomeScuola || 'Gestione Sostituzioni'}</strong>
-            </span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Denominazione Scuola / Istituto Comprensivo / IIS
+              </label>
+              <input
+                type="text"
+                value={nomeScuola}
+                onChange={(e) => setNomeScuola(e.target.value)}
+                placeholder="es. I.C. Leonardo da Vinci - Roma"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
+                required
+              />
+              <span className="text-[11px] text-slate-400 mt-1 block">
+                Anteprima barra superiore: <strong className="text-slate-700">{nomeScuola || 'Gestione Sostituzioni'}</strong>
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <label className="block text-xs font-bold text-slate-800 mb-1">
+                🔒 PIN Personale ATA / Segreteria
+              </label>
+              <p className="text-[10px] text-slate-500 mb-2">
+                Codice numerico richiesto ai collaboratori scolastici per visualizzare il quadro giornaliero.
+              </p>
+              <input
+                type="text"
+                value={pinPersonaleAta}
+                onChange={(e) => setPinPersonaleAta(e.target.value)}
+                placeholder="1234"
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-black text-indigo-700 text-center tracking-widest outline-none focus:border-indigo-500"
+                maxLength={6}
+                required
+              />
+            </div>
           </div>
         </div>
 

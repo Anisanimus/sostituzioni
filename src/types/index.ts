@@ -131,6 +131,7 @@ export interface ImpostazioniScuola {
   vistaTabellonePredefinita: 'GRUPPI_ORA' | 'PER_DOCENTE';
   nascondiWeekendCalendario: boolean;
   giorniFestivi?: string[]; // Array di date ISO YYYY-MM-DD per festività, ponti e chiusure
+  pinPersonaleAta?: string; // PIN di accesso riservato per Personale ATA / Segreteria
 }
 
 export interface CandidatoSostituto {

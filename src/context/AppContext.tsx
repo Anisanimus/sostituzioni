@@ -10,7 +10,9 @@ export const DEFAULT_IMPOSTAZIONI_SCUOLA: ImpostazioniScuola = {
   tettoMaxPermessiBreviAnno: 12,
   tettoMaxAssembleeSindacaliAnno: 10,
   vistaTabellonePredefinita: 'GRUPPI_ORA',
-  nascondiWeekendCalendario: true
+  nascondiWeekendCalendario: true,
+  giorniFestivi: [],
+  pinPersonaleAta: '1234'
 };
 
 export const DEFAULT_PRIORITA_ASSENZE: CategoriaSostituto[] = [
