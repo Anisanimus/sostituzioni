@@ -139,11 +139,12 @@ const MainApp: React.FC = () => {
             <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700">
               <button
                 onClick={() => setRuoloAttivo('VICEPRESIDENZA')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                className={`p-1.5 sm:px-3 sm:py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   ruoloAttivo === 'VICEPRESIDENZA'
                     ? 'bg-indigo-600 text-white shadow-2xs'
                     : 'text-slate-400 hover:text-white'
                 }`}
+                title="Area Vicepresidenza"
               >
                 <Lock className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Vicepresidenza</span>
@@ -151,11 +152,12 @@ const MainApp: React.FC = () => {
 
               <button
                 onClick={() => setRuoloAttivo('PORTALE_DOCENTE')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                className={`p-1.5 sm:px-3 sm:py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   ruoloAttivo === 'PORTALE_DOCENTE'
                     ? 'bg-emerald-600 text-white shadow-2xs'
                     : 'text-slate-400 hover:text-white'
                 }`}
+                title="Portale Docenti"
               >
                 <Smartphone className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Portale Docenti</span>
@@ -163,7 +165,7 @@ const MainApp: React.FC = () => {
 
               <button
                 onClick={() => setRuoloAttivo('QUADRO_SCUOLA')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                className={`p-1.5 sm:px-3 sm:py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                   ruoloAttivo === 'QUADRO_SCUOLA'
                     ? 'bg-amber-600 text-white shadow-2xs'
                     : 'text-slate-400 hover:text-white'
@@ -172,7 +174,6 @@ const MainApp: React.FC = () => {
               >
                 <KeyRound className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Personale ATA & Segreteria</span>
-                <span className="sm:hidden">ATA</span>
               </button>
             </div>
           </div>
