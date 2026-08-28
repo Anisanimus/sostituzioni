@@ -894,8 +894,8 @@ export const TabelloneSostituzioni: React.FC<{
                                       <span className="text-[10px] font-normal text-slate-500">({sost.categoria.replace(/_/g, ' ')})</span>
                                     </div>
 
-                                    {/* TRACKING STATO PRESA VISIONE */}
-                                    <div className="mt-1 flex items-center gap-1.5">
+                                    {/* TRACKING STATO PRESA VISIONE E CONDIVISIONE RAPIDA */}
+                                    <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                                       {sost.firmata ? (
                                         <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
                                           <CheckCircle className="w-3 h-3 text-emerald-600" />
@@ -918,6 +918,24 @@ export const TabelloneSostituzioni: React.FC<{
                                           <span>✉️ Invia per Firma</span>
                                         </button>
                                       )}
+
+                                      {/* PULSANTE WHATSAPP RAPIDO */}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const nomeSostituto = getDocenteNome(sost.docenteSostitutoId);
+                                          const nomeAssente = getBaseNomeDocente(os.docenteAssente.nome);
+                                          const dataFmt = formatDataItaliana(selectedDate);
+                                          const testoMsg = `Gentile Prof./Prof.ssa ${nomeSostituto}, Le comunichiamo che il giorno ${dataFmt} è assegnato/a alla ${os.ora}ª ora nella classe ${os.classe} per la sostituzione del Prof. ${nomeAssente}.`;
+                                          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(testoMsg)}`, '_blank');
+                                        }}
+                                        className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[10px] px-2 py-0.5 rounded-md transition shadow-2xs cursor-pointer"
+                                        title="Invia avviso su WhatsApp con messaggio precompilato"
+                                      >
+                                        <MessageSquare className="w-2.5 h-2.5 text-emerald-600" />
+                                        <span>WhatsApp</span>
+                                      </button>
                                     </div>
                                   </div>
 
