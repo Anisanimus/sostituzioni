@@ -115,12 +115,15 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     });
     const totDocentiAssenti = docentiAssentiUnici.size;
 
-    // Conteggio effettivo ore coperte corrispondenti a ore scoperte reali
-    const totCoperte = oreScoperteGiorno.filter(os => 
-      sostituzioniData.some(s => s.ora === os.ora && s.classe === os.classe)
-    ).length;
+    // Conteggio effettivo ore coperte (fatti), pubblicate (inviata richiesta) e firmate (presa visione fatta)
+    const sostituzioniEffettive = oreScoperteGiorno
+      .map(os => sostituzioniData.find(s => s.ora === os.ora && s.classe === os.classe))
+      .filter(Boolean) as typeof sostituzioniData;
 
-    const totRimanenti = Math.max(0, totOreScoperte - totCoperte);
+    const totCoperte = sostituzioniEffettive.length; // FATTI
+    const totPubblicate = sostituzioniEffettive.filter(s => s.pubblicata).length; // RICHIESTE INVIATE
+    const totFirmate = sostituzioniEffettive.filter(s => s.firmata).length; // PRESA VISIONE EFFETTUATA
+    const totRimanenti = Math.max(0, totOreScoperte - totCoperte); // DA FARE
 
     // Livello gravità in base al numero di docenti assenti:
     // 0 docenti: OK (Nessuna assenza / Tranquilla)
@@ -138,6 +141,8 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
       totDocentiAssenti,
       totOreScoperte,
       totCoperte,
+      totPubblicate,
+      totFirmate,
       totRimanenti,
       gravita,
       isOggi: dataStr === new Date().toISOString().split('T')[0],
@@ -198,7 +203,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
           className="bg-white hover:bg-slate-50 text-indigo-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-indigo-200 shadow-2xs flex items-center gap-1.5 transition cursor-pointer"
         >
           <BarChart3 className="w-3.5 h-3.5" />
-          <span>Mostra Avanzamento Lavori</span>
+          <span>Mostra Sostituzioni</span>
         </button>
       </div>
     );
@@ -209,16 +214,16 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
       
       {/* HEADER PANORAMICA */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
-        {/* TITOLO + DATA BEN VISIBILE */}
+        {/* TITOLO + DATA BEN VISIBILE CON FONT PIÙ GRANDE */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
-            <TrendingUp className="w-4 h-4" />
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
+            <TrendingUp className="w-5 h-5" />
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs sm:text-sm font-black tracking-tight text-slate-900">
-              Avanzamento Lavori
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="text-base sm:text-lg font-black tracking-tight text-slate-900">
+              Sostituzioni
             </span>
-            <span className="bg-indigo-600 text-white text-xs font-black px-2.5 py-0.5 rounded-lg shadow-2xs">
+            <span className="bg-indigo-600 text-white text-xs sm:text-sm font-black px-3 py-1 rounded-xl shadow-xs">
               {currentStat.giornoNome} {new Date(selectedDate).getDate()}/{new Date(selectedDate).getMonth() + 1}
             </span>
           </div>
@@ -262,17 +267,54 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* BADGE ORE FATTE / PERCENTUALE VICINO AI CONTROLLI */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            {/* 1. FATTI / TOTALI (PROGRESS GENERALE) */}
             <span className={`text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full border ${
               totGiornoScoperte === 0 
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 : percentualeGiorno === 100 
                   ? 'bg-emerald-600 text-white border-emerald-700'
                   : 'bg-amber-50 text-amber-900 border-amber-200'
-            }`}>
-              {totGiornoCoperte}/{totGiornoScoperte} Ore ({percentualeGiorno}%)
+            }`} title="Ore assegnate / Totale ore da coprire">
+              ✓ {totGiornoCoperte}/{totGiornoScoperte} Fatti
             </span>
+
+            {/* 2. DA FARE (SE > 0) */}
+            {currentStat.totRimanenti > 0 && (
+              <span className="text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs" title="Ore scoperte ancora da assegnare">
+                ⏳ {currentStat.totRimanenti} da fare
+              </span>
+            )}
+
+            {/* 3. RICHIESTE INVIATE (PUBBLICATE) */}
+            {totGiornoCoperte > 0 && (
+              <span className={`text-[10px] sm:text-[11px] font-black px-2 py-1 rounded-full border flex items-center gap-1 transition ${
+                currentStat.totPubblicate === totGiornoCoperte
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
+                  : currentStat.totPubblicate > 0
+                    ? 'bg-sky-50 text-sky-900 border-sky-200'
+                    : 'bg-slate-100 text-slate-600 border-slate-200'
+              }`} title="Richieste di sostituzione pubblicate / inviate ai docenti">
+                <span>📤 {currentStat.totPubblicate}/{totGiornoCoperte}</span>
+                <span className="hidden sm:inline font-normal text-[10px]">inviate</span>
+                {currentStat.totPubblicate === totGiornoCoperte && <span>✓</span>}
+              </span>
+            )}
+
+            {/* 4. PRESE VISIONE (FIRMATE) */}
+            {totGiornoCoperte > 0 && (
+              <span className={`text-[10px] sm:text-[11px] font-black px-2 py-1 rounded-full border flex items-center gap-1 transition ${
+                currentStat.totFirmate === totGiornoCoperte
+                  ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                  : currentStat.totFirmate > 0
+                    ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
+                    : 'bg-slate-100 text-slate-600 border-slate-200'
+              }`} title="Prese visione (firme) effettuate dai docenti">
+                <span>✍️ {currentStat.totFirmate}/{totGiornoCoperte}</span>
+                <span className="hidden sm:inline font-normal text-[10px]">firmate</span>
+                {currentStat.totFirmate === totGiornoCoperte && <span>✓</span>}
+              </span>
+            )}
 
             <button
               type="button"
@@ -316,7 +358,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                     id={`day_card_${s.dataStr}`}
                     type="button"
                     onClick={() => onSelectDate(s.dataStr)}
-                    className={`min-w-[190px] sm:min-w-[210px] p-2.5 rounded-2xl text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2 shrink-0 ${
+                    className={`min-w-[210px] sm:min-w-[230px] p-2.5 rounded-2xl text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2 shrink-0 ${
                       s.isSelezionata 
                         ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-4 ring-indigo-200/80 shadow-md scale-[1.01]' 
                         : 'bg-slate-50/70 hover:bg-slate-100/90 border border-slate-200/80 shadow-2xs'
@@ -333,28 +375,63 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                       )}
                     </div>
 
+                    {/* RIGA 1: FATTI E DA FARE */}
                     <div className="flex items-center justify-between gap-1">
                       <span className="text-[11px] font-bold text-slate-600">
-                        {s.totCoperte}/{s.totOreScoperte} ore <span className="text-[10px] text-slate-400 font-normal">({s.totDocentiAssenti} doc)</span>
+                        {s.totCoperte}/{s.totOreScoperte} fatti <span className="text-[10px] text-slate-400 font-normal">({s.totDocentiAssenti} doc)</span>
                       </span>
-                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-md border ${badgeGravita.color}`}>
-                        {badgeGravita.icon} {s.totOreScoperte === 0 ? '0' : s.totRimanenti > 0 ? `${s.totRimanenti} da fare` : 'OK'}
+                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-md border ${
+                        s.totRimanenti > 0 ? 'bg-rose-50 text-rose-800 border-rose-200' : badgeGravita.color
+                      }`}>
+                        {s.totOreScoperte === 0 ? '✓ 0' : s.totRimanenti > 0 ? `⏳ ${s.totRimanenti} da fare` : '✓ OK'}
                       </span>
                     </div>
 
-                    {/* Mini progress bar del giorno */}
+                    {/* RIGA 2: RICHIESTE INVIATE E PRESE VISIONE */}
+                    {s.totCoperte > 0 && (
+                      <div className="grid grid-cols-2 gap-1 text-[10px] font-bold bg-slate-100/90 p-1.5 rounded-lg border border-slate-200/70">
+                        <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition ${
+                          s.totPubblicate === s.totCoperte
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                            : 'text-sky-950 border-transparent'
+                        }`} title="Richieste inviate">
+                          <span>📤</span>
+                          <span>{s.totPubblicate}/{s.totCoperte} inviate {s.totPubblicate === s.totCoperte ? '✓' : ''}</span>
+                        </span>
+                        <span className={`flex items-center justify-end gap-1 px-1.5 py-0.5 rounded border transition ${
+                          s.totFirmate === s.totCoperte 
+                            ? 'bg-emerald-600 text-white border-emerald-700 font-black shadow-2xs' 
+                            : s.totFirmate > 0
+                              ? 'text-indigo-950 border-transparent'
+                              : 'text-slate-500 border-transparent'
+                        }`} title="Prese visione effettuate">
+                          <span>✍️</span>
+                          <span>{s.totFirmate}/{s.totCoperte} firmate {s.totFirmate === s.totCoperte ? '✓' : ''}</span>
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Mini progress bar del giorno: verde SOLO se tutte coperte e tutte firmate (ciclo completo) */}
                     <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
                       <div 
                         className={`h-full transition-all duration-300 ${
-                          s.totOreScoperte === 0 || s.totCoperte === s.totOreScoperte
+                          s.totOreScoperte === 0 || (s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte)
                             ? 'bg-emerald-500' 
-                            : s.gravita === 'COMPLICATO' 
-                              ? 'bg-rose-500' 
-                              : s.gravita === 'DISCRETA'
-                                ? 'bg-amber-500'
-                                : 'bg-sky-500'
+                            : s.totCoperte === s.totOreScoperte
+                              ? 'bg-indigo-500' // Tutte assegnate ma in attesa di firme
+                              : s.gravita === 'COMPLICATO' 
+                                ? 'bg-rose-500' 
+                                : s.gravita === 'DISCRETA'
+                                  ? 'bg-amber-500'
+                                  : 'bg-sky-500'
                         }`}
-                        style={{ width: `${s.totOreScoperte > 0 ? Math.min(100, (s.totCoperte / s.totOreScoperte) * 100) : 100}%` }}
+                        style={{ 
+                          width: `${
+                            s.totOreScoperte > 0 
+                              ? Math.min(100, ( (s.totCoperte * 0.5 + s.totFirmate * 0.5) / s.totOreScoperte) * 100) 
+                              : 100
+                          }%` 
+                        }}
                       />
                     </div>
                   </button>

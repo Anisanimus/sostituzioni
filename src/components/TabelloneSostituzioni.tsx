@@ -229,19 +229,33 @@ export const TabelloneSostituzioni: React.FC<{
 
     const docAssente = items[0].docenteAssente;
     const totOreDoc = items.length;
-    const totCoperteDoc = items.filter(os => getSostituzione(os.ora, os.classe)).length;
+    const sostsDoc = items.map(os => getSostituzione(os.ora, os.classe)).filter(Boolean);
+    const totCoperteDoc = sostsDoc.length;
+    const totPubblicateDoc = sostsDoc.filter(s => s?.pubblicata).length;
+    const totFirmateDoc = sostsDoc.filter(s => s?.firmata).length;
+    const totDaFareDoc = Math.max(0, totOreDoc - totCoperteDoc);
 
     return {
       nomeDocente,
       docAssente,
       totOreDoc,
       totCoperteDoc,
+      totPubblicateDoc,
+      totFirmateDoc,
+      totDaFareDoc,
       items
     };
   });
 
-  const totaleCoperte = oreScoperte.filter(os => getSostituzione(os.ora, os.classe)).length;
-  const totaleDaCoprire = oreScoperte.length;
+  const sostituzioniEffettiveOggi = oreScoperte
+    .map(os => getSostituzione(os.ora, os.classe))
+    .filter(Boolean) as SostituzioneAssegnata[];
+
+  const totaleCoperte = sostituzioniEffettiveOggi.length; // FATTI
+  const totaleDaCoprire = oreScoperte.length; // TOTALE
+  const totaleDaFare = Math.max(0, totaleDaCoprire - totaleCoperte); // DA FARE
+  const totalePubblicate = sostituzioniEffettiveOggi.filter(s => s.pubblicata).length; // RICHIESTE INVIATE
+  const totaleFirmate = sostituzioniEffettiveOggi.filter(s => s.firmata).length; // PRESE VISIONE (FIRMATE)
 
   // ==============================================================================
   // CALCOLO SPECCHIETTO COMPATTO RISORSE DISPONIBILI (DIVISI PER ORA E TIPOLOGIA)
@@ -504,18 +518,42 @@ export const TabelloneSostituzioni: React.FC<{
                           {!isOraRisorsaChiusa && (
                             <div className="p-2 pt-0 border-t border-slate-100 flex flex-wrap gap-1.5 animate-in fade-in duration-150 mt-1">
                               {potVisibili.map(p => (
-                                <span key={p.docenteId} className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
-                                  ⚡ {p.nome}
+                                <span 
+                                  key={p.docenteId} 
+                                  className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition ${
+                                    p.usata
+                                      ? 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-75'
+                                      : 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-2xs'
+                                  }`}
+                                  title={p.usata ? `${p.nome} è già assegnato in quest'ora` : `${p.nome} è disponibile`}
+                                >
+                                  ⚡ {p.nome} {p.usata ? '(Occupato)' : ''}
                                 </span>
                               ))}
                               {giteVisibili.map(g => (
-                                <span key={g.docenteId} className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
-                                  🚌 {g.nome}
+                                <span 
+                                  key={g.docenteId} 
+                                  className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition ${
+                                    g.usata
+                                      ? 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-75'
+                                      : 'bg-amber-50 text-amber-800 border-amber-200 shadow-2xs'
+                                  }`}
+                                  title={g.usata ? `${g.nome} è già assegnato in quest'ora` : `${g.nome} è disponibile (Liberato da ${g.classe})`}
+                                >
+                                  🚌 {g.nome} {g.usata ? '(Occupato)' : ''}
                                 </span>
                               ))}
                               {dispVisibili.map(d => (
-                                <span key={d.docenteId} className="text-[10px] text-purple-800 font-bold bg-purple-50 px-2 py-1 rounded-lg border border-purple-200">
-                                  ⏱️ {d.nome}
+                                <span 
+                                  key={d.docenteId} 
+                                  className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition ${
+                                    d.usata
+                                      ? 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-75'
+                                      : 'bg-purple-50 text-purple-800 border-purple-200 shadow-2xs'
+                                  }`}
+                                  title={d.usata ? `${d.nome} è già assegnato in quest'ora` : `${d.nome} è a disposizione`}
+                                >
+                                  ⏱️ {d.nome} {d.usata ? '(Occupato)' : ''}
                                 </span>
                               ))}
                             </div>
@@ -563,23 +601,59 @@ export const TabelloneSostituzioni: React.FC<{
                 </button>
               </div>
 
-              {/* MINI BADGE REPORT STATO: PROGRESS X/Y (VERDE QUANDO COMPLETATO) */}
-              <div className="shrink-0">
+              {/* MINI BADGE REPORT STATO CON LE 4 METRICHE */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {/* 1. FATTI / TOTALE */}
                 {totaleDaCoprire === 0 ? (
                   <div className="flex items-center gap-1.5 bg-emerald-100 text-emerald-950 px-2.5 py-1 rounded-xl text-xs font-black border border-emerald-300 shadow-2xs">
-                    <span className="text-[10px] font-bold text-emerald-800 uppercase">Progress:</span>
+                    <span className="text-[10px] font-bold text-emerald-800 uppercase">Fatti:</span>
                     <span>0/0 ✓</span>
                   </div>
                 ) : totaleCoperte === totaleDaCoprire ? (
-                  <div className="flex items-center gap-1.5 bg-emerald-500 text-white px-3 py-1 rounded-xl text-xs font-black border border-emerald-600 shadow-2xs animate-in zoom-in-95">
-                    <span className="text-[10px] font-bold text-emerald-100 uppercase">Progress:</span>
+                  <div className="flex items-center gap-1.5 bg-emerald-500 text-white px-2.5 py-1 rounded-xl text-xs font-black border border-emerald-600 shadow-2xs">
+                    <span className="text-[10px] font-bold text-emerald-100 uppercase">Fatti:</span>
                     <span>{totaleCoperte}/{totaleDaCoprire} ✓</span>
                   </div>
                 ) : (
                   <div className="flex items-center gap-1.5 bg-amber-50 text-amber-950 px-2.5 py-1 rounded-xl text-xs font-black border border-amber-300 shadow-2xs">
-                    <span className="text-[10px] font-bold text-amber-800 uppercase">Progress:</span>
+                    <span className="text-[10px] font-bold text-amber-800 uppercase">Fatti:</span>
                     <span>{totaleCoperte}/{totaleDaCoprire}</span>
                   </div>
+                )}
+
+                {/* 2. DA FARE (SE > 0) */}
+                {totaleDaFare > 0 && (
+                  <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs">
+                    ⏳ {totaleDaFare} da fare
+                  </span>
+                )}
+
+                {/* 3. INVIATE (SE > 0) */}
+                {totaleCoperte > 0 && (
+                  <span className={`text-xs font-black px-2.5 py-1 rounded-xl border shadow-2xs flex items-center gap-1 transition ${
+                    totalePubblicate === totaleCoperte
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                      : 'bg-sky-50 text-sky-950 border-sky-200'
+                  }`} title="Richieste inviate">
+                    <span>📤 {totalePubblicate}/{totaleCoperte}</span>
+                    <span className="hidden sm:inline font-normal text-[10px]">inviate</span>
+                    {totalePubblicate === totaleCoperte && <span>✓</span>}
+                  </span>
+                )}
+
+                {/* 4. PRESE VISIONE / FIRMATE */}
+                {totaleCoperte > 0 && (
+                  <span className={`text-xs font-black px-2.5 py-1 rounded-xl border shadow-2xs flex items-center gap-1 transition ${
+                    totaleFirmate === totaleCoperte
+                      ? 'bg-emerald-600 text-white border-emerald-700'
+                      : totaleFirmate > 0
+                        ? 'bg-indigo-50 text-indigo-950 border-indigo-200'
+                        : 'bg-slate-100 text-slate-600 border-slate-200'
+                  }`} title="Prese visione effettuate">
+                    <span>✍️ {totaleFirmate}/{totaleCoperte}</span>
+                    <span className="hidden sm:inline font-normal text-[10px]">firmate</span>
+                    {totaleFirmate === totaleCoperte && <span>✓</span>}
+                  </span>
                 )}
               </div>
             </div>
@@ -620,7 +694,11 @@ export const TabelloneSostituzioni: React.FC<{
         <div className="space-y-3">
           {oreRaggruppate.map(gruppo => {
             const isAperto = oreAperte.includes(gruppo.ora);
-            const totCoperteGruppo = gruppo.items.filter(item => getSostituzione(item.ora, item.classe)).length;
+            const sostsGruppo = gruppo.items.map(item => getSostituzione(item.ora, item.classe)).filter(Boolean);
+            const totCoperteGruppo = sostsGruppo.length; // FATTI
+            const totPubblicateGruppo = sostsGruppo.filter(s => s?.pubblicata).length; // INVIATE
+            const totFirmateGruppo = sostsGruppo.filter(s => s?.firmata).length; // PRESE VISIONE (FIRMATE)
+            const totDaFareGruppo = Math.max(0, gruppo.items.length - totCoperteGruppo); // DA FARE
 
             return (
               <div key={gruppo.ora} className="bg-white rounded-xl shadow-2xs border border-slate-200 overflow-hidden">
@@ -631,25 +709,61 @@ export const TabelloneSostituzioni: React.FC<{
                       prev.includes(gruppo.ora) ? prev.filter(o => o !== gruppo.ora) : [...prev, gruppo.ora]
                     );
                   }}
-                  className="w-full bg-slate-50/80 hover:bg-slate-100/90 px-3.5 py-2 border-b border-slate-200 flex items-center justify-between transition cursor-pointer text-left"
+                  className="w-full bg-slate-50/80 hover:bg-slate-100/90 px-3.5 py-2 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left"
                 >
                   <div className="flex items-center gap-2">
                     <span className="bg-slate-900 text-white font-black text-xs px-2 py-0.5 rounded shadow-2xs">
                       {gruppo.ora}ª ORA
                     </span>
                     <span className="text-xs font-bold text-slate-700">
-                      {gruppo.items.length} {gruppo.items.length === 1 ? 'classe da coprire' : 'classi da coprire'}
+                      {gruppo.items.length} {gruppo.items.length === 1 ? 'sostituzione' : 'sostituzioni'}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {/* 1. SOSTITUZIONI FATTE */}
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
                       totCoperteGruppo === gruppo.items.length 
                         ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' 
                         : 'bg-amber-100 text-amber-900 border border-amber-300'
-                    }`}>
-                      {totCoperteGruppo} / {gruppo.items.length} Coperte
+                    }`} title="Sostituzioni assegnate / totali">
+                      ✓ {totCoperteGruppo}/{gruppo.items.length} Fatti
                     </span>
+
+                    {/* 2. DA FARE */}
+                    {totDaFareGruppo > 0 && (
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200" title="Sostituzioni ancora da fare">
+                        ⏳ {totDaFareGruppo} da fare
+                      </span>
+                    )}
+
+                    {/* 3. INVIATE */}
+                    {totCoperteGruppo > 0 && (
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-md border transition ${
+                        totPubblicateGruppo === totCoperteGruppo
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                          : 'bg-sky-50 text-sky-900 border-sky-200'
+                      }`} title="Richieste inviate">
+                        <span>📤 {totPubblicateGruppo}/{totCoperteGruppo}</span>
+                        {totPubblicateGruppo === totCoperteGruppo && <span>✓</span>}
+                      </span>
+                    )}
+
+                    {/* 4. PRESE VISIONE / FIRME */}
+                    {totCoperteGruppo > 0 && (
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-md border flex items-center gap-1 transition ${
+                        totFirmateGruppo === totCoperteGruppo
+                          ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                          : totFirmateGruppo > 0
+                            ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`} title="Prese visione (firme) effettuate dai docenti">
+                        <span>✍️ {totFirmateGruppo}/{totCoperteGruppo}</span>
+                        <span className="hidden sm:inline font-normal text-[9px]">firmate</span>
+                        {totFirmateGruppo === totCoperteGruppo && <span>✓</span>}
+                      </span>
+                    )}
+
                     <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isAperto ? 'rotate-180 text-indigo-600' : ''}`} />
                   </div>
                 </button>
@@ -834,14 +948,50 @@ export const TabelloneSostituzioni: React.FC<{
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {/* 1. FATTI / TOTALI */}
                     <span className={`text-xs font-black px-2.5 py-1 rounded-xl shadow-2xs ${
                       gruppoDoc.totCoperteDoc === gruppoDoc.totOreDoc 
                         ? 'bg-emerald-500 text-white' 
                         : 'bg-amber-500 text-white'
-                    }`}>
-                      {gruppoDoc.totCoperteDoc} / {gruppoDoc.totOreDoc} Ore Coperte
+                    }`} title="Sostituzioni assegnate per questo docente">
+                      ✓ {gruppoDoc.totCoperteDoc}/{gruppoDoc.totOreDoc} Fatti
                     </span>
+
+                    {/* 2. DA FARE */}
+                    {gruppoDoc.totDaFareDoc > 0 && (
+                      <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-rose-500 text-white shadow-2xs" title="Sostituzioni ancora da assegnare">
+                        ⏳ {gruppoDoc.totDaFareDoc} da fare
+                      </span>
+                    )}
+
+                    {/* 3. INVIATE */}
+                    {gruppoDoc.totCoperteDoc > 0 && (
+                      <span className={`text-xs font-black px-2 py-1 rounded-xl border shadow-2xs flex items-center gap-1 transition ${
+                        gruppoDoc.totPubblicateDoc === gruppoDoc.totCoperteDoc
+                          ? 'bg-emerald-500/30 text-emerald-200 border-emerald-400/50'
+                          : 'bg-sky-900/80 text-sky-100 border-sky-700'
+                      }`} title="Richieste inviate ai docenti">
+                        <span>📤 {gruppoDoc.totPubblicateDoc}/{gruppoDoc.totCoperteDoc}</span>
+                        {gruppoDoc.totPubblicateDoc === gruppoDoc.totCoperteDoc && <span>✓</span>}
+                      </span>
+                    )}
+
+                    {/* 4. PRESE VISIONE (FIRME) */}
+                    {gruppoDoc.totCoperteDoc > 0 && (
+                      <span className={`text-xs font-black px-2 py-1 rounded-xl shadow-2xs flex items-center gap-1 transition ${
+                        gruppoDoc.totFirmateDoc === gruppoDoc.totCoperteDoc
+                          ? 'bg-emerald-500 text-white border border-emerald-400'
+                          : gruppoDoc.totFirmateDoc > 0
+                            ? 'bg-indigo-900/80 text-indigo-100 border border-indigo-700'
+                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                      }`} title="Prese visione (firme) effettuate dai docenti">
+                        <span>✍️ {gruppoDoc.totFirmateDoc}/{gruppoDoc.totCoperteDoc}</span>
+                        <span className="hidden sm:inline font-normal text-[10px]">firmate</span>
+                        {gruppoDoc.totFirmateDoc === gruppoDoc.totCoperteDoc && <span>✓</span>}
+                      </span>
+                    )}
+
                     <ChevronDown className={`w-4 h-4 text-slate-300 transition-transform duration-200 ${isAperto ? 'rotate-180 text-white' : ''}`} />
                   </div>
                 </button>
@@ -1089,18 +1239,42 @@ export const TabelloneSostituzioni: React.FC<{
                       {!isOraRisorsaChiusa && (
                         <div className="p-2 pt-0 border-t border-slate-100 flex flex-wrap gap-1.5 animate-in fade-in duration-150 mt-1">
                           {potVisibili.map(p => (
-                            <span key={p.docenteId} className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
-                              ⚡ {p.nome}
+                            <span 
+                              key={p.docenteId} 
+                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition ${
+                                p.usata
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-75'
+                                  : 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-2xs'
+                              }`}
+                              title={p.usata ? `${p.nome} è già assegnato in quest'ora` : `${p.nome} è disponibile`}
+                            >
+                              ⚡ {p.nome} {p.usata ? '(Occupato)' : ''}
                             </span>
                           ))}
                           {giteVisibili.map(g => (
-                            <span key={g.docenteId} className="text-[10px] text-amber-800 font-bold bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
-                              🚌 {g.nome}
+                            <span 
+                              key={g.docenteId} 
+                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition ${
+                                g.usata
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-75'
+                                  : 'bg-amber-50 text-amber-800 border-amber-200 shadow-2xs'
+                              }`}
+                              title={g.usata ? `${g.nome} è già assegnato in quest'ora` : `${g.nome} è disponibile (Liberato da ${g.classe})`}
+                            >
+                              🚌 {g.nome} {g.usata ? '(Occupato)' : ''}
                             </span>
                           ))}
                           {dispVisibili.map(d => (
-                            <span key={d.docenteId} className="text-[10px] text-purple-800 font-bold bg-purple-50 px-2 py-1 rounded-lg border border-purple-200">
-                              ⏱️ {d.nome}
+                            <span 
+                              key={d.docenteId} 
+                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition ${
+                                d.usata
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-75'
+                                  : 'bg-purple-50 text-purple-800 border-purple-200 shadow-2xs'
+                              }`}
+                              title={d.usata ? `${d.nome} è già assegnato in quest'ora` : `${d.nome} è a disposizione`}
+                            >
+                              ⏱️ {d.nome} {d.usata ? '(Occupato)' : ''}
                             </span>
                           ))}
                         </div>
