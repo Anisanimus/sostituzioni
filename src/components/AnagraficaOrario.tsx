@@ -262,17 +262,17 @@ export const AnagraficaOrario: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              if (window.confirm('Sei sicuro di voler azzerare a zero tutti i docenti e l\'intero orario?')) {
+              if (window.confirm('Sei sicuro di voler azzerare tutti i docenti e l\'intero orario?')) {
                 azzeraDocentiEOrario();
                 setSelectedDocenteId('');
-                setNotificaSalvataggio('Docenti e orario azzerati completamente a zero.');
+                setNotificaSalvataggio('Docenti e orario azzerati con successo.');
               }
             }}
             className="text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 font-bold text-xs px-3 py-1.5 rounded-xl border border-red-200 transition flex items-center gap-1.5 shadow-2xs"
-            title="Azzera a zero tutti i docenti e l'orario"
+            title="Azzera tutti i docenti e l'orario"
           >
             <Trash2 className="w-3.5 h-3.5 text-red-600" />
-            <span>Azzera a Zero</span>
+            <span>Azzera Dati</span>
           </button>
 
           <button
