@@ -409,11 +409,11 @@ export const TabelloneSostituzioni: React.FC<{
       {/* ============================================================================== */}
       {/* AREA A 2 COLONNE: TABELLONE IN PRIMO PIANO A SINISTRA (8/12) + RISORSE (4/12)   */}
       {/* ============================================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-4 items-start -mt-1 sm:mt-0">
 
         {/* DA MOBILE: BARRA ACCORDION RISORSE DISPONIBILI ESPANDIBILE (< LG) */}
         {risorsePerOra.length > 0 && (
-          <div className="block lg:hidden col-span-1 bg-white rounded-2xl p-3 shadow-2xs border border-slate-200">
+          <div className="block lg:hidden col-span-1 bg-white rounded-2xl p-2.5 sm:p-3 shadow-2xs border border-slate-200">
             <div>
               <button
                 type="button"
