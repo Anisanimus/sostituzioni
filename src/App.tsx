@@ -120,7 +120,7 @@ const MainApp: React.FC = () => {
             <div>
               <h1 className="text-sm sm:text-base font-black tracking-tight leading-tight flex items-center gap-2">
                 <span className="truncate max-w-[170px] sm:max-w-none">{impostazioniScuola?.nomeScuola || 'Gestione Sostituzioni'}</span>
-                <span className="hidden sm:inline text-[10px] bg-indigo-500/30 text-indigo-300 px-1.5 py-0.5 rounded font-mono">v2.0-RC3</span>
+                <span className="hidden sm:inline text-[10px] bg-indigo-500/30 text-indigo-300 px-1.5 py-0.5 rounded font-mono">v0.0.1</span>
               </h1>
             </div>
           </div>
@@ -389,7 +389,7 @@ const MainApp: React.FC = () => {
 
             {/* FOOTER SIDEBAR */}
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
-              <span className="font-mono text-[11px] font-bold text-slate-600">Sistema Sostituzioni v2.0-RC3</span>
+              <span className="font-mono text-[11px] font-bold text-slate-600">Sistema Sostituzioni v0.0.1</span>
               <span className="font-bold text-emerald-600 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Operativo
               </span>
