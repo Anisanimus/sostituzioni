@@ -237,9 +237,31 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
           </div>
         </div>
 
-        {/* CONTROLLI: CALENDARIO + FRECCE + BADGE ORE FATTE/PERCENTUALE + TOGGLE COMPRIMI */}
+        {/* CONTROLLI: VISTA SETTIMANA/MESE (DESKTOP) + CALENDARIO + FRECCE + BADGE + TOGGLE COMPRIMI */}
         <div className="flex items-center justify-between sm:justify-end gap-2 pt-1 sm:pt-0">
           
+          {/* SELETTORE VISTA DESKTOP: SETTIMANA / MESE */}
+          <div className="hidden sm:flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-bold shadow-inner mr-1">
+            <button
+              type="button"
+              onClick={() => setVista('GIORNO')}
+              className={`px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                vista === 'GIORNO' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span>📅 Settimana</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setVista('SETTIMANA')}
+              className={`px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1 ${
+                vista === 'SETTIMANA' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span>🗓️ Mese</span>
+            </button>
+          </div>
+
           <div className="flex items-center gap-1.5">
             {/* PULSANTE ICONA CALENDARIO */}
             <label className="relative p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-indigo-900 border border-slate-200 shadow-2xs flex items-center justify-center cursor-pointer transition" title="Scegli giorno dal calendario">
@@ -254,25 +276,27 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
               />
             </label>
 
-            {/* FRECCE SCORRIMENTO CAROSELLO */}
-            <div className="flex items-center gap-0.5 bg-slate-50 p-0.5 rounded-lg border border-slate-200">
-              <button
-                type="button"
-                onClick={() => scrollCarousel(-220)}
-                className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
-                title="Scorri indietro"
-              >
-                ❮
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollCarousel(220)}
-                className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
-                title="Scorri avanti"
-              >
-                ❯
-              </button>
-            </div>
+            {/* FRECCE SCORRIMENTO (ATTIVE IN VISTA SETTIMANA) */}
+            {vista === 'GIORNO' && (
+              <div className="flex items-center gap-0.5 bg-slate-50 p-0.5 rounded-lg border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => scrollCarousel(-220)}
+                  className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+                  title="Scorri indietro"
+                >
+                  ❮
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollCarousel(220)}
+                  className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+                  title="Scorri avanti"
+                >
+                  ❯
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
@@ -337,109 +361,185 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
         <div className="pt-0.5 animate-in fade-in duration-150 space-y-2.5">
           
           {/* ========================================================================= */}
-          {/* VISTA DESKTOP (SM+): CAROSELLO ORIZZONTALE CLASSICO                      */}
+          {/* VISTA DESKTOP (SM+): CAROSELLO SETTIMANALE OPPURE GRIGLIA MENSILE        */}
           {/* ========================================================================= */}
           <div className="hidden sm:block">
-            <div 
-              id="panoramicaCarouselTrack"
-              className="flex gap-2.5 overflow-x-auto py-1 scroll-smooth"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {statsGiorni.map((s) => {
-                const badgeGravita = 
-                  s.totDocentiAssenti === 0 
-                    ? { label: 'Tranquilla', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' }
-                    : s.gravita === 'COMPLICATO'
-                      ? { label: 'Complicato (>7)', color: 'bg-rose-600 text-white border-rose-700 font-black animate-pulse shadow-2xs', icon: '🔥' }
-                      : s.gravita === 'DISCRETA'
-                        ? { label: 'Discreta (4-7)', color: 'bg-amber-100 text-amber-950 border-amber-300 font-black', icon: '⚡' }
-                        : { label: 'Semplice (1-3)', color: 'bg-sky-50 text-sky-900 border-sky-200', icon: 'ℹ️' };
+            {vista === 'GIORNO' ? (
+              /* VISTA SETTIMANA: CAROSELLO ORIZZONTALE */
+              <div 
+                id="panoramicaCarouselTrack"
+                className="flex gap-2.5 overflow-x-auto py-1 scroll-smooth"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              >
+                {statsGiorni.map((s) => {
+                  const badgeGravita = 
+                    s.totDocentiAssenti === 0 
+                      ? { label: 'Tranquilla', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' }
+                      : s.gravita === 'COMPLICATO'
+                        ? { label: 'Complicato (>7)', color: 'bg-rose-600 text-white border-rose-700 font-black animate-pulse shadow-2xs', icon: '🔥' }
+                        : s.gravita === 'DISCRETA'
+                          ? { label: 'Discreta (4-7)', color: 'bg-amber-100 text-amber-950 border-amber-300 font-black', icon: '⚡' }
+                          : { label: 'Semplice (1-3)', color: 'bg-sky-50 text-sky-900 border-sky-200', icon: 'ℹ️' };
 
-                return (
-                  <button
-                    key={s.dataStr}
-                    id={`day_card_${s.dataStr}`}
-                    type="button"
-                    onClick={() => onSelectDate(s.dataStr)}
-                    className={`min-w-[210px] sm:min-w-[230px] p-2.5 rounded-2xl text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2 shrink-0 ${
-                      s.isSelezionata 
-                        ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-4 ring-indigo-200/80 shadow-md scale-[1.01]' 
-                        : 'bg-slate-50/70 hover:bg-slate-100/90 border border-slate-200/80 shadow-2xs'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-black text-xs text-slate-800">
-                        {s.giornoNome.slice(0, 3)} {new Date(s.dataStr).getDate()} {new Date(s.dataStr).toLocaleDateString('it-IT', { month: 'short' })}
-                      </span>
-                      {s.isOggi && (
-                        <span className="text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.2 rounded-md shadow-2xs">
-                          Oggi
+                  return (
+                    <button
+                      key={s.dataStr}
+                      id={`day_card_${s.dataStr}`}
+                      type="button"
+                      onClick={() => onSelectDate(s.dataStr)}
+                      className={`min-w-[210px] sm:min-w-[230px] p-2.5 rounded-2xl text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2 shrink-0 ${
+                        s.isSelezionata 
+                          ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-4 ring-indigo-200/80 shadow-md scale-[1.01]' 
+                          : 'bg-slate-50/70 hover:bg-slate-100/90 border border-slate-200/80 shadow-2xs'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-xs text-slate-800">
+                          {s.giornoNome.slice(0, 3)} {new Date(s.dataStr).getDate()} {new Date(s.dataStr).toLocaleDateString('it-IT', { month: 'short' })}
                         </span>
-                      )}
-                    </div>
+                        {s.isOggi && (
+                          <span className="text-[9px] font-black bg-indigo-600 text-white px-1.5 py-0.2 rounded-md shadow-2xs">
+                            Oggi
+                          </span>
+                        )}
+                      </div>
 
-                    {/* RIGA 1: ORE COPERTE CON ICONA OROLOGIO E GRAVITÀ */}
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-                        <span>🕒 {s.totCoperte}/{s.totOreScoperte}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">({s.totDocentiAssenti} doc)</span>
-                      </span>
-                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-md border ${badgeGravita.color}`}>
-                        {badgeGravita.icon} {badgeGravita.label}
-                      </span>
-                    </div>
-
-                    {/* RIGA 2: RICHIESTE INVIATE E PRESE VISIONE */}
-                    {s.totCoperte > 0 && (
-                      <div className="grid grid-cols-2 gap-1 text-[10px] font-bold bg-slate-100/90 p-1.5 rounded-lg border border-slate-200/70">
-                        <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition ${
-                          s.totPubblicate === s.totCoperte
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                            : 'text-sky-950 border-transparent'
-                        }`} title="Richieste inviate">
-                          <span>📤</span>
-                          <span>{s.totPubblicate}/{s.totCoperte} inviate {s.totPubblicate === s.totCoperte ? '✓' : ''}</span>
+                      {/* RIGA 1: ORE COPERTE CON ICONA OROLOGIO E GRAVITÀ */}
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                          <span>🕒 {s.totCoperte}/{s.totOreScoperte}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">({s.totDocentiAssenti} doc)</span>
                         </span>
-                        <span className={`flex items-center justify-end gap-1 px-1.5 py-0.5 rounded border transition ${
-                          s.totFirmate === s.totCoperte 
-                            ? 'bg-emerald-600 text-white border-emerald-700 font-black shadow-2xs' 
-                            : s.totFirmate > 0
-                              ? 'text-indigo-950 border-transparent'
-                              : 'text-slate-500 border-transparent'
-                        }`} title="Prese visione effettuate">
-                          <span>✍️</span>
-                          <span>{s.totFirmate}/{s.totCoperte} firmate {s.totFirmate === s.totCoperte ? '✓' : ''}</span>
+                        <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-md border ${badgeGravita.color}`}>
+                          {badgeGravita.icon} {badgeGravita.label}
                         </span>
                       </div>
-                    )}
 
-                    {/* Mini progress bar del giorno */}
-                    <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-300 ${
-                          s.totOreScoperte === 0 || (s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte)
-                            ? 'bg-emerald-500' 
-                            : s.totCoperte === s.totOreScoperte
-                              ? 'bg-indigo-500'
-                              : s.gravita === 'COMPLICATO' 
-                                ? 'bg-rose-500' 
-                                : s.gravita === 'DISCRETA'
-                                  ? 'bg-amber-500'
-                                  : 'bg-sky-500'
+                      {/* RIGA 2: RICHIESTE INVIATE E PRESE VISIONE */}
+                      {s.totCoperte > 0 && (
+                        <div className="grid grid-cols-2 gap-1 text-[10px] font-bold bg-slate-100/90 p-1.5 rounded-lg border border-slate-200/70">
+                          <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded border transition ${
+                            s.totPubblicate === s.totCoperte
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : 'text-sky-950 border-transparent'
+                          }`} title="Richieste inviate">
+                            <span>📤</span>
+                            <span>{s.totPubblicate}/{s.totCoperte} inviate {s.totPubblicate === s.totCoperte ? '✓' : ''}</span>
+                          </span>
+                          <span className={`flex items-center justify-end gap-1 px-1.5 py-0.5 rounded border transition ${
+                            s.totFirmate === s.totCoperte 
+                              ? 'bg-emerald-600 text-white border-emerald-700 font-black shadow-2xs' 
+                              : s.totFirmate > 0
+                                ? 'text-indigo-950 border-transparent'
+                                : 'text-slate-500 border-transparent'
+                          }`} title="Prese visione effettuate">
+                            <span>✍️</span>
+                            <span>{s.totFirmate}/{s.totCoperte} firmate {s.totFirmate === s.totCoperte ? '✓' : ''}</span>
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Mini progress bar del giorno */}
+                      <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-300 ${
+                            s.totOreScoperte === 0 || (s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte)
+                              ? 'bg-emerald-500' 
+                              : s.totCoperte === s.totOreScoperte
+                                ? 'bg-indigo-500'
+                                : s.gravita === 'COMPLICATO' 
+                                  ? 'bg-rose-500' 
+                                  : s.gravita === 'DISCRETA'
+                                    ? 'bg-amber-500'
+                                    : 'bg-sky-500'
+                          }`}
+                          style={{ 
+                            width: `${
+                              s.totOreScoperte > 0 
+                                ? Math.min(100, ( (s.totCoperte * 0.5 + s.totFirmate * 0.5) / s.totOreScoperte) * 100) 
+                                : 100
+                            }%` 
+                          }}
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              /* VISTA MESE DESKTOP: GRIGLIA MENSILE COMPLETA A MATRICE RICCA */
+              <div className="space-y-3 p-2 bg-slate-50/60 rounded-2xl border border-slate-200">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                    <span>🗓️ Panoramica Mensile Completa ({statsGiorni.length} Giorni Scolastici)</span>
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    Clicca su un giorno per aprirlo nel tabellone operativo
+                  </span>
+                </div>
+
+                {/* GRIGLIA DESKTOP DEI GIORNI */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 max-h-[380px] overflow-y-auto pr-1">
+                  {statsGiorni.map((s) => {
+                    const isCompletato = s.totOreScoperte > 0 && s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte;
+                    const perc = s.totOreScoperte > 0 ? Math.round((s.totCoperte / s.totOreScoperte) * 100) : 100;
+                    
+                    const badgeGravita = 
+                      s.totDocentiAssenti === 0 
+                        ? { label: 'Tranquilla', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' }
+                        : s.gravita === 'COMPLICATO'
+                          ? { label: `Complicato (${s.totDocentiAssenti})`, color: 'bg-rose-600 text-white font-black animate-pulse', icon: '🔥' }
+                          : s.gravita === 'DISCRETA'
+                            ? { label: `Discreta (${s.totDocentiAssenti})`, color: 'bg-amber-100 text-amber-950 border-amber-300 font-black', icon: '⚡' }
+                            : { label: `Semplice (${s.totDocentiAssenti})`, color: 'bg-sky-50 text-sky-900 border-sky-200 font-bold', icon: 'ℹ️' };
+
+                    return (
+                      <button
+                        key={`desk_m_${s.dataStr}`}
+                        type="button"
+                        onClick={() => onSelectDate(s.dataStr)}
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1.5 ${
+                          s.isSelezionata
+                            ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-2 ring-indigo-200 shadow-sm'
+                            : isCompletato
+                              ? 'bg-white border-emerald-200 hover:border-emerald-300'
+                              : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
                         }`}
-                        style={{ 
-                          width: `${
-                            s.totOreScoperte > 0 
-                              ? Math.min(100, ( (s.totCoperte * 0.5 + s.totFirmate * 0.5) / s.totOreScoperte) * 100) 
-                              : 100
-                          }%` 
-                        }}
-                      />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] font-black text-slate-800">
+                              {s.giornoNome.slice(0, 3)} {new Date(s.dataStr).getDate()} {new Date(s.dataStr).toLocaleDateString('it-IT', { month: 'short' })}
+                            </span>
+                            {s.isOggi && <span className="bg-indigo-600 text-white font-black text-[8px] px-1 py-0.2 rounded">OGGI</span>}
+                          </div>
+                          <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${badgeGravita.color}`}>
+                            {badgeGravita.icon}
+                          </span>
+                        </div>
+
+                        {s.totOreScoperte > 0 ? (
+                          <div className="space-y-1 w-full">
+                            <div className="flex items-center justify-between text-[10px] font-bold">
+                              <span className="text-slate-700">🕒 {s.totCoperte}/{s.totOreScoperte}</span>
+                              <span className="text-slate-500">✍️ {s.totFirmate}/{s.totCoperte}</span>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                              <div className={`${isCompletato ? 'bg-emerald-600' : 'bg-amber-500'} h-1 rounded-full`} style={{ width: `${perc}%` }} />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                            <span className="text-emerald-700 font-bold">🕒 0/0 ✓</span>
+                            <span className="text-[9px]">Nessuna assenza</span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ========================================================================= */}
