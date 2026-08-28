@@ -24,7 +24,8 @@ export function trovaCandidatiSostituzione(
     POTENZIAMENTO: [],
     RECUPERO_GENERICO: [],
     SOSTEGNO: [],
-    STRAORDINARIO_D: []
+    STRAORDINARIO_D: [],
+    NON_SOSTITUIRE: []
   };
 
   // 1. Tutti gli ID collegati alle persone assenti nel giorno e nell'ora specifica (non possono sostituire)

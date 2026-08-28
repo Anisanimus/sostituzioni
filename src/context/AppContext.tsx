@@ -525,7 +525,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const assegnaSostituzione = (nuovaSostituzione: Omit<SostituzioneAssegnata, 'id'>) => {
     setSostituzioni(prev => {
-      const filtrate = prev.filter(s => !(s.data === nuovaSostituzione.data && s.ora === nuovaSostituzione.ora && s.classe === nuovaSostituzione.classe));
+      // Se si assegna NON_SOSTITUIRE, sostituisce qualsiasi assegnazione pregressa per quell'ora/classe.
+      // Se si assegna un docente, rimuove l'eventuale 'NON_SOSTITUIRE' o la sostituzione dello stesso docente, ma MANTIENE altri docenti aggiunti come co-sostituti.
+      const filtrate = prev.filter(s => {
+        const isStessoSlot = s.data === nuovaSostituzione.data && s.ora === nuovaSostituzione.ora && s.classe === nuovaSostituzione.classe;
+        if (!isStessoSlot) return true;
+        if (nuovaSostituzione.categoria === 'NON_SOSTITUIRE') return false; // sovrascrive tutto
+        if (s.categoria === 'NON_SOSTITUIRE') return false; // rimpiazza il non sostituire
+        return s.docenteSostitutoId !== nuovaSostituzione.docenteSostitutoId; // permette più docenti diversi
+      });
+
       const sost: SostituzioneAssegnata = {
         ...nuovaSostituzione,
         id: 'sost_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4)
@@ -575,8 +584,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const sost = sostituzioni.find(s => s.id === id);
     if (!sost) return;
 
-    // Se era già pubblicata o firmata, avvisa il sostituto con una notifica di annullamento
-    if (sost.pubblicata || sost.firmata) {
+    // Se era già pubblicata o firmata, avvisa il sostituto con una notifica di annullamento (se assegnata a un docente reale)
+    if ((sost.pubblicata || sost.firmata) && sost.docenteSostitutoId && sost.categoria !== 'NON_SOSTITUIRE') {
       const docenteAssente = docenti.find(d => d.id === sost.docenteAssenteId);
       const docenteAssenteNome = docenteAssente ? docenteAssente.nome : sost.docenteAssenteId;
       const nuovaNotifica: NotificaDocente = {

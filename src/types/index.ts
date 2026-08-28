@@ -116,7 +116,8 @@ export type CategoriaSostituto =
   | 'POTENZIAMENTO'
   | 'RECUPERO_GENERICO'
   | 'SOSTEGNO'
-  | 'STRAORDINARIO_D';
+  | 'STRAORDINARIO_D'
+  | 'NON_SOSTITUIRE';
 
 export interface ImpostazioniPriorita {
   prioritaAssenze: CategoriaSostituto[];

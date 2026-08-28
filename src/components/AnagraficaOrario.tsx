@@ -539,6 +539,11 @@ const CATEGORIE_CONFIG: Record<CategoriaSostituto, { label: string; desc: string
     label: 'Docenti in Disposizione (D) - Ore a Pagamento',
     desc: 'Docenti con ora di disposizione (D) senza debito (assegnazione retribuita).',
     icon: '💶'
+  },
+  NON_SOSTITUIRE: {
+    label: 'Non Sostituire',
+    desc: 'Opzione per non assegnare alcun docente (classe lasciata scoperta o senza sostituto).',
+    icon: '🚫'
   }
 };
 
