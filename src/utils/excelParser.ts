@@ -71,7 +71,12 @@ export function parseOrarioExcel(fileData: ArrayBuffer): ParseResult {
     for (let g = 0; g < giorni.length; g++) {
       const giorno = giorni[g];
       for (let ora = 1; ora <= colsPerDay; ora++) {
-        let val = String(row[colIdx] || '').trim().toUpperCase();
+        let rawVal = String(row[colIdx] || '').trim().toUpperCase();
+        
+        // Rileva presenza di asterisco * (es. "1A*", "*1A", "1A *") che denota CASO GRAVE
+        const hasAsterisk = rawVal.includes('*');
+        let val = rawVal.replace(/\*/g, '').trim();
+
         // Se la riga è di POTENZIAMENTO e c'è una X o P o testo, standardizzalo a P
         if (isPotenziamento && val && val !== 'D' && val !== 'P') {
           // se ha un valore lo consideriamo P
@@ -82,11 +87,14 @@ export function parseOrarioExcel(fileData: ArrayBuffer): ParseResult {
         else if (val === 'P') tipo = 'P';
         else if (val !== '') tipo = 'LEZIONE';
 
+        const isCasoGrave = hasAsterisk || false;
+
         oreRiga.push({
           giorno,
           ora,
           valore: val,
-          tipo
+          tipo,
+          isCasoGrave
         });
         colIdx++;
       }

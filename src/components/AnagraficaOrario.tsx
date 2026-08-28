@@ -156,7 +156,11 @@ export const AnagraficaOrario: React.FC = () => {
         GIORNI.forEach(giorno => {
           for (let ora = 1; ora <= 9; ora++) {
             const cell = orarioDoc?.ore.find(c => c.giorno === giorno && c.ora === ora);
-            rowData.push(cell?.valore || '');
+            let v = cell?.valore || '';
+            if (cell?.isCasoGrave && v && v !== 'D' && v !== 'P') {
+              v = `${v}*`;
+            }
+            rowData.push(v);
           }
         });
 
