@@ -24,7 +24,7 @@ import { Coachmark } from './components/Coachmark';
 import { 
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
-  Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound
+  Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound, TrendingUp
 } from 'lucide-react';
 
 const MainApp: React.FC = () => {
@@ -231,7 +231,7 @@ const MainApp: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${tabVice === 'GESTIONE_GIORNALIERA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                      <LayoutDashboard className="w-4 h-4" />
+                      <TrendingUp className="w-4 h-4" />
                     </div>
                     <div>
                       <span className="block font-black text-sm">Sostituzioni</span>
@@ -255,7 +255,7 @@ const MainApp: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${tabVice === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                      <LayoutDashboard className="w-4 h-4" />
+                      <TrendingUp className="w-4 h-4" />
                     </div>
                     <div>
                       <span className="block font-black text-sm">Quadro Generale Sostituzioni</span>
