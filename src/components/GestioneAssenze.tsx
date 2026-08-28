@@ -301,37 +301,83 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
   return (
     <div className="bg-slate-50/70 rounded-2xl rounded-t-none p-2.5 sm:p-3 shadow-2xs border border-t border-slate-200 space-y-3">
       
-      {/* HEADER ULTRA-PULITO: I DUE PULSANTI AZIONE A SINISTRA */}
-      <div className="flex items-center justify-between sm:justify-start gap-2.5">
-        <button
-          id="targetBtnAssente"
-          type="button"
-          onClick={() => setModalitaAperta(modalitaAperta === 'DOCENTE' ? null : 'DOCENTE')}
-          className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs border cursor-pointer ${
-            modalitaAperta === 'DOCENTE'
-              ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
-              : 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100'
-          }`}
-        >
-          <UserMinus className="w-4 h-4 text-indigo-600" />
-          <span className="sm:hidden">+ Assente</span>
-          <span className="hidden sm:inline">+ Aggiungi Assente</span>
-        </button>
+      {/* HEADER PULSANTERIA COMPATTA: RIGA 1 (+ ASSENTE, + GITA), RIGA 2 (REGISTRATI, RISORSE) SU MOBILE */}
+      <div className="space-y-2">
+        {/* RIGA 1: AZIONI PRINCIPALI */}
+        <div className="flex items-center justify-between sm:justify-start gap-2">
+          <button
+            id="targetBtnAssente"
+            type="button"
+            onClick={() => setModalitaAperta(modalitaAperta === 'DOCENTE' ? null : 'DOCENTE')}
+            className={`flex-1 sm:flex-none px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border cursor-pointer ${
+              modalitaAperta === 'DOCENTE'
+                ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
+                : 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100'
+            }`}
+          >
+            <UserMinus className="w-4 h-4 text-indigo-600" />
+            <span className="sm:hidden">+ Assente</span>
+            <span className="hidden sm:inline">+ Aggiungi Assente</span>
+          </button>
 
-        <button
-          id="targetBtnGita"
-          type="button"
-          onClick={() => setModalitaAperta(modalitaAperta === 'GITA' ? null : 'GITA')}
-          className={`flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-2xs border cursor-pointer ${
-            modalitaAperta === 'GITA'
-              ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
-              : 'bg-amber-50 text-amber-950 border-amber-200 hover:bg-amber-100'
-          }`}
-        >
-          <Bus className="w-4 h-4 text-amber-600" />
-          <span className="sm:hidden">+ Gita</span>
-          <span className="hidden sm:inline">+ Aggiungi Gita</span>
-        </button>
+          <button
+            id="targetBtnGita"
+            type="button"
+            onClick={() => setModalitaAperta(modalitaAperta === 'GITA' ? null : 'GITA')}
+            className={`flex-1 sm:flex-none px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border cursor-pointer ${
+              modalitaAperta === 'GITA'
+                ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
+                : 'bg-amber-50 text-amber-950 border-amber-200 hover:bg-amber-100'
+            }`}
+          >
+            <Bus className="w-4 h-4 text-amber-600" />
+            <span className="sm:hidden">+ Gita</span>
+            <span className="hidden sm:inline">+ Aggiungi Gita</span>
+          </button>
+        </div>
+
+        {/* RIGA 2 (SOLO MOBILE / COMPATTO): 2 PULSANTI AFFIANCATI "REGISTRATI (N)" E "RISORSE (N)" */}
+        <div className="flex items-center gap-2 lg:hidden pt-0.5">
+          <button
+            type="button"
+            onClick={() => setMostraDettagliEventi(prev => !prev)}
+            className={`flex-1 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-between border cursor-pointer shadow-2xs ${
+              mostraDettagliEventi
+                ? 'bg-slate-800 text-white border-slate-900'
+                : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">📋</span>
+              <span>Registrati</span>
+            </div>
+            <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+              mostraDettagliEventi ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'
+            }`}>
+              {assenzeOggiDeduplicate.length + usciteOggi.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMostraDettagliRisorse(prev => !prev)}
+            className={`flex-1 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-between border cursor-pointer shadow-2xs ${
+              mostraDettagliRisorse
+                ? 'bg-amber-500 text-white border-amber-600'
+                : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">⚡</span>
+              <span>Risorse</span>
+            </div>
+            <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+              mostraDettagliRisorse ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 border border-amber-200'
+            }`}>
+              {totRisorseTotaliMobile}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* ========================================================= */}
@@ -796,12 +842,12 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
       {/* 3. LISTA EVENTI REGISTRATI PER LA DATA SELEZIONATA        */}
       {/* ========================================================= */}
       {(assenzeOggiDeduplicate.length > 0 || usciteOggi.length > 0) && (
-        <div className="pt-2.5 border-t border-slate-200 space-y-2">
-          {/* BARRA COLLAPSIBILE / ACCORDION CON "TOCCA PER DETTAGLI" E TRIANGOLINO */}
+        <div className="pt-2 border-t border-slate-200 space-y-2">
+          {/* HEADER ACCORDION SOLO DESKTOP (SU MOBILE USIAMO I PULSANTI SOPRA) */}
           <button
             type="button"
             onClick={() => setMostraDettagliEventi(prev => !prev)}
-            className="w-full flex items-center justify-between text-left p-1 rounded-xl hover:bg-slate-100/60 transition cursor-pointer"
+            className="hidden lg:flex w-full items-center justify-between text-left p-1 rounded-xl hover:bg-slate-100/60 transition cursor-pointer"
           >
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">
@@ -817,7 +863,7 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
             </div>
           </button>
 
-          {/* CONTENUTO ESPANDIBILE */}
+          {/* CONTENUTO ESPANDIBILE EVENTI REGISTRATI */}
           {mostraDettagliEventi && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-1 duration-150 pt-1">
               {/* Gite con Accompagnatori inclusi nello slot */}
@@ -895,146 +941,121 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
       )}
 
       {/* ========================================================================= */}
-      {/* 4. RISORSE DISPONIBILI OGGI INTEGRATE NELLA STESSA IDENTICA CORNICE MOBILE */}
+      {/* 4. CONTENUTO ESPANDIBILE RISORSE DISPONIBILI OGGI SU MOBILE               */}
       {/* ========================================================================= */}
-      {totRisorseTotaliMobile > 0 && (
-        <div className="block lg:hidden pt-2.5 border-t border-slate-200 space-y-2">
-          <button
-            type="button"
-            onClick={() => setMostraDettagliRisorse(prev => !prev)}
-            className="w-full flex items-center justify-between cursor-pointer font-bold text-xs text-slate-800 text-left p-1 rounded-xl hover:bg-slate-100/60 transition"
-          >
-            <span className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-[10px]">
-                ⚡
-              </span>
-              <span className="text-xs font-bold text-slate-800">
-                Risorse Disponibili Oggi ({totRisorseTotaliMobile})
-              </span>
-            </span>
-            <div className="flex items-center gap-1.5 text-slate-400 hover:text-slate-600">
-              <span className="text-[10px] text-slate-400 font-normal">
-                {mostraDettagliRisorse ? 'Nascondi dettagli' : 'Tocca per dettagli'}
-              </span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${mostraDettagliRisorse ? 'rotate-180 text-slate-600' : ''}`} />
-            </div>
-          </button>
+      {totRisorseTotaliMobile > 0 && mostraDettagliRisorse && (
+        <div className="block lg:hidden pt-2 border-t border-slate-200 space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
+          {/* FILTRI RAPIDI */}
+          <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
+            <button
+              type="button"
+              disabled={totPotenziamentoOggi === 0}
+              onClick={() => setMostraPotenziamento(prev => !prev)}
+              className={`px-2.5 py-0.5 rounded-full border transition flex items-center gap-1 ${
+                totPotenziamentoOggi === 0
+                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                  : mostraPotenziamento
+                    ? 'bg-emerald-100 text-emerald-950 border-emerald-300 font-black'
+                    : 'bg-slate-100 text-slate-400 line-through'
+              }`}
+            >
+              ⚡ Potenziamento ({totPotenziamentoOggi})
+            </button>
 
-          {mostraDettagliRisorse && (
-            <div className="pt-2 border-t border-slate-100 space-y-2.5 animate-in fade-in slide-in-from-top-1 duration-150">
-              {/* FILTRI RAPIDI */}
-              <div className="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
-                <button
-                  type="button"
-                  disabled={totPotenziamentoOggi === 0}
-                  onClick={() => setMostraPotenziamento(prev => !prev)}
-                  className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
-                    totPotenziamentoOggi === 0
-                      ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
-                      : mostraPotenziamento
-                        ? 'bg-emerald-100 text-emerald-950 border-emerald-300 font-black'
-                        : 'bg-slate-100 text-slate-400 line-through'
-                  }`}
-                >
-                  ⚡ Potenziamento ({totPotenziamentoOggi})
-                </button>
+            <button
+              type="button"
+              disabled={totGiteOggi === 0}
+              onClick={() => setMostraLiberatiGita(prev => !prev)}
+              className={`px-2.5 py-0.5 rounded-full border transition flex items-center gap-1 ${
+                totGiteOggi === 0
+                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                  : mostraLiberatiGita
+                    ? 'bg-amber-100 text-amber-950 border-amber-300 font-black'
+                    : 'bg-slate-100 text-slate-400 line-through'
+              }`}
+            >
+              🚌 Gita ({totGiteOggi})
+            </button>
 
-                <button
-                  type="button"
-                  disabled={totGiteOggi === 0}
-                  onClick={() => setMostraLiberatiGita(prev => !prev)}
-                  className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
-                    totGiteOggi === 0
-                      ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
-                      : mostraLiberatiGita
-                        ? 'bg-amber-100 text-amber-950 border-amber-300 font-black'
-                        : 'bg-slate-100 text-slate-400 line-through'
-                  }`}
-                >
-                  🚌 Gita ({totGiteOggi})
-                </button>
+            <button
+              type="button"
+              disabled={totDisposizioniOggi === 0}
+              onClick={() => setMostraDisposizioni(prev => !prev)}
+              className={`px-2.5 py-0.5 rounded-full border transition flex items-center gap-1 ${
+                totDisposizioniOggi === 0
+                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                  : mostraDisposizioni
+                    ? 'bg-purple-100 text-purple-950 border-purple-300 font-black'
+                    : 'bg-slate-100 text-slate-400 line-through'
+              }`}
+            >
+              ⏱️ Disp. ({totDisposizioniOggi})
+            </button>
+          </div>
 
-                <button
-                  type="button"
-                  disabled={totDisposizioniOggi === 0}
-                  onClick={() => setMostraDisposizioni(prev => !prev)}
-                  className={`px-2 py-0.5 rounded-full border transition flex items-center gap-1 ${
-                    totDisposizioniOggi === 0
-                      ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
-                      : mostraDisposizioni
-                        ? 'bg-purple-100 text-purple-950 border-purple-300 font-black'
-                        : 'bg-slate-100 text-slate-400 line-through'
-                  }`}
-                >
-                  ⏱️ Disp. ({totDisposizioniOggi})
-                </button>
-              </div>
+          {/* LISTA RISORSE PER ORA */}
+          <div className="space-y-1.5">
+            {risorsePerOraMobile.map(r => {
+              const potVisibili = mostraPotenziamento ? r.potenziamentoList.filter(p => !p.usata) : [];
+              const giteVisibili = mostraLiberatiGita ? r.liberatiGitaList.filter(g => !g.usata) : [];
+              const dispVisibili = (mostraDisposizioni ? r.disposizioniList : r.disposizioniList.filter(d => d.debito > 0)).filter(d => !d.usata);
+              const totFiltrati = potVisibili.length + giteVisibili.length + dispVisibili.length;
+              if (totFiltrati === 0) return null;
 
-              {/* LISTA RISORSE PER ORA */}
-              <div className="space-y-1.5">
-                {risorsePerOraMobile.map(r => {
-                  const potVisibili = mostraPotenziamento ? r.potenziamentoList.filter(p => !p.usata) : [];
-                  const giteVisibili = mostraLiberatiGita ? r.liberatiGitaList.filter(g => !g.usata) : [];
-                  const dispVisibili = (mostraDisposizioni ? r.disposizioniList : r.disposizioniList.filter(d => d.debito > 0)).filter(d => !d.usata);
-                  const totFiltrati = potVisibili.length + giteVisibili.length + dispVisibili.length;
-                  if (totFiltrati === 0) return null;
+              const isOraRisorsaChiusa = oreRisorseChiuse.includes(r.ora);
 
-                  const isOraRisorsaChiusa = oreRisorseChiuse.includes(r.ora);
-
-                  return (
-                    <div key={r.ora} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setOreRisorseChiuse(prev => 
-                            prev.includes(r.ora) ? prev.filter(o => o !== r.ora) : [...prev, r.ora]
-                          );
-                        }}
-                        className="w-full p-2 flex items-center justify-between hover:bg-slate-50 transition cursor-pointer text-left"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-slate-800 text-xs">{r.ora}ª Ora</span>
-                          <span className="text-[10px] bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 rounded-full border border-slate-200">
-                            {totFiltrati} {totFiltrati === 1 ? 'docente' : 'docenti'}
-                          </span>
-                        </div>
-                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isOraRisorsaChiusa ? '' : 'rotate-180 text-indigo-600'}`} />
-                      </button>
-
-                      {!isOraRisorsaChiusa && (
-                        <div className="p-2 pt-0 border-t border-slate-100 flex flex-wrap gap-1.5 animate-in fade-in duration-150 mt-1">
-                          {potVisibili.map(p => (
-                            <span 
-                              key={p.docenteId} 
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-emerald-50 text-emerald-800 border-emerald-200 shadow-2xs"
-                            >
-                              ⚡ {p.nome}
-                            </span>
-                          ))}
-                          {giteVisibili.map(g => (
-                            <span 
-                              key={g.docenteId} 
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-amber-50 text-amber-800 border-amber-200 shadow-2xs"
-                            >
-                              🚌 {g.nome} ({g.classe})
-                            </span>
-                          ))}
-                          {dispVisibili.map(d => (
-                            <span 
-                              key={d.docenteId} 
-                              className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-purple-50 text-purple-800 border-purple-200 shadow-2xs"
-                            >
-                              ⏱️ {d.nome}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+              return (
+                <div key={r.ora} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOreRisorseChiuse(prev => 
+                        prev.includes(r.ora) ? prev.filter(o => o !== r.ora) : [...prev, r.ora]
+                      );
+                    }}
+                    className="w-full p-2 flex items-center justify-between hover:bg-slate-50 transition cursor-pointer text-left"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-slate-800 text-xs">{r.ora}ª Ora</span>
+                      <span className="text-[10px] bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 rounded-full border border-slate-200">
+                        {totFiltrati} {totFiltrati === 1 ? 'docente' : 'docenti'}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isOraRisorsaChiusa ? '' : 'rotate-180 text-indigo-600'}`} />
+                  </button>
+
+                  {!isOraRisorsaChiusa && (
+                    <div className="p-2 pt-0 border-t border-slate-100 flex flex-wrap gap-1.5 animate-in fade-in duration-150 mt-1">
+                      {potVisibili.map(p => (
+                        <span 
+                          key={p.docenteId} 
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-emerald-50 text-emerald-800 border-emerald-200 shadow-2xs"
+                        >
+                          ⚡ {p.nome}
+                        </span>
+                      ))}
+                      {giteVisibili.map(g => (
+                        <span 
+                          key={g.docenteId} 
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-amber-50 text-amber-800 border-amber-200 shadow-2xs"
+                        >
+                          🚌 {g.nome} ({g.classe})
+                        </span>
+                      ))}
+                      {dispVisibili.map(d => (
+                        <span 
+                          key={d.docenteId} 
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-purple-50 text-purple-800 border-purple-200 shadow-2xs"
+                        >
+                          ⏱️ {d.nome}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
