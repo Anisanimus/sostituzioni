@@ -606,56 +606,71 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
             )}
 
             {/* FEED VERTICALE CARD GIORNALIERE SU MOBILE */}
-            <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
-              {(vista === 'GIORNO' ? statsGiorni.slice(0, 7) : statsGiorni).map((s) => {
-                const isCompletato = s.totOreScoperte > 0 && s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte;
-                const perc = s.totOreScoperte > 0 ? Math.round((s.totCoperte / s.totOreScoperte) * 100) : 100;
-                
-                const badgeGravita = 
-                  s.totDocentiAssenti === 0 
-                    ? { label: 'Tranquilla', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' }
-                    : s.gravita === 'COMPLICATO'
-                      ? { label: `Complicato (${s.totDocentiAssenti})`, color: 'bg-rose-600 text-white font-black animate-pulse', icon: '🔥' }
-                      : s.gravita === 'DISCRETA'
-                        ? { label: `Discreta (${s.totDocentiAssenti})`, color: 'bg-amber-100 text-amber-950 border-amber-300 font-black', icon: '⚡' }
-                        : { label: `Semplice (${s.totDocentiAssenti})`, color: 'bg-sky-50 text-sky-900 border-sky-200 font-bold', icon: 'ℹ️' };
+            <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+              {(() => {
+                // In vista Settimana, mostriamo i giorni della settimana attorno alla data selezionata/oggi
+                const indexSel = statsGiorni.findIndex(s => s.isSelezionata);
+                let giorniMostrati = statsGiorni;
+                if (vista === 'GIORNO') {
+                  const start = Math.max(0, indexSel >= 0 ? Math.max(0, indexSel - 2) : 8);
+                  giorniMostrati = statsGiorni.slice(start, start + 7);
+                }
 
-                return (
-                  <div
-                    key={`mob_${s.dataStr}`}
-                    onClick={() => handleSelectGiorno(s.dataStr)}
-                    className={`p-3 rounded-xl border text-left transition cursor-pointer relative overflow-hidden ${
-                      s.isSelezionata
-                        ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-2 ring-indigo-200 shadow-sm'
-                        : isCompletato
-                          ? 'bg-white border-emerald-200 hover:border-emerald-300'
-                          : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
-                    }`}
-                  >
-                    {/* Header Card */}
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-lg flex flex-col items-center justify-center font-black leading-tight shrink-0 ${
-                          s.isOggi ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 border border-slate-200'
-                        }`}>
-                          <span className="text-[8px] uppercase opacity-80">{s.giornoNome.slice(0, 3)}</span>
-                          <span className="text-xs font-black">{new Date(s.dataStr).getDate()}</span>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-1">
-                            <span className="font-black text-xs text-slate-900">{s.giornoNome} {new Date(s.dataStr).getDate()} {new Date(s.dataStr).toLocaleDateString('it-IT', { month: 'short' })}</span>
-                            {s.isOggi && <span className="bg-indigo-600 text-white font-black text-[8px] px-1 py-0.2 rounded">OGGI</span>}
+                return giorniMostrati.map((s) => {
+                  const isCompletato = s.totOreScoperte > 0 && s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte;
+                  const perc = s.totOreScoperte > 0 ? Math.round((s.totCoperte / s.totOreScoperte) * 100) : 100;
+                  
+                  const badgeGravita = 
+                    s.totDocentiAssenti === 0 
+                      ? { label: 'Tranquilla', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' }
+                      : s.gravita === 'COMPLICATO'
+                        ? { label: `Complicato (${s.totDocentiAssenti})`, color: 'bg-rose-600 text-white font-black animate-pulse', icon: '🔥' }
+                        : s.gravita === 'DISCRETA'
+                          ? { label: `Discreta (${s.totDocentiAssenti})`, color: 'bg-amber-100 text-amber-950 border-amber-300 font-black', icon: '⚡' }
+                          : { label: `Semplice (${s.totDocentiAssenti})`, color: 'bg-sky-50 text-sky-900 border-sky-200 font-bold', icon: 'ℹ️' };
+
+                  return (
+                    <div
+                      key={`mob_${s.dataStr}`}
+                      id={`mob_card_${s.dataStr}`}
+                      onClick={() => handleSelectGiorno(s.dataStr)}
+                      className={`p-3 rounded-2xl border text-left transition cursor-pointer relative overflow-hidden ${
+                        s.isSelezionata
+                          ? 'bg-indigo-50/95 border-2 border-indigo-600 ring-4 ring-indigo-200/80 shadow-md scale-[1.01]'
+                          : isCompletato
+                            ? 'bg-white border-emerald-200 hover:border-emerald-300'
+                            : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
+                      }`}
+                    >
+                      {/* Header Card */}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-9 h-9 rounded-xl flex flex-col items-center justify-center font-black leading-tight shrink-0 ${
+                            s.isSelezionata
+                              ? 'bg-indigo-600 text-white shadow-xs'
+                              : s.isOggi
+                                ? 'bg-indigo-600 text-white shadow-xs'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
+                          }`}>
+                            <span className="text-[8px] uppercase opacity-80">{s.giornoNome.slice(0, 3)}</span>
+                            <span className="text-xs font-black">{new Date(s.dataStr).getDate()}</span>
                           </div>
-                          <span className="text-[10px] text-slate-500 block">
-                            {s.totDocentiAssenti === 0 ? 'Nessuna assenza' : `${s.totDocentiAssenti} ${s.totDocentiAssenti === 1 ? 'docente assente' : 'docenti assenti'}`}
-                          </span>
+                          <div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-black text-xs text-slate-900">{s.giornoNome} {new Date(s.dataStr).getDate()} {new Date(s.dataStr).toLocaleDateString('it-IT', { month: 'short' })}</span>
+                              {s.isOggi && <span className="bg-indigo-600 text-white font-black text-[8px] px-1.5 py-0.2 rounded shadow-2xs">OGGI</span>}
+                              {s.isSelezionata && !s.isOggi && <span className="bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-[8px] px-1.5 py-0.2 rounded">SELEZIONATO</span>}
+                            </div>
+                            <span className="text-[10px] text-slate-500 block">
+                              {s.totDocentiAssenti === 0 ? 'Nessuna assenza' : `${s.totDocentiAssenti} ${s.totDocentiAssenti === 1 ? 'docente assente' : 'docenti assenti'}`}
+                            </span>
+                          </div>
                         </div>
-                      </div>
 
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${badgeGravita.color} shrink-0`}>
-                        {badgeGravita.icon} {badgeGravita.label}
-                      </span>
-                    </div>
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${badgeGravita.color} shrink-0`}>
+                          {badgeGravita.icon} {badgeGravita.label}
+                        </span>
+                      </div>
 
                     {/* Metric badges */}
                     {s.totOreScoperte > 0 ? (
@@ -705,7 +720,8 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                     </div>
                   </div>
                 );
-              })}
+              });
+            })()}
             </div>
           </div>
 
