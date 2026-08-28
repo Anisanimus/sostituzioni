@@ -124,6 +124,14 @@ export interface ImpostazioniPriorita {
   prioritaGite: CategoriaSostituto[];
 }
 
+export interface ImpostazioniScuola {
+  nomeScuola: string;
+  tettoMaxPermessiBreviAnno: number;
+  tettoMaxAssembleeSindacaliAnno: number;
+  vistaTabellonePredefinita: 'GRUPPI_ORA' | 'PER_DOCENTE';
+  nascondiWeekendCalendario: boolean;
+}
+
 export interface CandidatoSostituto {
   docente: Docente;
   categoria: CategoriaSostituto;

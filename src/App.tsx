@@ -17,18 +17,19 @@ import { PortaleDocente } from './components/PortaleDocente';
 import { RegistroStoricoAssenze } from './components/RegistroStoricoAssenze';
 import { AnagraficaOrario, ImpostazioniPriorita } from './components/AnagraficaOrario';
 import { ReportStatistiche } from './components/ReportStatistiche';
+import { PersonalizzazioniScuola } from './components/PersonalizzazioniScuola';
 import { PanoramicaLavori } from './components/PanoramicaLavori';
 import { Coachmark } from './components/Coachmark';
 import { 
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
-  Menu, X, Sliders, BarChart3
+  Menu, X, Sliders, BarChart3, Sparkles, Building2
 } from 'lucide-react';
 
 const MainApp: React.FC = () => {
-  const { docenti, orariDocenti, assenze, uscite, sostituzioni } = useApp();
+  const { docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola } = useApp();
   const [ruoloAttivo, setRuoloAttivo] = useState<'VICEPRESIDENZA' | 'PORTALE_DOCENTE'>('VICEPRESIDENZA');
-  const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'IMPOSTAZIONI'>('GESTIONE_GIORNALIERA');
+  const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'SOSTITUZIONI_SMART' | 'PERSONALIZZAZIONI'>('GESTIONE_GIORNALIERA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
 
@@ -117,7 +118,7 @@ const MainApp: React.FC = () => {
             </div>
             <div>
               <h1 className="text-sm sm:text-base font-black tracking-tight leading-tight flex items-center gap-2">
-                <span>Gestione Sostituzioni</span>
+                <span>{impostazioniScuola?.nomeScuola || 'Gestione Sostituzioni'}</span>
                 <span className="text-[10px] bg-indigo-500/30 text-indigo-300 px-1.5 py-0.5 rounded font-mono">v2.0</span>
               </h1>
             </div>
@@ -298,25 +299,49 @@ const MainApp: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    setTabVice('IMPOSTAZIONI');
+                    setTabVice('SOSTITUZIONI_SMART');
                     setIsSidebarOpen(false);
                   }}
-                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left ${
-                    tabVice === 'IMPOSTAZIONI'
+                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    tabVice === 'SOSTITUZIONI_SMART'
                       ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                       : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${tabVice === 'IMPOSTAZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                      <Settings className="w-4 h-4" />
+                    <div className={`p-2 rounded-lg ${tabVice === 'SOSTITUZIONI_SMART' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <Sparkles className="w-4 h-4" />
                     </div>
                     <div>
-                      <span className="block font-black text-sm">Impostazioni</span>
+                      <span className="block font-black text-sm">Sostituzioni Smart</span>
                       <span className="text-[11px] text-slate-500 font-normal">Priorità algoritmi e recupero debiti</span>
                     </div>
                   </div>
-                  {tabVice === 'IMPOSTAZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                  {tabVice === 'SOSTITUZIONI_SMART' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTabVice('PERSONALIZZAZIONI');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    tabVice === 'PERSONALIZZAZIONI'
+                      ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${tabVice === 'PERSONALIZZAZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <Sliders className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block font-black text-sm">Personalizzazioni</span>
+                      <span className="text-[11px] text-slate-500 font-normal">Nome scuola, tetti orari e vista</span>
+                    </div>
+                  </div>
+                  {tabVice === 'PERSONALIZZAZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                 </button>
               </div>
             </div>
@@ -376,8 +401,12 @@ const MainApp: React.FC = () => {
               <AnagraficaOrario />
             )}
 
-            {tabVice === 'IMPOSTAZIONI' && (
+            {tabVice === 'SOSTITUZIONI_SMART' && (
               <ImpostazioniPriorita />
+            )}
+
+            {tabVice === 'PERSONALIZZAZIONI' && (
+              <PersonalizzazioniScuola />
             )}
           </>
         )}

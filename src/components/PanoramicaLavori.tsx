@@ -11,7 +11,7 @@ interface PanoramicaLavoriProps {
 }
 
 export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate, onSelectDate }) => {
-  const { docenti, orariDocenti, assenze, uscite, sostituzioni } = useApp();
+  const { docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola } = useApp();
   
   // Stato visibilità banner - SU MOBILE default chiuso/compresso, su desktop aperto
   const [visibile, setVisibile] = useState(true);
@@ -19,8 +19,9 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
   const [vista, setVista] = useState<'GIORNO' | 'SETTIMANA'>('GIORNO');
 
   const todayStr = new Date().toISOString().split('T')[0];
+  const nascondiWeekend = impostazioniScuola?.nascondiWeekendCalendario ?? true;
 
-  // Calcola una finestra di giorni scolastici (Lun-Ven) a partire da OGGI IN POI
+  // Calcola una finestra di giorni a partire da OGGI IN POI (con filtro weekend personalizzabile)
   const getFinestraGiorniScuola = (passati: number = 0, futuri: number = 30) => {
     const dates: string[] = [];
     
@@ -30,7 +31,8 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
       const tempPast: string[] = [];
       while (tempPast.length < passati) {
         curPast.setDate(curPast.getDate() - 1);
-        if (curPast.getDay() !== 0 && curPast.getDay() !== 6) {
+        const isWeekend = curPast.getDay() === 0 || curPast.getDay() === 6;
+        if (!nascondiWeekend || !isWeekend) {
           tempPast.unshift(curPast.toISOString().split('T')[0]);
         }
       }
@@ -40,7 +42,8 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     // Oggi + Giorni futuri
     let cur = new Date();
     while (dates.length < passati + futuri) {
-      if (cur.getDay() !== 0 && cur.getDay() !== 6) {
+      const isWeekend = cur.getDay() === 0 || cur.getDay() === 6;
+      if (!nascondiWeekend || !isWeekend) {
         dates.push(cur.toISOString().split('T')[0]);
       }
       cur.setDate(cur.getDate() + 1);

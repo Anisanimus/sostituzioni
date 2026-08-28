@@ -1,9 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, CategoriaSostituto, NotificaDocente } from '../types';
+import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente } from '../utils/docentiHelper';
 
 const CURRENT_TIMETABLE_VERSION = 'v14_fictional_demo_names';
+
+export const DEFAULT_IMPOSTAZIONI_SCUOLA: ImpostazioniScuola = {
+  nomeScuola: 'I.C. Leonardo da Vinci',
+  tettoMaxPermessiBreviAnno: 12,
+  tettoMaxAssembleeSindacaliAnno: 10,
+  vistaTabellonePredefinita: 'GRUPPI_ORA',
+  nascondiWeekendCalendario: true
+};
 
 export const DEFAULT_PRIORITA_ASSENZE: CategoriaSostituto[] = [
   'COMPRESENTE_CLASSE',
@@ -44,6 +52,10 @@ interface AppContextType {
   setImpostazioniPriorita: React.Dispatch<React.SetStateAction<ImpostazioniPriorita>>;
   updateImpostazioniPriorita: (nuove: ImpostazioniPriorita) => void;
   resetImpostazioniPrioritaPredefinite: () => void;
+
+  impostazioniScuola: ImpostazioniScuola;
+  setImpostazioniScuola: React.Dispatch<React.SetStateAction<ImpostazioniScuola>>;
+  updateImpostazioniScuola: (nuove: Partial<ImpostazioniScuola>) => void;
   
   addAssenza: (assenza: Omit<AssenzaDocente, 'id' | 'createdAt'>) => void;
   removeAssenza: (id: string) => void;
@@ -162,6 +174,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prioritaGite: DEFAULT_PRIORITA_GITE
     });
   };
+
+  const [impostazioniScuola, setImpostazioniScuola] = useState<ImpostazioniScuola>(() => {
+    try {
+      const saved = localStorage.getItem('scuola_impostazioni_generali');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...DEFAULT_IMPOSTAZIONI_SCUOLA, ...parsed };
+      }
+    } catch (e) {}
+    return DEFAULT_IMPOSTAZIONI_SCUOLA;
+  });
+
+  const updateImpostazioniScuola = (nuove: Partial<ImpostazioniScuola>) => {
+    setImpostazioniScuola(prev => ({ ...prev, ...nuove }));
+  };
+
+  useEffect(() => {
+    localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(impostazioniScuola));
+  }, [impostazioniScuola]);
 
   useEffect(() => {
     localStorage.setItem('scuola_impostazioni_priorita', JSON.stringify(impostazioniPriorita));
@@ -768,6 +799,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setImpostazioniPriorita,
       updateImpostazioniPriorita,
       resetImpostazioniPrioritaPredefinite,
+      impostazioniScuola,
+      setImpostazioniScuola,
+      updateImpostazioniScuola,
       addAssenza,
       removeAssenza,
       annullaAssenza,

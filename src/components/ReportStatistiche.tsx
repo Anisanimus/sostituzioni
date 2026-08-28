@@ -11,7 +11,10 @@ import * as XLSX from 'xlsx';
 type PeriodoFiltro = 'MESE' | 'QUADRIMESTRE_1' | 'QUADRIMESTRE_2' | 'ANNO_INTERO';
 
 export const ReportStatistiche: React.FC = () => {
-  const { docenti, assenze, uscite, sostituzioni, movimentiDebito } = useApp();
+  const { docenti, assenze, uscite, sostituzioni, movimentiDebito, impostazioniScuola } = useApp();
+
+  const tettoPermessi = impostazioniScuola?.tettoMaxPermessiBreviAnno || 12;
+  const tettoAssemblee = impostazioniScuola?.tettoMaxAssembleeSindacaliAnno || 10;
 
   const today = new Date();
   const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -539,8 +542,8 @@ export const ReportStatistiche: React.FC = () => {
                 <tr className="bg-slate-800 text-white font-bold text-[11px]">
                   <th className="p-2.5 rounded-tl-xl">Docente</th>
                   <th className="p-2.5">Materia</th>
-                  <th className="p-2.5 text-center">Permessi Brevi</th>
-                  <th className="p-2.5 text-center">Assemblee Sindacali (Max 10h)</th>
+                  <th className="p-2.5 text-center">Permessi Brevi (Tetto {tettoPermessi}h)</th>
+                  <th className="p-2.5 text-center">Assemblee Sindacali (Max {tettoAssemblee}h)</th>
                   <th className="p-2.5 text-center">Ore Recuperate</th>
                   <th className="p-2.5 text-center rounded-tr-xl">Debito Residuo</th>
                 </tr>
@@ -551,19 +554,23 @@ export const ReportStatistiche: React.FC = () => {
                     <td className="p-2.5 font-bold text-slate-900">{p.nome}</td>
                     <td className="p-2.5 text-slate-500">{p.materia}</td>
                     <td className="p-2.5 text-center">
-                      <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
-                        {p.orePermessiRichieste}h ({p.nPermessi} {p.nPermessi === 1 ? 'richiesta' : 'richieste'})
+                      <span className={`font-bold px-2 py-0.5 rounded-lg border ${
+                        p.orePermessiRichieste >= tettoPermessi
+                          ? 'bg-rose-100 text-rose-800 border-rose-300'
+                          : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                      }`}>
+                        {p.orePermessiRichieste}h / {tettoPermessi}h ({p.nPermessi} {p.nPermessi === 1 ? 'richiesta' : 'richieste'})
                       </span>
                     </td>
                     <td className="p-2.5 text-center">
                       <span className={`font-bold px-2 py-0.5 rounded-lg border ${
-                        p.oreAssembleaRichieste >= 10 
+                        p.oreAssembleaRichieste >= tettoAssemblee 
                           ? 'bg-rose-100 text-rose-800 border-rose-300' 
-                          : p.oreAssembleaRichieste >= 8
+                          : p.oreAssembleaRichieste >= tettoAssemblee * 0.8
                             ? 'bg-amber-100 text-amber-800 border-amber-300'
                             : 'bg-slate-100 text-slate-700 border-slate-200'
                       }`}>
-                        {p.oreAssembleaRichieste}h / 10h max
+                        {p.oreAssembleaRichieste}h / {tettoAssemblee}h max
                       </span>
                     </td>
                     <td className="p-2.5 text-center font-bold text-emerald-700">

@@ -17,14 +17,16 @@ export const TabelloneSostituzioni: React.FC<{
 }> = ({ selectedDate, selectedGiorno, onChangeDate }) => {
   const { 
     docenti, orariDocenti, assenze, uscite, sostituzioni, 
-    impostazioniPriorita, assegnaSostituzione, rimuoviSostituzione, 
+    impostazioniPriorita, impostazioniScuola, assegnaSostituzione, rimuoviSostituzione, 
     pubblicaTutteSostituzioniData, pubblicaSingolaSostituzione,
     rimuoviSingolaOraAssenza
   } = useApp();
 
   const [selectedOraScoperta, setSelectedOraScoperta] = useState<OraScoperta | null>(null);
-  // Due modalità di visualizzazione: A blocchi orari, Per Docente Assente
-  const [visualizzazione, setVisualizzazione] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>('GRUPPI_ORA');
+  // Due modalità di visualizzazione: A blocchi orari, Per Docente Assente (con default da impostazioniScuola)
+  const [visualizzazione, setVisualizzazione] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>(() => 
+    impostazioniScuola?.vistaTabellonePredefinita || 'GRUPPI_ORA'
+  );
   const [mostraRisorseMobile, setMostraRisorseMobile] = useState<boolean>(false);
   
   // Set per gestire gli accordion aperti (se presente nel set = aperto). Di default vuoti = TUTTO CHIUSO
