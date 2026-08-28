@@ -152,7 +152,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     };
   };
 
-  const datesFinestra = getFinestraGiorniScuola(10, 25);
+  const datesFinestra = getFinestraGiorniScuola(0, 35);
   const statsGiorni = datesFinestra.map(d => getStatsGiorno(d));
 
   // Statistiche del giorno selezionato o di oggi
