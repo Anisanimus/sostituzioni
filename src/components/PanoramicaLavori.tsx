@@ -20,20 +20,22 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
 
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Calcola una finestra di giorni scolastici (Lun-Ven) con 10 giorni passati e 25 futuri
-  const getFinestraGiorniScuola = (passati: number = 10, futuri: number = 25) => {
+  // Calcola una finestra di giorni scolastici (Lun-Ven) a partire da OGGI IN POI
+  const getFinestraGiorniScuola = (passati: number = 0, futuri: number = 30) => {
     const dates: string[] = [];
     
-    // Giorni passati
-    let curPast = new Date();
-    const tempPast: string[] = [];
-    while (tempPast.length < passati) {
-      curPast.setDate(curPast.getDate() - 1);
-      if (curPast.getDay() !== 0 && curPast.getDay() !== 6) {
-        tempPast.unshift(curPast.toISOString().split('T')[0]);
+    // Giorni passati (default 0 per partire da oggi in poi)
+    if (passati > 0) {
+      let curPast = new Date();
+      const tempPast: string[] = [];
+      while (tempPast.length < passati) {
+        curPast.setDate(curPast.getDate() - 1);
+        if (curPast.getDay() !== 0 && curPast.getDay() !== 6) {
+          tempPast.unshift(curPast.toISOString().split('T')[0]);
+        }
       }
+      dates.push(...tempPast);
     }
-    dates.push(...tempPast);
 
     // Oggi + Giorni futuri
     let cur = new Date();
@@ -608,13 +610,8 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
             {/* FEED VERTICALE CARD GIORNALIERE SU MOBILE */}
             <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
               {(() => {
-                // In vista Settimana, mostriamo i giorni della settimana attorno alla data selezionata/oggi
-                const indexSel = statsGiorni.findIndex(s => s.isSelezionata);
-                let giorniMostrati = statsGiorni;
-                if (vista === 'GIORNO') {
-                  const start = Math.max(0, indexSel >= 0 ? Math.max(0, indexSel - 2) : 8);
-                  giorniMostrati = statsGiorni.slice(start, start + 7);
-                }
+                // In vista Settimana mostra i primi 7 giorni scolastici a partire da OGGI, in vista Mese l'intero mese da oggi
+                const giorniMostrati = vista === 'GIORNO' ? statsGiorni.slice(0, 7) : statsGiorni;
 
                 return giorniMostrati.map((s) => {
                   const isCompletato = s.totOreScoperte > 0 && s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte;

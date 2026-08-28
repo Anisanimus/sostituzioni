@@ -696,12 +696,12 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
       {/* 3. LISTA EVENTI REGISTRATI PER LA DATA SELEZIONATA        */}
       {/* ========================================================= */}
       {(assenzeOggiDeduplicate.length > 0 || usciteOggi.length > 0) && (
-        <div className="pt-2.5 border-t border-slate-100 space-y-2">
+        <div className="pt-2.5 border-t border-slate-200 space-y-2">
           {/* BARRA COLLAPSIBILE / ACCORDION CON "TOCCA PER DETTAGLI" E TRIANGOLINO */}
           <button
             type="button"
             onClick={() => setMostraDettagliEventi(prev => !prev)}
-            className="w-full flex items-center justify-between text-left p-1 rounded-xl hover:bg-slate-50 transition cursor-pointer"
+            className="w-full flex items-center justify-between text-left p-1 rounded-xl hover:bg-slate-100/60 transition cursor-pointer"
           >
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">

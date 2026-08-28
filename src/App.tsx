@@ -316,9 +316,9 @@ const MainApp: React.FC = () => {
 
             {/* VISTA PRINCIPALE A 2 COLONNE CON TABELLONE IN PRIMO PIANO */}
             {tabVice === 'GESTIONE_GIORNALIERA' && (
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-0 sm:space-y-4">
                 {/* BLOCCO UNIFICATO: AVANZAMENTO LAVORI + PULSANTI RAPIDI SENZA SPAZIO */}
-                <div className="shadow-2xs rounded-2xl overflow-hidden mb-2 sm:mb-4">
+                <div className="shadow-2xs rounded-2xl rounded-b-none sm:rounded-b-2xl overflow-hidden border-b-0 sm:border-b">
                   <PanoramicaLavori 
                     selectedDate={selectedDate} 
                     onSelectDate={(newDate) => setSelectedDate(newDate)} 
