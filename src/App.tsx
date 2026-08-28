@@ -16,18 +16,19 @@ import { TabelloneSostituzioni } from './components/TabelloneSostituzioni';
 import { PortaleDocente } from './components/PortaleDocente';
 import { RegistroStoricoAssenze } from './components/RegistroStoricoAssenze';
 import { AnagraficaOrario, ImpostazioniPriorita } from './components/AnagraficaOrario';
+import { ReportStatistiche } from './components/ReportStatistiche';
 import { PanoramicaLavori } from './components/PanoramicaLavori';
 import { Coachmark } from './components/Coachmark';
 import { 
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
-  Menu, X, Sliders
+  Menu, X, Sliders, BarChart3
 } from 'lucide-react';
 
 const MainApp: React.FC = () => {
   const { docenti, orariDocenti, assenze, uscite, sostituzioni } = useApp();
   const [ruoloAttivo, setRuoloAttivo] = useState<'VICEPRESIDENZA' | 'PORTALE_DOCENTE'>('VICEPRESIDENZA');
-  const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'STORICO' | 'DOCENTI' | 'IMPOSTAZIONI'>('GESTIONE_GIORNALIERA');
+  const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'IMPOSTAZIONI'>('GESTIONE_GIORNALIERA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
 
@@ -249,10 +250,34 @@ const MainApp: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    setTabVice('REPORT');
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    tabVice === 'REPORT'
+                      ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${tabVice === 'REPORT' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <BarChart3 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block font-black text-sm">Report & Statistiche</span>
+                      <span className="text-[11px] text-slate-500 font-normal">Equità sostegni, permessi e uscite</span>
+                    </div>
+                  </div>
+                  {tabVice === 'REPORT' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
                     setTabVice('DOCENTI');
                     setIsSidebarOpen(false);
                   }}
-                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left ${
+                  className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                     tabVice === 'DOCENTI'
                       ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                       : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
@@ -341,6 +366,10 @@ const MainApp: React.FC = () => {
 
             {tabVice === 'STORICO' && (
               <RegistroStoricoAssenze />
+            )}
+
+            {tabVice === 'REPORT' && (
+              <ReportStatistiche />
             )}
 
             {tabVice === 'DOCENTI' && (
