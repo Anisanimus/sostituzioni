@@ -225,7 +225,7 @@ export const AnagraficaOrario: React.FC = () => {
             )}
           </div>
           <p className="text-xs text-slate-500">
-            Modifica le classi per ora, gestisci le <strong>Disposizioni (D)</strong>, i <strong>Potenziamenti (P)</strong> e le ore con <strong>Alunno a Caso Grave</strong>.
+            Modifica le classi per ora, gestisci le <strong>Disposizioni (D)</strong>, i <strong>Potenziamenti (P)</strong> e le ore con <strong>Alunno a Caso Grave</strong>. Se fai upload di un orario, segna le ore dei sostegni bloccati con caso grave con un asterisco (es. <strong>1A*</strong>).
           </p>
         </div>
 
