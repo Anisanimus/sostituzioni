@@ -208,7 +208,12 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
     });
   }, [righeQuadro, filtroOra, filtroClasse, ricercaDocente]);
 
-  // Raggruppamento per Ora per eliminare la ripetizione (1ª, 1ª, 1ª...)
+  // Due modalità di visualizzazione: Per Ora / Per Docente (con default da impostazioniScuola)
+  const [visualizzazione, setVisualizzazione] = useState<'PER_ORA' | 'PER_DOCENTE'>(() => 
+    impostazioniScuola?.vistaTabellonePredefinita === 'PER_DOCENTE' ? 'PER_DOCENTE' : 'PER_ORA'
+  );
+
+  // Raggruppamento 1: per ORA (senza colonne inutili)
   const gruppiPerOra = useMemo(() => {
     const map = new Map<number, typeof righeFiltrate>();
     righeFiltrate.forEach(r => {
@@ -216,6 +221,16 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
       map.get(r.ora)!.push(r);
     });
     return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
+  }, [righeFiltrate]);
+
+  // Raggruppamento 2: per DOCENTE ASSENTE
+  const gruppiPerDocente = useMemo(() => {
+    const map = new Map<string, typeof righeFiltrate>();
+    righeFiltrate.forEach(r => {
+      if (!map.has(r.docenteAssente)) map.set(r.docenteAssente, []);
+      map.get(r.docenteAssente)!.push(r);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [righeFiltrate]);
 
   // STATISTICHE IN SINTESI
@@ -284,7 +299,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
   // SCHERMATA QUADRO GIORNALIERO (AUTENTICATO)
   return (
     <div className="space-y-3 sm:space-y-4 max-w-6xl mx-auto">
-      {/* HEADER DELLA PAGINA CON NAVIGAZIONE DATA E STAMPA */}
+      {/* HEADER DELLA PAGINA CON NAVIGAZIONE DATA, SWITCH VISTA E STAMPA */}
       <div className="bg-white rounded-2xl p-3.5 sm:p-5 shadow-2xs border border-slate-200 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -302,6 +317,35 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
         {/* CONTROLLI DATA & PULSANTE STAMPA */}
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
+          {/* SELETTORE VISTA: PER ORA VS PER DOCENTE */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setVisualizzazione('PER_ORA')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                visualizzazione === 'PER_ORA'
+                  ? 'bg-white text-indigo-900 shadow-2xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Per Ora</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setVisualizzazione('PER_DOCENTE')}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                visualizzazione === 'PER_DOCENTE'
+                  ? 'bg-white text-indigo-900 shadow-2xs font-black'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Per Docente</span>
+            </button>
+          </div>
+
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               type="button"
@@ -312,7 +356,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <div className="px-2.5 text-center min-w-[110px]">
+            <div className="px-2.5 text-center min-w-[105px]">
               <span className="block text-xs font-black text-slate-900">{giornoSettimana}</span>
               <span className="text-[10px] text-slate-500 font-mono">{formatDataItaliana(selectedDate)}</span>
             </div>
@@ -343,7 +387,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
               title="Stampa foglio per bacheca o reception"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Stampa A4</span>
+              <span className="hidden sm:inline">Stampa</span>
             </button>
           </div>
         </div>
@@ -351,7 +395,6 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
       {/* KPI DI RIEPILOGO STATO COMPATTO (SU 1 RIGA SU MOBILE E DESKTOP) */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        {/* KPI 1 */}
         <div className="bg-white p-2.5 sm:p-3.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between gap-2">
           <div className="min-w-0">
             <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 truncate block">Ore Scoperte</span>
@@ -362,7 +405,6 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           </div>
         </div>
 
-        {/* KPI 2 */}
         <div className="bg-white p-2.5 sm:p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/20 shadow-2xs flex items-center justify-between gap-2">
           <div className="min-w-0">
             <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 truncate block">Coperte</span>
@@ -373,7 +415,6 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           </div>
         </div>
 
-        {/* KPI 3 */}
         <div className="bg-white p-2.5 sm:p-3.5 rounded-xl border border-amber-200 bg-amber-50/20 shadow-2xs flex items-center justify-between gap-2">
           <div className="min-w-0">
             <span className="text-[10px] sm:text-[11px] font-bold text-amber-700 truncate block">Da Coprire</span>
@@ -387,7 +428,6 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
       {/* BARRA FILTRI CON ACCORDION/COLLAPSE PER MOBILE */}
       <div className="bg-white rounded-xl shadow-2xs border border-slate-200 overflow-hidden">
-        {/* HEADER FILTRI CON PULSANTE TOGGLE SU MOBILE */}
         <div className="p-2.5 sm:p-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <button
@@ -410,7 +450,6 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
             </span>
           </div>
 
-          {/* Cerca Docente Rapido (Sempre accessibile in testata) */}
           <div className="relative flex-1 max-w-xs ml-auto">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
@@ -423,9 +462,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           </div>
         </div>
 
-        {/* CORPO FILTRI (VISIBILE SU DESKTOP O QUANDO APERTO SU MOBILE) */}
         <div className={`${mostraFiltriMobile ? 'block' : 'hidden'} sm:flex flex-wrap items-center gap-3 p-3 bg-slate-50/70 border-t border-slate-100 animate-in fade-in duration-150`}>
-          {/* Filtro Ora */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-bold text-slate-600">Ora:</span>
             <select
@@ -440,7 +477,6 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
             </select>
           </div>
 
-          {/* Filtro Classe */}
           {classiUniche.length > 0 && (
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-slate-600">Classe:</span>
@@ -457,7 +493,6 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
             </div>
           )}
 
-          {/* RESET RAPIDO FILTRI */}
           {filtriAttiviCount > 0 && (
             <button
               type="button"
@@ -474,10 +509,10 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
         </div>
       </div>
 
-      {/* TABELLA PROSPETTO SOSTITUZIONI RAGGRUPPATA PER ORA (SENZA RIPETIZIONI 1, 1, 1...) */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-        {gruppiPerOra.length === 0 ? (
-          <div className="p-8 text-center space-y-2">
+      {/* ELENCO SOSTITUZIONI: RAGGRUPPATO (PER ORA O PER DOCENTE) ADATTATO PERFETTO A MOBILE E DESKTOP */}
+      <div className="space-y-3">
+        {righeFiltrate.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-8 text-center space-y-2">
             <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-6 h-6" />
             </div>
@@ -490,121 +525,182 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
               Tutte le classi sono regolari con i rispettivi docenti titolari.
             </p>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left border-collapse min-w-[620px]">
-              <thead>
-                <tr className="bg-slate-900 text-white font-bold text-[11px]">
-                  <th className="p-3 w-16 text-center">Ora</th>
-                  <th className="p-3 w-20 text-center">Classe</th>
-                  <th className="p-3">Docente Assente / In Uscita</th>
-                  <th className="p-3">Docente Sostituto Assegnato</th>
-                  <th className="p-3 text-center">Stato / Firma</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {gruppiPerOra.map(([oraNum, righeDellOra]) => (
-                  <React.Fragment key={oraNum}>
-                    {/* INTESTAZIONE ORA UNIFICATA (SEPARATORE DI BLOCCO ORARIO) */}
-                    <tr className="bg-slate-100/90 border-t-2 border-slate-300">
-                      <td colSpan={5} className="py-2 px-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="bg-slate-900 text-white font-black px-2.5 py-0.5 rounded-lg text-xs shadow-2xs">
-                              ⏰ {oraNum}ª ORA
-                            </span>
-                            <span className="text-xs font-bold text-slate-700">
-                              ({righeDellOra.length} {righeDellOra.length === 1 ? 'classe scoperta' : 'classi scoperte'})
-                            </span>
-                          </div>
+        ) : visualizzazione === 'PER_ORA' ? (
+          /* ======================================================= */
+          /* VISTA 1: RAGGRUPPATA PER ORA (COMPATTA, RESPONSIVE)     */
+          /* ======================================================= */
+          <div className="space-y-3">
+            {gruppiPerOra.map(([oraNum, righeDellOra]) => (
+              <div key={oraNum} className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+                {/* INTESTAZIONE ORA */}
+                <div className="bg-slate-900 text-white px-3.5 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-indigo-600 text-white font-black px-2 py-0.5 rounded-lg text-xs shadow-2xs">
+                      ⏰ {oraNum}ª ORA
+                    </span>
+                    <span className="text-xs font-bold text-slate-200">
+                      {righeDellOra.length} {righeDellOra.length === 1 ? 'classe' : 'classi'}
+                    </span>
+                  </div>
 
-                          <div className="text-[11px] font-bold text-slate-500">
-                            {righeDellOra.filter(r => r.sostituti.length > 0).length} / {righeDellOra.length} coperte
-                          </div>
+                  <div className="text-[11px] font-bold text-slate-300">
+                    {righeDellOra.filter(r => r.sostituti.length > 0).length}/{righeDellOra.length} coperte
+                  </div>
+                </div>
+
+                {/* LISTA CLASSI DELL'ORA (LAYOUT A CARD RESPONSIVE) */}
+                <div className="divide-y divide-slate-100">
+                  {righeDellOra.map((r, idx) => (
+                    <div key={idx} className="p-3 hover:bg-slate-50/70 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      {/* Sinistra: Classe e Docente Assente */}
+                      <div className="flex items-start sm:items-center gap-3">
+                        <div className="w-10 h-8 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-900 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
+                          {r.classe}
                         </div>
-                      </td>
-                    </tr>
 
-                    {/* RIGHE DELLE CLASSI DELL'ORA (SENZA RIPETERE L'ORA) */}
-                    {righeDellOra.map((r, idx) => (
-                      <tr key={idx} className="hover:bg-indigo-50/30 transition-colors">
-                        {/* COLONNA ORA COMPATTA (Icona o badge minimo) */}
-                        <td className="p-3 text-center border-r border-slate-100">
-                          <span className="font-mono text-slate-400 font-bold text-xs">
-                            #{idx + 1}
-                          </span>
-                        </td>
-
-                        {/* CLASSE */}
-                        <td className="p-3 text-center">
-                          <span className="bg-indigo-50 border border-indigo-200 text-indigo-900 font-black px-2.5 py-1 rounded-lg text-xs shadow-2xs">
-                            {r.classe}
-                          </span>
-                        </td>
-
-                        {/* DOCENTE ASSENTE */}
-                        <td className="p-3">
-                          <div className="font-bold text-slate-900 text-xs">
-                            {r.docenteAssente}
+                        <div>
+                          <div className="font-bold text-slate-900 text-xs flex flex-wrap items-center gap-1.5">
+                            <span>{r.docenteAssente}</span>
+                            <span className="text-[11px] font-normal text-slate-500">({r.materia})</span>
                           </div>
-                          <div className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                            <span>{r.materia}</span>
+                          <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
                             {r.isUscita ? (
-                              <span className="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded flex items-center gap-0.5">
+                              <span className="bg-amber-100 text-amber-800 font-bold px-1 rounded flex items-center gap-0.5">
                                 <Bus className="w-2.5 h-2.5" /> Uscita Didattica
                               </span>
                             ) : (
-                              <span className="text-slate-400">• {r.motivo}</span>
+                              <span>Tipologia: <strong className="text-slate-600">{r.motivo}</strong></span>
                             )}
                           </div>
-                        </td>
+                        </div>
+                      </div>
 
-                        {/* DOCENTE SOSTITUTO */}
-                        <td className="p-3">
-                          {r.sostituti.length > 0 ? (
-                            <div className="space-y-1">
-                              {r.sostituti.map(s => (
-                                <div key={s.id} className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="font-black text-indigo-900 text-xs bg-indigo-50/80 border border-indigo-200 px-2 py-0.5 rounded-lg shadow-2xs">
-                                    👤 {s.nomeSostituto}
-                                  </span>
-                                  <span className="text-[10px] text-slate-500 font-medium">({s.categoria})</span>
-                                </div>
-                              ))}
-                            </div>
-                          ) : r.nonSostituita ? (
-                            <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-300 text-[10px]">
-                              🚫 Non Sostituita
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 font-black px-2.5 py-0.5 rounded-lg border border-amber-300 text-[10px] animate-pulse shadow-2xs">
-                              ⚠️ In attesa di assegnazione
-                            </span>
-                          )}
-                        </td>
+                      {/* Destra: Docente Sostituto e Stato Firma */}
+                      <div className="flex items-center justify-between sm:justify-end gap-2 pl-13 sm:pl-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                        {r.sostituti.length > 0 ? (
+                          <div className="flex flex-wrap items-center gap-1.5 justify-end">
+                            {r.sostituti.map(s => (
+                              <div key={s.id} className="flex items-center gap-1.5">
+                                <span className="font-black text-indigo-900 text-xs bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg shadow-2xs">
+                                  👤 {s.nomeSostituto}
+                                </span>
+                                <span className="text-[10px] text-slate-500 font-medium hidden md:inline">({s.categoria})</span>
+                              </div>
+                            ))}
 
-                        {/* STATO FIRMA */}
-                        <td className="p-3 text-center">
-                          {r.sostituti.length > 0 ? (
-                            r.sostituti.every(s => s.firmata) ? (
-                              <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
-                                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Presa Visione
+                            {r.sostituti.every(s => s.firmata) ? (
+                              <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs ml-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> <span className="hidden sm:inline">Presa Visione</span>
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[10px] px-2 py-0.5 rounded-md">
-                                <Clock className="w-3 h-3 text-amber-600" /> Assegnata
+                              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[10px] px-2 py-0.5 rounded-md ml-1">
+                                <Clock className="w-3 h-3 text-amber-600" /> <span className="hidden sm:inline">Assegnata</span>
                               </span>
-                            )
+                            )}
+                          </div>
+                        ) : r.nonSostituita ? (
+                          <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-300 text-[10px]">
+                            🚫 Non Sostituita
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 font-black px-2 py-0.5 rounded-lg border border-amber-300 text-[10px] animate-pulse shadow-2xs">
+                            ⚠️ In attesa
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* ======================================================= */
+          /* VISTA 2: RAGGRUPPATA PER DOCENTE ASSENTE                */
+          /* ======================================================= */
+          <div className="space-y-3">
+            {gruppiPerDocente.map(([docenteNome, righeDocente]) => (
+              <div key={docenteNome} className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+                {/* INTESTAZIONE DOCENTE */}
+                <div className="bg-slate-900 text-white px-3.5 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 bg-indigo-600 rounded-lg text-white">
+                      <User className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-black text-white">{docenteNome}</span>
+                      <span className="text-[10px] text-slate-300 ml-1.5">({righeDocente[0]?.materia})</span>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] font-bold text-slate-300">
+                    {righeDocente.filter(r => r.sostituti.length > 0).length}/{righeDocente.length} ore coperte
+                  </div>
+                </div>
+
+                {/* LISTA ORE DEL DOCENTE */}
+                <div className="divide-y divide-slate-100">
+                  {righeDocente.map((r, idx) => (
+                    <div key={idx} className="p-3 hover:bg-slate-50/70 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      {/* Sinistra: Ora e Classe */}
+                      <div className="flex items-center gap-3">
+                        <span className="bg-slate-900 text-white font-black text-xs px-2.5 py-1 rounded-lg shrink-0 shadow-2xs">
+                          {r.ora}ª ORA
+                        </span>
+                        
+                        <div className="w-10 h-8 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-900 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                          {r.classe}
+                        </div>
+
+                        <div className="text-[11px] text-slate-500">
+                          {r.isUscita ? (
+                            <span className="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded text-[10px] flex items-center gap-0.5">
+                              <Bus className="w-2.5 h-2.5" /> Uscita Didattica
+                            </span>
                           ) : (
-                            <span className="text-slate-400 text-[11px]">-</span>
+                            <span>{r.motivo}</span>
                           )}
-                        </td>
-                      </tr>
-                    ))}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
+                        </div>
+                      </div>
+
+                      {/* Destra: Supplente e Firma */}
+                      <div className="flex items-center justify-between sm:justify-end gap-2 pl-13 sm:pl-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                        {r.sostituti.length > 0 ? (
+                          <div className="flex flex-wrap items-center gap-1.5 justify-end">
+                            {r.sostituti.map(s => (
+                              <div key={s.id} className="flex items-center gap-1.5">
+                                <span className="font-black text-indigo-900 text-xs bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg shadow-2xs">
+                                  👤 {s.nomeSostituto}
+                                </span>
+                                <span className="text-[10px] text-slate-500 font-medium hidden md:inline">({s.categoria})</span>
+                              </div>
+                            ))}
+
+                            {r.sostituti.every(s => s.firmata) ? (
+                              <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs ml-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> <span className="hidden sm:inline">Presa Visione</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[10px] px-2 py-0.5 rounded-md ml-1">
+                                <Clock className="w-3 h-3 text-amber-600" /> <span className="hidden sm:inline">Assegnata</span>
+                              </span>
+                            )}
+                          </div>
+                        ) : r.nonSostituita ? (
+                          <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-300 text-[10px]">
+                            🚫 Non Sostituita
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 font-black px-2.5 py-0.5 rounded-lg border border-amber-300 text-[10px] animate-pulse shadow-2xs">
+                            ⚠️ In attesa
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
