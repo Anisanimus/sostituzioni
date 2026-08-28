@@ -326,12 +326,12 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
 
       {/* CONTENUTO ESPANSO */}
       {!compresso && (
-        <div className="pt-0.5 animate-in fade-in duration-150 space-y-2">
+        <div className="pt-0.5 animate-in fade-in duration-150 space-y-2.5">
           
           {/* ========================================================================= */}
-          {/* 1. VISTA GIORNO (DEFAULT): FOCUS SU OGGI + CAROSELLO PROSSIMI GIORNI      */}
+          {/* VISTA DESKTOP (SM+): CAROSELLO ORIZZONTALE CLASSICO                      */}
           {/* ========================================================================= */}
-          {vista === 'GIORNO' && (
+          <div className="hidden sm:block">
             <div 
               id="panoramicaCarouselTrack"
               className="flex gap-2.5 overflow-x-auto py-1 scroll-smooth"
@@ -405,14 +405,14 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                       </div>
                     )}
 
-                    {/* Mini progress bar del giorno: verde SOLO se tutte coperte e tutte firmate (ciclo completo) */}
+                    {/* Mini progress bar del giorno */}
                     <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
                       <div 
                         className={`h-full transition-all duration-300 ${
                           s.totOreScoperte === 0 || (s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte)
                             ? 'bg-emerald-500' 
                             : s.totCoperte === s.totOreScoperte
-                              ? 'bg-indigo-500' // Tutte assegnate ma in attesa di firme
+                              ? 'bg-indigo-500'
                               : s.gravita === 'COMPLICATO' 
                                 ? 'bg-rose-500' 
                                 : s.gravita === 'DISCRETA'
@@ -432,7 +432,174 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                 );
               })}
             </div>
-          )}
+          </div>
+
+          {/* ========================================================================= */}
+          {/* VISTA MOBILE (BLOCK SU SMARTPHONE): CALENDARIO VERTICALE + TOGGLE MESE    */}
+          {/* ========================================================================= */}
+          <div className="block sm:hidden space-y-2.5">
+            {/* SELETTORE VISTA MOBILE: SETTIMANA / MESE */}
+            <div className="flex items-center justify-between bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setVista('GIORNO')}
+                className={`flex-1 py-1.5 rounded-lg text-center transition cursor-pointer ${
+                  vista === 'GIORNO' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                📅 Settimana
+              </button>
+              <button
+                type="button"
+                onClick={() => setVista('SETTIMANA')}
+                className={`flex-1 py-1.5 rounded-lg text-center transition cursor-pointer ${
+                  vista === 'SETTIMANA' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                🗓️ Mese
+              </button>
+            </div>
+
+            {/* SE VISTA MESE SU MOBILE: MINI MAPPA A MATRICE DEI GIORNI */}
+            {vista === 'SETTIMANA' && (
+              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] font-black text-slate-700 uppercase">
+                  <span>Mappa Mensile</span>
+                  <span className="text-[10px] text-slate-400 font-bold">{statsGiorni.length} Giorni</span>
+                </div>
+                <div className="grid grid-cols-5 gap-1 text-center">
+                  {statsGiorni.map((d) => {
+                    const isSel = d.isSelezionata;
+                    const isAllOk = d.totOreScoperte > 0 && d.totCoperte === d.totOreScoperte && d.totFirmate === d.totOreScoperte;
+                    const bgClass = d.totOreScoperte === 0
+                      ? 'bg-slate-100 text-slate-600 border border-slate-200'
+                      : isAllOk
+                        ? 'bg-emerald-600 text-white font-black shadow-2xs'
+                        : d.gravita === 'COMPLICATO'
+                          ? 'bg-rose-500 text-white font-black'
+                          : 'bg-amber-100 text-amber-950 border border-amber-300 font-bold';
+
+                    return (
+                      <button
+                        key={`mini_${d.dataStr}`}
+                        type="button"
+                        onClick={() => onSelectDate(d.dataStr)}
+                        className={`p-1 rounded-lg ${bgClass} text-[10px] leading-tight flex flex-col items-center justify-center transition cursor-pointer ${
+                          isSel ? 'ring-2 ring-indigo-600 ring-offset-1 scale-105' : ''
+                        }`}
+                      >
+                        <span className="font-black">{new Date(d.dataStr).getDate()}</span>
+                        <span className="text-[7px] opacity-90">{d.totOreScoperte > 0 ? `${d.totCoperte}/${d.totOreScoperte}` : '✓'}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* FEED VERTICALE CARD GIORNALIERE SU MOBILE */}
+            <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+              {(vista === 'GIORNO' ? statsGiorni.slice(0, 7) : statsGiorni).map((s) => {
+                const isCompletato = s.totOreScoperte > 0 && s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte;
+                const perc = s.totOreScoperte > 0 ? Math.round((s.totCoperte / s.totOreScoperte) * 100) : 100;
+                
+                const badgeGravita = 
+                  s.totDocentiAssenti === 0 
+                    ? { label: 'Tranquilla', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' }
+                    : s.gravita === 'COMPLICATO'
+                      ? { label: `Complicato (${s.totDocentiAssenti})`, color: 'bg-rose-600 text-white font-black animate-pulse', icon: '🔥' }
+                      : s.gravita === 'DISCRETA'
+                        ? { label: `Discreta (${s.totDocentiAssenti})`, color: 'bg-amber-100 text-amber-950 border-amber-300 font-black', icon: '⚡' }
+                        : { label: `Semplice (${s.totDocentiAssenti})`, color: 'bg-sky-50 text-sky-900 border-sky-200 font-bold', icon: 'ℹ️' };
+
+                return (
+                  <div
+                    key={`mob_${s.dataStr}`}
+                    onClick={() => onSelectDate(s.dataStr)}
+                    className={`p-3 rounded-xl border text-left transition cursor-pointer relative overflow-hidden ${
+                      s.isSelezionata
+                        ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-2 ring-indigo-200 shadow-sm'
+                        : isCompletato
+                          ? 'bg-white border-emerald-200 hover:border-emerald-300'
+                          : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
+                    }`}
+                  >
+                    {/* Header Card */}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-lg flex flex-col items-center justify-center font-black leading-tight shrink-0 ${
+                          s.isOggi ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 border border-slate-200'
+                        }`}>
+                          <span className="text-[8px] uppercase opacity-80">{s.giornoNome.slice(0, 3)}</span>
+                          <span className="text-xs font-black">{new Date(s.dataStr).getDate()}</span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1">
+                            <span className="font-black text-xs text-slate-900">{s.giornoNome} {new Date(s.dataStr).getDate()} {new Date(s.dataStr).toLocaleDateString('it-IT', { month: 'short' })}</span>
+                            {s.isOggi && <span className="bg-indigo-600 text-white font-black text-[8px] px-1 py-0.2 rounded">OGGI</span>}
+                          </div>
+                          <span className="text-[10px] text-slate-500 block">
+                            {s.totDocentiAssenti === 0 ? 'Nessuna assenza' : `${s.totDocentiAssenti} ${s.totDocentiAssenti === 1 ? 'docente assente' : 'docenti assenti'}`}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${badgeGravita.color} shrink-0`}>
+                        {badgeGravita.icon} {badgeGravita.label}
+                      </span>
+                    </div>
+
+                    {/* Metric badges */}
+                    {s.totOreScoperte > 0 ? (
+                      <div className="space-y-1.5 my-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border flex items-center gap-1 ${
+                            s.totCoperte === s.totOreScoperte ? 'bg-emerald-600 text-white' : 'bg-amber-50 text-amber-950 border-amber-300'
+                          }`}>
+                            <span>🕒 {s.totCoperte}/{s.totOreScoperte}</span>
+                            {s.totCoperte === s.totOreScoperte && <span>✓</span>}
+                          </span>
+
+                          {s.totCoperte > 0 && (
+                            <>
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border flex items-center gap-1 ${
+                                s.totPubblicate === s.totCoperte ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-sky-50 text-sky-950 border-sky-200'
+                              }`}>
+                                <span>📤 {s.totPubblicate}/{s.totCoperte}</span>
+                                {s.totPubblicate === s.totCoperte && <span>✓</span>}
+                              </span>
+
+                              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border flex items-center gap-1 ${
+                                s.totFirmate === s.totCoperte ? 'bg-emerald-600 text-white' : 'bg-indigo-50 text-indigo-950 border-indigo-200'
+                              }`}>
+                                <span>✍️ {s.totFirmate}/{s.totCoperte}</span>
+                                {s.totFirmate === s.totCoperte && <span>✓</span>}
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                          <div className={`${isCompletato ? 'bg-emerald-600' : 'bg-amber-500'} h-1 rounded-full`} style={{ width: `${perc}%` }} />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-slate-400 font-medium my-1 flex items-center gap-1">
+                        <span className="text-emerald-700 font-bold">🕒 0/0 ✓</span>
+                        <span>Nessuna copertura necessaria</span>
+                      </div>
+                    )}
+
+                    <div className="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-indigo-600">
+                      <span>{s.isSelezionata ? '📌 Giorno aperto nel tabellone sotto' : 'Tocca per aprire questo giorno'}</span>
+                      <span>{s.isSelezionata ? 'Attivo' : '→'}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
         </div>
       )}
