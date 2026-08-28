@@ -413,14 +413,34 @@ export const PersonalizzazioniScuola: React.FC = () => {
           </div>
         </div>
 
-        {/* PULSANTE DI SALVATAGGIO CONFIGURAZIONE */}
+        {/* PULSANTE DI SALVATAGGIO CONFIGURAZIONE CON MORPHING FEEDBACK */}
         <div className="flex items-center justify-end gap-3 pt-2">
+          {salvato && (
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm animate-in fade-in slide-in-from-right duration-200">
+              <CheckCircle className="w-4 h-4 text-emerald-600 animate-bounce" />
+              <span>Modifiche salvate con successo nel database!</span>
+            </div>
+          )}
+
           <button
             type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm px-6 py-3 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
+            className={`font-black text-sm px-6 py-3 rounded-xl shadow-md transition-all duration-300 flex items-center gap-2 cursor-pointer ${
+              salvato
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white ring-4 ring-emerald-200 scale-105'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+            }`}
           >
-            <Save className="w-4 h-4" />
-            <span>Salva Personalizzazioni</span>
+            {salvato ? (
+              <>
+                <CheckCircle className="w-4 h-4 text-white" />
+                <span>Salvataggio Eseguito! ✓</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Salva Personalizzazioni</span>
+              </>
+            )}
           </button>
         </div>
       </form>
