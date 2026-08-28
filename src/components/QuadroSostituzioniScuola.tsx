@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
-  School, Lock, Eye, CheckCircle2, Clock, Calendar, 
-  Search, Filter, Printer, KeyRound, ShieldAlert, Sparkles,
-  ChevronLeft, ChevronRight, User, Bus, AlertCircle
+  Lock, CheckCircle2, Clock, 
+  Search, Filter, Printer, KeyRound, ShieldAlert,
+  ChevronLeft, ChevronRight, User, AlertCircle
 } from 'lucide-react';
 import { getBaseNomeDocente, formatDataItaliana } from '../utils/docentiHelper';
 
