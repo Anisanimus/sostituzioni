@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { OraScoperta, SostituzioneAssegnata, CandidatoSostituto, CategoriaSostituto } from '../types';
-import { trovaCandidatiSostituzione } from '../utils/substitutionEngine';
+import { trovaCandidatiSostituzione, risolviOttimizzazioneGlobale } from '../utils/substitutionEngine';
 import { 
   Users, AlertCircle, CheckCircle, Clock, ArrowRight, UserPlus, 
   HelpCircle, Trash2, Bus, ShieldAlert, Sparkles, Filter, ChevronRight, ChevronLeft, ChevronDown,
@@ -134,62 +134,43 @@ export const TabelloneSostituzioni: React.FC<{
     return cella?.isCasoGrave || false;
   };
 
-  // Funzione "Assegna Tutto" in base alla priorità normativa (1 -> 7) ESCLUDENDO I CASI GRAVI
+  // Funzione "Assegna Tutto" con OTTIMIZZAZIONE A PANORAMICA GLOBALE GUIDATA DALLE PRIORITÀ UTENTE
   const handleAutoAssegnaTutto = () => {
-    let sostituzioniCorrenti = [...sostituzioniOggi];
+    const prioritaAssenzeUtente = impostazioniPriorita?.prioritaAssenze || [
+      'COMPRESENTE_CLASSE', 
+      'RECUPERO_STESSA_CLASSE', 
+      'POTENZIAMENTO', 
+      'SOSTEGNO', 
+      'RECUPERO_GENERICO', 
+      'STRAORDINARIO_D'
+    ];
 
-    oreScoperte.forEach(os => {
-      const giaAssegnata = sostituzioniCorrenti.some(s => s.ora === os.ora && s.classe === os.classe);
-      if (giaAssegnata) return;
+    const prioritaGiteUtente = impostazioniPriorita?.prioritaGite || [
+      'COMPRESENTE_CLASSE', 
+      'LIBERATO_STESSA_CLASSE', 
+      'LIBERATO_STESSA_MATERIA', 
+      'LIBERATO_ALTRA_CLASSE', 
+      'RECUPERO_STESSA_CLASSE', 
+      'POTENZIAMENTO', 
+      'SOSTEGNO', 
+      'STRAORDINARIO_D'
+    ];
 
-      const cand = trovaCandidatiSostituzione(
-        selectedDate,
-        os.ora,
-        selectedGiorno,
-        os.classe,
-        os.docenteAssente,
-        os.isUscita || false,
-        orariDocenti,
-        docenti,
-        assenze,
-        uscite,
-        sostituzioniCorrenti
-      );
+    const nuoveSostituzioni = risolviOttimizzazioneGlobale(
+      selectedDate,
+      selectedGiorno,
+      oreScoperte,
+      orariDocenti,
+      docenti,
+      assenze,
+      uscite,
+      sostituzioniOggi,
+      prioritaAssenzeUtente,
+      prioritaGiteUtente
+    );
 
-      const ciSonoGiteOggi = usciteOggi.length > 0 || os.isUscita;
-      const categorieOrdinate: CategoriaSostituto[] = ciSonoGiteOggi
-        ? (impostazioniPriorita?.prioritaGite || ['COMPRESENTE_CLASSE', 'LIBERATO_STESSA_CLASSE', 'LIBERATO_STESSA_MATERIA', 'LIBERATO_ALTRA_CLASSE', 'RECUPERO_STESSA_CLASSE', 'POTENZIAMENTO', 'SOSTEGNO', 'STRAORDINARIO_D'])
-        : (impostazioniPriorita?.prioritaAssenze || ['COMPRESENTE_CLASSE', 'RECUPERO_STESSA_CLASSE', 'POTENZIAMENTO', 'SOSTEGNO', 'RECUPERO_GENERICO', 'STRAORDINARIO_D']);
-
-      for (const cat of categorieOrdinate) {
-        const lista = cand[cat];
-        if (lista && lista.length > 0) {
-          // Filtra rigorosamente solo candidati NON su Caso Grave
-          const candidatiValidi = lista.filter(c => !c.isCasoGrave && !c.docente.isCasoGraveSostegno && !(c.docente as any).casoGraveSostegno);
-          if (candidatiValidi.length === 0) continue;
-
-          const primo = candidatiValidi[0];
-
-          const nuovaSost: SostituzioneAssegnata = {
-            id: 'sost_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-            data: selectedDate,
-            giorno: selectedGiorno,
-            ora: os.ora,
-            classe: os.classe,
-            docenteAssenteId: os.docenteAssente.id,
-            docenteSostitutoId: primo.docente.id,
-            categoria: cat,
-            isStraordinario: cat === 'STRAORDINARIO_D',
-            consumaDebito: cat === 'RECUPERO_STESSA_CLASSE' || cat === 'RECUPERO_GENERICO',
-            pubblicata: false,
-            firmata: false
-          };
-          
-          sostituzioniCorrenti = [...sostituzioniCorrenti, nuovaSost];
-          assegnaSostituzione(nuovaSost);
-          break; // Passa alla prossima ora scoperta
-        }
-      }
+    nuoveSostituzioni.forEach(sost => {
+      assegnaSostituzione(sost);
     });
   };
 

@@ -1,4 +1,4 @@
-import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, CandidatoSostituto, CategoriaSostituto } from '../types';
+import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, CandidatoSostituto, CategoriaSostituto, GiornoSettimana } from '../types';
 import { getDocentiCollegatiIds, getBaseNomeDocente, getDocentiUnici } from './docentiHelper';
 
 export function trovaCandidatiSostituzione(
@@ -249,4 +249,155 @@ export function trovaCandidatiSostituzione(
   candidatiPerCategoria.SOSTEGNO.sort((a, b) => (a.oreSostegnoPregresse || 0) - (b.oreSostegnoPregresse || 0));
 
   return candidatiPerCategoria;
+}
+
+// =========================================================================================
+// OTTIMIZZAZIONE A PANORAMICA GLOBALE PER ASSEGNAZIONE SOSTITUZIONI
+// =========================================================================================
+
+export interface SlotOraScopertaInput {
+  ora: number;
+  classe: string;
+  docenteAssente: Docente;
+  isUscita?: boolean;
+}
+
+export function risolviOttimizzazioneGlobale(
+  data: string,
+  giorno: GiornoSettimana,
+  oreDaCoprire: SlotOraScopertaInput[],
+  orariDocenti: OrarioDocente[],
+  docenti: Docente[],
+  assenze: AssenzaDocente[],
+  uscite: UscitaClasse[],
+  sostituzioniEsistenti: SostituzioneAssegnata[],
+  prioritaAssenze: CategoriaSostituto[],
+  prioritaGite: CategoriaSostituto[]
+): SostituzioneAssegnata[] {
+  // Filtra gli slot non ancora assegnati
+  const slotRimasti = oreDaCoprire.filter(os => 
+    !sostituzioniEsistenti.some(s => s.ora === os.ora && s.classe === os.classe)
+  );
+
+  if (slotRimasti.length === 0) return [];
+
+  // Mappa di tutti i candidati per ciascuno slot
+  interface MatchCandidato {
+    slotIndex: number;
+    docente: Docente;
+    categoria: CategoriaSostituto;
+    pesoPriorita: number; // 0 = massima priorità, 1, 2, ...
+    punteggioRotazione: number;
+  }
+
+  const matchesPossibili: MatchCandidato[] = [];
+
+  slotRimasti.forEach((os, slotIdx) => {
+    const cand = trovaCandidatiSostituzione(
+      data,
+      os.ora,
+      giorno,
+      os.classe,
+      os.docenteAssente,
+      os.isUscita || false,
+      orariDocenti,
+      docenti,
+      assenze,
+      uscite,
+      sostituzioniEsistenti
+    );
+
+    const isGita = (uscite.filter(u => u.data === data && !u.annullata).length > 0) || os.isUscita;
+    const scalaPriorita = isGita ? prioritaGite : prioritaAssenze;
+
+    scalaPriorita.forEach((cat, catIdx) => {
+      const lista = cand[cat] || [];
+      const candidatiValidi = lista.filter(c => !c.isCasoGrave && !c.docente.isCasoGraveSostegno && !(c.docente as any).casoGraveSostegno);
+
+      candidatiValidi.forEach(c => {
+        matchesPossibili.push({
+          slotIndex: slotIdx,
+          docente: c.docente,
+          categoria: cat,
+          pesoPriorita: catIdx, // Indice esatto della scala personalizzata dell'utente
+          punteggioRotazione: c.oreSostegnoPregresse || 0
+        });
+      });
+    });
+  });
+
+  // Ordina i match possibili:
+  // 1. Prima la priorità normativa personalizzata (pesoPriorita crescente: 0, 1, 2, ...)
+  // 2. A parità di priorità, premia gli slot che hanno MENO alternative (euristica per evitare vicoli ciechi)
+  // 3. A parità, chi ha meno ore pregresse (rotazione ed equità)
+  const alternativePerSlot: Record<number, number> = {};
+  slotRimasti.forEach((_, idx) => {
+    alternativePerSlot[idx] = matchesPossibili.filter(m => m.slotIndex === idx).length;
+  });
+
+  matchesPossibili.sort((a, b) => {
+    if (a.pesoPriorita !== b.pesoPriorita) {
+      return a.pesoPriorita - b.pesoPriorita;
+    }
+    const altA = alternativePerSlot[a.slotIndex] || 0;
+    const altB = alternativePerSlot[b.slotIndex] || 0;
+    if (altA !== altB) {
+      return altA - altB; // Prima gli slot più "difficili" / con meno alternative
+    }
+    return a.punteggioRotazione - b.punteggioRotazione;
+  });
+
+  // Esecuzione del matching globale senza conflitti (un docente non può essere assegnato a due slot nella stessa ora)
+  const nuoveSostituzioni: SostituzioneAssegnata[] = [];
+  const slotCoperti = new Set<number>();
+  const docentiOccupatiPerOra = new Map<number, Set<string>>(); // ora -> Set(docenteNomeBase)
+
+  // Popola già i docenti occupati dalle sostituzioni esistenti
+  sostituzioniEsistenti.forEach(s => {
+    const doc = docenti.find(d => d.id === s.docenteSostitutoId);
+    if (doc) {
+      const nomeBase = getBaseNomeDocente(doc.nome);
+      if (!docentiOccupatiPerOra.has(s.ora)) {
+        docentiOccupatiPerOra.set(s.ora, new Set());
+      }
+      docentiOccupatiPerOra.get(s.ora)!.add(nomeBase);
+    }
+  });
+
+  for (const match of matchesPossibili) {
+    if (slotCoperti.has(match.slotIndex)) continue;
+
+    const os = slotRimasti[match.slotIndex];
+    const nomeBase = getBaseNomeDocente(match.docente.nome);
+
+    if (!docentiOccupatiPerOra.has(os.ora)) {
+      docentiOccupatiPerOra.set(os.ora, new Set());
+    }
+
+    const occupatiInQuestOra = docentiOccupatiPerOra.get(os.ora)!;
+    if (occupatiInQuestOra.has(nomeBase)) {
+      continue; // Docente già impiegato in quest'ora
+    }
+
+    // Assegna
+    occupatiInQuestOra.add(nomeBase);
+    slotCoperti.add(match.slotIndex);
+
+    nuoveSostituzioni.push({
+      id: 'sost_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      data,
+      giorno,
+      ora: os.ora,
+      classe: os.classe,
+      docenteAssenteId: os.docenteAssente.id,
+      docenteSostitutoId: match.docente.id,
+      categoria: match.categoria,
+      isStraordinario: match.categoria === 'STRAORDINARIO_D',
+      consumaDebito: match.categoria === 'RECUPERO_STESSA_CLASSE' || match.categoria === 'RECUPERO_GENERICO',
+      pubblicata: false,
+      firmata: false
+    });
+  }
+
+  return nuoveSostituzioni;
 }
