@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, LayoutGrid } from 'lucide-react';
+import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, LayoutDashboard } from 'lucide-react';
 import { getDocentiCollegatiIds } from '../utils/docentiHelper';
 import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
 
@@ -195,8 +195,8 @@ export const PortaleDocente: React.FC = () => {
               : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
           }`}
         >
-          <LayoutGrid className="w-4 h-4" />
-          <span>📋 Quadro Generale Sostituzioni Scuola</span>
+          <LayoutDashboard className="w-4 h-4" />
+          <span>Quadro Generale Sostituzioni Scuola</span>
         </button>
       </div>
 

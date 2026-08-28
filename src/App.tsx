@@ -172,7 +172,7 @@ const MainApp: React.FC = () => {
                 }`}
                 title="Quadro Sostituzioni protetto da PIN per Personale ATA e Segreteria"
               >
-                <KeyRound className="w-3.5 h-3.5" />
+                <LayoutDashboard className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Personale ATA & Segreteria</span>
               </button>
             </div>
@@ -255,7 +255,7 @@ const MainApp: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${tabVice === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                      <LayoutGrid className="w-4 h-4" />
+                      <LayoutDashboard className="w-4 h-4" />
                     </div>
                     <div>
                       <span className="block font-black text-sm">Quadro Generale Sostituzioni</span>
