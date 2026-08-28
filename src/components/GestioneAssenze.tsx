@@ -996,9 +996,9 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
           {/* LISTA RISORSE PER ORA */}
           <div className="space-y-1.5">
             {risorsePerOraMobile.map(r => {
-              const potVisibili = mostraPotenziamento ? r.potenziamentoList.filter(p => !p.usata) : [];
-              const giteVisibili = mostraLiberatiGita ? r.liberatiGitaList.filter(g => !g.usata) : [];
-              const dispVisibili = (mostraDisposizioni ? r.disposizioniList : r.disposizioniList.filter(d => d.debito > 0)).filter(d => !d.usata);
+              const potVisibili = mostraPotenziamento ? r.potenziamentoList : [];
+              const giteVisibili = mostraLiberatiGita ? r.liberatiGitaList : [];
+              const dispVisibili = mostraDisposizioni ? r.disposizioniList : [];
               const totFiltrati = potVisibili.length + giteVisibili.length + dispVisibili.length;
               if (totFiltrati === 0) return null;
 
@@ -1029,25 +1029,40 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                       {potVisibili.map(p => (
                         <span 
                           key={p.docenteId} 
-                          className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-emerald-50 text-emerald-800 border-emerald-200 shadow-2xs"
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition ${
+                            p.usata 
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-75' 
+                              : 'bg-emerald-50 text-emerald-800 border-emerald-200 shadow-2xs'
+                          }`}
+                          title={p.usata ? `${p.nome} è già assegnato in quest'ora` : `${p.nome} è disponibile`}
                         >
-                          ⚡ {p.nome}
+                          ⚡ {p.nome} {p.usata ? '(Occupato)' : ''}
                         </span>
                       ))}
                       {giteVisibili.map(g => (
                         <span 
                           key={g.docenteId} 
-                          className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-amber-50 text-amber-800 border-amber-200 shadow-2xs"
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition ${
+                            g.usata 
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-75' 
+                              : 'bg-amber-50 text-amber-800 border-amber-200 shadow-2xs'
+                          }`}
+                          title={g.usata ? `${g.nome} è già assegnato in quest'ora` : `${g.nome} è disponibile (Liberato da ${g.classe})`}
                         >
-                          🚌 {g.nome} ({g.classe})
+                          🚌 {g.nome} ({g.classe}) {g.usata ? '(Occupato)' : ''}
                         </span>
                       ))}
                       {dispVisibili.map(d => (
                         <span 
                           key={d.docenteId} 
-                          className="text-[10px] font-bold px-2 py-0.5 rounded-lg border bg-purple-50 text-purple-800 border-purple-200 shadow-2xs"
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition ${
+                            d.usata 
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-75' 
+                              : 'bg-purple-50 text-purple-800 border-purple-200 shadow-2xs'
+                          }`}
+                          title={d.usata ? `${d.nome} è già assegnato in quest'ora` : `${d.nome} è a disposizione`}
                         >
-                          ⏱️ {d.nome}
+                          ⏱️ {d.nome} {d.usata ? '(Occupato)' : ''}
                         </span>
                       ))}
                     </div>
