@@ -600,62 +600,6 @@ export const TabelloneSostituzioni: React.FC<{
                   <span className="hidden md:inline">Per Docente</span>
                 </button>
               </div>
-
-              {/* MINI BADGE REPORT STATO CON LE 4 METRICHE */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {/* 1. FATTI / TOTALE */}
-                {totaleDaCoprire === 0 ? (
-                  <div className="flex items-center gap-1.5 bg-emerald-100 text-emerald-950 px-2.5 py-1 rounded-xl text-xs font-black border border-emerald-300 shadow-2xs">
-                    <span className="text-[10px] font-bold text-emerald-800 uppercase">Fatti:</span>
-                    <span>0/0 ✓</span>
-                  </div>
-                ) : totaleCoperte === totaleDaCoprire ? (
-                  <div className="flex items-center gap-1.5 bg-emerald-500 text-white px-2.5 py-1 rounded-xl text-xs font-black border border-emerald-600 shadow-2xs">
-                    <span className="text-[10px] font-bold text-emerald-100 uppercase">Fatti:</span>
-                    <span>{totaleCoperte}/{totaleDaCoprire} ✓</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5 bg-amber-50 text-amber-950 px-2.5 py-1 rounded-xl text-xs font-black border border-amber-300 shadow-2xs">
-                    <span className="text-[10px] font-bold text-amber-800 uppercase">Fatti:</span>
-                    <span>{totaleCoperte}/{totaleDaCoprire}</span>
-                  </div>
-                )}
-
-                {/* 2. DA FARE (SE > 0) */}
-                {totaleDaFare > 0 && (
-                  <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs">
-                    ⏳ {totaleDaFare} da fare
-                  </span>
-                )}
-
-                {/* 3. INVIATE (SE > 0) */}
-                {totaleCoperte > 0 && (
-                  <span className={`text-xs font-black px-2.5 py-1 rounded-xl border shadow-2xs flex items-center gap-1 transition ${
-                    totalePubblicate === totaleCoperte
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                      : 'bg-sky-50 text-sky-950 border-sky-200'
-                  }`} title="Richieste inviate">
-                    <span>📤 {totalePubblicate}/{totaleCoperte}</span>
-                    <span className="hidden sm:inline font-normal text-[10px]">inviate</span>
-                    {totalePubblicate === totaleCoperte && <span>✓</span>}
-                  </span>
-                )}
-
-                {/* 4. PRESE VISIONE / FIRMATE */}
-                {totaleCoperte > 0 && (
-                  <span className={`text-xs font-black px-2.5 py-1 rounded-xl border shadow-2xs flex items-center gap-1 transition ${
-                    totaleFirmate === totaleCoperte
-                      ? 'bg-emerald-600 text-white border-emerald-700'
-                      : totaleFirmate > 0
-                        ? 'bg-indigo-50 text-indigo-950 border-indigo-200'
-                        : 'bg-slate-100 text-slate-600 border-slate-200'
-                  }`} title="Prese visione effettuate">
-                    <span>✍️ {totaleFirmate}/{totaleCoperte}</span>
-                    <span className="hidden sm:inline font-normal text-[10px]">firmate</span>
-                    {totaleFirmate === totaleCoperte && <span>✓</span>}
-                  </span>
-                )}
-              </div>
             </div>
 
             {/* PULSANTI DI AZIONE: AFFIANCATI SU DESKTOP (RIGA 1), SOTTO 50%-50% SU MOBILE */}
@@ -721,21 +665,15 @@ export const TabelloneSostituzioni: React.FC<{
                   </div>
 
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {/* 1. SOSTITUZIONI FATTE */}
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
+                    {/* 1. ORE COPERTE CON ICONA OROLOGIO */}
+                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 ${
                       totCoperteGruppo === gruppo.items.length 
                         ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' 
                         : 'bg-amber-100 text-amber-900 border border-amber-300'
-                    }`} title="Sostituzioni assegnate / totali">
-                      ✓ {totCoperteGruppo}/{gruppo.items.length} Fatti
+                    }`} title="Ore coperte / totali">
+                      <span>🕒 {totCoperteGruppo}/{gruppo.items.length}</span>
+                      {totCoperteGruppo === gruppo.items.length && <span>✓</span>}
                     </span>
-
-                    {/* 2. DA FARE */}
-                    {totDaFareGruppo > 0 && (
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-rose-50 text-rose-800 border border-rose-200" title="Sostituzioni ancora da fare">
-                        ⏳ {totDaFareGruppo} da fare
-                      </span>
-                    )}
 
                     {/* 3. INVIATE */}
                     {totCoperteGruppo > 0 && (
@@ -949,21 +887,15 @@ export const TabelloneSostituzioni: React.FC<{
                   </div>
 
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {/* 1. FATTI / TOTALI */}
-                    <span className={`text-xs font-black px-2.5 py-1 rounded-xl shadow-2xs ${
+                    {/* 1. ORE COPERTE CON ICONA OROLOGIO */}
+                    <span className={`text-xs font-black px-2.5 py-1 rounded-xl shadow-2xs flex items-center gap-1 ${
                       gruppoDoc.totCoperteDoc === gruppoDoc.totOreDoc 
                         ? 'bg-emerald-500 text-white' 
                         : 'bg-amber-500 text-white'
-                    }`} title="Sostituzioni assegnate per questo docente">
-                      ✓ {gruppoDoc.totCoperteDoc}/{gruppoDoc.totOreDoc} Fatti
+                    }`} title="Ore coperte per questo docente">
+                      <span>🕒 {gruppoDoc.totCoperteDoc}/{gruppoDoc.totOreDoc}</span>
+                      {gruppoDoc.totCoperteDoc === gruppoDoc.totOreDoc && <span>✓</span>}
                     </span>
-
-                    {/* 2. DA FARE */}
-                    {gruppoDoc.totDaFareDoc > 0 && (
-                      <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-rose-500 text-white shadow-2xs" title="Sostituzioni ancora da assegnare">
-                        ⏳ {gruppoDoc.totDaFareDoc} da fare
-                      </span>
-                    )}
 
                     {/* 3. INVIATE */}
                     {gruppoDoc.totCoperteDoc > 0 && (

@@ -268,23 +268,18 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            {/* 1. FATTI / TOTALI (PROGRESS GENERALE) */}
-            <span className={`text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full border ${
+            {/* 1. ORE COPERTE CON ICONA OROLOGIO (DESKTOP: ORE ASSEGNATE, MOBILE: SOLO ICONA E CONTEGGIO) */}
+            <span className={`text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full border flex items-center gap-1 ${
               totGiornoScoperte === 0 
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 : percentualeGiorno === 100 
                   ? 'bg-emerald-600 text-white border-emerald-700'
                   : 'bg-amber-50 text-amber-900 border-amber-200'
-            }`} title="Ore assegnate / Totale ore da coprire">
-              ✓ {totGiornoCoperte}/{totGiornoScoperte} Fatti
+            }`} title="Ore assegnate / Totale ore">
+              <span>🕒 {totGiornoCoperte}/{totGiornoScoperte}</span>
+              <span className="hidden sm:inline font-bold">ore assegnate</span>
+              {totGiornoCoperte === totGiornoScoperte && totGiornoScoperte > 0 && <span>✓</span>}
             </span>
-
-            {/* 2. DA FARE (SE > 0) */}
-            {currentStat.totRimanenti > 0 && (
-              <span className="text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full bg-rose-50 text-rose-800 border border-rose-200 shadow-2xs" title="Ore scoperte ancora da assegnare">
-                ⏳ {currentStat.totRimanenti} da fare
-              </span>
-            )}
 
             {/* 3. RICHIESTE INVIATE (PUBBLICATE) */}
             {totGiornoCoperte > 0 && (
@@ -375,15 +370,14 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                       )}
                     </div>
 
-                    {/* RIGA 1: FATTI E DA FARE */}
+                    {/* RIGA 1: ORE COPERTE CON ICONA OROLOGIO E GRAVITÀ */}
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-[11px] font-bold text-slate-600">
-                        {s.totCoperte}/{s.totOreScoperte} fatti <span className="text-[10px] text-slate-400 font-normal">({s.totDocentiAssenti} doc)</span>
+                      <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                        <span>🕒 {s.totCoperte}/{s.totOreScoperte}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">({s.totDocentiAssenti} doc)</span>
                       </span>
-                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-md border ${
-                        s.totRimanenti > 0 ? 'bg-rose-50 text-rose-800 border-rose-200' : badgeGravita.color
-                      }`}>
-                        {s.totOreScoperte === 0 ? '✓ 0' : s.totRimanenti > 0 ? `⏳ ${s.totRimanenti} da fare` : '✓ OK'}
+                      <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-md border ${badgeGravita.color}`}>
+                        {badgeGravita.icon} {badgeGravita.label}
                       </span>
                     </div>
 
