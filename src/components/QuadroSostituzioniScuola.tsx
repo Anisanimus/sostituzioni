@@ -208,10 +208,24 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
     });
   }, [righeQuadro, filtroOra, filtroClasse, ricercaDocente]);
 
+  // Raggruppamento per Ora per eliminare la ripetizione (1ª, 1ª, 1ª...)
+  const gruppiPerOra = useMemo(() => {
+    const map = new Map<number, typeof righeFiltrate>();
+    righeFiltrate.forEach(r => {
+      if (!map.has(r.ora)) map.set(r.ora, []);
+      map.get(r.ora)!.push(r);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[0] - b[0]);
+  }, [righeFiltrate]);
+
   // STATISTICHE IN SINTESI
   const totOreScoperte = righeQuadro.length;
   const totCoperte = righeQuadro.filter(r => r.sostituti.length > 0).length;
   const totScoperteNonCoperte = righeQuadro.filter(r => r.sostituti.length === 0 && !r.nonSostituita).length;
+
+  // STATO FILTRI SU MOBILE (Accordion chiuso di default con icona filtro e badge filtri attivi)
+  const [mostraFiltriMobile, setMostraFiltriMobile] = useState<boolean>(false);
+  const filtriAttiviCount = (filtroOra !== 'TUTTE' ? 1 : 0) + (filtroClasse !== '' ? 1 : 0) + (ricercaDocente.trim() !== '' ? 1 : 0);
 
   // SE NON ANCORA AUTENTICATO: FORM DI LOGIN PIN ATA / SEGRETERIA
   if (!isAutenticato) {
@@ -269,9 +283,9 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
   // SCHERMATA QUADRO GIORNALIERO (AUTENTICATO)
   return (
-    <div className="space-y-4 max-w-6xl mx-auto">
+    <div className="space-y-3 sm:space-y-4 max-w-6xl mx-auto">
       {/* HEADER DELLA PAGINA CON NAVIGAZIONE DATA E STAMPA */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white rounded-2xl p-3.5 sm:p-5 shadow-2xs border border-slate-200 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="bg-indigo-50 text-indigo-700 font-bold text-[10px] uppercase px-2 py-0.5 rounded-md border border-indigo-100">
@@ -281,16 +295,13 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
               <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Area Protetta
             </span>
           </div>
-          <h2 className="text-lg sm:text-xl font-black text-slate-900 flex items-center gap-2">
+          <h2 className="text-base sm:text-xl font-black text-slate-900 flex items-center gap-2">
             <span>📋 Prospetto Giornaliero Sostituzioni</span>
           </h2>
-          <p className="text-xs text-slate-500">
-            Quadro completo per Collaboratori Scolastici, Segreteria e Sala Docenti.
-          </p>
         </div>
 
         {/* CONTROLLI DATA & PULSANTE STAMPA */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               type="button"
@@ -301,7 +312,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <div className="px-3 text-center">
+            <div className="px-2.5 text-center min-w-[110px]">
               <span className="block text-xs font-black text-slate-900">{giornoSettimana}</span>
               <span className="text-[10px] text-slate-500 font-mono">{formatDataItaliana(selectedDate)}</span>
             </div>
@@ -316,69 +327,111 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setSelectedDate(todayStr)}
-            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition cursor-pointer"
-          >
-            Oggi
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setSelectedDate(todayStr)}
+              className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition cursor-pointer"
+            >
+              Oggi
+            </button>
 
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer"
-            title="Stampa foglio per bacheca o reception"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Stampa A4</span>
-          </button>
-        </div>
-      </div>
-
-      {/* KPI DI RIEPILOGO STATO COPERTURA */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-bold text-slate-500 block">Ore Scoperte Totali</span>
-            <span className="text-xl font-black text-slate-900">{totOreScoperte}</span>
-          </div>
-          <div className="p-2.5 bg-slate-100 text-slate-700 rounded-xl">
-            <Clock className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/30 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-bold text-emerald-700 block">Sostituzioni Coperte</span>
-            <span className="text-xl font-black text-emerald-800">{totCoperte}</span>
-          </div>
-          <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-        </div>
-
-        <div className="bg-white p-3.5 rounded-xl border border-amber-200 bg-amber-50/30 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-bold text-amber-700 block">Ancora da Coprire</span>
-            <span className="text-xl font-black text-amber-800">{totScoperteNonCoperte}</span>
-          </div>
-          <div className="p-2.5 bg-amber-100 text-amber-700 rounded-xl">
-            <AlertCircle className="w-5 h-5" />
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer"
+              title="Stampa foglio per bacheca o reception"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Stampa A4</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* BARRA FILTRI RAPIDI */}
-      <div className="bg-white rounded-xl p-3 shadow-2xs border border-slate-200 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+      {/* KPI DI RIEPILOGO STATO COMPATTO (SU 1 RIGA SU MOBILE E DESKTOP) */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        {/* KPI 1 */}
+        <div className="bg-white p-2.5 sm:p-3.5 rounded-xl border border-slate-200 shadow-2xs flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 truncate block">Ore Scoperte</span>
+            <span className="text-base sm:text-xl font-black text-slate-900">{totOreScoperte}</span>
+          </div>
+          <div className="p-1.5 sm:p-2.5 bg-slate-100 text-slate-700 rounded-lg sm:rounded-xl shrink-0">
+            <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+          </div>
+        </div>
+
+        {/* KPI 2 */}
+        <div className="bg-white p-2.5 sm:p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/20 shadow-2xs flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 truncate block">Coperte</span>
+            <span className="text-base sm:text-xl font-black text-emerald-800">{totCoperte}</span>
+          </div>
+          <div className="p-1.5 sm:p-2.5 bg-emerald-100 text-emerald-700 rounded-lg sm:rounded-xl shrink-0">
+            <CheckCircle2 className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+          </div>
+        </div>
+
+        {/* KPI 3 */}
+        <div className="bg-white p-2.5 sm:p-3.5 rounded-xl border border-amber-200 bg-amber-50/20 shadow-2xs flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <span className="text-[10px] sm:text-[11px] font-bold text-amber-700 truncate block">Da Coprire</span>
+            <span className="text-base sm:text-xl font-black text-amber-800">{totScoperteNonCoperte}</span>
+          </div>
+          <div className="p-1.5 sm:p-2.5 bg-amber-100 text-amber-700 rounded-lg sm:rounded-xl shrink-0">
+            <AlertCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
+          </div>
+        </div>
+      </div>
+
+      {/* BARRA FILTRI CON ACCORDION/COLLAPSE PER MOBILE */}
+      <div className="bg-white rounded-xl shadow-2xs border border-slate-200 overflow-hidden">
+        {/* HEADER FILTRI CON PULSANTE TOGGLE SU MOBILE */}
+        <div className="p-2.5 sm:p-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMostraFiltriMobile(!mostraFiltriMobile)}
+              className="sm:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 font-bold text-xs cursor-pointer hover:bg-slate-100"
+            >
+              <Filter className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Filtri</span>
+              {filtriAttiviCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center font-mono">
+                  {filtriAttiviCount}
+                </span>
+              )}
+            </button>
+
+            <span className="text-xs font-bold text-slate-700 hidden sm:flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Filtri & Ricerca</span>
+            </span>
+          </div>
+
+          {/* Cerca Docente Rapido (Sempre accessibile in testata) */}
+          <div className="relative flex-1 max-w-xs ml-auto">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={ricercaDocente}
+              onChange={(e) => setRicercaDocente(e.target.value)}
+              placeholder="Cerca docente..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-2.5 py-1 text-xs text-slate-800 outline-none focus:border-indigo-500"
+            />
+          </div>
+        </div>
+
+        {/* CORPO FILTRI (VISIBILE SU DESKTOP O QUANDO APERTO SU MOBILE) */}
+        <div className={`${mostraFiltriMobile ? 'block' : 'hidden'} sm:flex flex-wrap items-center gap-3 p-3 bg-slate-50/70 border-t border-slate-100 animate-in fade-in duration-150`}>
           {/* Filtro Ora */}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-slate-500">Ora:</span>
+            <span className="text-xs font-bold text-slate-600">Ora:</span>
             <select
               value={filtroOra}
               onChange={(e) => setFiltroOra(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+              className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
             >
               <option value="TUTTE">Tutte le Ore</option>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(o => (
@@ -390,11 +443,11 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           {/* Filtro Classe */}
           {classiUniche.length > 0 && (
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-slate-500">Classe:</span>
+              <span className="text-xs font-bold text-slate-600">Classe:</span>
               <select
                 value={filtroClasse}
                 onChange={(e) => setFiltroClasse(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+                className="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
               >
                 <option value="">Tutte le Classi</option>
                 {classiUniche.map(c => (
@@ -403,24 +456,27 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
               </select>
             </div>
           )}
-        </div>
 
-        {/* Cerca Docente */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={ricercaDocente}
-            onChange={(e) => setRicercaDocente(e.target.value)}
-            placeholder="Cerca docente assente o supplente..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 outline-none focus:border-indigo-500"
-          />
+          {/* RESET RAPIDO FILTRI */}
+          {filtriAttiviCount > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setFiltroOra('TUTTE');
+                setFiltroClasse('');
+                setRicercaDocente('');
+              }}
+              className="text-[11px] text-rose-600 hover:text-rose-800 font-bold underline cursor-pointer ml-auto sm:ml-0"
+            >
+              Azzera Filtri
+            </button>
+          )}
         </div>
       </div>
 
-      {/* TABELLA PROSPETTO SOSTITUZIONI */}
+      {/* TABELLA PROSPETTO SOSTITUZIONI RAGGRUPPATA PER ORA (SENZA RIPETIZIONI 1, 1, 1...) */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-        {righeFiltrate.length === 0 ? (
+        {gruppiPerOra.length === 0 ? (
           <div className="p-8 text-center space-y-2">
             <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-6 h-6" />
@@ -436,91 +492,116 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left border-collapse min-w-[650px]">
+            <table className="w-full text-xs text-left border-collapse min-w-[620px]">
               <thead>
                 <tr className="bg-slate-900 text-white font-bold text-[11px]">
                   <th className="p-3 w-16 text-center">Ora</th>
                   <th className="p-3 w-20 text-center">Classe</th>
                   <th className="p-3">Docente Assente / In Uscita</th>
                   <th className="p-3">Docente Sostituto Assegnato</th>
-                  <th className="p-3 text-center">Stato / Presa Visione</th>
+                  <th className="p-3 text-center">Stato / Firma</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {righeFiltrate.map((r, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                    {/* ORA */}
-                    <td className="p-3 text-center">
-                      <span className="bg-slate-900 text-white font-black px-2.5 py-1 rounded-lg text-xs shadow-2xs">
-                        {r.ora}ª
-                      </span>
-                    </td>
+                {gruppiPerOra.map(([oraNum, righeDellOra]) => (
+                  <React.Fragment key={oraNum}>
+                    {/* INTESTAZIONE ORA UNIFICATA (SEPARATORE DI BLOCCO ORARIO) */}
+                    <tr className="bg-slate-100/90 border-t-2 border-slate-300">
+                      <td colSpan={5} className="py-2 px-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="bg-slate-900 text-white font-black px-2.5 py-0.5 rounded-lg text-xs shadow-2xs">
+                              ⏰ {oraNum}ª ORA
+                            </span>
+                            <span className="text-xs font-bold text-slate-700">
+                              ({righeDellOra.length} {righeDellOra.length === 1 ? 'classe scoperta' : 'classi scoperte'})
+                            </span>
+                          </div>
 
-                    {/* CLASSE */}
-                    <td className="p-3 text-center">
-                      <span className="bg-indigo-50 border border-indigo-200 text-indigo-900 font-black px-2.5 py-1 rounded-lg text-xs shadow-2xs">
-                        {r.classe}
-                      </span>
-                    </td>
-
-                    {/* DOCENTE ASSENTE */}
-                    <td className="p-3">
-                      <div className="font-bold text-slate-900 text-xs">
-                        {r.docenteAssente}
-                      </div>
-                      <div className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                        <span>{r.materia}</span>
-                        {r.isUscita ? (
-                          <span className="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded flex items-center gap-0.5">
-                            <Bus className="w-2.5 h-2.5" /> Uscita Didattica
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">• {r.motivo}</span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* DOCENTE SOSTITUTO */}
-                    <td className="p-3">
-                      {r.sostituti.length > 0 ? (
-                        <div className="space-y-1">
-                          {r.sostituti.map(s => (
-                            <div key={s.id} className="flex items-center gap-1.5">
-                              <span className="font-black text-indigo-900 text-xs bg-indigo-50/80 border border-indigo-200 px-2 py-0.5 rounded-lg shadow-2xs">
-                                👤 {s.nomeSostituto}
-                              </span>
-                              <span className="text-[10px] text-slate-500 font-medium">({s.categoria})</span>
-                            </div>
-                          ))}
+                          <div className="text-[11px] font-bold text-slate-500">
+                            {righeDellOra.filter(r => r.sostituti.length > 0).length} / {righeDellOra.length} coperte
+                          </div>
                         </div>
-                      ) : r.nonSostituita ? (
-                        <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-300 text-[10px]">
-                          🚫 Non Sostituita
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 font-black px-2.5 py-0.5 rounded-lg border border-amber-300 text-[10px] animate-pulse shadow-2xs">
-                          ⚠️ In attesa di assegnazione
-                        </span>
-                      )}
-                    </td>
+                      </td>
+                    </tr>
 
-                    {/* STATO FIRMA */}
-                    <td className="p-3 text-center">
-                      {r.sostituti.length > 0 ? (
-                        r.sostituti.every(s => s.firmata) ? (
-                          <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Presa Visione
+                    {/* RIGHE DELLE CLASSI DELL'ORA (SENZA RIPETERE L'ORA) */}
+                    {righeDellOra.map((r, idx) => (
+                      <tr key={idx} className="hover:bg-indigo-50/30 transition-colors">
+                        {/* COLONNA ORA COMPATTA (Icona o badge minimo) */}
+                        <td className="p-3 text-center border-r border-slate-100">
+                          <span className="font-mono text-slate-400 font-bold text-xs">
+                            #{idx + 1}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[10px] px-2 py-0.5 rounded-md">
-                            <Clock className="w-3 h-3 text-amber-600" /> Assegnata
+                        </td>
+
+                        {/* CLASSE */}
+                        <td className="p-3 text-center">
+                          <span className="bg-indigo-50 border border-indigo-200 text-indigo-900 font-black px-2.5 py-1 rounded-lg text-xs shadow-2xs">
+                            {r.classe}
                           </span>
-                        )
-                      ) : (
-                        <span className="text-slate-400 text-[11px]">-</span>
-                      )}
-                    </td>
-                  </tr>
+                        </td>
+
+                        {/* DOCENTE ASSENTE */}
+                        <td className="p-3">
+                          <div className="font-bold text-slate-900 text-xs">
+                            {r.docenteAssente}
+                          </div>
+                          <div className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                            <span>{r.materia}</span>
+                            {r.isUscita ? (
+                              <span className="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded flex items-center gap-0.5">
+                                <Bus className="w-2.5 h-2.5" /> Uscita Didattica
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">• {r.motivo}</span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* DOCENTE SOSTITUTO */}
+                        <td className="p-3">
+                          {r.sostituti.length > 0 ? (
+                            <div className="space-y-1">
+                              {r.sostituti.map(s => (
+                                <div key={s.id} className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-black text-indigo-900 text-xs bg-indigo-50/80 border border-indigo-200 px-2 py-0.5 rounded-lg shadow-2xs">
+                                    👤 {s.nomeSostituto}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-medium">({s.categoria})</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : r.nonSostituita ? (
+                            <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-300 text-[10px]">
+                              🚫 Non Sostituita
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 font-black px-2.5 py-0.5 rounded-lg border border-amber-300 text-[10px] animate-pulse shadow-2xs">
+                              ⚠️ In attesa di assegnazione
+                            </span>
+                          )}
+                        </td>
+
+                        {/* STATO FIRMA */}
+                        <td className="p-3 text-center">
+                          {r.sostituti.length > 0 ? (
+                            r.sostituti.every(s => s.firmata) ? (
+                              <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Presa Visione
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[10px] px-2 py-0.5 rounded-md">
+                                <Clock className="w-3 h-3 text-amber-600" /> Assegnata
+                              </span>
+                            )
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
