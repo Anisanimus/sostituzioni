@@ -194,6 +194,14 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     }
   };
 
+  const handleSelectGiorno = (dataStr: string) => {
+    onSelectDate(dataStr);
+    // Su schermi mobile (< 640px) chiude automaticamente la tendina dopo la selezione
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      setCompresso(true);
+    }
+  };
+
   if (!visibile) {
     return (
       <div className="flex justify-end mb-1">
@@ -483,7 +491,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                       <button
                         key={`mini_${d.dataStr}`}
                         type="button"
-                        onClick={() => onSelectDate(d.dataStr)}
+                        onClick={() => handleSelectGiorno(d.dataStr)}
                         className={`p-1 rounded-lg ${bgClass} text-[10px] leading-tight flex flex-col items-center justify-center transition cursor-pointer ${
                           isSel ? 'ring-2 ring-indigo-600 ring-offset-1 scale-105' : ''
                         }`}
@@ -515,7 +523,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                 return (
                   <div
                     key={`mob_${s.dataStr}`}
-                    onClick={() => onSelectDate(s.dataStr)}
+                    onClick={() => handleSelectGiorno(s.dataStr)}
                     className={`p-3 rounded-xl border text-left transition cursor-pointer relative overflow-hidden ${
                       s.isSelezionata
                         ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-2 ring-indigo-200 shadow-sm'
