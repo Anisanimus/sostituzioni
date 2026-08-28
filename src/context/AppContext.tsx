@@ -77,6 +77,8 @@ interface AppContextType {
   resetOrarioPredefinito: () => void;
   azzeraDocentiEOrario: () => void;
   importaNuovoOrarioCompleto: (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => void;
+  aggiornaOrarioSenzaCancellareStorico: (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => void;
+  ripristinaBackupCompleto: (datiBackup: any) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -779,6 +781,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const aggiornaOrarioSenzaCancellareStorico = (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => {
+    // Mantiene lo storico dei debiti pregresso per i docenti già esistenti
+    const docentiAggiornati = nuoviDocenti.map(nd => {
+      const docEsistente = docenti.find(d => getBaseNomeDocente(d.nome) === getBaseNomeDocente(nd.nome));
+      if (docEsistente) {
+        return {
+          ...nd,
+          oreDebitoPermesso: docEsistente.oreDebitoPermesso || 0,
+          pinAccesso: docEsistente.pinAccesso || nd.pinAccesso
+        };
+      }
+      return nd;
+    });
+
+    setDocenti(docentiAggiornati);
+    setOrariDocenti(nuoviOrari);
+
+    try {
+      localStorage.setItem('scuola_docenti', JSON.stringify(docentiAggiornati));
+      localStorage.setItem('scuola_orari', JSON.stringify(nuoviOrari));
+      localStorage.setItem('scuola_orario_version', 'updated_' + Date.now());
+    } catch (e) {
+      console.error('Errore durante l\'aggiornamento orario in localStorage:', e);
+    }
+  };
+
+  const ripristinaBackupCompleto = (datiBackup: any) => {
+    if (!datiBackup) return;
+    if (datiBackup.docenti) {
+      setDocenti(datiBackup.docenti);
+      localStorage.setItem('scuola_docenti', JSON.stringify(datiBackup.docenti));
+    }
+    if (datiBackup.orariDocenti) {
+      setOrariDocenti(datiBackup.orariDocenti);
+      localStorage.setItem('scuola_orari', JSON.stringify(datiBackup.orariDocenti));
+    }
+    if (datiBackup.assenze) {
+      setAssenze(datiBackup.assenze);
+      localStorage.setItem('scuola_assenze', JSON.stringify(datiBackup.assenze));
+    }
+    if (datiBackup.uscite) {
+      setUscite(datiBackup.uscite);
+      localStorage.setItem('scuola_uscite', JSON.stringify(datiBackup.uscite));
+    }
+    if (datiBackup.sostituzioni) {
+      setSostituzioni(datiBackup.sostituzioni);
+      localStorage.setItem('scuola_sostituzioni', JSON.stringify(datiBackup.sostituzioni));
+    }
+    if (datiBackup.movimentiDebito) {
+      setMovimentiDebito(datiBackup.movimentiDebito);
+      localStorage.setItem('scuola_movimenti_debito', JSON.stringify(datiBackup.movimentiDebito));
+    }
+    if (datiBackup.impostazioniScuola) {
+      setImpostazioniScuola(datiBackup.impostazioniScuola);
+      localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(datiBackup.impostazioniScuola));
+    }
+    if (datiBackup.impostazioniPriorita) {
+      setImpostazioniPriorita(datiBackup.impostazioniPriorita);
+      localStorage.setItem('scuola_impostazioni_priorita', JSON.stringify(datiBackup.impostazioniPriorita));
+    }
+    localStorage.setItem('scuola_orario_version', 'backup_restored_' + Date.now());
+  };
+
   return (
     <AppContext.Provider value={{
       docenti,
@@ -821,7 +886,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       modificaDebitoManuale,
       resetOrarioPredefinito,
       azzeraDocentiEOrario,
-      importaNuovoOrarioCompleto
+      importaNuovoOrarioCompleto,
+      aggiornaOrarioSenzaCancellareStorico,
+      ripristinaBackupCompleto
     }}>
       {children}
     </AppContext.Provider>

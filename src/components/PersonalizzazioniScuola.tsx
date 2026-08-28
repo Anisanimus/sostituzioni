@@ -2,20 +2,43 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   Building2, Clock, Eye, Calendar, CheckCircle, RotateCcw, 
-  Save, School, Sliders, ShieldAlert, Sparkles, LayoutGrid, List
+  Save, School, Sliders, ShieldAlert, Sparkles, LayoutGrid, List,
+  Download, Upload, Plus, Trash2, ShieldCheck, Database
 } from 'lucide-react';
 import { DEFAULT_IMPOSTAZIONI_SCUOLA } from '../context/AppContext';
+import { formatDataItaliana } from '../utils/docentiHelper';
 
 export const PersonalizzazioniScuola: React.FC = () => {
-  const { impostazioniScuola, updateImpostazioniScuola, setImpostazioniScuola } = useApp();
+  const { 
+    docenti, orariDocenti, assenze, uscite, sostituzioni, movimentiDebito, impostazioniPriorita,
+    impostazioniScuola, updateImpostazioniScuola, setImpostazioniScuola, ripristinaBackupCompleto 
+  } = useApp();
   
   const [nomeScuola, setNomeScuola] = useState(impostazioniScuola.nomeScuola || 'I.C. Leonardo da Vinci');
   const [tettoPermessi, setTettoPermessi] = useState(impostazioniScuola.tettoMaxPermessiBreviAnno || 12);
   const [tettoAssemblee, setTettoAssemblee] = useState(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
   const [vistaTabellone, setVistaTabellone] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>(impostazioniScuola.vistaTabellonePredefinita || 'GRUPPI_ORA');
   const [nascondiWeekend, setNascondiWeekend] = useState(impostazioniScuola.nascondiWeekendCalendario ?? true);
+  
+  // Gestione Giorni Festivi / Ponti / Chiusure
+  const [giorniFestivi, setGiorniFestivi] = useState<string[]>(impostazioniScuola.giorniFestivi || []);
+  const [nuovaDataFestiva, setNuovaDataFestiva] = useState('');
 
   const [salvato, setSalvato] = useState(false);
+  const fileBackupRef = React.useRef<HTMLInputElement>(null);
+
+  const handleAggiungiFestivita = () => {
+    if (!nuovaDataFestiva) return;
+    if (!giorniFestivi.includes(nuovaDataFestiva)) {
+      const agg = [...giorniFestivi, nuovaDataFestiva].sort();
+      setGiorniFestivi(agg);
+      setNuovaDataFestiva('');
+    }
+  };
+
+  const handleRimuoviFestivita = (dataDaRimuovere: string) => {
+    setGiorniFestivi(prev => prev.filter(d => d !== dataDaRimuovere));
+  };
 
   const handleSalva = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +47,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
       tettoMaxPermessiBreviAnno: Number(tettoPermessi) || 12,
       tettoMaxAssembleeSindacaliAnno: Number(tettoAssemblee) || 10,
       vistaTabellonePredefinita: vistaTabellone,
-      nascondiWeekendCalendario: nascondiWeekend
+      nascondiWeekendCalendario: nascondiWeekend,
+      giorniFestivi
     });
 
     setSalvato(true);
@@ -39,9 +63,74 @@ export const PersonalizzazioniScuola: React.FC = () => {
       setTettoAssemblee(DEFAULT_IMPOSTAZIONI_SCUOLA.tettoMaxAssembleeSindacaliAnno);
       setVistaTabellone(DEFAULT_IMPOSTAZIONI_SCUOLA.vistaTabellonePredefinita);
       setNascondiWeekend(DEFAULT_IMPOSTAZIONI_SCUOLA.nascondiWeekendCalendario);
+      setGiorniFestivi([]);
       setSalvato(true);
       setTimeout(() => setSalvato(false), 2500);
     }
+  };
+
+  // BACKUP EXPORT & RESTORE
+  const handleDownloadBackup = () => {
+    const backupData = {
+      app: 'GestioneSostituzioniScolastiche',
+      versione: '2.0',
+      dataBackup: new Date().toISOString(),
+      docenti,
+      orariDocenti,
+      assenze,
+      uscite,
+      sostituzioni,
+      movimentiDebito,
+      impostazioniScuola: {
+        nomeScuola,
+        tettoMaxPermessiBreviAnno: Number(tettoPermessi),
+        tettoMaxAssembleeSindacaliAnno: Number(tettoAssemblee),
+        vistaTabellonePredefinita: vistaTabellone,
+        nascondiWeekendCalendario: nascondiWeekend,
+        giorniFestivi
+      },
+      impostazioniPriorita
+    };
+
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Backup_Sostituzioni_${nomeScuola.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleUploadBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const json = JSON.parse(evt.target?.result as string);
+        if (json.docenti && json.orariDocenti) {
+          if (window.confirm(`Sei sicuro di voler ripristinare il backup del ${new Date(json.dataBackup || '').toLocaleDateString()}? I dati attuali verranno sostituiti con quelli del backup.`)) {
+            ripristinaBackupCompleto(json);
+            setNomeScuola(json.impostazioniScuola?.nomeScuola || 'I.C. Leonardo da Vinci');
+            setTettoPermessi(json.impostazioniScuola?.tettoMaxPermessiBreviAnno || 12);
+            setTettoAssemblee(json.impostazioniScuola?.tettoMaxAssembleeSindacaliAnno || 10);
+            setVistaTabellone(json.impostazioniScuola?.vistaTabellonePredefinita || 'GRUPPI_ORA');
+            setNascondiWeekend(json.impostazioniScuola?.nascondiWeekendCalendario ?? true);
+            setGiorniFestivi(json.impostazioniScuola?.giorniFestivi || []);
+            setSalvato(true);
+            setTimeout(() => setSalvato(false), 3000);
+          }
+        } else {
+          alert('Il file non è un file di backup valido.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Errore durante la lettura del file di backup.');
+      }
+    };
+    reader.readAsText(file);
+    if (fileBackupRef.current) fileBackupRef.current.value = '';
   };
 
   return (
@@ -64,7 +153,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
             <span>Personalizzazioni Istituto & Visualizzazione</span>
           </h2>
           <p className="text-xs text-slate-500">
-            Configura il nome del tuo istituto scolastico, i massimali orari per il personale e le preferenze grafiche.
+            Configura il nome del tuo istituto scolastico, i massimali orari per il personale, festività e backup.
           </p>
         </div>
 
@@ -177,7 +266,6 @@ export const PersonalizzazioniScuola: React.FC = () => {
           </div>
 
           <div className="space-y-3.5">
-            {/* Modalità Vista Tabellone */}
             <div>
               <label className="block text-xs font-black text-slate-800 mb-2">
                 Modalità di Visualizzazione Preferita del Tabellone Sostituzioni
@@ -221,7 +309,6 @@ export const PersonalizzazioniScuola: React.FC = () => {
               </div>
             </div>
 
-            {/* Nascondi Sabato e Domenica */}
             <div className="pt-2 border-t border-slate-100">
               <label className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition cursor-pointer">
                 <div className="flex items-center gap-3">
@@ -248,7 +335,62 @@ export const PersonalizzazioniScuola: React.FC = () => {
           </div>
         </div>
 
-        {/* PULSANTE DI SALVATAGGIO */}
+        {/* SEZIONE 4: GIORNI FESTIVI, PONTI E CHIUSURE SCUOLA */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-3">
+          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+            <div className="p-2 bg-rose-50 text-rose-700 rounded-xl">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-black text-slate-900">Giorni Festivi, Ponti & Chiusura Scuola</h3>
+              <p className="text-xs text-slate-500">I giorni festivi registrati vengono saltati dal calendario e non conteggiati come giorni di lezione.</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="date"
+                value={nuovaDataFestiva}
+                onChange={(e) => setNuovaDataFestiva(e.target.value)}
+                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-rose-500"
+              />
+              <button
+                type="button"
+                onClick={handleAggiungiFestivita}
+                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1 cursor-pointer shadow-2xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Aggiungi Giorno Festivo / Chiusura</span>
+              </button>
+            </div>
+
+            {/* LISTA FESTIVITÀ REGISTRATE */}
+            <div className="flex flex-wrap gap-2 pt-1">
+              {giorniFestivi.map(dataFest => (
+                <span
+                  key={dataFest}
+                  className="bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs px-3 py-1 rounded-xl flex items-center gap-2 shadow-2xs"
+                >
+                  <span>🎉 {formatDataItaliana(dataFest)}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRimuoviFestivita(dataFest)}
+                    className="text-rose-400 hover:text-rose-700 transition"
+                    title="Rimuovi data"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+              {giorniFestivi.length === 0 && (
+                <p className="text-xs text-slate-400 italic">Nessun giorno festivo o ponte scolastico registrato.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* PULSANTE DI SALVATAGGIO CONFIGURAZIONE */}
         <div className="flex items-center justify-end gap-3 pt-2">
           <button
             type="submit"
@@ -259,6 +401,73 @@ export const PersonalizzazioniScuola: React.FC = () => {
           </button>
         </div>
       </form>
+
+      {/* SEZIONE 5: SALVATAGGIO BACKUP & RIPRISTINO COMPLETO */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-3 mt-6">
+        <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+          <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl">
+            <Database className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-sm sm:text-base font-black text-slate-900">Salvataggio Backup & Ripristino Dati</h3>
+            <p className="text-xs text-slate-500">Esporta o importa l'intero archivio (docenti, orari, assenze, uscite, debiti e impostazioni).</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          {/* EXPORT BACKUP */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3">
+            <div>
+              <span className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
+                <Download className="w-4 h-4 text-emerald-600" />
+                <span>Scarica File di Backup (.json)</span>
+              </span>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Salva una copia completa di sicurezza di tutti i dati per conservarli o trasferirli su un altro PC.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadBackup}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Esporta Backup Completo</span>
+            </button>
+          </div>
+
+          {/* IMPORT RESTORE */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3">
+            <div>
+              <span className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
+                <Upload className="w-4 h-4 text-indigo-600" />
+                <span>Ripristina da File Backup (.json)</span>
+              </span>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Carica un file di backup scaricato in precedenza per ripristinare l'intero stato della scuola.
+              </p>
+            </div>
+
+            <input
+              type="file"
+              ref={fileBackupRef}
+              onChange={handleUploadBackup}
+              accept=".json"
+              className="hidden"
+            />
+
+            <button
+              type="button"
+              onClick={() => fileBackupRef.current?.click()}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Carica File Backup</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
+

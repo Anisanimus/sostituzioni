@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Docente, GiornoSettimana, CellaOrario, TipoOra, CategoriaSostituto } from '../types';
+import { Docente, OrarioDocente, GiornoSettimana, CellaOrario, TipoOra, CategoriaSostituto } from '../types';
 import { GIORNI } from '../data/initialData';
 import { parseOrarioExcel } from '../utils/excelParser';
 import { getDocentiUnici, getBaseNomeDocente } from '../utils/docentiHelper';
@@ -15,7 +15,8 @@ import {
 export const AnagraficaOrario: React.FC = () => {
   const { 
     docenti, setDocenti, orariDocenti, setOrariDocenti, 
-    updateDocente, updateOrarioDocente, resetOrarioPredefinito, azzeraDocentiEOrario, importaNuovoOrarioCompleto 
+    updateDocente, updateOrarioDocente, resetOrarioPredefinito, azzeraDocentiEOrario, importaNuovoOrarioCompleto,
+    aggiornaOrarioSenzaCancellareStorico
   } = useApp();
 
   const docentiUnici = React.useMemo(() => getDocentiUnici(docenti), [docenti]);
@@ -102,7 +103,9 @@ export const AnagraficaOrario: React.FC = () => {
     setTimeout(() => setNotificaSalvataggio(null), 4000);
   };
 
-  // UPLOAD FILE EXCEL
+  // UPLOAD FILE EXCEL (CON SCELTA AGGIORNAMENTO / SOVRASCRITTURA CONSERVA-STORICO)
+  const [fileExcelInAttesa, setFileExcelInAttesa] = useState<{ docenti: Docente[]; orariDocenti: OrarioDocente[] } | null>(null);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -113,16 +116,8 @@ export const AnagraficaOrario: React.FC = () => {
         const buffer = evt.target?.result as ArrayBuffer;
         const result = parseOrarioExcel(buffer);
         if (result.docenti.length > 0 && result.orariDocenti.length > 0) {
-          importaNuovoOrarioCompleto(result.docenti, result.orariDocenti);
-          setSelectedDocenteId('');
-          setOreModificate([]);
-          
-          const righeCaricate = result.docenti.length;
-          const uniciNomi = new Set(result.docenti.map(d => getBaseNomeDocente(d.nome)));
-          const docentiEffettivi = uniciNomi.size;
-
-          setNotificaSalvataggio(`✅ Orario caricato con successo! Importate ${righeCaricate} righe orario per ${docentiEffettivi} docenti effettivi.`);
-          setTimeout(() => setNotificaSalvataggio(null), 6000);
+          // Apre il popup di scelta se aggiornare mantenendo lo storico o reimpostare a zero
+          setFileExcelInAttesa(result);
         } else {
           alert('Il file Excel non contiene una struttura orario valida.');
         }
@@ -133,6 +128,25 @@ export const AnagraficaOrario: React.FC = () => {
     };
     reader.readAsArrayBuffer(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const confermaAggiornamentoOrario = (mantieniStorico: boolean) => {
+    if (!fileExcelInAttesa) return;
+
+    const { docenti: nuoviDocenti, orariDocenti: nuoviOrari } = fileExcelInAttesa;
+
+    if (mantieniStorico) {
+      aggiornaOrarioSenzaCancellareStorico(nuoviDocenti, nuoviOrari);
+      setNotificaSalvataggio(`✅ Orario AGGIORNATO con successo! Mantenuto integro lo storico delle assenze, uscite e debiti pregressi.`);
+    } else {
+      importaNuovoOrarioCompleto(nuoviDocenti, nuoviOrari);
+      setNotificaSalvataggio(`✅ Nuovo orario importato! Storico azzerato per il nuovo anno.`);
+    }
+
+    setSelectedDocenteId('');
+    setOreModificate([]);
+    setFileExcelInAttesa(null);
+    setTimeout(() => setNotificaSalvataggio(null), 6000);
   };
 
   // DOWNLOAD FILE EXCEL
@@ -207,6 +221,79 @@ export const AnagraficaOrario: React.FC = () => {
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {/* MODALE DI SCELTA IMPORTAZIONE EXCEL: AGGIORNAMENTO VS NUOVO ANNO */}
+      {fileExcelInAttesa && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-lg w-full border border-slate-200 space-y-4">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-2xl">
+                <Upload className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900">Tipo di Importazione Orario</h3>
+                <p className="text-xs text-slate-500">
+                  Rilevati <strong>{fileExcelInAttesa.docenti.length} docenti</strong> nel file Excel caricato.
+                </p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Come desideri procedere con i dati attuali della scuola?
+            </p>
+
+            <div className="space-y-3">
+              {/* OPZIONE 1: AGGIORNA E MANTIENI STORICO */}
+              <button
+                type="button"
+                onClick={() => confermaAggiornamentoOrario(true)}
+                className="w-full p-3.5 rounded-2xl border-2 border-indigo-600 bg-indigo-50/60 hover:bg-indigo-100/80 text-left transition flex items-start gap-3.5 cursor-pointer shadow-2xs group"
+              >
+                <div className="p-2 bg-indigo-600 text-white rounded-xl group-hover:scale-105 transition-transform shrink-0">
+                  <RotateCcw className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="block text-sm font-black text-indigo-950">
+                    🔄 Aggiorna Orario (Conserva Storico Assenze & Debiti)
+                  </span>
+                  <span className="text-[11px] text-indigo-800 leading-normal block mt-0.5">
+                    <strong>Raccomandato durante l'anno scolastico:</strong> aggiorna le classi e i docenti, ma <u>mantiene intatte</u> le assenze già registrate, le uscite e i debiti orari pregressi.
+                  </span>
+                </div>
+              </button>
+
+              {/* OPZIONE 2: NUOVO ANNO / AZZERA TUTTO */}
+              <button
+                type="button"
+                onClick={() => confermaAggiornamentoOrario(false)}
+                className="w-full p-3.5 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-rose-50 hover:border-rose-300 text-left transition flex items-start gap-3.5 cursor-pointer group"
+              >
+                <div className="p-2 bg-slate-300 group-hover:bg-rose-600 group-hover:text-white text-slate-700 rounded-xl transition-colors shrink-0">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="block text-sm font-bold text-slate-900 group-hover:text-rose-950">
+                    ⚠️ Nuovo Anno Scolastico (Azzera Storico e Ricomincia da Zero)
+                  </span>
+                  <span className="text-[11px] text-slate-500 group-hover:text-rose-800 leading-normal block mt-0.5">
+                    Cancella tutte le vecchie assenze e sostituzioni dell'anno precedente, impostando solo il nuovo orario.
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setFileExcelInAttesa(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+              >
+                Annulla
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

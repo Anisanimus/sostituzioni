@@ -130,6 +130,7 @@ export interface ImpostazioniScuola {
   tettoMaxAssembleeSindacaliAnno: number;
   vistaTabellonePredefinita: 'GRUPPI_ORA' | 'PER_DOCENTE';
   nascondiWeekendCalendario: boolean;
+  giorniFestivi?: string[]; // Array di date ISO YYYY-MM-DD per festività, ponti e chiusure
 }
 
 export interface CandidatoSostituto {

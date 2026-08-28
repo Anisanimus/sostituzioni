@@ -20,8 +20,9 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
 
   const todayStr = new Date().toISOString().split('T')[0];
   const nascondiWeekend = impostazioniScuola?.nascondiWeekendCalendario ?? true;
+  const giorniFestivi = impostazioniScuola?.giorniFestivi || [];
 
-  // Calcola una finestra di giorni a partire da OGGI IN POI (con filtro weekend personalizzabile)
+  // Calcola una finestra di giorni a partire da OGGI IN POI (con filtro weekend e festività personalizzabile)
   const getFinestraGiorniScuola = (passati: number = 0, futuri: number = 30) => {
     const dates: string[] = [];
     
@@ -31,9 +32,11 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
       const tempPast: string[] = [];
       while (tempPast.length < passati) {
         curPast.setDate(curPast.getDate() - 1);
+        const iso = curPast.toISOString().split('T')[0];
         const isWeekend = curPast.getDay() === 0 || curPast.getDay() === 6;
-        if (!nascondiWeekend || !isWeekend) {
-          tempPast.unshift(curPast.toISOString().split('T')[0]);
+        const isFestivo = giorniFestivi.includes(iso);
+        if ((!nascondiWeekend || !isWeekend) && !isFestivo) {
+          tempPast.unshift(iso);
         }
       }
       dates.push(...tempPast);
@@ -42,9 +45,11 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     // Oggi + Giorni futuri
     let cur = new Date();
     while (dates.length < passati + futuri) {
+      const iso = cur.toISOString().split('T')[0];
       const isWeekend = cur.getDay() === 0 || cur.getDay() === 6;
-      if (!nascondiWeekend || !isWeekend) {
-        dates.push(cur.toISOString().split('T')[0]);
+      const isFestivo = giorniFestivi.includes(iso);
+      if ((!nascondiWeekend || !isWeekend) && !isFestivo) {
+        dates.push(iso);
       }
       cur.setDate(cur.getDate() + 1);
     }
