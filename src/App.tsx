@@ -127,9 +127,8 @@ const MainApp: React.FC = () => {
               <School className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h1 className="text-sm sm:text-base font-black tracking-tight leading-tight flex items-center gap-2">
-                <span className="truncate max-w-[170px] sm:max-w-none">{impostazioniScuola?.nomeScuola || 'Gestione Sostituzioni'}</span>
-                <span className="hidden sm:inline text-[10px] bg-indigo-500/30 text-indigo-300 px-1.5 py-0.5 rounded font-mono">v0.0.1</span>
+              <h1 className="text-sm sm:text-base font-black tracking-tight leading-tight">
+                <span className="truncate max-w-[220px] sm:max-w-none">{impostazioniScuola?.nomeScuola || 'Gestione Sostituzioni'}</span>
               </h1>
             </div>
           </div>
