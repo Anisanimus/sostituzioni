@@ -766,10 +766,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
                             <div className="leading-tight">
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-800 text-xs">
-                                  Classe {r.classe}
-                                </span>
-                                <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 uppercase">
+                                <span className="bg-indigo-50 text-indigo-700 text-[11px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 uppercase">
                                   {r.materia}
                                 </span>
                               </div>

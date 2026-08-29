@@ -892,8 +892,7 @@ export const TabelloneSostituzioni: React.FC<{
 
                         <div>
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-bold text-xs text-slate-800">Classe {os.classe}</span>
-                            <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                            <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 uppercase">
                               {os.docenteAssente.materia}
                             </span>
                             {isGraveSostegno && (
