@@ -676,27 +676,27 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
           </div>
 
           {/* ========================================================= */}
-          {/* MENU A TENDINA MULTI-SELEZIONE PER DOCENTI ACCOMPAGNATORI */}
+          {/* SELEZIONE DOCENTI ACCOMPAGNATORI (DESKTOP & MOBILE SHEET) */}
           {/* ========================================================= */}
           <div className="space-y-2">
             <label className="block text-[10px] font-black text-slate-700 uppercase">
               Docenti Accompagnatori ({accompagnatoriIds.length} selezionati)
             </label>
 
-            {/* Selettore a tendina */}
+            {/* Selettore a tendina / Pulsante apertura */}
             <div className="relative" ref={dropdownRef}>
               <div
                 onClick={() => setIsDropdownAccompagnatoriOpen(!isDropdownAccompagnatoriOpen)}
-                className="w-full min-h-[42px] border border-slate-300 rounded-xl p-2 bg-white flex flex-wrap items-center justify-between gap-1.5 cursor-pointer hover:border-amber-400 transition"
+                className="w-full min-h-[44px] border border-slate-300 rounded-xl p-2 bg-white flex flex-wrap items-center justify-between gap-1.5 cursor-pointer hover:border-amber-500 shadow-2xs transition"
               >
-                <div className="flex flex-wrap items-center gap-1">
+                <div className="flex flex-wrap items-center gap-1.5 flex-1">
                   {accompagnatoriIds.length === 0 ? (
-                    <span className="text-xs text-slate-400">Clicca per aprire la tendina e scegliere i docenti...</span>
+                    <span className="text-xs text-slate-400 font-medium py-1">Tocca per scegliere i docenti accompagnatori...</span>
                   ) : (
                     accompagnatoriIds.map(docId => (
                       <span
                         key={docId}
-                        className="bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold px-2 py-0.5 rounded-lg flex items-center gap-1"
+                        className="bg-amber-100 text-amber-950 border border-amber-300 text-xs font-bold px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-2xs"
                       >
                         <span>{getDocenteNome(docId)}</span>
                         <button
@@ -705,68 +705,134 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                             e.stopPropagation();
                             toggleAccompagnatore(docId);
                           }}
-                          className="text-amber-700 hover:text-red-600 p-0.5 rounded"
+                          className="text-amber-800 hover:text-red-600 p-0.5 rounded transition"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-3.5 h-3.5" />
                         </button>
                       </span>
                     ))
                   )}
                 </div>
-                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isDropdownAccompagnatoriOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${isDropdownAccompagnatoriOpen ? 'rotate-180 text-amber-600' : ''}`} />
               </div>
 
-              {/* Contenuto Tendina Dropdown con Ricerca */}
+              {/* MODALE / BOTTOM SHEET SU MOBILE O TENDINA SU DESKTOP */}
               {isDropdownAccompagnatoriOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden animate-fadeIn">
-                  {/* Barra Ricerca Interna */}
-                  <div className="p-2 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
-                    <Search className="w-3.5 h-3.5 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Cerca docente per nome o materia..."
-                      value={cercaDocente}
-                      onChange={(e) => setCercaDocente(e.target.value)}
-                      className="w-full bg-transparent text-xs outline-none font-medium text-slate-800"
-                      autoFocus
-                    />
-                    {cercaDocente && (
-                      <button type="button" onClick={() => setCercaDocente('')} className="text-slate-400 hover:text-slate-600 text-xs font-bold">
-                        ✕
-                      </button>
-                    )}
-                  </div>
+                <>
+                  {/* Backdrop per mobile */}
+                  <div 
+                    className="sm:hidden fixed inset-0 bg-slate-900/60 z-50 backdrop-blur-2xs animate-fadeIn"
+                    onClick={() => setIsDropdownAccompagnatoriOpen(false)}
+                  />
 
-                  {/* Elenco Docenti con Checkbox Multipla */}
-                  <div className="max-h-56 overflow-y-auto divide-y divide-slate-50 p-1">
-                    {docentiFiltratiPerTendina.length === 0 ? (
-                      <p className="p-3 text-center text-xs text-slate-400 italic">Nessun docente trovato.</p>
-                    ) : (
-                      docentiFiltratiPerTendina.map(d => {
-                        const isSelected = accompagnatoriIds.includes(d.id);
-                        return (
-                          <div
-                            key={d.id}
-                            onClick={() => toggleAccompagnatore(d.id)}
-                            className={`p-2 rounded-lg flex items-center justify-between text-xs cursor-pointer transition ${
-                              isSelected ? 'bg-amber-50 text-amber-950 font-bold' : 'hover:bg-slate-50 text-slate-700'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <div className={`w-4 h-4 rounded border flex items-center justify-center transition ${
-                                isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-slate-300 bg-white'
-                              }`}>
-                                {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                              </div>
-                              <span>{d.nome}</span>
-                            </div>
-                            <span className="text-[10px] text-slate-400">{d.materie.join(', ')}</span>
-                          </div>
-                        );
-                      })
+                  {/* Finestra di selezione (Bottom sheet su mobile, dropdown absolute su desktop) */}
+                  <div className="fixed sm:absolute inset-x-0 bottom-0 sm:bottom-auto sm:top-full sm:left-0 sm:right-0 z-50 max-h-[85vh] sm:max-h-96 sm:mt-1.5 bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+                    
+                    {/* Header Modale Mobile / Dropdown Desktop */}
+                    <div className="p-3.5 bg-amber-500 text-white flex items-center justify-between shrink-0">
+                      <div className="flex items-center gap-2">
+                        <UserMinus className="w-4 h-4 text-white" />
+                        <span className="font-bold text-xs sm:text-sm">
+                          Scegli Accompagnatori ({accompagnatoriIds.length} selezionati)
+                        </span>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setIsDropdownAccompagnatoriOpen(false)} 
+                        className="bg-amber-600/60 hover:bg-amber-600 text-white rounded-lg p-1.5 transition text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span className="sm:hidden">Fatto</span>
+                      </button>
+                    </div>
+
+                    {/* Barra Ricerca Interna */}
+                    <div className="p-2.5 border-b border-slate-100 bg-slate-50 flex items-center gap-2 shrink-0">
+                      <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Filtra per cognome o materia..."
+                        value={cercaDocente}
+                        onChange={(e) => setCercaDocente(e.target.value)}
+                        className="w-full bg-transparent text-xs sm:text-sm outline-none font-semibold text-slate-800 placeholder:text-slate-400"
+                        autoFocus
+                      />
+                      {cercaDocente && (
+                        <button type="button" onClick={() => setCercaDocente('')} className="text-slate-400 hover:text-slate-600 p-1 text-xs font-bold">
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Selezioni Rapide se presenti */}
+                    {accompagnatoriIds.length > 0 && (
+                      <div className="px-3 py-1.5 bg-amber-50/70 border-b border-amber-100 flex items-center justify-between text-[11px] shrink-0">
+                        <span className="font-bold text-amber-900">
+                          {accompagnatoriIds.length} docenti scelti
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setAccompagnatoriIds([])}
+                          className="text-rose-600 font-bold hover:underline"
+                        >
+                          Deseleziona tutti
+                        </button>
+                      </div>
                     )}
+
+                    {/* Elenco Docenti con Checkbox Touch-Friendly */}
+                    <div className="overflow-y-auto divide-y divide-slate-100 p-1.5 flex-1">
+                      {docentiFiltratiPerTendina.length === 0 ? (
+                        <div className="p-6 text-center text-xs text-slate-400 italic">
+                          Nessun docente trovato con "{cercaDocente}".
+                        </div>
+                      ) : (
+                        docentiFiltratiPerTendina.map(d => {
+                          const isSelected = accompagnatoriIds.includes(d.id);
+                          return (
+                            <div
+                              key={d.id}
+                              onClick={() => toggleAccompagnatore(d.id)}
+                              className={`p-3 rounded-xl flex items-center justify-between text-xs sm:text-sm cursor-pointer transition select-none ${
+                                isSelected ? 'bg-amber-100/70 text-amber-950 font-bold' : 'hover:bg-slate-50 text-slate-800'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition shrink-0 ${
+                                  isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-slate-300 bg-white'
+                                }`}>
+                                  {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="font-bold text-slate-900">{d.nome}</span>
+                                  <span className="text-[10px] text-slate-500 font-medium">{d.materie.join(', ')}</span>
+                                </div>
+                              </div>
+                              {isSelected && (
+                                <span className="text-[10px] bg-amber-200/80 text-amber-900 font-bold px-2 py-0.5 rounded-full">
+                                  Scelto
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Footer mobile conferma rapida */}
+                    <div className="p-3 border-t border-slate-200 bg-slate-50 sm:hidden shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setIsDropdownAccompagnatoriOpen(false)}
+                        className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>Conferma ({accompagnatoriIds.length} Accompagnatori)</span>
+                      </button>
+                    </div>
+
                   </div>
-                </div>
+                </>
               )}
             </div>
           </div>
