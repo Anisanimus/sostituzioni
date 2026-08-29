@@ -5,7 +5,7 @@ import {
   Search, Filter, Printer, KeyRound, ShieldAlert,
   ChevronLeft, ChevronRight, User, AlertCircle
 } from 'lucide-react';
-import { getBaseNomeDocente, formatDataItaliana } from '../utils/docentiHelper';
+import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds } from '../utils/docentiHelper';
 
 interface QuadroSostituzioniScuolaProps {
   initialDate?: string;
@@ -97,27 +97,33 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
     // 1. Assenze ordinarie
     assenzeOggi.forEach(assenza => {
+      const orarioFuso = getOrarioUnificatoDocente(assenza.docenteId, docenti, orariDocenti);
+      const collegatiIds = getDocentiCollegatiIds(assenza.docenteId, docenti);
       const doc = docenti.find(d => d.id === assenza.docenteId);
-      if (!doc) return;
-      const orario = orariDocenti.find(o => o.docenteId === doc.id);
-      if (!orario) return;
+      const nomeAssente = doc ? getBaseNomeDocente(doc.nome) : 'Docente';
+      const materiaDoc = doc?.materia || 'Materia';
 
-      const oreLezione = orario.ore.filter(c => 
+      const oreLezione = orarioFuso.filter(c => 
         c.giorno === giornoSettimana && 
-        c.tipo === 'LEZIONE' && 
-        c.valore !== '' &&
+        c.valore !== '' && 
+        c.valore !== 'D' && 
+        c.valore !== 'P' &&
         assenza.oreInteressate.includes(c.ora)
       );
 
       oreLezione.forEach(c => {
-        const sosts = sostituzioniOggi.filter(s => s.ora === c.ora && s.classe === c.valore);
+        const sosts = sostituzioniOggi.filter(s => 
+          s.ora === c.ora && 
+          s.classe === c.valore &&
+          (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId)
+        );
         const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE');
 
         items.push({
           ora: c.ora,
           classe: c.valore,
-          docenteAssente: getBaseNomeDocente(doc.nome),
-          materia: doc.materia,
+          docenteAssente: nomeAssente,
+          materia: materiaDoc,
           motivo: assenza.motivo,
           isUscita: false,
           nonSostituita: nonSost,
@@ -140,28 +146,34 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
     // 2. Uscite didattiche / Gite
     usciteOggi.forEach(uscita => {
       uscita.docentiAccompagnatoriIds.forEach(docId => {
+        const orarioFuso = getOrarioUnificatoDocente(docId, docenti, orariDocenti);
+        const collegatiIds = getDocentiCollegatiIds(docId, docenti);
         const doc = docenti.find(d => d.id === docId);
-        if (!doc) return;
-        const orario = orariDocenti.find(o => o.docenteId === doc.id);
-        if (!orario) return;
+        const nomeAccompagnatore = doc ? getBaseNomeDocente(doc.nome) : 'Docente';
+        const materiaDoc = doc?.materia || 'Materia';
 
-        const oreLezione = orario.ore.filter(c => 
+        const oreLezione = orarioFuso.filter(c => 
           c.giorno === giornoSettimana && 
-          c.tipo === 'LEZIONE' && 
           c.valore !== '' && 
+          c.valore !== 'D' && 
+          c.valore !== 'P' &&
           !uscita.classi.includes(c.valore) && 
           uscita.ore.includes(c.ora)
         );
 
         oreLezione.forEach(c => {
-          const sosts = sostituzioniOggi.filter(s => s.ora === c.ora && s.classe === c.valore);
+          const sosts = sostituzioniOggi.filter(s => 
+            s.ora === c.ora && 
+            s.classe === c.valore &&
+            (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === docId)
+          );
           const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE');
 
           items.push({
             ora: c.ora,
             classe: c.valore,
-            docenteAssente: getBaseNomeDocente(doc.nome),
-            materia: doc.materia,
+            docenteAssente: nomeAccompagnatore,
+            materia: materiaDoc,
             motivo: `Uscita ${uscita.classi.join(', ')}`,
             isUscita: true,
             nonSostituita: nonSost,
