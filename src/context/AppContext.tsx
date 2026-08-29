@@ -946,7 +946,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const importaNuovoOrarioCompleto = (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => {
+  const importaNuovoOrarioCompleto = async (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => {
     // 1. Sovrascrive completamente gli stati in memoria
     setDocenti(nuoviDocenti);
     setOrariDocenti(nuoviOrari);
@@ -966,17 +966,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('Errore durante il salvataggio in localStorage:', e);
     }
 
-    // 3. Sincronizzazione immediata su Cloud Firestore
-    triggerCloudSync({
-      docenti: nuoviDocenti,
-      orariDocenti: nuoviOrari,
-      assenze: [],
-      uscite: [],
-      sostituzioni: []
-    });
+    // 3. Salva DIRETTAMENTE e IMMEDIATAMENTE su Cloud Firestore (senza attendere debounce)
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, {
+        docenti: nuoviDocenti,
+        orariDocenti: nuoviOrari,
+        assenze: [],
+        uscite: [],
+        sostituzioni: [],
+        ultimoAggiornamento: new Date().toISOString()
+      }, { merge: true });
+      console.log('✅ Orario nuovo salvato con successo direttamente su Cloud Firestore!');
+    } catch (cloudErr) {
+      console.error('Errore salvataggio diretto Cloud:', cloudErr);
+    }
   };
 
-  const aggiornaOrarioSenzaCancellareStorico = (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => {
+  const aggiornaOrarioSenzaCancellareStorico = async (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => {
     // Mantiene lo storico dei debiti pregresso per i docenti già esistenti
     const docentiAggiornati = nuoviDocenti.map(nd => {
       const docEsistente = docenti.find(d => getBaseNomeDocente(d.nome) === getBaseNomeDocente(nd.nome));
@@ -1001,11 +1008,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('Errore durante l\'aggiornamento orario in localStorage:', e);
     }
 
-    // Sincronizzazione immediata su Cloud Firestore
-    triggerCloudSync({
-      docenti: docentiAggiornati,
-      orariDocenti: nuoviOrari
-    });
+    // Salva DIRETTAMENTE su Cloud Firestore
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, {
+        docenti: docentiAggiornati,
+        orariDocenti: nuoviOrari,
+        ultimoAggiornamento: new Date().toISOString()
+      }, { merge: true });
+      console.log('✅ Orario aggiornato salvato con successo direttamente su Cloud Firestore!');
+    } catch (cloudErr) {
+      console.error('Errore salvataggio diretto Cloud:', cloudErr);
+    }
   };
 
   const ripristinaBackupCompleto = (datiBackup: any) => {
