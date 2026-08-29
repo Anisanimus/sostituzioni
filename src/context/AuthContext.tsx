@@ -125,12 +125,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setErroreAuth(null);
       setIsLoadingAuth(true);
       
-      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                       (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
 
-      if (isIos && isStandalone) {
+      if (isMobile) {
+        // Su mobile (Chrome iPhone, Safari, Android) il popup viene bloccato dal browser: usiamo sempre redirect pulito
         await signInWithRedirect(auth, googleProvider);
       } else {
+        // Su Desktop usiamo il comodo popup
         await signInWithPopup(auth, googleProvider);
       }
     } catch (err: any) {
