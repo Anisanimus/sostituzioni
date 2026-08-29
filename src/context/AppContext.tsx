@@ -3,7 +3,7 @@ import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAsseg
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente } from '../utils/docentiHelper';
 
-const CURRENT_TIMETABLE_VERSION = 'v14_fictional_demo_names';
+const CURRENT_TIMETABLE_VERSION = 'v15_pdf_exact_timetable_fictional_names';
 
 export const DEFAULT_IMPOSTAZIONI_SCUOLA: ImpostazioniScuola = {
   nomeScuola: 'I.C. Leonardo da Vinci',
