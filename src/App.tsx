@@ -28,12 +28,31 @@ import {
   Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound, TrendingUp
 } from 'lucide-react';
 
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LoginScreen } from './components/LoginScreen';
+import { LogOut } from 'lucide-react';
+
 const MainApp: React.FC = () => {
   const { docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola } = useApp();
+  const { utenteInfo, logout, isLoadingAuth } = useAuth();
+
   const [ruoloAttivo, setRuoloAttivo] = useState<'VICEPRESIDENZA' | 'PORTALE_DOCENTE' | 'QUADRO_SCUOLA'>('VICEPRESIDENZA');
   const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'QUADRO_SCUOLA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'SOSTITUZIONI_SMART' | 'PERSONALIZZAZIONI'>('GESTIONE_GIORNALIERA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
+
+  // Sincronizza ruolo utente autenticato all'accesso
+  React.useEffect(() => {
+    if (utenteInfo) {
+      if (utenteInfo.ruolo === 'DOCENTE') {
+        setRuoloAttivo('PORTALE_DOCENTE');
+      } else if (utenteInfo.ruolo === 'PERSONALE_ATA') {
+        setRuoloAttivo('QUADRO_SCUOLA');
+      } else {
+        setRuoloAttivo('VICEPRESIDENZA');
+      }
+    }
+  }, [utenteInfo]);
 
   const todayStr = new Date().toISOString().split('T')[0];
   const nascondiWeekend = impostazioniScuola?.nascondiWeekendCalendario ?? true;
@@ -56,6 +75,21 @@ const MainApp: React.FC = () => {
   };
 
   const selectedGiorno = getGiornoFromDate(selectedDate);
+
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-bold text-slate-300">Caricamento sessione...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!utenteInfo) {
+    return <LoginScreen />;
+  }
 
   // Cambia giorno con le frecce saltando automaticamente weekend e giorni festivi se impostato
   const cambiaGiorno = (delta: number) => {
@@ -181,7 +215,24 @@ const MainApp: React.FC = () => {
                 title="Quadro Sostituzioni protetto da PIN per Personale ATA e Segreteria"
               >
                 <LayoutDashboard className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Personale ATA & Segreteria</span>
+                <span className="hidden sm:inline">ATA</span>
+              </button>
+            </div>
+
+            {/* PROFILO UTENTE AUTENTICATO & LOGOUT */}
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-700">
+              <div className="hidden lg:flex flex-col text-right leading-tight">
+                <span className="text-xs font-bold text-slate-200 truncate max-w-[120px]">{utenteInfo.displayName}</span>
+                <span className="text-[10px] text-slate-400">{utenteInfo.ruolo}</span>
+              </div>
+              <button
+                type="button"
+                onClick={logout}
+                className="p-1.5 bg-slate-800 hover:bg-rose-600/80 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition cursor-pointer flex items-center gap-1"
+                title="Disconnetti (Esci)"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden md:inline text-xs font-semibold">Esci</span>
               </button>
             </div>
           </div>
@@ -475,8 +526,10 @@ const MainApp: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <MainApp />
-    </AppProvider>
+    <AuthProvider>
+      <AppProvider>
+        <MainApp />
+      </AppProvider>
+    </AuthProvider>
   );
 }

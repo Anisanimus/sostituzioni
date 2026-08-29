@@ -24,6 +24,7 @@ export type TipoMateria =
 export interface Docente {
   id: string;
   nome: string;
+  email?: string;                // Email istituzionale Google Workspace
   materia: TipoMateria;
   dettaglioMateria?: string;
   classeRiferimento?: string;
@@ -35,6 +36,27 @@ export interface Docente {
   isAlternativa: boolean;
   oreDebitoPermesso: number;     // Ore da recuperare per permessi brevi (usa le sue D)
   pinAccesso?: string;
+}
+
+export type RuoloSistema = 'SUPER_ADMIN' | 'VICEPRESIDENZA' | 'DOCENTE' | 'PERSONALE_ATA' | 'GUEST';
+
+export interface UtenteAutenticato {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL?: string;
+  ruolo: RuoloSistema;
+  scuolaId: string;
+  docenteCollegatoId?: string; // Se è un docente, l'ID corrispondente
+}
+
+export interface IstitutoScolastico {
+  id: string;                    // Es. "IC_ANNA_FRANK"
+  codiceMeccanografico?: string;
+  nomeScuola: string;
+  dominiAutorizzati: string[];   // Es. ["icannafrank.edu.it"]
+  emailVicepresidenza: string[]; // Es. ["vicepresidenza@icannafrank.edu.it"]
+  attiva: boolean;
 }
 
 export type TipoOra = 'LEZIONE' | 'D' | 'P' | 'LIBERO';
