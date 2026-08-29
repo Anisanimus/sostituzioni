@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, googleProvider, db } from '../firebase';
-import { signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { UtenteAutenticato, IstitutoScolastico, Docente } from '../types';
 
@@ -36,19 +36,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
   useEffect(() => {
-    // 1. Controlla il risultato di un eventuale redirect al ritorno da Google su Safari/Chrome iOS
-    const checkRedirect = async () => {
-      try {
-        const { getRedirectResult } = await import('firebase/auth');
-        await getRedirectResult(auth);
-      } catch (err) {
-        console.warn('Errore getRedirectResult:', err);
-      }
-    };
-    checkRedirect();
+    // 1. Gestione ritorno da Google Redirect (indispensabile per Standalone Home Screen iOS PWA)
+    getRedirectResult(auth).catch((err) => {
+      console.warn('Redirect result info:', err);
+    });
 
     // 2. Ascolta lo stato di autenticazione
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsLoadingAuth(true);
       setErroreAuth(null);
 
