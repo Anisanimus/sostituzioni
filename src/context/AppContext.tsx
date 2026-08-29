@@ -361,9 +361,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 1000);
   };
 
+  // Sincronizza localStorage passivamente solo per cache offline
   useEffect(() => {
     localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(impostazioniScuola));
-    triggerCloudSync({ impostazioniScuola });
   }, [impostazioniScuola]);
 
   useEffect(() => {
@@ -371,37 +371,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [impostazioniPriorita]);
 
   useEffect(() => {
-    localStorage.setItem('scuola_docenti', JSON.stringify(docenti));
     if (docenti && docenti.length > 0) {
-      triggerCloudSync({ docenti });
+      localStorage.setItem('scuola_docenti', JSON.stringify(docenti));
     }
   }, [docenti]);
 
   useEffect(() => {
-    localStorage.setItem('scuola_orari', JSON.stringify(orariDocenti));
     if (orariDocenti && orariDocenti.length > 0) {
-      triggerCloudSync({ orariDocenti });
+      localStorage.setItem('scuola_orari', JSON.stringify(orariDocenti));
     }
   }, [orariDocenti]);
 
   useEffect(() => {
     localStorage.setItem('scuola_assenze', JSON.stringify(assenze));
-    triggerCloudSync({ assenze });
   }, [assenze]);
 
   useEffect(() => {
     localStorage.setItem('scuola_uscite', JSON.stringify(uscite));
-    triggerCloudSync({ uscite });
   }, [uscite]);
 
   useEffect(() => {
     localStorage.setItem('scuola_sostituzioni', JSON.stringify(sostituzioni));
-    triggerCloudSync({ sostituzioni });
   }, [sostituzioni]);
 
   useEffect(() => {
     localStorage.setItem('scuola_movimenti_debito', JSON.stringify(movimentiDebito));
-    triggerCloudSync({ movimentiDebito });
   }, [movimentiDebito]);
 
   // Aggiungi assenza registrando tutti gli ID collegati alla persona fisica
@@ -495,7 +489,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
     });
 
-    setAssenze(prev => [assenza, ...prev]);
+    setAssenze(prev => {
+      const updated = [assenza, ...prev];
+      triggerCloudSync({ assenze: updated });
+      return updated;
+    });
   };
 
   // Annulla Assenza (annulla tutti i record associati alla stessa persona per quella data/ora)
@@ -506,18 +504,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const collegatiIds = getDocentiCollegatiIds(assenza.docenteId, docenti);
 
     // Rimuovi eventuali sostituzioni collegate
-    setSostituzioni(prev => prev.filter(s => 
-      !(s.data === assenza.data && collegatiIds.includes(s.docenteAssenteId) && assenza.oreInteressate.includes(s.ora))
-    ));
+    setSostituzioni(prev => {
+      const updated = prev.filter(s => 
+        !(s.data === assenza.data && collegatiIds.includes(s.docenteAssenteId) && assenza.oreInteressate.includes(s.ora))
+      );
+      triggerCloudSync({ sostituzioni: updated });
+      return updated;
+    });
 
     // Se aveva generato debito, storna il debito
     if (assenza.oreDebitoGenerate && assenza.oreDebitoGenerate > 0 && !assenza.annullata) {
-      setDocenti(prev => prev.map(d => {
-        if (collegatiIds.includes(d.id)) {
-          return { ...d, oreDebitoPermesso: Math.max(0, (d.oreDebitoPermesso || 0) - assenza.oreDebitoGenerate!) };
-        }
-        return d;
-      }));
+      setDocenti(prev => {
+        const updated = prev.map(d => {
+          if (collegatiIds.includes(d.id)) {
+            return { ...d, oreDebitoPermesso: Math.max(0, (d.oreDebitoPermesso || 0) - assenza.oreDebitoGenerate!) };
+          }
+          return d;
+        });
+        triggerCloudSync({ docenti: updated });
+        return updated;
+      });
 
       const mov: MovimentoDebito = {
         id: 'mov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -526,23 +532,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         giorno: assenza.giorno,
         tipo: 'MODIFICA_MANUALE',
         deltaOre: assenza.oreDebitoGenerate,
-        descrizione: `Storno debito per annullamento assenza del ${assenza.data}`,
+        descrizione: `Storno ${assenza.oreDebitoGenerate}h debito per annullamento assenza del ${assenza.data}`,
         createdAt: new Date().toISOString()
       };
-      setMovimentiDebito(prev => [mov, ...prev]);
+      setMovimentiDebito(prev => {
+        const updated = [mov, ...prev];
+        triggerCloudSync({ movimentiDebito: updated });
+        return updated;
+      });
     }
 
-    // Marca come annullate tutte le assenze della stessa persona per quella data
-    setAssenze(prev => prev.map(a => {
-      if (a.data === assenza.data && collegatiIds.includes(a.docenteId)) {
-        return {
-          ...a,
-          annullata: true,
-          annullataIl: new Date().toISOString()
-        };
-      }
-      return a;
-    }));
+    setAssenze(prev => {
+      const updated = prev.map(a => {
+        if (a.id === id) {
+          return { ...a, annullata: true, annullataIl: new Date().toISOString() };
+        }
+        return a;
+      });
+      triggerCloudSync({ assenze: updated });
+      return updated;
+    });
   };
 
   // Elimina Definitivamente Assenza (cancella fisicamente la riga dallo storico e stornando debiti/sostituzioni)
@@ -713,23 +722,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const uscita = uscite.find(u => u.id === id);
     if (!uscita) return;
 
-    setAssenze(prev => prev.map(a => {
-      if (a.data === uscita.data && a.dettagliUscita?.uscitaId === id) {
-        return { ...a, annullata: true, annullataIl: new Date().toISOString() };
-      }
-      return a;
-    }));
+    setAssenze(prev => {
+      const updated = prev.map(a => {
+        if (a.data === uscita.data && a.dettagliUscita?.uscitaId === id) {
+          return { ...a, annullata: true, annullataIl: new Date().toISOString() };
+        }
+        return a;
+      });
+      triggerCloudSync({ assenze: updated });
+      return updated;
+    });
 
     const tuttiAccompagnatoriIds = uscita.docentiAccompagnatoriIds.flatMap(docId => getDocentiCollegatiIds(docId, docenti));
 
-    setSostituzioni(prev => prev.filter(s => 
-      !(s.data === uscita.data && tuttiAccompagnatoriIds.includes(s.docenteAssenteId) && uscita.ore.includes(s.ora))
-    ));
+    setSostituzioni(prev => {
+      const updated = prev.filter(s => 
+        !(s.data === uscita.data && tuttiAccompagnatoriIds.includes(s.docenteAssenteId) && uscita.ore.includes(s.ora))
+      );
+      triggerCloudSync({ sostituzioni: updated });
+      return updated;
+    });
 
-    setUscite(prev => prev.map(u => {
-      if (u.id === id) return { ...u, annullata: true, annullataIl: new Date().toISOString() };
-      return u;
-    }));
+    setUscite(prev => {
+      const updated = prev.map(u => {
+        if (u.id === id) return { ...u, annullata: true, annullataIl: new Date().toISOString() };
+        return u;
+      });
+      triggerCloudSync({ uscite: updated });
+      return updated;
+    });
   };
 
   const removeUscita = (id: string) => {
