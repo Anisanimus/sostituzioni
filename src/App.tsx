@@ -397,7 +397,7 @@ const MainApp: React.FC = () => {
             <div className="shrink-0 p-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
               <div className="leading-tight">
                 <span className="font-black text-xs text-slate-800 block">Sostituzioni Smart</span>
-                <span className="font-mono text-[10px] text-slate-500 font-bold">v0.0.4 (RC4)</span>
+                <span className="font-mono text-[10px] text-slate-500 font-bold">v0.0.5 (RC5)</span>
               </div>
               <span className="font-bold text-emerald-600 text-xs flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Operativo
