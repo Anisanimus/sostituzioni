@@ -965,6 +965,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.error('Errore durante il salvataggio in localStorage:', e);
     }
+
+    // 3. Sincronizzazione immediata su Cloud Firestore
+    triggerCloudSync({
+      docenti: nuoviDocenti,
+      orariDocenti: nuoviOrari,
+      assenze: [],
+      uscite: [],
+      sostituzioni: []
+    });
   };
 
   const aggiornaOrarioSenzaCancellareStorico = (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => {
@@ -991,6 +1000,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.error('Errore durante l\'aggiornamento orario in localStorage:', e);
     }
+
+    // Sincronizzazione immediata su Cloud Firestore
+    triggerCloudSync({
+      docenti: docentiAggiornati,
+      orariDocenti: nuoviOrari
+    });
   };
 
   const ripristinaBackupCompleto = (datiBackup: any) => {

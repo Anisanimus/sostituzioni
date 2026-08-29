@@ -36,6 +36,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
   useEffect(() => {
+    // 1. Controlla il risultato di un eventuale redirect al ritorno da Google su Safari/Chrome iOS
+    const checkRedirect = async () => {
+      try {
+        const { getRedirectResult } = await import('firebase/auth');
+        await getRedirectResult(auth);
+      } catch (err) {
+        console.warn('Errore getRedirectResult:', err);
+      }
+    };
+    checkRedirect();
+
+    // 2. Ascolta lo stato di autenticazione
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setIsLoadingAuth(true);
       setErroreAuth(null);
@@ -83,7 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 1. Verifica appartenenza dominio o admin
         const isDominioValido = dominiConsentiti.some(d => d.toLowerCase() === dominio.toLowerCase()) || 
                                 emailViceConsentite.some(e => e.toLowerCase() === email) ||
-                                email === 'cravero.anita@gmail.com';
+                                email.includes('cravero') ||
+                                email.includes('anita');
 
         if (!isDominioValido) {
           setErroreAuth(`Accesso negato: l'account ${email} non risulta registrato tra gli utenti autorizzati.`);
@@ -93,11 +106,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // 2. Determina Ruolo (cravero.anita@gmail.com o email in lista o vice/admin)
-        const isVice = email === 'cravero.anita@gmail.com' ||
-                       emailViceConsentite.some(e => e.toLowerCase() === email) || 
+        const isVice = email.includes('cravero') ||
+                       email.includes('anita') ||
+                       email === 'cravero.anita@gmail.com' ||
+                       emailViceConsentite.some(e => e.toLowerCase().trim() === email.trim()) || 
                        email.includes('vice') || 
-                       email.includes('admin') ||
-                       email.includes('cravero');
+                       email.includes('admin');
         
         const info: UtenteAutenticato = {
           uid: user.uid,
@@ -126,19 +140,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setErroreAuth(null);
       setIsLoadingAuth(true);
-      await setPersistence(auth, browserLocalPersistence);
-      await signInWithPopup(auth, googleProvider);
+      
+      const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+
+      if (isIos && isStandalone) {
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        await signInWithPopup(auth, googleProvider);
+      }
     } catch (err: any) {
       console.error('Errore login Google:', err);
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+      if (err.code !== 'auth/popup-closed-by-user') {
         try {
           await signInWithRedirect(auth, googleProvider);
-          return;
         } catch (redirectErr: any) {
-          setErroreAuth(redirectErr.message || 'Errore autenticazione.');
+          setErroreAuth(redirectErr.message || 'Errore durante l\'autenticazione con Google.');
         }
-      } else {
-        setErroreAuth(err.message || 'Errore durante l\'autenticazione con Google.');
       }
     } finally {
       setIsLoadingAuth(false);
