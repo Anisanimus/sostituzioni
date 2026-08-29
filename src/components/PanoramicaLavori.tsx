@@ -22,15 +22,17 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
   const nascondiWeekend = impostazioniScuola?.nascondiWeekendCalendario ?? true;
   const giorniFestivi = impostazioniScuola?.giorniFestivi || [];
 
-  // Calcola una finestra di giorni a partire da OGGI IN POI (con filtro weekend e festività personalizzabile)
-  const getFinestraGiorniScuola = (passati: number = 0, futuri: number = 30) => {
+  // Calcola una finestra dinamica di giorni scolastici attorno alla data selezionata (passati e futuri)
+  const getFinestraGiorniScuola = (centroData: string = selectedDate, passati: number = 30, futuri: number = 60) => {
     const dates: string[] = [];
+    const base = new Date(centroData || todayStr);
     
-    // Giorni passati (default 0 per partire da oggi in poi)
+    // Giorni passati
     if (passati > 0) {
-      let curPast = new Date();
+      let curPast = new Date(base);
       const tempPast: string[] = [];
-      while (tempPast.length < passati) {
+      let attempts = 0;
+      while (tempPast.length < passati && attempts < 150) {
         curPast.setDate(curPast.getDate() - 1);
         const iso = curPast.toISOString().split('T')[0];
         const isWeekend = curPast.getDay() === 0 || curPast.getDay() === 6;
@@ -38,20 +40,33 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
         if ((!nascondiWeekend || !isWeekend) && !isFestivo) {
           tempPast.unshift(iso);
         }
+        attempts++;
       }
       dates.push(...tempPast);
     }
 
-    // Oggi + Giorni futuri
-    let cur = new Date();
-    while (dates.length < passati + futuri) {
-      const iso = cur.toISOString().split('T')[0];
-      const isWeekend = cur.getDay() === 0 || cur.getDay() === 6;
+    // Giorno base (se scolastico, altrimenti cerca avanti)
+    const baseIso = base.toISOString().split('T')[0];
+    const isBaseWeekend = base.getDay() === 0 || base.getDay() === 6;
+    const isBaseFestivo = giorniFestivi.includes(baseIso);
+    if ((!nascondiWeekend || !isBaseWeekend) && !isBaseFestivo) {
+      dates.push(baseIso);
+    }
+
+    // Giorni futuri
+    let curFut = new Date(base);
+    let futCount = 0;
+    let attemptsFut = 0;
+    while (futCount < futuri && attemptsFut < 250) {
+      curFut.setDate(curFut.getDate() + 1);
+      const iso = curFut.toISOString().split('T')[0];
+      const isWeekend = curFut.getDay() === 0 || curFut.getDay() === 6;
       const isFestivo = giorniFestivi.includes(iso);
       if ((!nascondiWeekend || !isWeekend) && !isFestivo) {
         dates.push(iso);
+        futCount++;
       }
-      cur.setDate(cur.getDate() + 1);
+      attemptsFut++;
     }
     return dates;
   };
@@ -160,7 +175,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     };
   };
 
-  const datesFinestra = getFinestraGiorniScuola(0, 35);
+  const datesFinestra = getFinestraGiorniScuola(selectedDate, 20, 45);
   const statsGiorni = datesFinestra.map(d => getStatsGiorno(d));
 
   // Statistiche del giorno selezionato o di oggi
@@ -182,26 +197,25 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
         elActive.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       } else {
         // Primo a sinistra su desktop
-        elActive.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+        elActive.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       }
     }
-  }, [selectedDate, compresso]);
+  }, [selectedDate, compresso, vista]);
 
-  // Funzione helper per scorrere o cambiare giorno
+  // Funzione helper per scorrere o cambiare giorno (+1 / -1)
   const scrollCarousel = (offset: number) => {
-    // Sposta la data attiva al giorno di lezione precedente o successivo
     const delta = offset > 0 ? 1 : -1;
-    const curIndex = datesFinestra.indexOf(selectedDate);
-    if (curIndex !== -1) {
-      const nextIdx = curIndex + delta;
-      if (nextIdx >= 0 && nextIdx < datesFinestra.length) {
-        onSelectDate(datesFinestra[nextIdx]);
-      }
-    } else {
-      // Se non presente nella finestra, usa il salto matematico scolastico
-      const nuova = spostaGiornoScolastico(selectedDate, delta, nascondiWeekend, giorniFestivi);
-      onSelectDate(nuova);
-    }
+    const nuova = spostaGiornoScolastico(selectedDate, delta, nascondiWeekend, giorniFestivi);
+    onSelectDate(nuova);
+  };
+
+  // Funzione helper per slittare avanti / indietro di un MESE INTERO
+  const spostaMese = (deltaMese: number) => {
+    const d = new Date(selectedDate);
+    d.setMonth(d.getMonth() + deltaMese);
+    const iso = d.toISOString().split('T')[0];
+    const valida = spostaGiornoScolastico(iso, 0, nascondiWeekend, giorniFestivi);
+    onSelectDate(valida);
   };
 
   const handleSelectGiorno = (dataStr: string) => {
@@ -273,40 +287,61 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* PULSANTE ICONA CALENDARIO */}
-            <label className="relative p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-indigo-900 border border-slate-200 shadow-2xs flex items-center justify-center cursor-pointer transition" title="Scegli giorno dal calendario">
-              <Calendar className="w-4 h-4 text-indigo-700" />
-              <input 
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  if (e.target.value) onSelectDate(e.target.value);
-                }}
-                className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-              />
-            </label>
+            {/* PULSANTI DI SLITTAMENTO MESE / GIORNO */}
+            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200 shadow-2xs">
+              {/* SLITTAMENTO MESE PRECEDENTE */}
+              <button
+                type="button"
+                onClick={() => spostaMese(-1)}
+                className="px-1.5 py-1 rounded-lg hover:bg-slate-200 text-slate-700 text-[10px] font-black transition cursor-pointer flex items-center gap-0.5"
+                title="Mese precedente"
+              >
+                <span>« Mese</span>
+              </button>
 
-            {/* FRECCE SCORRIMENTO (ATTIVE IN VISTA SETTIMANA) */}
-            {vista === 'GIORNO' && (
-              <div className="flex items-center gap-0.5 bg-slate-50 p-0.5 rounded-lg border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => scrollCarousel(-220)}
-                  className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
-                  title="Scorri indietro"
-                >
-                  ❮
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollCarousel(220)}
-                  className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
-                  title="Scorri avanti"
-                >
-                  ❯
-                </button>
-              </div>
-            )}
+              {/* FRECCIA GIORNO PRECEDENTE */}
+              <button
+                type="button"
+                onClick={() => scrollCarousel(-1)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white text-slate-800 text-xs font-black transition cursor-pointer shadow-2xs"
+                title="Giorno precedente (salta weekend)"
+              >
+                ❮
+              </button>
+
+              {/* PULSANTE ICONA CALENDARIO */}
+              <label className="relative p-1 rounded-lg hover:bg-white text-indigo-700 shadow-2xs flex items-center justify-center cursor-pointer transition" title="Scegli giorno dal calendario">
+                <Calendar className="w-3.5 h-3.5" />
+                <input 
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    if (e.target.value) onSelectDate(e.target.value);
+                  }}
+                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                />
+              </label>
+
+              {/* FRECCIA GIORNO SUCCESSIVO */}
+              <button
+                type="button"
+                onClick={() => scrollCarousel(1)}
+                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white text-slate-800 text-xs font-black transition cursor-pointer shadow-2xs"
+                title="Giorno successivo (salta weekend)"
+              >
+                ❯
+              </button>
+
+              {/* SLITTAMENTO MESE SUCCESSIVO */}
+              <button
+                type="button"
+                onClick={() => spostaMese(1)}
+                className="px-1.5 py-1 rounded-lg hover:bg-slate-200 text-slate-700 text-[10px] font-black transition cursor-pointer flex items-center gap-0.5"
+                title="Mese successivo"
+              >
+                <span>Mese »</span>
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
