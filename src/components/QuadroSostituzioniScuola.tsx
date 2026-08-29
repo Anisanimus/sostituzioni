@@ -692,106 +692,129 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           </table>
         ) : (
           /* ======================================================= */
-          /* VISTA 2: TABELLA RAGGRUPPATA PER DOCENTE ASSENTE        */
+          /* VISTA 2: CARD MODERNE RAGGRUPPATE PER DOCENTE (UGUALE A VICEPRESIDENZA) */
           /* ======================================================= */
-          <table className="w-full text-left border-collapse table-fixed text-[11px] sm:text-xs">
-            <thead>
-              <tr className="bg-slate-900 text-white font-bold text-[10px] sm:text-[11px]">
-                <th className="py-2 px-1.5 sm:px-3 w-[15%] sm:w-16 text-center">Ora</th>
-                <th className="py-2 px-1.5 sm:px-3 w-[15%] sm:w-16 text-center">Classe</th>
-                <th className="py-2 px-1.5 sm:px-3 w-[55%] sm:w-auto">Docente Sostituto Assegnato</th>
-                <th className="py-2 px-1.5 sm:px-3 w-[15%] sm:w-28 text-center">Stato</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {gruppiPerDocente.map(([docenteNome, righeDocente]) => (
-                <React.Fragment key={docenteNome}>
-                  {/* INTESTAZIONE DOCENTE */}
-                  <tr className="bg-slate-800 text-white">
-                    <td colSpan={4} className="py-1.5 px-2.5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 font-black text-[11px] sm:text-xs tracking-wide">
-                          <span>👤 {docenteNome}</span>
-                          <span className="text-[10px] font-normal text-slate-300">
-                            ({righeDocente[0]?.materia})
-                          </span>
+          <div className="space-y-4 p-3 sm:p-4 bg-slate-100/50">
+            {gruppiPerDocente.map(([docenteNome, righeDocente], gIdx) => {
+              const totOreDoc = righeDocente.length;
+              const totCoperteDoc = righeDocente.filter(r => r.sostituti.length > 0 || r.nonSostituita).length;
+              const isTuttoCoperto = totCoperteDoc === totOreDoc;
+              const materiaDoc = righeDocente[0]?.materia || '';
+              const motivoAssenza = righeDocente[0]?.motivo || 'Assenza';
+
+              return (
+                <div key={gIdx} className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden">
+                  {/* Intestazione del Docente Assente con Avatar e Statistiche */}
+                  <div className="w-full bg-slate-900 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-black text-xs shadow-2xs">
+                        {docenteNome.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <strong className="text-sm font-black tracking-wide">{docenteNome}</strong>
+                          <span className="text-xs text-indigo-300 font-semibold">({materiaDoc})</span>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-300">
-                          {righeDocente.filter(r => r.sostituti.length > 0).length}/{righeDocente.length} coperte
+                        <span className="text-[11px] text-slate-300 block">
+                          Tipologia assenza: {motivoAssenza}
                         </span>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
 
-                  {/* RIGHE DEL DOCENTE */}
-                  {righeDocente.map((r, idx) => (
-                    <tr key={idx} className="hover:bg-indigo-50/30 transition-colors">
-                      {/* ORA */}
-                      <td className="py-2 px-1 sm:px-3 text-center align-middle">
-                        <span className="inline-block bg-slate-900 text-white font-black px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs">
-                          {r.ora}ª
-                        </span>
-                      </td>
+                    <div className="flex items-center gap-2">
+                      {/* ORE COPERTE CON BADGE AMBRA/VERDE */}
+                      <span className={`text-xs font-black px-3 py-1 rounded-xl shadow-2xs flex items-center gap-1.5 ${
+                        isTuttoCoperto 
+                          ? 'bg-emerald-500 text-white' 
+                          : 'bg-amber-500 text-white'
+                      }`}>
+                        <span>🕒 {totCoperteDoc}/{totOreDoc}</span>
+                        {isTuttoCoperto && <span>✓</span>}
+                      </span>
+                    </div>
+                  </div>
 
-                      {/* CLASSE */}
-                      <td className="py-2 px-1 sm:px-3 text-center align-middle">
-                        <span className="inline-block bg-indigo-50 border border-indigo-200 text-indigo-900 font-black px-1.5 sm:px-2 py-0.5 rounded text-[11px] sm:text-xs shadow-2xs">
-                          {r.classe}
-                        </span>
-                      </td>
+                  {/* Elenco delle ore del docente come Card Moderne */}
+                  <div className="p-3 bg-slate-50/40 space-y-2">
+                    {righeDocente.map((r, idx) => {
+                      const isAssegnata = r.sostituti.length > 0;
+                      const isNonSost = r.nonSostituita;
 
-                      {/* DOCENTE SOSTITUTO */}
-                      <td className="py-2 px-1.5 sm:px-3 align-middle">
-                        {r.sostituti.length > 0 ? (
-                          <div className="space-y-0.5">
-                            {r.sostituti.map(s => (
-                              <div key={s.id} className="leading-tight">
-                                <span className="font-black text-indigo-950 text-[11px] sm:text-xs block sm:inline truncate">
-                                  👤 {s.nomeSostituto}
+                      return (
+                        <div
+                          key={idx}
+                          className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition hover:border-indigo-300"
+                        >
+                          {/* Ora, Classe e Dettaglio Materia */}
+                          <div className="flex items-center gap-3">
+                            <span className="bg-slate-900 text-white font-black text-xs px-2.5 py-1.5 rounded-lg shrink-0 shadow-2xs">
+                              {r.ora}ª ORA
+                            </span>
+                            
+                            <div className={`w-11 h-9 rounded-lg flex items-center justify-center font-black text-sm border shadow-2xs shrink-0 ${
+                              isAssegnata ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-amber-50 text-amber-900 border-amber-300'
+                            }`}>
+                              {r.classe}
+                            </div>
+
+                            <div className="leading-tight">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-800 text-xs">
+                                  Classe {r.classe}
                                 </span>
-                                <span className="text-[9px] text-slate-500 font-normal hidden md:inline ml-1">
-                                  ({s.categoria})
+                                <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 uppercase">
+                                  {r.materia}
                                 </span>
                               </div>
-                            ))}
+                              <span className="text-[10px] text-slate-400">
+                                Fascia oraria regolare da orario docente
+                              </span>
+                            </div>
                           </div>
-                        ) : r.nonSostituita ? (
-                          <span className="inline-block bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 rounded border border-slate-200 text-[9px] sm:text-[10px]">
-                            Non Sost.
-                          </span>
-                        ) : (
-                          <span className="inline-block bg-amber-100 text-amber-900 font-black px-1.5 py-0.2 rounded border border-amber-300 text-[9px] sm:text-[10px] animate-pulse">
-                            In attesa
-                          </span>
-                        )}
-                      </td>
 
-                      {/* STATO FIRMA */}
-                      <td className="py-2 px-1 sm:px-3 text-center align-middle">
-                        {r.sostituti.length > 0 ? (
-                          r.sostituti.every(s => s.firmata) ? (
-                            <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[9px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded shadow-2xs">
-                              <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-600 shrink-0" />
-                              <span className="hidden sm:inline">Firmata</span>
-                              <span className="sm:hidden">OK</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[9px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded">
-                              <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-600 shrink-0" />
-                              <span className="hidden sm:inline">Assegnata</span>
-                              <span className="sm:hidden">Ass.</span>
-                            </span>
-                          )
-                        ) : (
-                          <span className="text-slate-400 text-[10px]">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
+                          {/* Stato / Docente Sostituto Assegnato */}
+                          <div className="flex items-center gap-2 self-end sm:self-center flex-wrap justify-end">
+                            {isAssegnata ? (
+                              <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 flex-wrap">
+                                {r.sostituti.map((sost) => (
+                                  <div
+                                    key={sost.id}
+                                    className="bg-emerald-50 text-emerald-900 border border-emerald-300 font-black text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-2xs"
+                                  >
+                                    <span>👤 {sost.nomeSostituto}</span>
+                                    <span className="text-[10px] text-emerald-700 font-semibold hidden md:inline">
+                                      ({sost.categoria})
+                                    </span>
+                                    {sost.firmata ? (
+                                      <span className="bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded ml-1">
+                                        ✓ Firmata
+                                      </span>
+                                    ) : (
+                                      <span className="bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded ml-1">
+                                        In attesa
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : isNonSost ? (
+                              <span className="bg-slate-100 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg border border-slate-300">
+                                🚫 Non Sostituire
+                              </span>
+                            ) : (
+                              <span className="bg-amber-50 text-amber-900 border border-amber-300 font-black text-xs px-3.5 py-1.5 rounded-lg shadow-2xs animate-pulse">
+                                In attesa di sostituto
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
