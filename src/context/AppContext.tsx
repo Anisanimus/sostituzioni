@@ -93,34 +93,24 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [docenti, setDocenti] = useState<Docente[]>(() => {
     try {
-      const savedVersion = localStorage.getItem('scuola_orario_version');
-      if (savedVersion === CURRENT_TIMETABLE_VERSION) {
-        const saved = localStorage.getItem('scuola_docenti');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
+      const saved = localStorage.getItem('scuola_docenti');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {}
-    return DOCENTI_PRECARICATI;
+    return [];
   });
 
   const [orariDocenti, setOrariDocenti] = useState<OrarioDocente[]>(() => {
     try {
-      const savedVersion = localStorage.getItem('scuola_orario_version');
-      if (savedVersion === CURRENT_TIMETABLE_VERSION) {
-        const saved = localStorage.getItem('scuola_orari');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const is9Cols = parsed[0]?.ore?.length === 45;
-            if (is9Cols) return parsed;
-          }
-        }
+      const saved = localStorage.getItem('scuola_orari');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {}
-    localStorage.setItem('scuola_orario_version', CURRENT_TIMETABLE_VERSION);
-    return ORARI_DOCENTI_PRECARICATI;
+    return [];
   });
 
   const [assenze, setAssenze] = useState<AssenzaDocente[]>(() => {
@@ -382,12 +372,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     localStorage.setItem('scuola_docenti', JSON.stringify(docenti));
-    triggerCloudSync({ docenti });
+    if (docenti && docenti.length > 0) {
+      triggerCloudSync({ docenti });
+    }
   }, [docenti]);
 
   useEffect(() => {
     localStorage.setItem('scuola_orari', JSON.stringify(orariDocenti));
-    triggerCloudSync({ orariDocenti });
+    if (orariDocenti && orariDocenti.length > 0) {
+      triggerCloudSync({ orariDocenti });
+    }
   }, [orariDocenti]);
 
   useEffect(() => {
