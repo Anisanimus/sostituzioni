@@ -141,8 +141,8 @@ const MainApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-300/80 text-slate-800 font-sans flex flex-col antialiased">
-      {/* HEADER COMPATTO CON BURGER MENU IN ALTO A SINISTRA */}
-      <header className="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+      {/* HEADER COMPATTO CON BURGER MENU E SUPPORTO IPHONE NOTCH / DYNAMIC ISLAND */}
+      <header className="bg-slate-900 text-white shadow-md sticky top-0 z-40 safe-top">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             {/* PULSANTE BURGER IN ALTO A SINISTRA (SOLO IN MODALITA VICEPRESIDENZA) */}
@@ -255,7 +255,7 @@ const MainApp: React.FC = () => {
           {/* PANNELLO LATERALE SLIDE-IN */}
           <div className="relative w-80 max-w-[85vw] bg-white h-full max-h-[100dvh] shadow-2xl z-10 flex flex-col justify-between animate-in slide-in-from-left duration-200 border-r border-slate-200 overflow-hidden">
             {/* HEADER SIDEBAR (FISSO IN ALTO) */}
-            <div className="shrink-0 bg-slate-900 text-white p-4 flex items-center justify-between border-b border-slate-800">
+            <div className="shrink-0 bg-slate-900 text-white p-4 safe-top flex items-center justify-between border-b border-slate-800">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-indigo-600 rounded-xl shadow-2xs">
                   <School className="w-5 h-5 text-white" />

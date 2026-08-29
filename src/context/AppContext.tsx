@@ -206,15 +206,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const isIncomingRemoteUpdate = React.useRef(false);
   const syncTimeoutRef = React.useRef<any>(null);
 
-  // 1. ASCOLTATORE IN TEMPO REALE DA CLOUD FIRESTORE
+  // 1. ASCOLTATORE IN TEMPO REALE DA CLOUD FIRESTORE (OTTIMIZZATO PER SAFARI & CHROME)
   useEffect(() => {
-    try {
-      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
-      const unsubscribe = onSnapshot(scuolaDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const cloudData = docSnap.data();
-          isIncomingRemoteUpdate.current = true;
+    let unsubscribe: (() => void) | undefined;
 
+    const setupRealtimeSync = async () => {
+      try {
+        const { getDoc } = await import('firebase/firestore');
+        const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+
+        // Fetch iniziale immediato compatibile con Safari iOS
+        const initialSnap = await getDoc(scuolaDocRef);
+        if (initialSnap.exists()) {
+          const cloudData = initialSnap.data();
           if (cloudData.docenti && Array.isArray(cloudData.docenti) && cloudData.docenti.length > 0) {
             setDocenti(cloudData.docenti);
           }
@@ -236,19 +240,109 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (cloudData.impostazioniScuola) {
             setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
           }
-
-          setTimeout(() => {
-            isIncomingRemoteUpdate.current = false;
-          }, 300);
+        } else {
+          // Se non esiste ancora su Firestore, salva i dati iniziali
+          await setDoc(scuolaDocRef, {
+            docenti: DOCENTI_PRECARICATI,
+            orariDocenti: ORARI_DOCENTI_PRECARICATI,
+            assenze: [],
+            uscite: [],
+            sostituzioni: [],
+            movimentiDebito: [],
+            impostazioniScuola: DEFAULT_IMPOSTAZIONI_SCUOLA,
+            ultimoAggiornamento: new Date().toISOString()
+          });
         }
-      }, (err) => {
-        console.warn('Connessione Firestore in background:', err);
-      });
 
-      return () => unsubscribe();
-    } catch (e) {
-      console.warn('Errore snapshot cloud:', e);
-    }
+        // Ascolto in tempo reale continuo (Live Listener)
+        unsubscribe = onSnapshot(scuolaDocRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const cloudData = docSnap.data();
+            isIncomingRemoteUpdate.current = true;
+
+            if (cloudData.docenti && Array.isArray(cloudData.docenti) && cloudData.docenti.length > 0) {
+              setDocenti(cloudData.docenti);
+            }
+            if (cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti) && cloudData.orariDocenti.length > 0) {
+              setOrariDocenti(cloudData.orariDocenti);
+            }
+            if (cloudData.assenze && Array.isArray(cloudData.assenze)) {
+              setAssenze(cloudData.assenze);
+            }
+            if (cloudData.uscite && Array.isArray(cloudData.uscite)) {
+              setUscite(cloudData.uscite);
+            }
+            // Controlla se sono arrivate nuove sostituzioni pubblicate o annullate e invia notifica push di sistema
+            if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
+              if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                const vecchiePubblicate = (sostituzioni || []).filter(s => s.pubblicata);
+                const vecchiePubblicateIds = vecchiePubblicate.map(s => s.id);
+                
+                // 1. Nuove sostituzioni pubblicate
+                const nuoveAppenaPubblicate = cloudData.sostituzioni.filter(
+                  (s: SostituzioneAssegnata) => s.pubblicata && !vecchiePubblicateIds.includes(s.id) && s.docenteSostitutoId
+                );
+
+                if (nuoveAppenaPubblicate.length > 0) {
+                  nuoveAppenaPubblicate.forEach((s: SostituzioneAssegnata) => {
+                    const docSostituto = (cloudData.docenti || docenti).find((d: any) => d.id === s.docenteSostitutoId);
+                    try {
+                      new Notification('🔔 Nuova Sostituzione Assegnata!', {
+                        body: `Docente ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
+                        icon: '/favicon.svg'
+                      });
+                    } catch (err) {
+                      console.warn('Errore trigger push notification:', err);
+                    }
+                  });
+                }
+
+                // 2. Sostituzioni annullate o rimosse dalla Vicepresidenza
+                const nuoveIds = cloudData.sostituzioni.map((s: SostituzioneAssegnata) => s.id);
+                const annullate = vecchiePubblicate.filter(s => !nuoveIds.includes(s.id) && s.docenteSostitutoId);
+
+                if (annullate.length > 0) {
+                  annullate.forEach((s: SostituzioneAssegnata) => {
+                    const docSostituto = (cloudData.docenti || docenti).find((d: any) => d.id === s.docenteSostitutoId);
+                    try {
+                      new Notification('⚠️ Supplenza Annullata', {
+                        body: `Docente ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
+                        icon: '/favicon.svg'
+                      });
+                    } catch (err) {
+                      console.warn('Errore trigger push notification annullamento:', err);
+                    }
+                  });
+                }
+              }
+              setSostituzioni(cloudData.sostituzioni);
+            }
+
+            if (cloudData.movimentiDebito && Array.isArray(cloudData.movimentiDebito)) {
+              setMovimentiDebito(cloudData.movimentiDebito);
+            }
+            if (cloudData.impostazioniScuola) {
+              setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
+            }
+
+            setTimeout(() => {
+              isIncomingRemoteUpdate.current = false;
+            }, 300);
+          }
+        }, (err) => {
+          console.warn('Connessione Firestore in background:', err);
+        });
+
+      } catch (e) {
+        console.warn('Errore inizializzazione realtime cloud:', e);
+      }
+    };
+
+    setupRealtimeSync();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const triggerCloudSync = (override?: any) => {

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth, googleProvider, db } from '../firebase';
-import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, User, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { UtenteAutenticato, IstitutoScolastico, Docente } from '../types';
 
@@ -45,19 +45,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const email = user.email.toLowerCase();
         const dominio = email.split('@')[1] || '';
 
-        // Recupera impostazioni scuola salvate localmente o default
+        // Recupera impostazioni scuola da Firestore o savedScuola
         let dominiConsentiti = SCUOLA_DEFAULT.dominiAutorizzati;
-        let emailViceConsentite = SCUOLA_DEFAULT.emailVicepresidenza;
+        let emailViceConsentite = [...SCUOLA_DEFAULT.emailVicepresidenza, 'cravero.anita@gmail.com'];
+
+        try {
+          const { getDoc, doc } = await import('firebase/firestore');
+          const snap = await getDoc(doc(db, 'scuole_dati', 'IC_ANNA_FRANK'));
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data.impostazioniScuola?.dominiAutorizzatiGoogle?.length > 0) {
+              dominiConsentiti = data.impostazioniScuola.dominiAutorizzatiGoogle;
+            }
+            if (data.impostazioniScuola?.emailVicepresidenzaGoogle?.length > 0) {
+              emailViceConsentite = [...emailViceConsentite, ...data.impostazioniScuola.emailVicepresidenzaGoogle];
+            }
+          }
+        } catch (e) {
+          console.warn('Fallback lettura impostazioni cloud:', e);
+        }
 
         try {
           const savedScuola = localStorage.getItem('scuola_impostazioni_generali');
           if (savedScuola) {
             const parsed = JSON.parse(savedScuola);
             if (parsed.dominiAutorizzatiGoogle && parsed.dominiAutorizzatiGoogle.length > 0) {
-              dominiConsentiti = parsed.dominiAutorizzatiGoogle;
+              dominiConsentiti = [...dominiConsentiti, ...parsed.dominiAutorizzatiGoogle];
             }
             if (parsed.emailVicepresidenzaGoogle && parsed.emailVicepresidenzaGoogle.length > 0) {
-              emailViceConsentite = parsed.emailVicepresidenzaGoogle;
+              emailViceConsentite = [...emailViceConsentite, ...parsed.emailVicepresidenzaGoogle];
             }
           }
         } catch (e) {
@@ -66,17 +82,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // 1. Verifica appartenenza dominio o admin
         const isDominioValido = dominiConsentiti.some(d => d.toLowerCase() === dominio.toLowerCase()) || 
-                                emailViceConsentite.some(e => e.toLowerCase() === email);
+                                emailViceConsentite.some(e => e.toLowerCase() === email) ||
+                                email === 'cravero.anita@gmail.com';
 
         if (!isDominioValido) {
-          setErroreAuth(`Accesso negato: il dominio @${dominio} non risulta registrato tra le scuole autorizzate.`);
+          setErroreAuth(`Accesso negato: l'account ${email} non risulta registrato tra gli utenti autorizzati.`);
           setUtenteInfo(null);
           setIsLoadingAuth(false);
           return;
         }
 
-        // 2. Determina Ruolo
-        const isVice = emailViceConsentite.some(e => e.toLowerCase() === email) || email.includes('vice') || email.includes('admin');
+        // 2. Determina Ruolo (cravero.anita@gmail.com o email in lista o vice/admin)
+        const isVice = email === 'cravero.anita@gmail.com' ||
+                       emailViceConsentite.some(e => e.toLowerCase() === email) || 
+                       email.includes('vice') || 
+                       email.includes('admin') ||
+                       email.includes('cravero');
         
         const info: UtenteAutenticato = {
           uid: user.uid,
@@ -105,10 +126,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setErroreAuth(null);
       setIsLoadingAuth(true);
+      await setPersistence(auth, browserLocalPersistence);
       await signInWithPopup(auth, googleProvider);
     } catch (err: any) {
       console.error('Errore login Google:', err);
-      if (err.code !== 'auth/popup-closed-by-user') {
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (redirectErr: any) {
+          setErroreAuth(redirectErr.message || 'Errore autenticazione.');
+        }
+      } else {
         setErroreAuth(err.message || 'Errore durante l\'autenticazione con Google.');
       }
     } finally {
