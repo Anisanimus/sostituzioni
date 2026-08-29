@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, LayoutDashboard } from 'lucide-react';
-import { getDocentiCollegatiIds } from '../utils/docentiHelper';
+import { getDocentiCollegatiIds, getDocentiUnici } from '../utils/docentiHelper';
 import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
 
 export const PortaleDocente: React.FC = () => {
@@ -66,13 +66,13 @@ export const PortaleDocente: React.FC = () => {
             <select
               value={selectedDocenteId}
               onChange={(e) => setSelectedDocenteId(e.target.value)}
-              className="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white font-semibold"
+              className="w-full border border-slate-300 rounded-xl p-3 text-sm bg-white font-semibold shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
               required
             >
               <option value="">-- Scegli Docente --</option>
-              {docenti.map(d => (
+              {getDocentiUnici(docenti).map(d => (
                 <option key={d.id} value={d.id}>
-                  {d.nome} ({d.materia})
+                  {d.nome} ({d.materie.join(', ')})
                 </option>
               ))}
             </select>

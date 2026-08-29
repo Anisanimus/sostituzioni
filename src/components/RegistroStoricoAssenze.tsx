@@ -101,14 +101,12 @@ export const RegistroStoricoAssenze: React.FC = () => {
   // Lista docenti con debito > 0 deduplicati
   const docentiConDebitoList = getDocentiUnici(docenti.filter(d => (d.oreDebitoPermesso || 0) > 0));
 
-  // Docenti per il menu a tendina recuperi
-  const docentiPerSelectDebito = docenti
-    .filter(d => !d.isEducatore)
+  // Docenti per il menu a tendina recuperi (deduplicati per persona fisica e ordinati alfabeticamente)
+  const docentiPerSelectDebito = getDocentiUnici(docenti)
     .filter(d => {
       if (soloConDebito) return (d.oreDebitoPermesso || 0) > 0;
       return true;
-    })
-    .sort((a, b) => a.nome.localeCompare(b.nome));
+    });
 
   // Statistiche rapide
   const totDocentiConDebito = docentiConDebitoList.length;
@@ -552,7 +550,7 @@ export const RegistroStoricoAssenze: React.FC = () => {
                   <option value="">-- Scegli Docente --</option>
                   {docentiPerSelectDebito.map(d => (
                     <option key={d.id} value={d.id}>
-                      {d.nome} ({d.materia}{d.isSostegno ? ' - Sost.' : ''}) { (d.oreDebitoPermesso || 0) > 0 ? `[-${d.oreDebitoPermesso}h]` : '' }
+                      {d.nome} ({d.materie.join(', ')}{d.isSostegno ? ' - Sost.' : ''}) { (d.oreDebitoPermesso || 0) > 0 ? `[-${d.oreDebitoPermesso}h]` : '' }
                     </option>
                   ))}
                 </select>
