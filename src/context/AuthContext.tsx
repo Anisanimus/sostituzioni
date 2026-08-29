@@ -57,25 +57,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const email = user.email.toLowerCase();
         const dominio = email.split('@')[1] || '';
 
-        // Recupera impostazioni scuola da Firestore o savedScuola
+        // Recupera impostazioni scuola
         let dominiConsentiti = SCUOLA_DEFAULT.dominiAutorizzati;
         let emailViceConsentite = [...SCUOLA_DEFAULT.emailVicepresidenza, 'cravero.anita@gmail.com'];
-
-        try {
-          const { getDoc, doc } = await import('firebase/firestore');
-          const snap = await getDoc(doc(db, 'scuole_dati', 'IC_ANNA_FRANK'));
-          if (snap.exists()) {
-            const data = snap.data();
-            if (data.impostazioniScuola?.dominiAutorizzatiGoogle?.length > 0) {
-              dominiConsentiti = data.impostazioniScuola.dominiAutorizzatiGoogle;
-            }
-            if (data.impostazioniScuola?.emailVicepresidenzaGoogle?.length > 0) {
-              emailViceConsentite = [...emailViceConsentite, ...data.impostazioniScuola.emailVicepresidenzaGoogle];
-            }
-          }
-        } catch (e) {
-          console.warn('Fallback lettura impostazioni cloud:', e);
-        }
 
         try {
           const savedScuola = localStorage.getItem('scuola_impostazioni_generali');
