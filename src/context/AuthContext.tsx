@@ -36,15 +36,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false);
 
   useEffect(() => {
-    // 1. Gestione ritorno da Google Redirect (indispensabile per Standalone Home Screen iOS PWA)
-    getRedirectResult(auth).catch((err) => {
-      console.warn('Redirect result info:', err);
-    });
+    let isMounted = true;
+
+    // Timeout di sicurezza massimo 2.5s per evitare spinner infinito
+    const timeoutSafety = setTimeout(() => {
+      if (isMounted) {
+        setIsLoadingAuth(false);
+      }
+    }, 2500);
+
+    // 1. Gestione ritorno da Google Redirect
+    getRedirectResult(auth)
+      .then((res) => {
+        if (res?.user && isMounted) {
+          setCurrentUser(res.user);
+        }
+      })
+      .catch((err) => {
+        console.warn('Redirect result info:', err);
+      });
 
     // 2. Ascolta lo stato di autenticazione
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsLoadingAuth(true);
-      setErroreAuth(null);
+      clearTimeout(timeoutSafety);
+      if (!isMounted) return;
 
       if (user && user.email) {
         setCurrentUser(user);
@@ -111,32 +126,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoadingAuth(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutSafety);
+      unsubscribe();
+    };
   }, [isDemoMode]);
 
   const loginConGoogle = async () => {
     try {
       setErroreAuth(null);
       setIsLoadingAuth(true);
-      
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                       (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
-
-      if (isMobile) {
-        // Su mobile (Chrome iPhone, Safari, Android) il popup viene bloccato dal browser: usiamo sempre redirect pulito
-        await signInWithRedirect(auth, googleProvider);
-      } else {
-        // Su Desktop usiamo il comodo popup
-        await signInWithPopup(auth, googleProvider);
-      }
+      await signInWithPopup(auth, googleProvider);
     } catch (err: any) {
-      console.error('Errore login Google:', err);
-      if (err.code !== 'auth/popup-closed-by-user') {
+      console.error('Errore login Google Popup:', err);
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
         try {
           await signInWithRedirect(auth, googleProvider);
+          return;
         } catch (redirectErr: any) {
           setErroreAuth(redirectErr.message || 'Errore durante l\'autenticazione con Google.');
         }
+      } else {
+        setErroreAuth(err.message || 'Errore durante l\'autenticazione.');
       }
     } finally {
       setIsLoadingAuth(false);
