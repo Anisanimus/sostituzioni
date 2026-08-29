@@ -8,7 +8,7 @@ import {
   Printer, LayoutGrid, List, MessageSquare, AlertTriangle, Accessibility, Lock,
   UserCheck, UserX, UserMinus
 } from 'lucide-react';
-import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido } from '../utils/docentiHelper';
+import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente } from '../utils/docentiHelper';
 
 export const TabelloneSostituzioni: React.FC<{ 
   selectedDate: string; 
@@ -1625,9 +1625,64 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                 <button
                   disabled={!docenteManualeSelezionatoId}
                   onClick={() => {
-                    if (docenteManualeSelezionatoId) {
-                      onAssegna(docenteManualeSelezionatoId, 'STRAORDINARIO_D', false, false);
+                    if (!docenteManualeSelezionatoId) return;
+
+                    const collegatiIds = getDocentiCollegatiIds(docenteManualeSelezionatoId, docenti);
+                    const docSel = docenti.find(d => d.id === docenteManualeSelezionatoId);
+                    const nomeDocSel = docSel ? getBaseNomeDocente(docSel.nome) : 'Il docente';
+
+                    // 1. Controllo se il docente è assente in questa giornata/ora
+                    const assenzaDoc = assenze.find(a => 
+                      a.data === selectedDate && 
+                      !a.annullata && 
+                      collegatiIds.includes(a.docenteId) && 
+                      a.oreInteressate.includes(oraScoperta.ora)
+                    );
+
+                    // 2. Controllo se il docente è già stato assegnato a un'altra classe nella stessa ora
+                    const sostituzioneEsistente = sostituzioni.find(s => 
+                      s.data === selectedDate && 
+                      s.ora === oraScoperta.ora && 
+                      s.categoria !== 'NON_SOSTITUIRE' && 
+                      collegatiIds.includes(s.docenteSostitutoId) &&
+                      !(s.classe === oraScoperta.classe && s.docenteAssenteId === oraScoperta.docenteAssente.id)
+                    );
+
+                    // 3. Controllo se il docente è già impegnato in orario curricolare in un'altra classe
+                    const orarioUnificato = getOrarioUnificatoDocente(docenteManualeSelezionatoId, docenti, orariDocenti);
+                    const cellaCurricolare = orarioUnificato.find(c => 
+                      c.giorno === selectedGiorno && 
+                      c.ora === oraScoperta.ora && 
+                      c.valore !== '' && 
+                      c.valore !== 'D' && 
+                      c.valore !== 'P'
+                    );
+
+                    const motiviConflitto: string[] = [];
+
+                    if (assenzaDoc) {
+                      motiviConflitto.push(`🔴 È SEGNATO COME ASSENTE (${assenzaDoc.motivo}) alla ${oraScoperta.ora}ª ora.`);
                     }
+
+                    if (sostituzioneEsistente) {
+                      motiviConflitto.push(`⚠️ È GIÀ STATO ASSEGNATO COME SOSTITUTO in classe ${sostituzioneEsistente.classe} alla ${oraScoperta.ora}ª ora.`);
+                    }
+
+                    if (cellaCurricolare) {
+                      motiviConflitto.push(`📚 Ha già lezione curricolare in classe ${cellaCurricolare.valore} alla ${oraScoperta.ora}ª ora.`);
+                    }
+
+                    if (motiviConflitto.length > 0) {
+                      const messaggio = `ATTENZIONE: Conflitto per ${nomeDocSel} alla ${oraScoperta.ora}ª ora:\n\n` + 
+                        motiviConflitto.join('\n') + 
+                        `\n\nVuoi procedere comunque e forzare l'assegnazione?`;
+
+                      if (!window.confirm(messaggio)) {
+                        return;
+                      }
+                    }
+
+                    onAssegna(docenteManualeSelezionatoId, 'STRAORDINARIO_D', false, false);
                   }}
                   className={`px-4 py-2 rounded-lg font-bold text-xs shrink-0 transition shadow-xs flex items-center justify-center gap-1 ${
                     docenteManualeSelezionatoId
