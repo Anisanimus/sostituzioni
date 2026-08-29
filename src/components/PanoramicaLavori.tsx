@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { getBaseNomeDocente, getDocentiCollegatiIds, spostaGiornoScolastico, getPrimoGiornoScolasticoValido } from '../utils/docentiHelper';
+import { getBaseNomeDocente, getDocentiCollegatiIds, spostaGiornoScolastico, getPrimoGiornoScolasticoValido, formatDataItaliana } from '../utils/docentiHelper';
 import { 
   ChevronDown, X, BarChart3, TrendingUp, Calendar 
 } from 'lucide-react';
@@ -17,16 +17,45 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
   const [visibile, setVisibile] = useState(true);
   const [compresso, setCompresso] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const [vista, setVista] = useState<'GIORNO' | 'SETTIMANA'>('GIORNO');
+  const [offsetMeseBlocco, setOffsetMeseBlocco] = useState(0); // 0 = blocco corrente 30gg, -1 = 30gg prima, +1 = 30gg dopo
 
   const todayStr = new Date().toISOString().split('T')[0];
   const nascondiWeekend = impostazioniScuola?.nascondiWeekendCalendario ?? true;
   const giorniFestivi = impostazioniScuola?.giorniFestivi || [];
 
-  // Calcola la finestra di max 30 giorni scolastici futuri a partire dal primo giorno utile (oggi o Lunedì se weekend)
-  const getFinestraGiorniScuola = (maxGiorni: number = 30) => {
-    const dates: string[] = [];
+  // Calcola una finestra di 30 giorni scolastici futuri/passati in base al blocco selezionato
+  const getFinestraGiorniScuola = (bloccoOffset: number = 0, maxGiorni: number = 30) => {
     const primoGiornoUtile = getPrimoGiornoScolasticoValido(todayStr, nascondiWeekend, giorniFestivi);
     let cur = new Date(primoGiornoUtile);
+
+    // Se bloccoOffset !== 0, calcola l'inizio del blocco
+    if (bloccoOffset > 0) {
+      let avanzati = 0;
+      while (avanzati < bloccoOffset * maxGiorni) {
+        cur.setDate(cur.getDate() + 1);
+        const iso = cur.toISOString().split('T')[0];
+        const day = cur.getDay();
+        const isWeekend = day === 0 || day === 6;
+        const isFestivo = giorniFestivi.includes(iso);
+        if ((!nascondiWeekend || !isWeekend) && !isFestivo) {
+          avanzati++;
+        }
+      }
+    } else if (bloccoOffset < 0) {
+      let indietreggiati = 0;
+      while (indietreggiati < Math.abs(bloccoOffset) * maxGiorni) {
+        cur.setDate(cur.getDate() - 1);
+        const iso = cur.toISOString().split('T')[0];
+        const day = cur.getDay();
+        const isWeekend = day === 0 || day === 6;
+        const isFestivo = giorniFestivi.includes(iso);
+        if ((!nascondiWeekend || !isWeekend) && !isFestivo) {
+          indietreggiati++;
+        }
+      }
+    }
+
+    const dates: string[] = [];
     let count = 0;
     let attempts = 0;
 
@@ -149,7 +178,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     };
   };
 
-  const datesFinestra = getFinestraGiorniScuola(30);
+  const datesFinestra = getFinestraGiorniScuola(vista === 'SETTIMANA' ? offsetMeseBlocco : 0, 30);
   const statsGiorni = datesFinestra.map(d => getStatsGiorno(d));
 
   // Statistiche del giorno selezionato o di oggi
@@ -520,77 +549,110 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
               </button>
             </div>
             ) : (
-              /* VISTA MESE DESKTOP: GRIGLIA MENSILE COMPLETA A MATRICE RICCA */
-              <div className="space-y-3 p-2 bg-slate-50/60 rounded-2xl border border-slate-200">
-                <div className="flex items-center justify-between px-1">
-                  <span className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
-                    <span>🗓️ Panoramica Mensile Completa ({statsGiorni.length} Giorni Scolastici)</span>
-                  </span>
-                  <span className="text-[11px] text-slate-500 font-medium">
-                    Clicca su un giorno per aprirlo nel tabellone operativo
-                  </span>
-                </div>
+              /* VISTA MESE DESKTOP: GRIGLIA MENSILE COMPLETA CON FRECCE LATERALI */
+              <div className="relative group/month">
+                {/* FRECCIA SINISTRA (30 GIORNI PRECEDENTI) */}
+                <button
+                  type="button"
+                  onClick={() => setOffsetMeseBlocco(prev => prev - 1)}
+                  className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white text-slate-800 shadow-md border border-slate-200 flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 transition cursor-pointer"
+                  title="30 giorni scolastici precedenti"
+                >
+                  ❮
+                </button>
 
-                {/* GRIGLIA DESKTOP DEI GIORNI */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 max-h-[380px] overflow-y-auto pr-1">
-                  {statsGiorni.map((s) => {
-                    const isCompletato = s.totOreScoperte > 0 && s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte;
-                    const perc = s.totOreScoperte > 0 ? Math.round((s.totCoperte / s.totOreScoperte) * 100) : 100;
-                    
-                    const badgeGravita = 
-                      s.totDocentiAssenti === 0 
-                        ? { label: 'Tranquilla', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' }
-                        : s.gravita === 'COMPLICATO'
-                          ? { label: `Complicato (${s.totDocentiAssenti})`, color: 'bg-rose-600 text-white font-black animate-pulse', icon: '🔥' }
-                          : s.gravita === 'DISCRETA'
-                            ? { label: `Discreta (${s.totDocentiAssenti})`, color: 'bg-amber-100 text-amber-950 border-amber-300 font-black', icon: '⚡' }
-                            : { label: `Semplice (${s.totDocentiAssenti})`, color: 'bg-sky-50 text-sky-900 border-sky-200 font-bold', icon: 'ℹ️' };
+                <div className="space-y-3 p-3 bg-slate-50/60 rounded-2xl border border-slate-200">
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">
+                        <span>🗓️ Prospetto 30 Giorni Scolastici</span>
+                      </span>
+                      {offsetMeseBlocco !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setOffsetMeseBlocco(0)}
+                          className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-md hover:bg-indigo-200 transition cursor-pointer"
+                        >
+                          Torna a Oggi
+                        </button>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      Dal {formatDataItaliana(datesFinestra[0])} al {formatDataItaliana(datesFinestra[datesFinestra.length - 1])}
+                    </span>
+                  </div>
 
-                    return (
-                      <button
-                        key={`desk_m_${s.dataStr}`}
-                        type="button"
-                        onClick={() => onSelectDate(s.dataStr)}
-                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1.5 ${
-                          s.isSelezionata
-                            ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-2 ring-indigo-200 shadow-sm'
-                            : isCompletato
-                              ? 'bg-white border-emerald-200 hover:border-emerald-300'
-                              : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[11px] font-black text-slate-800">
-                              {s.giornoNome.slice(0, 3)} {new Date(s.dataStr).getDate()} {new Date(s.dataStr).toLocaleDateString('it-IT', { month: 'short' })}
+                  {/* GRIGLIA DESKTOP DEI GIORNI */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 max-h-[380px] overflow-y-auto pr-1">
+                    {statsGiorni.map((s) => {
+                      const isCompletato = s.totOreScoperte > 0 && s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte;
+                      const perc = s.totOreScoperte > 0 ? Math.round((s.totCoperte / s.totOreScoperte) * 100) : 100;
+                      
+                      const badgeGravita = 
+                        s.totDocentiAssenti === 0 
+                          ? { label: 'Tranquilla', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' }
+                          : s.gravita === 'COMPLICATO'
+                            ? { label: `Complicato (${s.totDocentiAssenti})`, color: 'bg-rose-600 text-white font-black animate-pulse', icon: '🔥' }
+                            : s.gravita === 'DISCRETA'
+                              ? { label: `Discreta (${s.totDocentiAssenti})`, color: 'bg-amber-100 text-amber-950 border-amber-300 font-black', icon: '⚡' }
+                              : { label: `Semplice (${s.totDocentiAssenti})`, color: 'bg-sky-50 text-sky-900 border-sky-200 font-bold', icon: 'ℹ️' };
+
+                      return (
+                        <button
+                          key={`desk_m_${s.dataStr}`}
+                          type="button"
+                          onClick={() => onSelectDate(s.dataStr)}
+                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1.5 ${
+                            s.isSelezionata
+                              ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-2 ring-indigo-200 shadow-sm'
+                              : isCompletato
+                                ? 'bg-white border-emerald-200 hover:border-emerald-300'
+                                : 'bg-white border-slate-200 hover:border-slate-300 shadow-2xs'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[11px] font-black text-slate-800">
+                                {s.giornoNome.slice(0, 3)} {new Date(s.dataStr).getDate()} {new Date(s.dataStr).toLocaleDateString('it-IT', { month: 'short' })}
+                              </span>
+                              {s.isOggi && <span className="bg-indigo-600 text-white font-black text-[8px] px-1 py-0.2 rounded">OGGI</span>}
+                            </div>
+                            <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${badgeGravita.color}`}>
+                              {badgeGravita.icon}
                             </span>
-                            {s.isOggi && <span className="bg-indigo-600 text-white font-black text-[8px] px-1 py-0.2 rounded">OGGI</span>}
                           </div>
-                          <span className={`text-[9px] font-black px-1.5 py-0.2 rounded border ${badgeGravita.color}`}>
-                            {badgeGravita.icon}
-                          </span>
-                        </div>
 
-                        {s.totOreScoperte > 0 ? (
-                          <div className="space-y-1 w-full">
-                            <div className="flex items-center justify-between text-[10px] font-bold">
-                              <span className="text-slate-700">🕒 {s.totCoperte}/{s.totOreScoperte}</span>
-                              <span className="text-slate-500">✍️ {s.totFirmate}/{s.totCoperte}</span>
+                          {s.totOreScoperte > 0 ? (
+                            <div className="space-y-1 w-full">
+                              <div className="flex items-center justify-between text-[10px] font-bold">
+                                <span className="text-slate-700">🕒 {s.totCoperte}/{s.totOreScoperte}</span>
+                                <span className="text-slate-500">✍️ {s.totFirmate}/{s.totCoperte}</span>
+                              </div>
+                              <div className="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                                <div className={`${isCompletato ? 'bg-emerald-600' : 'bg-amber-500'} h-1 rounded-full`} style={{ width: `${perc}%` }} />
+                              </div>
                             </div>
-                            <div className="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
-                              <div className={`${isCompletato ? 'bg-emerald-600' : 'bg-amber-500'} h-1 rounded-full`} style={{ width: `${perc}%` }} />
+                          ) : (
+                            <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                              <span className="text-emerald-700 font-bold">🕒 0/0 ✓</span>
+                              <span className="text-[9px]">Nessuna assenza</span>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
-                            <span className="text-emerald-700 font-bold">🕒 0/0 ✓</span>
-                            <span className="text-[9px]">Nessuna assenza</span>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
+                {/* FRECCIA DESTRA (30 GIORNI SUCCESSIVI) */}
+                <button
+                  type="button"
+                  onClick={() => setOffsetMeseBlocco(prev => prev + 1)}
+                  className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white text-slate-800 shadow-md border border-slate-200 flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 transition cursor-pointer"
+                  title="30 giorni scolastici successivi"
+                >
+                  ❯
+                </button>
               </div>
             )}
           </div>
@@ -621,43 +683,76 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
               </button>
             </div>
 
-            {/* SE VISTA MESE SU MOBILE: GRIGLIA MENSILE COMPLETA A 30 GIORNI */}
+            {/* SE VISTA MESE SU MOBILE: GRIGLIA MENSILE COMPLETA A 30 GIORNI CON FRECCE LATERALI */}
             {vista === 'SETTIMANA' ? (
-              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2.5">
-                <div className="flex items-center justify-between text-xs font-black text-slate-800 uppercase px-1 border-b border-slate-200 pb-1.5">
-                  <span>🗓️ Prospetto 30 Giorni Futuri</span>
-                  <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
-                    {statsGiorni.length} Giorni Scolastici
-                  </span>
-                </div>
-                <div className="grid grid-cols-5 gap-1.5 text-center">
-                  {statsGiorni.map((d) => {
-                    const isSel = d.isSelezionata;
-                    const isAllOk = d.totOreScoperte > 0 && d.totCoperte === d.totOreScoperte && d.totFirmate === d.totOreScoperte;
-                    const bgClass = d.totOreScoperte === 0
-                      ? 'bg-white text-slate-700 border border-slate-200 shadow-2xs hover:bg-slate-100'
-                      : isAllOk
-                        ? 'bg-emerald-600 text-white font-black shadow-2xs hover:bg-emerald-700'
-                        : d.gravita === 'COMPLICATO'
-                          ? 'bg-rose-500 text-white font-black hover:bg-rose-600'
-                          : 'bg-amber-100 text-amber-950 border border-amber-300 font-bold hover:bg-amber-200';
+              <div className="relative group/mobmonth">
+                {/* FRECCIA SINISTRA MOBILE */}
+                <button
+                  type="button"
+                  onClick={() => setOffsetMeseBlocco(prev => prev - 1)}
+                  className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white text-slate-800 shadow-md border border-slate-200 flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 text-xs font-black transition cursor-pointer"
+                  title="30 giorni precedenti"
+                >
+                  ❮
+                </button>
 
-                    return (
-                      <button
-                        key={`mini_${d.dataStr}`}
-                        type="button"
-                        onClick={() => handleSelectGiorno(d.dataStr)}
-                        className={`p-2 rounded-xl ${bgClass} text-xs leading-tight flex flex-col items-center justify-center transition cursor-pointer ${
-                          isSel ? 'ring-2 ring-indigo-600 ring-offset-2 scale-105 font-black shadow-md' : ''
-                        }`}
-                      >
-                        <span className="text-[9px] font-bold uppercase opacity-75">{d.giornoNome.slice(0, 3)}</span>
-                        <span className="font-black text-sm my-0.5">{new Date(d.dataStr).getDate()}</span>
-                        <span className="text-[9px] font-mono opacity-90">{d.totOreScoperte > 0 ? `${d.totCoperte}/${d.totOreScoperte}` : '✓'}</span>
-                      </button>
-                    );
-                  })}
+                <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs font-black text-slate-800 uppercase px-1 border-b border-slate-200 pb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span>🗓️ 30 Giorni</span>
+                      {offsetMeseBlocco !== 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setOffsetMeseBlocco(0)}
+                          className="text-[9px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.2 rounded"
+                        >
+                          Oggi
+                        </button>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                      {formatDataItaliana(datesFinestra[0]).slice(0, 5)} - {formatDataItaliana(datesFinestra[datesFinestra.length - 1]).slice(0, 5)}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-1.5 text-center">
+                    {statsGiorni.map((d) => {
+                      const isSel = d.isSelezionata;
+                      const isAllOk = d.totOreScoperte > 0 && d.totCoperte === d.totOreScoperte && d.totFirmate === d.totOreScoperte;
+                      const bgClass = d.totOreScoperte === 0
+                        ? 'bg-white text-slate-700 border border-slate-200 shadow-2xs hover:bg-slate-100'
+                        : isAllOk
+                          ? 'bg-emerald-600 text-white font-black shadow-2xs hover:bg-emerald-700'
+                          : d.gravita === 'COMPLICATO'
+                            ? 'bg-rose-500 text-white font-black hover:bg-rose-600'
+                            : 'bg-amber-100 text-amber-950 border border-amber-300 font-bold hover:bg-amber-200';
+
+                      return (
+                        <button
+                          key={`mini_${d.dataStr}`}
+                          type="button"
+                          onClick={() => handleSelectGiorno(d.dataStr)}
+                          className={`p-2 rounded-xl ${bgClass} text-xs leading-tight flex flex-col items-center justify-center transition cursor-pointer ${
+                            isSel ? 'ring-2 ring-indigo-600 ring-offset-2 scale-105 font-black shadow-md' : ''
+                          }`}
+                        >
+                          <span className="text-[9px] font-bold uppercase opacity-75">{d.giornoNome.slice(0, 3)}</span>
+                          <span className="font-black text-sm my-0.5">{new Date(d.dataStr).getDate()}</span>
+                          <span className="text-[9px] font-mono opacity-90">{d.totOreScoperte > 0 ? `${d.totCoperte}/${d.totOreScoperte}` : '✓'}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
+                {/* FRECCIA DESTRA MOBILE */}
+                <button
+                  type="button"
+                  onClick={() => setOffsetMeseBlocco(prev => prev + 1)}
+                  className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 rounded-full bg-white text-slate-800 shadow-md border border-slate-200 flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 text-xs font-black transition cursor-pointer"
+                  title="30 giorni successivi"
+                >
+                  ❯
+                </button>
               </div>
             ) : (
               /* SE VISTA SETTIMANA SU MOBILE: FEED VERTICALE CARD SETTIMANALI */
