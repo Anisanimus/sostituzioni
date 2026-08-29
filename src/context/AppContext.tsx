@@ -2,8 +2,11 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente } from '../utils/docentiHelper';
+import { db } from '../firebase';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 
 const CURRENT_TIMETABLE_VERSION = 'v17_pdf_marchi_pellegrino_compresenza_fix';
+const SCUOLA_FIRESTORE_ID = 'IC_ANNA_FRANK';
 
 export const DEFAULT_IMPOSTAZIONI_SCUOLA: ImpostazioniScuola = {
   nomeScuola: 'I.C. Leonardo da Vinci',
@@ -196,8 +199,89 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setImpostazioniScuola(prev => ({ ...prev, ...nuove }));
   };
 
+  // ============================================================================
+  // SINCRONIZZAZIONE REAL-TIME IN CLOUD (FIRESTORE DATABASE) TRA TUTTI I DISPOSITIVI
+  // ============================================================================
+  const [isCloudLoaded, setIsCloudLoaded] = useState<boolean>(false);
+
+  // 1. ASCOLTATORE IN TEMPO REALE DA CLOUD FIRESTORE
+  useEffect(() => {
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      const unsubscribe = onSnapshot(scuolaDocRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const cloudData = docSnap.data();
+          if (cloudData.docenti && Array.isArray(cloudData.docenti) && cloudData.docenti.length > 0) {
+            setDocenti(cloudData.docenti);
+          }
+          if (cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti) && cloudData.orariDocenti.length > 0) {
+            setOrariDocenti(cloudData.orariDocenti);
+          }
+          if (cloudData.assenze && Array.isArray(cloudData.assenze)) {
+            setAssenze(cloudData.assenze);
+          }
+          if (cloudData.uscite && Array.isArray(cloudData.uscite)) {
+            setUscite(cloudData.uscite);
+          }
+          if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
+            setSostituzioni(cloudData.sostituzioni);
+          }
+          if (cloudData.movimentiDebito && Array.isArray(cloudData.movimentiDebito)) {
+            setMovimentiDebito(cloudData.movimentiDebito);
+          }
+          if (cloudData.impostazioniScuola) {
+            setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
+          }
+        } else {
+          // Primo bootstrap: carica i dati iniziali su Cloud Firestore
+          setDoc(scuolaDocRef, {
+            docenti: DOCENTI_PRECARICATI,
+            orariDocenti: ORARI_DOCENTI_PRECARICATI,
+            assenze: [],
+            uscite: [],
+            sostituzioni: [],
+            movimentiDebito: [],
+            impostazioniScuola: DEFAULT_IMPOSTAZIONI_SCUOLA,
+            ultimoAggiornamento: new Date().toISOString()
+          }).catch(err => console.warn('Bootstrap cloud silenzioso:', err));
+        }
+        setIsCloudLoaded(true);
+      }, (err) => {
+        console.warn('Connessione Firestore in modalità offline/fallback:', err);
+        setIsCloudLoaded(true);
+      });
+
+      return () => unsubscribe();
+    } catch (e) {
+      console.warn('Errore inizializzazione snapshot cloud:', e);
+      setIsCloudLoaded(true);
+    }
+  }, []);
+
+  // 2. FUNZIONE DI SALVATAGGIO CENTRALIZZATA CLOUD + LOCALSTORAGE
+  const syncToCloud = async (overrideData?: any) => {
+    try {
+      const payload = {
+        docenti,
+        orariDocenti,
+        assenze,
+        uscite,
+        sostituzioni,
+        movimentiDebito,
+        impostazioniScuola,
+        ultimoAggiornamento: new Date().toISOString(),
+        ...overrideData
+      };
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, payload, { merge: true });
+    } catch (err) {
+      console.error('Errore sincronizzazione Cloud:', err);
+    }
+  };
+
   useEffect(() => {
     localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(impostazioniScuola));
+    if (isCloudLoaded) syncToCloud({ impostazioniScuola });
   }, [impostazioniScuola]);
 
   useEffect(() => {
@@ -206,26 +290,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     localStorage.setItem('scuola_docenti', JSON.stringify(docenti));
+    if (isCloudLoaded) syncToCloud({ docenti });
   }, [docenti]);
 
   useEffect(() => {
     localStorage.setItem('scuola_orari', JSON.stringify(orariDocenti));
+    if (isCloudLoaded) syncToCloud({ orariDocenti });
   }, [orariDocenti]);
 
   useEffect(() => {
     localStorage.setItem('scuola_assenze', JSON.stringify(assenze));
+    if (isCloudLoaded) syncToCloud({ assenze });
   }, [assenze]);
 
   useEffect(() => {
     localStorage.setItem('scuola_uscite', JSON.stringify(uscite));
+    if (isCloudLoaded) syncToCloud({ uscite });
   }, [uscite]);
 
   useEffect(() => {
     localStorage.setItem('scuola_sostituzioni', JSON.stringify(sostituzioni));
+    if (isCloudLoaded) syncToCloud({ sostituzioni });
   }, [sostituzioni]);
 
   useEffect(() => {
     localStorage.setItem('scuola_movimenti_debito', JSON.stringify(movimentiDebito));
+    if (isCloudLoaded) syncToCloud({ movimentiDebito });
   }, [movimentiDebito]);
 
   // Aggiungi assenza registrando tutti gli ID collegati alla persona fisica
