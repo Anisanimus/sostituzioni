@@ -621,37 +621,39 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
               </button>
             </div>
 
-            {/* SE VISTA MESE SU MOBILE: GRIGLIA MENSILE COMPLETA */}
+            {/* SE VISTA MESE SU MOBILE: GRIGLIA MENSILE COMPLETA A 30 GIORNI */}
             {vista === 'SETTIMANA' ? (
-              <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-black text-slate-700 uppercase px-1">
-                  <span>🗓️ Mappa Mensile ({statsGiorni.length} Giorni)</span>
-                  <span className="text-[10px] text-slate-400 font-bold">Tocca per selezionare</span>
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2.5">
+                <div className="flex items-center justify-between text-xs font-black text-slate-800 uppercase px-1 border-b border-slate-200 pb-1.5">
+                  <span>🗓️ Prospetto 30 Giorni Futuri</span>
+                  <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                    {statsGiorni.length} Giorni Scolastici
+                  </span>
                 </div>
                 <div className="grid grid-cols-5 gap-1.5 text-center">
                   {statsGiorni.map((d) => {
                     const isSel = d.isSelezionata;
                     const isAllOk = d.totOreScoperte > 0 && d.totCoperte === d.totOreScoperte && d.totFirmate === d.totOreScoperte;
                     const bgClass = d.totOreScoperte === 0
-                      ? 'bg-white text-slate-700 border border-slate-200 shadow-2xs'
+                      ? 'bg-white text-slate-700 border border-slate-200 shadow-2xs hover:bg-slate-100'
                       : isAllOk
-                        ? 'bg-emerald-600 text-white font-black shadow-2xs'
+                        ? 'bg-emerald-600 text-white font-black shadow-2xs hover:bg-emerald-700'
                         : d.gravita === 'COMPLICATO'
-                          ? 'bg-rose-500 text-white font-black'
-                          : 'bg-amber-100 text-amber-950 border border-amber-300 font-bold';
+                          ? 'bg-rose-500 text-white font-black hover:bg-rose-600'
+                          : 'bg-amber-100 text-amber-950 border border-amber-300 font-bold hover:bg-amber-200';
 
                     return (
                       <button
                         key={`mini_${d.dataStr}`}
                         type="button"
                         onClick={() => handleSelectGiorno(d.dataStr)}
-                        className={`p-1.5 rounded-xl ${bgClass} text-xs leading-tight flex flex-col items-center justify-center transition cursor-pointer ${
-                          isSel ? 'ring-2 ring-indigo-600 ring-offset-2 scale-105 font-black' : ''
+                        className={`p-2 rounded-xl ${bgClass} text-xs leading-tight flex flex-col items-center justify-center transition cursor-pointer ${
+                          isSel ? 'ring-2 ring-indigo-600 ring-offset-2 scale-105 font-black shadow-md' : ''
                         }`}
                       >
-                        <span className="text-[9px] font-bold uppercase opacity-75">{d.giornoNome.slice(0, 1)}</span>
-                        <span className="font-black text-sm">{new Date(d.dataStr).getDate()}</span>
-                        <span className="text-[8px] opacity-90 mt-0.5">{d.totOreScoperte > 0 ? `${d.totCoperte}/${d.totOreScoperte}` : '✓'}</span>
+                        <span className="text-[9px] font-bold uppercase opacity-75">{d.giornoNome.slice(0, 3)}</span>
+                        <span className="font-black text-sm my-0.5">{new Date(d.dataStr).getDate()}</span>
+                        <span className="text-[9px] font-mono opacity-90">{d.totOreScoperte > 0 ? `${d.totCoperte}/${d.totOreScoperte}` : '✓'}</span>
                       </button>
                     );
                   })}
