@@ -29,6 +29,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [dominiGoogleStr, setDominiGoogleStr] = useState((impostazioniScuola.dominiAutorizzatiGoogle || ['gmail.com', 'scuola.edu.it']).join(', '));
   const [emailViceStr, setEmailViceStr] = useState((impostazioniScuola.emailVicepresidenzaGoogle || ['vicepresidenza@scuola.edu.it']).join(', '));
 
+  // Diagnostica Cloud Test
+  const [testCloudStato, setTestCloudStato] = useState<'IDLE' | 'IN_CORSO' | 'SUCCESSO' | 'ERRORE'>('IDLE');
+  const [testCloudMessaggio, setTestCloudMessaggio] = useState('');
+
   const [salvato, setSalvato] = useState(false);
   const fileBackupRef = React.useRef<HTMLInputElement>(null);
 
@@ -270,6 +274,67 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 className="w-full bg-white border border-purple-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-purple-500"
               />
             </div>
+          </div>
+
+          {/* DIAGNOSTICA & TEST DIRETTO CLOUD FIRESTORE */}
+          <div className="pt-3 border-t border-slate-100">
+            <div className="p-3.5 bg-slate-900 text-white rounded-xl flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                  <Database className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold">Diagnostica Cloud Firebase & Database</h4>
+                  <p className="text-[10px] text-slate-400">Verifica la connessione in tempo reale e il ping del database</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  setTestCloudStato('IN_CORSO');
+                  setTestCloudMessaggio('Invio pacchetto di test a Cloud Firestore...');
+                  try {
+                    const { db } = await import('../firebase');
+                    const { doc, setDoc, getDoc } = await import('firebase/firestore');
+                    const testRef = doc(db, 'diagnostica_connessione', 'ping_test');
+                    const now = new Date().toISOString();
+                    await setDoc(testRef, {
+                      ultimoPing: now,
+                      nomeScuola: nomeScuola,
+                      esito: 'OK'
+                    });
+                    const snap = await getDoc(testRef);
+                    if (snap.exists()) {
+                      setTestCloudStato('SUCCESSO');
+                      setTestCloudMessaggio(`✅ Connessione Cloud Perfetta! Scrittura e lettura Firestore eseguite con successo alle ${new Date().toLocaleTimeString('it-IT')}.`);
+                    } else {
+                      setTestCloudStato('ERRORE');
+                      setTestCloudMessaggio('Documento non trovato.');
+                    }
+                  } catch (err: any) {
+                    console.error('Errore test Firestore:', err);
+                    setTestCloudStato('ERRORE');
+                    setTestCloudMessaggio(`❌ Errore di connessione: ${err.message || 'Verifica le regole di sicurezza di Firestore'}`);
+                  }
+                }}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition cursor-pointer shadow-xs flex items-center gap-1.5"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Testa Connessione Cloud Database</span>
+              </button>
+            </div>
+
+            {testCloudStato !== 'IDLE' && (
+              <div className={`mt-2 p-2.5 rounded-lg text-xs font-bold animate-in fade-in ${
+                testCloudStato === 'SUCCESSO' 
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                  : testCloudStato === 'ERRORE' 
+                  ? 'bg-rose-50 text-rose-800 border border-rose-200' 
+                  : 'bg-indigo-50 text-indigo-800 border border-indigo-200 animate-pulse'
+              }`}>
+                {testCloudMessaggio}
+              </div>
+            )}
           </div>
         </div>
 
