@@ -97,60 +97,67 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
     // 1. Assenze ordinarie
     assenzeOggi.forEach(assenza => {
-      const orarioFuso = getOrarioUnificatoDocente(assenza.docenteId, docenti, orariDocenti);
       const collegatiIds = getDocentiCollegatiIds(assenza.docenteId, docenti);
+      const profiliPersona = docenti.filter(d => collegatiIds.includes(d.id));
       const doc = docenti.find(d => d.id === assenza.docenteId);
       const nomeAssente = doc ? getBaseNomeDocente(doc.nome) : 'Docente';
-      const profiliPersona = docenti.filter(d => collegatiIds.includes(d.id));
-      const materiePersona = Array.from(new Set(profiliPersona.map(p => {
-        if (p.isAlternativa || p.nome.toUpperCase().includes('ALTERNATIVA')) return 'ALTERNATIVA';
-        if (p.isPotenziamento || p.nome.toUpperCase().includes('POTENZIAMENTO')) return 'POTENZIAMENTO';
-        return p.materia;
-      }))).filter(Boolean);
-      // Metti prima le materie curricolari
-      materiePersona.sort((a, b) => {
-        if (a === 'ALTERNATIVA' || a === 'POTENZIAMENTO') return 1;
-        if (b === 'ALTERNATIVA' || b === 'POTENZIAMENTO') return -1;
-        return a.localeCompare(b);
-      });
-      const materiaDoc = materiePersona.length > 0 ? materiePersona.join(', ') : (doc?.materia || 'Materia');
 
-      const oreLezione = orarioFuso.filter(c => 
-        c.giorno === giornoSettimana && 
-        c.valore !== '' && 
-        c.valore !== 'D' && 
-        c.valore !== 'P' &&
-        assenza.oreInteressate.includes(c.ora)
-      );
+      profiliPersona.forEach(prof => {
+        const orarioDoc = orariDocenti.find(o => o.docenteId === prof.id);
+        if (!orarioDoc) return;
 
-      oreLezione.forEach(c => {
-        const sosts = sostituzioniOggi.filter(s => 
-          s.ora === c.ora && 
-          s.classe === c.valore &&
-          (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId)
-        );
-        const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE');
+        assenza.oreInteressate.forEach(ora => {
+          const cella = orarioDoc.ore.find(c => c.giorno === giornoSettimana && c.ora === ora);
+          const val = cella ? cella.valore.trim().toUpperCase() : '';
 
-        items.push({
-          ora: c.ora,
-          classe: c.valore,
-          docenteAssente: nomeAssente,
-          materia: materiaDoc,
-          motivo: assenza.motivo,
-          isUscita: false,
-          nonSostituita: nonSost,
-          sostituti: sosts
-            .filter(s => s.categoria !== 'NON_SOSTITUIRE')
-            .map(s => {
-              const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
-              return {
-                id: s.id,
-                nomeSostituto: docSost ? getBaseNomeDocente(docSost.nome) : 'Docente Sostituto',
-                categoria: s.categoria.replace(/_/g, ' '),
-                firmata: !!s.firmata,
-                pubblicata: !!s.pubblicata
-              };
-            })
+          if (val && val !== 'D' && val !== 'P') {
+            // Evita duplicati
+            const giaInserita = items.some(it => 
+              it.ora === ora && 
+              it.classe === val && 
+              it.docenteAssente === nomeAssente
+            );
+
+            if (!giaInserita) {
+              let materiaOra = prof.materia;
+              if (prof.isAlternativa || prof.nome.toUpperCase().includes('ALTERNATIVA')) {
+                materiaOra = 'ALTERNATIVA';
+              } else if (prof.isPotenziamento || prof.nome.toUpperCase().includes('POTENZIAMENTO')) {
+                materiaOra = 'POTENZIAMENTO';
+              } else if (prof.isSostegno || prof.nome.toUpperCase().includes('SOSTEGNO')) {
+                materiaOra = 'SOSTEGNO';
+              }
+
+              const sosts = sostituzioniOggi.filter(s => 
+                s.ora === ora && 
+                s.classe === val &&
+                (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId)
+              );
+              const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE');
+
+              items.push({
+                ora,
+                classe: val,
+                docenteAssente: nomeAssente,
+                materia: materiaOra,
+                motivo: assenza.motivo,
+                isUscita: false,
+                nonSostituita: nonSost,
+                sostituti: sosts
+                  .filter(s => s.categoria !== 'NON_SOSTITUIRE')
+                  .map(s => {
+                    const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
+                    return {
+                      id: s.id,
+                      nomeSostituto: docSost ? getBaseNomeDocente(docSost.nome) : 'Docente Sostituto',
+                      categoria: s.categoria.replace(/_/g, ' '),
+                      firmata: !!s.firmata,
+                      pubblicata: !!s.pubblicata
+                    };
+                  })
+              });
+            }
+          }
         });
       });
     });
