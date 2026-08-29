@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { getBaseNomeDocente, getDocentiCollegatiIds, spostaGiornoScolastico } from '../utils/docentiHelper';
+import { getBaseNomeDocente, getDocentiCollegatiIds, spostaGiornoScolastico, getPrimoGiornoScolasticoValido } from '../utils/docentiHelper';
 import { 
   ChevronDown, X, BarChart3, TrendingUp, Calendar 
 } from 'lucide-react';
@@ -22,51 +22,25 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
   const nascondiWeekend = impostazioniScuola?.nascondiWeekendCalendario ?? true;
   const giorniFestivi = impostazioniScuola?.giorniFestivi || [];
 
-  // Calcola una finestra dinamica di giorni scolastici attorno alla data selezionata (passati e futuri)
-  const getFinestraGiorniScuola = (centroData: string = selectedDate, passati: number = 30, futuri: number = 60) => {
+  // Calcola la finestra di max 30 giorni scolastici futuri a partire dal primo giorno utile (oggi o Lunedì se weekend)
+  const getFinestraGiorniScuola = (maxGiorni: number = 30) => {
     const dates: string[] = [];
-    const base = new Date(centroData || todayStr);
-    
-    // Giorni passati
-    if (passati > 0) {
-      let curPast = new Date(base);
-      const tempPast: string[] = [];
-      let attempts = 0;
-      while (tempPast.length < passati && attempts < 150) {
-        curPast.setDate(curPast.getDate() - 1);
-        const iso = curPast.toISOString().split('T')[0];
-        const isWeekend = curPast.getDay() === 0 || curPast.getDay() === 6;
-        const isFestivo = giorniFestivi.includes(iso);
-        if ((!nascondiWeekend || !isWeekend) && !isFestivo) {
-          tempPast.unshift(iso);
-        }
-        attempts++;
-      }
-      dates.push(...tempPast);
-    }
+    const primoGiornoUtile = getPrimoGiornoScolasticoValido(todayStr, nascondiWeekend, giorniFestivi);
+    let cur = new Date(primoGiornoUtile);
+    let count = 0;
+    let attempts = 0;
 
-    // Giorno base (se scolastico, altrimenti cerca avanti)
-    const baseIso = base.toISOString().split('T')[0];
-    const isBaseWeekend = base.getDay() === 0 || base.getDay() === 6;
-    const isBaseFestivo = giorniFestivi.includes(baseIso);
-    if ((!nascondiWeekend || !isBaseWeekend) && !isBaseFestivo) {
-      dates.push(baseIso);
-    }
-
-    // Giorni futuri
-    let curFut = new Date(base);
-    let futCount = 0;
-    let attemptsFut = 0;
-    while (futCount < futuri && attemptsFut < 250) {
-      curFut.setDate(curFut.getDate() + 1);
-      const iso = curFut.toISOString().split('T')[0];
-      const isWeekend = curFut.getDay() === 0 || curFut.getDay() === 6;
+    while (count < maxGiorni && attempts < 150) {
+      const iso = cur.toISOString().split('T')[0];
+      const day = cur.getDay();
+      const isWeekend = day === 0 || day === 6;
       const isFestivo = giorniFestivi.includes(iso);
       if ((!nascondiWeekend || !isWeekend) && !isFestivo) {
         dates.push(iso);
-        futCount++;
+        count++;
       }
-      attemptsFut++;
+      cur.setDate(cur.getDate() + 1);
+      attempts++;
     }
     return dates;
   };
@@ -175,7 +149,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
     };
   };
 
-  const datesFinestra = getFinestraGiorniScuola(selectedDate, 20, 45);
+  const datesFinestra = getFinestraGiorniScuola(30);
   const statsGiorni = datesFinestra.map(d => getStatsGiorno(d));
 
   // Statistiche del giorno selezionato o di oggi
@@ -292,8 +266,11 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
               {/* SLITTAMENTO MESE PRECEDENTE */}
               <button
                 type="button"
-                onClick={() => spostaMese(-1)}
-                className="px-1.5 py-1 rounded-lg hover:bg-slate-200 text-slate-700 text-[10px] font-black transition cursor-pointer flex items-center gap-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  spostaMese(-1);
+                }}
+                className="px-2 py-1 rounded-lg hover:bg-white text-slate-700 text-[10px] font-black transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
                 title="Mese precedente"
               >
                 <span>« Mese</span>
@@ -302,31 +279,59 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
               {/* FRECCIA GIORNO PRECEDENTE */}
               <button
                 type="button"
-                onClick={() => scrollCarousel(-1)}
-                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white text-slate-800 text-xs font-black transition cursor-pointer shadow-2xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  scrollCarousel(-1);
+                }}
+                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white text-slate-800 text-xs font-black transition cursor-pointer shadow-2xs"
                 title="Giorno precedente (salta weekend)"
               >
                 ❮
               </button>
 
-              {/* PULSANTE ICONA CALENDARIO */}
-              <label className="relative p-1 rounded-lg hover:bg-white text-indigo-700 shadow-2xs flex items-center justify-center cursor-pointer transition" title="Scegli giorno dal calendario">
-                <Calendar className="w-3.5 h-3.5" />
+              {/* PULSANTE ICONA CALENDARIO DEDICATO SENZA OVERLAY INVASIVO */}
+              <div className="relative flex items-center justify-center">
                 <input 
+                  id="calendarInputPanoramica"
                   type="date"
                   value={selectedDate}
                   onChange={(e) => {
                     if (e.target.value) onSelectDate(e.target.value);
                   }}
-                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                  className="sr-only"
                 />
-              </label>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const el = document.getElementById('calendarInputPanoramica') as HTMLInputElement | null;
+                    if (el) {
+                      if (typeof (el as any).showPicker === 'function') {
+                        try {
+                          (el as any).showPicker();
+                        } catch {
+                          el.focus();
+                        }
+                      } else {
+                        el.focus();
+                      }
+                    }
+                  }}
+                  className="p-1.5 rounded-lg hover:bg-white text-indigo-700 shadow-2xs flex items-center justify-center cursor-pointer transition"
+                  title="Apri selettore calendario"
+                >
+                  <Calendar className="w-4 h-4" />
+                </button>
+              </div>
 
               {/* FRECCIA GIORNO SUCCESSIVO */}
               <button
                 type="button"
-                onClick={() => scrollCarousel(1)}
-                className="w-6 h-6 flex items-center justify-center rounded-lg hover:bg-white text-slate-800 text-xs font-black transition cursor-pointer shadow-2xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  scrollCarousel(1);
+                }}
+                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white text-slate-800 text-xs font-black transition cursor-pointer shadow-2xs"
                 title="Giorno successivo (salta weekend)"
               >
                 ❯
@@ -335,8 +340,11 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
               {/* SLITTAMENTO MESE SUCCESSIVO */}
               <button
                 type="button"
-                onClick={() => spostaMese(1)}
-                className="px-1.5 py-1 rounded-lg hover:bg-slate-200 text-slate-700 text-[10px] font-black transition cursor-pointer flex items-center gap-0.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  spostaMese(1);
+                }}
+                className="px-2 py-1 rounded-lg hover:bg-white text-slate-700 text-[10px] font-black transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
                 title="Mese successivo"
               >
                 <span>Mese »</span>
