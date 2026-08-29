@@ -32,6 +32,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
   const [filtroClasse, setFiltroClasse] = useState<string>('');
   const [filtroOra, setFiltroOra] = useState<string>('TUTTE');
   const [ricercaDocente, setRicercaDocente] = useState<string>('');
+  const [mostraFiltroDocente, setMostraFiltroDocente] = useState<boolean>(false);
 
   const pinAtaValido = impostazioniScuola?.pinPersonaleAta || '1234';
 
@@ -411,6 +412,23 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
               Oggi
             </button>
 
+            {/* PULSANTE FILTRO RICERCA DOCENTE (ICON-ONLY DISCRETO) */}
+            <button
+              type="button"
+              onClick={() => {
+                setMostraFiltroDocente(!mostraFiltroDocente);
+                if (mostraFiltroDocente) setRicercaDocente('');
+              }}
+              className={`p-2 rounded-xl border transition flex items-center justify-center cursor-pointer ${
+                mostraFiltroDocente || ricercaDocente
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-300 ring-2 ring-indigo-200 shadow-2xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+              }`}
+              title="Filtra per Docente"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
             <button
               type="button"
               onClick={() => window.print()}
@@ -422,6 +440,42 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
             </button>
           </div>
         </div>
+
+        {/* INPUT DI RICERCA DOCENTE (MOSTRATO SOLO SE APERTO) */}
+        {mostraFiltroDocente && (
+          <div className="w-full mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-150">
+            <div className="relative flex-1">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                autoFocus
+                value={ricercaDocente}
+                onChange={(e) => setRicercaDocente(e.target.value)}
+                placeholder="Filtra per nome docente assente o sostituto..."
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-8 py-2 text-xs font-semibold text-slate-800 outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              />
+              {ricercaDocente && (
+                <button
+                  type="button"
+                  onClick={() => setRicercaDocente('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold p-1 cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setMostraFiltroDocente(false);
+                setRicercaDocente('');
+              }}
+              className="text-xs font-bold text-slate-500 hover:text-slate-700 px-2 py-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+            >
+              Chiudi
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ELENCO SOSTITUZIONI: TABELLA COMPATTA ORIZZONTALE AL 100% (ZERO SCROLL / ZERO SWIPE SU MOBILE) */}
