@@ -600,7 +600,7 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
               </span>
               
               {/* Scorciatoie Rapide Compatte */}
-              <div className="flex items-center gap-1 text-[10px]">
+              <div className="flex items-center gap-1 text-[10px] flex-wrap">
                 <button 
                   type="button" 
                   onClick={() => selezionaTutteClassiAnno('1')} 
@@ -610,7 +610,7 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                       : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                   }`}
                 >
-                  Tutte le Prime
+                  Prime
                 </button>
                 <button 
                   type="button" 
@@ -621,7 +621,7 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                       : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                   }`}
                 >
-                  Tutte le Seconde
+                  Seconde
                 </button>
                 <button 
                   type="button" 
@@ -632,14 +632,14 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                       : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                   }`}
                 >
-                  Tutte le Terze
+                  Terze
                 </button>
                 <button 
                   type="button" 
                   onClick={() => setClassiSelezionate([...tutteClassi])} 
                   className="px-2 py-0.5 bg-white border border-slate-300 rounded-md font-bold text-indigo-700 hover:bg-indigo-50"
                 >
-                  Tutto l'Istituto
+                  Tutti
                 </button>
                 {classiSelezionate.length > 0 && (
                   <button 
