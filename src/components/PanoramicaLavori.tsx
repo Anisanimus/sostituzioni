@@ -613,19 +613,19 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
               </button>
             </div>
 
-            {/* SE VISTA MESE SU MOBILE: MINI MAPPA A MATRICE DEI GIORNI */}
-            {vista === 'SETTIMANA' && (
-              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] font-black text-slate-700 uppercase">
-                  <span>Mappa Mensile</span>
-                  <span className="text-[10px] text-slate-400 font-bold">{statsGiorni.length} Giorni</span>
+            {/* SE VISTA MESE SU MOBILE: GRIGLIA MENSILE COMPLETA */}
+            {vista === 'SETTIMANA' ? (
+              <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-black text-slate-700 uppercase px-1">
+                  <span>🗓️ Mappa Mensile ({statsGiorni.length} Giorni)</span>
+                  <span className="text-[10px] text-slate-400 font-bold">Tocca per selezionare</span>
                 </div>
-                <div className="grid grid-cols-5 gap-1 text-center">
+                <div className="grid grid-cols-5 gap-1.5 text-center">
                   {statsGiorni.map((d) => {
                     const isSel = d.isSelezionata;
                     const isAllOk = d.totOreScoperte > 0 && d.totCoperte === d.totOreScoperte && d.totFirmate === d.totOreScoperte;
                     const bgClass = d.totOreScoperte === 0
-                      ? 'bg-slate-100 text-slate-600 border border-slate-200'
+                      ? 'bg-white text-slate-700 border border-slate-200 shadow-2xs'
                       : isAllOk
                         ? 'bg-emerald-600 text-white font-black shadow-2xs'
                         : d.gravita === 'COMPLICATO'
@@ -637,26 +637,22 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                         key={`mini_${d.dataStr}`}
                         type="button"
                         onClick={() => handleSelectGiorno(d.dataStr)}
-                        className={`p-1 rounded-lg ${bgClass} text-[10px] leading-tight flex flex-col items-center justify-center transition cursor-pointer ${
-                          isSel ? 'ring-2 ring-indigo-600 ring-offset-1 scale-105' : ''
+                        className={`p-1.5 rounded-xl ${bgClass} text-xs leading-tight flex flex-col items-center justify-center transition cursor-pointer ${
+                          isSel ? 'ring-2 ring-indigo-600 ring-offset-2 scale-105 font-black' : ''
                         }`}
                       >
-                        <span className="font-black">{new Date(d.dataStr).getDate()}</span>
-                        <span className="text-[7px] opacity-90">{d.totOreScoperte > 0 ? `${d.totCoperte}/${d.totOreScoperte}` : '✓'}</span>
+                        <span className="text-[9px] font-bold uppercase opacity-75">{d.giornoNome.slice(0, 1)}</span>
+                        <span className="font-black text-sm">{new Date(d.dataStr).getDate()}</span>
+                        <span className="text-[8px] opacity-90 mt-0.5">{d.totOreScoperte > 0 ? `${d.totCoperte}/${d.totOreScoperte}` : '✓'}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
-            )}
-
-            {/* FEED VERTICALE CARD GIORNALIERE SU MOBILE */}
-            <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
-              {(() => {
-                // In vista Settimana mostra i primi 7 giorni scolastici a partire da OGGI, in vista Mese l'intero mese da oggi
-                const giorniMostrati = vista === 'GIORNO' ? statsGiorni.slice(0, 7) : statsGiorni;
-
-                return giorniMostrati.map((s) => {
+            ) : (
+              /* SE VISTA SETTIMANA SU MOBILE: FEED VERTICALE CARD SETTIMANALI */
+              <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                {statsGiorni.slice(0, 7).map((s) => {
                   const isCompletato = s.totOreScoperte > 0 && s.totCoperte === s.totOreScoperte && s.totFirmate === s.totOreScoperte;
                   const perc = s.totOreScoperte > 0 ? Math.round((s.totCoperte / s.totOreScoperte) * 100) : 100;
                   
@@ -760,9 +756,9 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                     </div>
                   </div>
                 );
-              });
-            })()}
+              })}
             </div>
+          )}
           </div>
 
         </div>
