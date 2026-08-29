@@ -298,23 +298,25 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     const { doc, setDoc, getDoc } = await import('firebase/firestore');
                     const testRef = doc(db, 'diagnostica_connessione', 'ping_test');
                     const now = new Date().toISOString();
+                    
                     await setDoc(testRef, {
                       ultimoPing: now,
                       nomeScuola: nomeScuola,
                       esito: 'OK'
                     });
+
                     const snap = await getDoc(testRef);
                     if (snap.exists()) {
                       setTestCloudStato('SUCCESSO');
                       setTestCloudMessaggio(`✅ Connessione Cloud Perfetta! Scrittura e lettura Firestore eseguite con successo alle ${new Date().toLocaleTimeString('it-IT')}.`);
                     } else {
                       setTestCloudStato('ERRORE');
-                      setTestCloudMessaggio('Documento non trovato.');
+                      setTestCloudMessaggio('Documento non trovato dopo la scrittura.');
                     }
                   } catch (err: any) {
-                    console.error('Errore test Firestore:', err);
+                    console.error('Errore test Firestore completo:', err);
                     setTestCloudStato('ERRORE');
-                    setTestCloudMessaggio(`❌ Errore di connessione: ${err.message || 'Verifica le regole di sicurezza di Firestore'}`);
+                    setTestCloudMessaggio(`❌ [${err.code || 'ERRORE'}]: ${err.message || 'Verifica console per dettagli'}`);
                   }
                 }}
                 className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition cursor-pointer shadow-xs flex items-center gap-1.5"

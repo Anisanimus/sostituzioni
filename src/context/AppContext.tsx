@@ -16,8 +16,8 @@ export const DEFAULT_IMPOSTAZIONI_SCUOLA: ImpostazioniScuola = {
   nascondiWeekendCalendario: true,
   giorniFestivi: [],
   pinPersonaleAta: '1234',
-  dominiAutorizzatiGoogle: ['gmail.com', 'scuola.edu.it'],
-  emailVicepresidenzaGoogle: ['vicepresidenza@scuola.edu.it', 'admin@scuola.edu.it']
+  dominiAutorizzatiGoogle: ['gmail.com', 'scuola.edu.it', 'icannafrank.edu.it'],
+  emailVicepresidenzaGoogle: ['cravero.anita@gmail.com', 'vicepresidenza@scuola.edu.it', 'admin@scuola.edu.it']
 };
 
 export const DEFAULT_PRIORITA_ASSENZE: CategoriaSostituto[] = [
@@ -202,7 +202,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // ============================================================================
   // SINCRONIZZAZIONE REAL-TIME IN CLOUD (FIRESTORE DATABASE) TRA TUTTI I DISPOSITIVI
   // ============================================================================
-  const [isCloudLoaded, setIsCloudLoaded] = useState<boolean>(false);
+  // 2. FUNZIONE DI SALVATAGGIO CENTRALIZZATA CON DEBOUNCE (Evita loop di scrittura infiniti)
+  const isIncomingRemoteUpdate = React.useRef(false);
+  const syncTimeoutRef = React.useRef<any>(null);
 
   // 1. ASCOLTATORE IN TEMPO REALE DA CLOUD FIRESTORE
   useEffect(() => {
@@ -211,6 +213,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const unsubscribe = onSnapshot(scuolaDocRef, (docSnap) => {
         if (docSnap.exists()) {
           const cloudData = docSnap.data();
+          isIncomingRemoteUpdate.current = true;
+
           if (cloudData.docenti && Array.isArray(cloudData.docenti) && cloudData.docenti.length > 0) {
             setDocenti(cloudData.docenti);
           }
@@ -232,56 +236,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (cloudData.impostazioniScuola) {
             setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
           }
-        } else {
-          // Primo bootstrap: carica i dati iniziali su Cloud Firestore
-          setDoc(scuolaDocRef, {
-            docenti: DOCENTI_PRECARICATI,
-            orariDocenti: ORARI_DOCENTI_PRECARICATI,
-            assenze: [],
-            uscite: [],
-            sostituzioni: [],
-            movimentiDebito: [],
-            impostazioniScuola: DEFAULT_IMPOSTAZIONI_SCUOLA,
-            ultimoAggiornamento: new Date().toISOString()
-          }).catch(err => console.warn('Bootstrap cloud silenzioso:', err));
+
+          setTimeout(() => {
+            isIncomingRemoteUpdate.current = false;
+          }, 300);
         }
-        setIsCloudLoaded(true);
       }, (err) => {
-        console.warn('Connessione Firestore in modalità offline/fallback:', err);
-        setIsCloudLoaded(true);
+        console.warn('Connessione Firestore in background:', err);
       });
 
       return () => unsubscribe();
     } catch (e) {
-      console.warn('Errore inizializzazione snapshot cloud:', e);
-      setIsCloudLoaded(true);
+      console.warn('Errore snapshot cloud:', e);
     }
   }, []);
 
-  // 2. FUNZIONE DI SALVATAGGIO CENTRALIZZATA CLOUD + LOCALSTORAGE
-  const syncToCloud = async (overrideData?: any) => {
-    try {
-      const payload = {
-        docenti,
-        orariDocenti,
-        assenze,
-        uscite,
-        sostituzioni,
-        movimentiDebito,
-        impostazioniScuola,
-        ultimoAggiornamento: new Date().toISOString(),
-        ...overrideData
-      };
-      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
-      await setDoc(scuolaDocRef, payload, { merge: true });
-    } catch (err) {
-      console.error('Errore sincronizzazione Cloud:', err);
-    }
+  const triggerCloudSync = (override?: any) => {
+    if (isIncomingRemoteUpdate.current) return;
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+
+    syncTimeoutRef.current = setTimeout(async () => {
+      try {
+        const payload = {
+          docenti,
+          orariDocenti,
+          assenze,
+          uscite,
+          sostituzioni,
+          movimentiDebito,
+          impostazioniScuola,
+          ultimoAggiornamento: new Date().toISOString(),
+          ...override
+        };
+        const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+        await setDoc(scuolaDocRef, payload, { merge: true });
+        console.log('☁️ Sincronizzato con successo su Firestore!');
+      } catch (err) {
+        console.error('Errore sincronizzazione Cloud:', err);
+      }
+    }, 1000);
   };
 
   useEffect(() => {
     localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(impostazioniScuola));
-    if (isCloudLoaded) syncToCloud({ impostazioniScuola });
+    triggerCloudSync({ impostazioniScuola });
   }, [impostazioniScuola]);
 
   useEffect(() => {
@@ -290,32 +288,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     localStorage.setItem('scuola_docenti', JSON.stringify(docenti));
-    if (isCloudLoaded) syncToCloud({ docenti });
+    triggerCloudSync({ docenti });
   }, [docenti]);
 
   useEffect(() => {
     localStorage.setItem('scuola_orari', JSON.stringify(orariDocenti));
-    if (isCloudLoaded) syncToCloud({ orariDocenti });
+    triggerCloudSync({ orariDocenti });
   }, [orariDocenti]);
 
   useEffect(() => {
     localStorage.setItem('scuola_assenze', JSON.stringify(assenze));
-    if (isCloudLoaded) syncToCloud({ assenze });
+    triggerCloudSync({ assenze });
   }, [assenze]);
 
   useEffect(() => {
     localStorage.setItem('scuola_uscite', JSON.stringify(uscite));
-    if (isCloudLoaded) syncToCloud({ uscite });
+    triggerCloudSync({ uscite });
   }, [uscite]);
 
   useEffect(() => {
     localStorage.setItem('scuola_sostituzioni', JSON.stringify(sostituzioni));
-    if (isCloudLoaded) syncToCloud({ sostituzioni });
+    triggerCloudSync({ sostituzioni });
   }, [sostituzioni]);
 
   useEffect(() => {
     localStorage.setItem('scuola_movimenti_debito', JSON.stringify(movimentiDebito));
-    if (isCloudLoaded) syncToCloud({ movimentiDebito });
+    triggerCloudSync({ movimentiDebito });
   }, [movimentiDebito]);
 
   // Aggiungi assenza registrando tutti gli ID collegati alla persona fisica

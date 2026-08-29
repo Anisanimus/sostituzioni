@@ -23,7 +23,7 @@ export const SCUOLA_DEFAULT: IstitutoScolastico = {
   id: 'IC_ANNA_FRANK',
   nomeScuola: 'I.C. Anna Frank',
   dominiAutorizzati: ['gmail.com', 'icannafrank.edu.it', 'scuola.edu.it'],
-  emailVicepresidenza: ['vicepresidenza@icannafrank.edu.it', 'admin@scuola.edu.it'],
+  emailVicepresidenza: ['cravero.anita@gmail.com', 'vicepresidenza@icannafrank.edu.it', 'admin@scuola.edu.it'],
   attiva: true
 };
 
@@ -50,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let emailViceConsentite = SCUOLA_DEFAULT.emailVicepresidenza;
 
         try {
-          const savedScuola = localStorage.getItem('orario_impostazioni_scuola');
+          const savedScuola = localStorage.getItem('scuola_impostazioni_generali');
           if (savedScuola) {
             const parsed = JSON.parse(savedScuola);
             if (parsed.dominiAutorizzatiGoogle && parsed.dominiAutorizzatiGoogle.length > 0) {

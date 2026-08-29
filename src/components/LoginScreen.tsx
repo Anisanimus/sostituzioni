@@ -53,43 +53,11 @@ export const LoginScreen: React.FC = () => {
             </p>
           </div>
 
-          <div className="relative flex items-center justify-center">
-            <div className="border-t border-slate-200 w-full" />
-            <span className="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">oppure accesso rapido</span>
-          </div>
-
-          {/* ACCESSO DIRETTO AMMINISTRAZIONE / DEMO */}
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => bypassDemoLogin('VICEPRESIDENZA')}
-              className="w-full p-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-xl font-bold text-xs flex items-center justify-between transition cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                <span>Entra come Vicepresidenza</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-indigo-600" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => bypassDemoLogin('DOCENTE')}
-              className="w-full p-3 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-bold text-xs flex items-center justify-between transition cursor-pointer"
-            >
-              <div className="flex items-center gap-2.5">
-                <User className="w-4 h-4 text-slate-600" />
-                <span>Entra come Portale Docente</span>
-              </div>
-              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-          </div>
-
           {/* PRIVACY & PROTEZIONE STUDENTI */}
           <div className="pt-2 border-t border-slate-100 text-center">
             <span className="text-[10px] text-slate-400 flex items-center justify-center gap-1">
               <Lock className="w-3 h-3 text-slate-400" />
-              Accesso riservato e protetto per il solo personale scolastico
+              Accesso riservato e protetto per il solo personale scolastico autorizzato
             </span>
           </div>
 

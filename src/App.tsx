@@ -179,18 +179,20 @@ const MainApp: React.FC = () => {
             </button>
 
             <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700">
-              <button
-                onClick={() => setRuoloAttivo('VICEPRESIDENZA')}
-                className={`p-1.5 sm:px-3 sm:py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                  ruoloAttivo === 'VICEPRESIDENZA'
-                    ? 'bg-indigo-600 text-white shadow-2xs'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-                title="Area Vicepresidenza"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Vicepresidenza</span>
-              </button>
+              {utenteInfo.ruolo === 'VICEPRESIDENZA' && (
+                <button
+                  onClick={() => setRuoloAttivo('VICEPRESIDENZA')}
+                  className={`p-1.5 sm:px-3 sm:py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    ruoloAttivo === 'VICEPRESIDENZA'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Area Vicepresidenza (Riservata)"
+                >
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Vicepresidenza</span>
+                </button>
+              )}
 
               <button
                 onClick={() => setRuoloAttivo('PORTALE_DOCENTE')}

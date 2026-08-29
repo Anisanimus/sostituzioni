@@ -1,0 +1,17 @@
+{
+  "name": "Sostituzioni Smart",
+  "short_name": "Sostituzioni",
+  "description": "Piattaforma Gestione Orario e Sostituzioni Scolastiche",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

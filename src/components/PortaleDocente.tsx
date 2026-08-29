@@ -25,17 +25,45 @@ export const PortaleDocente: React.FC = () => {
     setIsLogged(true);
   };
 
+  const [mostraGuidaIos, setMostraGuidaIos] = useState<boolean>(false);
+
   const handleRichiediNotifiche = async () => {
-    if ('Notification' in window) {
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+
+    if (!('Notification' in window)) {
+      if (isIos && !isStandalone) {
+        setMostraGuidaIos(true);
+      } else {
+        alert('Il browser attuale non supporta le notifiche Web Push. Su iPhone apri con Safari e aggiungi l\'app a Home.');
+      }
+      return;
+    }
+
+    try {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
         setNotificaAttiva(true);
-        new Notification('Notifiche Attivate', {
-          body: 'Riceverai un avviso ogni volta che ti viene assegnata o modificata una sostituzione.'
+        new Notification('🔔 Notifiche Attivate con Successo!', {
+          body: `Gentile ${docente?.nome || 'Docente'}, riceverai una notifica sonora ogni volta che ti viene assegnata una supplenza.`
         });
+      } else if (permission === 'denied') {
+        alert('Le notifiche sono state bloccate nelle impostazioni del browser. Per attivarle, consenti le notifiche per questo sito.');
       }
+    } catch (e) {
+      if (isIos && !isStandalone) {
+        setMostraGuidaIos(true);
+      }
+    }
+  };
+
+  const handleInviaNotificaTest = () => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('🔔 Sostituzioni Smart - Test Notifica', {
+        body: 'Hai una nuova supplenza assegnata per la 3ª ora in classe 2B! (Test riuscito)'
+      });
     } else {
-      alert('Il tuo browser non supporta le notifiche push.');
+      handleRichiediNotifiche();
     }
   };
 
@@ -147,26 +175,70 @@ export const PortaleDocente: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleRichiediNotifiche}
-            className={`px-3 py-2 rounded-lg text-xs font-semibold border flex items-center gap-1.5 transition ${
+            className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition cursor-pointer ${
               notificaAttiva
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-200'
             }`}
           >
-            <Bell className="w-4 h-4" />
-            {notificaAttiva ? 'Notifiche Push Attive' : 'Attiva Notifiche Push'}
+            <Bell className="w-4 h-4 text-indigo-600" />
+            <span>{notificaAttiva ? 'Notifiche Push Attive ✓' : 'Attiva Notifiche Push'}</span>
           </button>
+
+          {notificaAttiva && (
+            <button
+              onClick={handleInviaNotificaTest}
+              className="px-2.5 py-2 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer flex items-center gap-1"
+              title="Invia notifica sonora di test"
+            >
+              <span>🔔 Prova Notifica</span>
+            </button>
+          )}
+
           <button
             onClick={() => setIsLogged(false)}
-            className="text-xs text-slate-500 hover:text-slate-800 underline p-2"
+            className="text-xs text-slate-500 hover:text-slate-800 underline p-2 cursor-pointer"
           >
             Esci
           </button>
         </div>
       </div>
+
+      {/* GUIDA ATTIVAZIONE NOTIFICHE IPHONE / IPAD */}
+      {mostraGuidaIos && (
+        <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-xl border border-indigo-700 animate-in fade-in space-y-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-indigo-500/30 text-indigo-300 rounded-xl text-lg">
+                📲
+              </div>
+              <div>
+                <h4 className="text-sm font-black text-white">Come attivare le Notifiche Push su iPhone / iPad</h4>
+                <p className="text-xs text-indigo-200">Requisito di sicurezza Apple (iOS 16.4 o successivo)</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setMostraGuidaIos(false)}
+              className="p-1 text-slate-400 hover:text-white rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="text-xs text-slate-200 space-y-2 bg-white/10 p-3.5 rounded-xl border border-white/10">
+            <p className="font-semibold text-white">Segui questi 2 semplici passaggi per ricevere le notifiche sullo schermo:</p>
+            <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-300">
+              <li>Apri il sito su <strong>Safari</strong> (o Chrome su iPhone)</li>
+              <li>Tocca in basso il pulsante <strong>Condividi</strong> (l'icona del quadrato con la freccia 📤)</li>
+              <li>Scorri in basso e tocca <strong>"Aggiungi alla schermata Home"</strong> 📲</li>
+              <li>Apri l'app dalla Home del telefono e tocca <strong>"Attiva Notifiche Push"</strong></li>
+            </ol>
+          </div>
+        </div>
+      )}
 
       {/* SELETTORE SCHEDE DOCENTE: MIE SOSTITUZIONI VS QUADRO SCUOLA */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
