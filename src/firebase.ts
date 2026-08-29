@@ -3,7 +3,7 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDkmVLAtwyrNIpbmJxUPfKq_zBIB58KyMo",
+  apiKey: "AIzaSyDkmvLAtwyrNIpbmJxUPfKq_zBIB58KyMo",
   authDomain: "sostutuzioni-smart.firebaseapp.com",
   projectId: "sostutuzioni-smart",
   storageBucket: "sostutuzioni-smart.firebasestorage.app",
