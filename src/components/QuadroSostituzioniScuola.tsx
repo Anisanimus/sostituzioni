@@ -101,7 +101,19 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
       const collegatiIds = getDocentiCollegatiIds(assenza.docenteId, docenti);
       const doc = docenti.find(d => d.id === assenza.docenteId);
       const nomeAssente = doc ? getBaseNomeDocente(doc.nome) : 'Docente';
-      const materiaDoc = doc?.materia || 'Materia';
+      const profiliPersona = docenti.filter(d => collegatiIds.includes(d.id));
+      const materiePersona = Array.from(new Set(profiliPersona.map(p => {
+        if (p.isAlternativa || p.nome.toUpperCase().includes('ALTERNATIVA')) return 'ALTERNATIVA';
+        if (p.isPotenziamento || p.nome.toUpperCase().includes('POTENZIAMENTO')) return 'POTENZIAMENTO';
+        return p.materia;
+      }))).filter(Boolean);
+      // Metti prima le materie curricolari
+      materiePersona.sort((a, b) => {
+        if (a === 'ALTERNATIVA' || a === 'POTENZIAMENTO') return 1;
+        if (b === 'ALTERNATIVA' || b === 'POTENZIAMENTO') return -1;
+        return a.localeCompare(b);
+      });
+      const materiaDoc = materiePersona.length > 0 ? materiePersona.join(', ') : (doc?.materia || 'Materia');
 
       const oreLezione = orarioFuso.filter(c => 
         c.giorno === giornoSettimana && 
