@@ -902,9 +902,6 @@ export const TabelloneSostituzioni: React.FC<{
                               </span>
                             )}
                           </div>
-                          <span className="text-[11px] text-slate-400 block">
-                            Fascia oraria regolare da orario docente
-                          </span>
                         </div>
                       </div>
 

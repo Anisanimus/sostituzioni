@@ -773,9 +773,6 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                                   {r.materia}
                                 </span>
                               </div>
-                              <span className="text-[10px] text-slate-400">
-                                Fascia oraria regolare da orario docente
-                              </span>
                             </div>
                           </div>
 
