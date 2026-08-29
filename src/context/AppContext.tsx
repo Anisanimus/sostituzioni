@@ -3,7 +3,7 @@ import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAsseg
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente } from '../utils/docentiHelper';
 
-const CURRENT_TIMETABLE_VERSION = 'v16_pdf_marchi_6th_hour_fix';
+const CURRENT_TIMETABLE_VERSION = 'v17_pdf_marchi_pellegrino_compresenza_fix';
 
 export const DEFAULT_IMPOSTAZIONI_SCUOLA: ImpostazioniScuola = {
   nomeScuola: 'I.C. Leonardo da Vinci',
