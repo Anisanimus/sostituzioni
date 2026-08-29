@@ -261,93 +261,64 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* PULSANTI DI SLITTAMENTO MESE / GIORNO */}
-            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200 shadow-2xs">
-              {/* SLITTAMENTO MESE PRECEDENTE */}
+            {/* PULSANTE ICONA CALENDARIO */}
+            <div className="relative flex items-center justify-center">
+              <input 
+                id="calendarInputPanoramica"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  if (e.target.value) onSelectDate(e.target.value);
+                }}
+                className="sr-only"
+              />
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  spostaMese(-1);
+                  const el = document.getElementById('calendarInputPanoramica') as HTMLInputElement | null;
+                  if (el) {
+                    if (typeof (el as any).showPicker === 'function') {
+                      try {
+                        (el as any).showPicker();
+                      } catch {
+                        el.focus();
+                      }
+                    } else {
+                      el.focus();
+                    }
+                  }
                 }}
-                className="px-2 py-1 rounded-lg hover:bg-white text-slate-700 text-[10px] font-black transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
-                title="Mese precedente"
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-indigo-900 border border-slate-200 shadow-2xs flex items-center justify-center cursor-pointer transition"
+                title="Scegli giorno dal calendario"
               >
-                <span>« Mese</span>
+                <Calendar className="w-4 h-4 text-indigo-700" />
               </button>
+            </div>
 
-              {/* FRECCIA GIORNO PRECEDENTE */}
+            {/* FRECCE SCORRIMENTO NORMALI (❮ / ❯) */}
+            <div className="flex items-center gap-0.5 bg-slate-50 p-0.5 rounded-lg border border-slate-200">
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   scrollCarousel(-1);
                 }}
-                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white text-slate-800 text-xs font-black transition cursor-pointer shadow-2xs"
-                title="Giorno precedente (salta weekend)"
+                className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+                title="Giorno precedente"
               >
                 ❮
               </button>
-
-              {/* PULSANTE ICONA CALENDARIO DEDICATO SENZA OVERLAY INVASIVO */}
-              <div className="relative flex items-center justify-center">
-                <input 
-                  id="calendarInputPanoramica"
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => {
-                    if (e.target.value) onSelectDate(e.target.value);
-                  }}
-                  className="sr-only"
-                />
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const el = document.getElementById('calendarInputPanoramica') as HTMLInputElement | null;
-                    if (el) {
-                      if (typeof (el as any).showPicker === 'function') {
-                        try {
-                          (el as any).showPicker();
-                        } catch {
-                          el.focus();
-                        }
-                      } else {
-                        el.focus();
-                      }
-                    }
-                  }}
-                  className="p-1.5 rounded-lg hover:bg-white text-indigo-700 shadow-2xs flex items-center justify-center cursor-pointer transition"
-                  title="Apri selettore calendario"
-                >
-                  <Calendar className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* FRECCIA GIORNO SUCCESSIVO */}
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   scrollCarousel(1);
                 }}
-                className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white text-slate-800 text-xs font-black transition cursor-pointer shadow-2xs"
-                title="Giorno successivo (salta weekend)"
+                className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+                title="Giorno successivo"
               >
                 ❯
-              </button>
-
-              {/* SLITTAMENTO MESE SUCCESSIVO */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  spostaMese(1);
-                }}
-                className="px-2 py-1 rounded-lg hover:bg-white text-slate-700 text-[10px] font-black transition cursor-pointer flex items-center gap-0.5 shadow-2xs"
-                title="Mese successivo"
-              >
-                <span>Mese »</span>
               </button>
             </div>
           </div>
@@ -418,13 +389,28 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
           {/* ========================================================================= */}
           <div className="hidden sm:block">
             {vista === 'GIORNO' ? (
-              /* VISTA SETTIMANA: CAROSELLO ORIZZONTALE */
-              <div 
-                id="panoramicaCarouselTrack"
-                className="flex gap-2.5 overflow-x-auto py-1 scroll-smooth"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-              >
-                {statsGiorni.map((s) => {
+              /* VISTA SETTIMANA: CAROSELLO ORIZZONTALE CON CONTROLLI DI SCORRIMENTO INTEGRATI */
+              <div className="relative group/carousel">
+                {/* FRECCIA SCORRIMENTO DIRETTO A SINISTRA */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const track = document.getElementById('panoramicaCarouselTrack');
+                    if (track) track.scrollBy({ left: -260, behavior: 'smooth' });
+                  }}
+                  className="absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white text-slate-800 shadow-md border border-slate-200 flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 transition cursor-pointer"
+                  title="Scorri indietro le schede"
+                >
+                  ❮
+                </button>
+
+                {/* TRACK CAROSELLO */}
+                <div 
+                  id="panoramicaCarouselTrack"
+                  className="flex gap-2.5 overflow-x-auto py-1 scroll-smooth px-1"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {statsGiorni.map((s) => {
                   const badgeGravita = 
                     s.totDocentiAssenti === 0 
                       ? { label: 'Tranquilla', color: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' }
@@ -519,6 +505,20 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                   );
                 })}
               </div>
+
+              {/* FRECCIA SCORRIMENTO DIRETTO A DESTRA */}
+              <button
+                type="button"
+                onClick={() => {
+                  const track = document.getElementById('panoramicaCarouselTrack');
+                  if (track) track.scrollBy({ left: 260, behavior: 'smooth' });
+                }}
+                className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-white text-slate-800 shadow-md border border-slate-200 flex items-center justify-center hover:bg-indigo-50 hover:text-indigo-600 transition cursor-pointer"
+                title="Scorri avanti le schede"
+              >
+                ❯
+              </button>
+            </div>
             ) : (
               /* VISTA MESE DESKTOP: GRIGLIA MENSILE COMPLETA A MATRICE RICCA */
               <div className="space-y-3 p-2 bg-slate-50/60 rounded-2xl border border-slate-200">
