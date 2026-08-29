@@ -33,6 +33,63 @@ export function formatDataItaliana(dataStr: string): string {
 }
 
 /**
+ * Verifica se una data è un giorno di lezione (non weekend e non festivo)
+ */
+export function isGiornoScolastico(dataStr: string, nascondiWeekend: boolean = true, giorniFestivi: string[] = []): boolean {
+  if (!dataStr) return false;
+  const d = new Date(dataStr);
+  const day = d.getDay(); // 0 = Domenica, 6 = Sabato
+  if (nascondiWeekend && (day === 0 || day === 6)) return false;
+  const iso = d.toISOString().split('T')[0];
+  if (giorniFestivi && giorniFestivi.includes(iso)) return false;
+  return true;
+}
+
+/**
+ * Calcola il primo giorno scolastico valido a partire da una data (se oggi è weekend/festivo, salta a Lunedì/primo giorno utile)
+ */
+export function getPrimoGiornoScolasticoValido(dataStr: string, nascondiWeekend: boolean = true, giorniFestivi: string[] = []): string {
+  let d = new Date(dataStr);
+  let attempts = 0;
+  while (attempts < 60) {
+    const day = d.getDay();
+    const iso = d.toISOString().split('T')[0];
+    const isWeekend = day === 0 || day === 6;
+    const isFestivo = giorniFestivi && giorniFestivi.includes(iso);
+    if ((!nascondiWeekend || !isWeekend) && !isFestivo) {
+      return iso;
+    }
+    d.setDate(d.getDate() + 1);
+    attempts++;
+  }
+  return dataStr;
+}
+
+/**
+ * Calcola il giorno scolastico successivo o precedente (+1 o -1) saltando automaticamente weekend e festività
+ */
+export function spostaGiornoScolastico(dataStr: string, delta: number, nascondiWeekend: boolean = true, giorniFestivi: string[] = []): string {
+  let d = new Date(dataStr);
+  const step = delta >= 0 ? 1 : -1;
+  const count = Math.abs(delta) || 1;
+  let advanced = 0;
+  let attempts = 0;
+
+  while (advanced < count && attempts < 100) {
+    d.setDate(d.getDate() + step);
+    const day = d.getDay();
+    const iso = d.toISOString().split('T')[0];
+    const isWeekend = day === 0 || day === 6;
+    const isFestivo = giorniFestivi && giorniFestivi.includes(iso);
+    if ((!nascondiWeekend || !isWeekend) && !isFestivo) {
+      advanced++;
+    }
+    attempts++;
+  }
+  return d.toISOString().split('T')[0];
+}
+
+/**
  * Restituisce tutti gli ID dei profili associati alla stessa persona fisica
  */
 export function getDocentiCollegatiIds(docenteIdOrNome: string, docenti: Docente[]): string[] {

@@ -512,19 +512,50 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
       {/* ELENCO SOSTITUZIONI: TABELLA COMPATTA ORIZZONTALE AL 100% (ZERO SCROLL / ZERO SWIPE SU MOBILE) */}
       <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
         {righeFiltrate.length === 0 ? (
-          <div className="p-8 text-center space-y-2">
-            <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-6 h-6" />
-            </div>
-            <p className="text-sm font-black text-slate-800">
-              {righeQuadro.length === 0 
-                ? 'Nessuna assenza o sostituzione per questa giornata.' 
-                : 'Nessun risultato corrispondente ai filtri selezionati.'}
-            </p>
-            <p className="text-xs text-slate-500">
-              Tutte le classi sono regolari con i rispettivi docenti titolari.
-            </p>
-          </div>
+          (() => {
+            const dObj = new Date(selectedDate);
+            const dayOfWeek = dObj.getDay(); // 0 = Dom, 6 = Sab
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const isFestivo = (impostazioniScuola?.giorniFestivi || []).includes(selectedDate);
+            const isGiornoChiusura = isWeekend || isFestivo;
+
+            if (isGiornoChiusura) {
+              return (
+                <div className="bg-gradient-to-br from-amber-50/90 via-sky-50/80 to-emerald-50/90 p-8 sm:p-10 text-center space-y-4 animate-in fade-in duration-200">
+                  <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center mx-auto text-3xl shadow-md border-2 border-amber-200 animate-bounce">
+                    {isWeekend ? '🏖️' : '🎉'}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-base sm:text-lg font-black text-slate-900">
+                      {isWeekend 
+                        ? `Buon Fine Settimana! (${dayOfWeek === 6 ? 'Sabato' : 'Domenica'} - Scuola Chiusa)` 
+                        : `Giorno Festivo / Chiusura Scuola`
+                      }
+                    </p>
+                    <p className="text-xs sm:text-sm text-slate-600 font-medium">
+                      Nessuna attività didattica prevista per {giornoSettimana} {formatDataItaliana(selectedDate)}. ☀️🌴
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div className="p-8 text-center space-y-2">
+                <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <p className="text-sm font-black text-slate-800">
+                  {righeQuadro.length === 0 
+                    ? 'Nessuna assenza o sostituzione per questa giornata.' 
+                    : 'Nessun risultato corrispondente ai filtri selezionati.'}
+                </p>
+                <p className="text-xs text-slate-500">
+                  Tutte le classi sono regolari con i rispettivi docenti titolari.
+                </p>
+              </div>
+            );
+          })()
         ) : visualizzazione === 'PER_ORA' ? (
           /* ======================================================= */
           /* VISTA 1: TABELLA RAGGRUPPATA PER ORA (100% FIT SCREEN) */

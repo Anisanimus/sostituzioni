@@ -21,6 +21,7 @@ import { PersonalizzazioniScuola } from './components/PersonalizzazioniScuola';
 import { QuadroSostituzioniScuola } from './components/QuadroSostituzioniScuola';
 import { PanoramicaLavori } from './components/PanoramicaLavori';
 import { Coachmark } from './components/Coachmark';
+import { getPrimoGiornoScolasticoValido, spostaGiornoScolastico } from './utils/docentiHelper';
 import { 
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
@@ -35,7 +36,13 @@ const MainApp: React.FC = () => {
   const [isTourOpen, setIsTourOpen] = useState(false);
 
   const todayStr = new Date().toISOString().split('T')[0];
-  const [selectedDate, setSelectedDate] = useState<string>(todayStr);
+  const nascondiWeekend = impostazioniScuola?.nascondiWeekendCalendario ?? true;
+  const giorniFestivi = impostazioniScuola?.giorniFestivi || [];
+
+  // Inizializza la data al primo giorno di lezione valido (se oggi è Sabato/Domenica o Festivo e weekend nascosti, salta a Lunedì/prossimo utile)
+  const [selectedDate, setSelectedDate] = useState<string>(() => 
+    getPrimoGiornoScolasticoValido(todayStr, nascondiWeekend, giorniFestivi)
+  );
 
   const getGiornoFromDate = (dateStr: string): GiornoSettimana => {
     const d = new Date(dateStr);
@@ -50,13 +57,15 @@ const MainApp: React.FC = () => {
 
   const selectedGiorno = getGiornoFromDate(selectedDate);
 
+  // Cambia giorno con le frecce saltando automaticamente weekend e giorni festivi se impostato
   const cambiaGiorno = (delta: number) => {
-    const d = new Date(selectedDate);
-    d.setDate(d.getDate() + delta);
-    setSelectedDate(d.toISOString().split('T')[0]);
+    const nuovaData = spostaGiornoScolastico(selectedDate, delta, nascondiWeekend, giorniFestivi);
+    setSelectedDate(nuovaData);
   };
 
-  const vaiAOggi = () => setSelectedDate(todayStr);
+  const vaiAOggi = () => {
+    setSelectedDate(getPrimoGiornoScolasticoValido(todayStr, nascondiWeekend, giorniFestivi));
+  };
 
   // Analisi Giornaliera (solo eventi attivi non annullati)
   const assenzeOggi = assenze.filter(a => a.data === selectedDate && !a.annullata);

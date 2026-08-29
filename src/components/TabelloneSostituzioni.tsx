@@ -8,7 +8,7 @@ import {
   Printer, LayoutGrid, List, MessageSquare, AlertTriangle, Accessibility, Lock,
   UserCheck, UserX, UserMinus
 } from 'lucide-react';
-import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico } from '../utils/docentiHelper';
+import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido } from '../utils/docentiHelper';
 
 export const TabelloneSostituzioni: React.FC<{ 
   selectedDate: string; 
@@ -452,13 +452,57 @@ export const TabelloneSostituzioni: React.FC<{
             </div>
           </div>
 
-      {oreScoperte.length === 0 ? (
-        <div className="bg-white p-8 text-center rounded-xl border border-dashed border-slate-300">
-          <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
-          <h4 className="font-bold text-slate-800 text-base">Tutte le classi sono coperte!</h4>
-          <p className="text-xs text-slate-500 mt-0.5">Non ci sono ore scoperte per {selectedGiorno} {formatDataItaliana(selectedDate)}.</p>
-        </div>
-      ) : visualizzazione === 'GRUPPI_ORA' ? (
+      {(() => {
+        const dObj = new Date(selectedDate);
+        const dayOfWeek = dObj.getDay(); // 0 = Dom, 6 = Sab
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const isFestivo = (impostazioniScuola?.giorniFestivi || []).includes(selectedDate);
+        const isGiornoChiusura = isWeekend || isFestivo;
+
+        if (isGiornoChiusura && oreScoperte.length === 0) {
+          return (
+            <div className="bg-gradient-to-br from-amber-50/90 via-sky-50/80 to-emerald-50/90 p-8 sm:p-10 text-center rounded-2xl border-2 border-amber-200/80 shadow-md space-y-4 animate-in fade-in zoom-in-95 duration-200">
+              <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-3xl flex items-center justify-center mx-auto text-4xl shadow-md border-2 border-amber-200 animate-bounce">
+                {isWeekend ? '🏖️' : '🎉'}
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-black text-slate-900 text-lg sm:text-xl tracking-tight">
+                  {isWeekend 
+                    ? `Buon Fine Settimana! (${dayOfWeek === 6 ? 'Sabato' : 'Domenica'} - Scuola Chiusa)`
+                    : `Giorno Festivo / Chiusura Scuola`
+                  }
+                </h4>
+                <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-md mx-auto">
+                  Nessuna attività didattica prevista per <strong className="text-slate-800">{selectedGiorno} {formatDataItaliana(selectedDate)}</strong>. Rilassati e goditi la giornata! ☀️🌴
+                </p>
+              </div>
+              {onChangeDate && (
+                <button
+                  type="button"
+                  onClick={() => onChangeDate(getPrimoGiornoScolasticoValido(selectedDate, true, impostazioniScuola?.giorniFestivi || []))}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition inline-flex items-center gap-2 cursor-pointer"
+                >
+                  <span>Vai al prossimo giorno di lezione ➔</span>
+                </button>
+              )}
+            </div>
+          );
+        }
+
+        if (oreScoperte.length === 0) {
+          return (
+            <div className="bg-white p-8 text-center rounded-xl border border-dashed border-slate-300">
+              <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
+              <h4 className="font-bold text-slate-800 text-base">Tutte le classi sono coperte!</h4>
+              <p className="text-xs text-slate-500 mt-0.5">Non ci sono ore scoperte per {selectedGiorno} {formatDataItaliana(selectedDate)}.</p>
+            </div>
+          );
+        }
+
+        return null;
+      })()}
+
+      {oreScoperte.length > 0 && (visualizzazione === 'GRUPPI_ORA' ? (
         /* VISTA 1: RAGGRUPPATA PER ORA */
         <div className="space-y-3">
           {oreRaggruppate.map(gruppo => {
@@ -1011,7 +1055,7 @@ export const TabelloneSostituzioni: React.FC<{
         );
       })}
     </div>
-      )}
+      ))}
 
         </div>
 

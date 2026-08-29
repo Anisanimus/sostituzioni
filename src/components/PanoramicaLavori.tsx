@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { getBaseNomeDocente, getDocentiCollegatiIds } from '../utils/docentiHelper';
+import { getBaseNomeDocente, getDocentiCollegatiIds, spostaGiornoScolastico } from '../utils/docentiHelper';
 import { 
   ChevronDown, X, BarChart3, TrendingUp, Calendar 
 } from 'lucide-react';
@@ -189,18 +189,18 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
 
   // Funzione helper per scorrere o cambiare giorno
   const scrollCarousel = (offset: number) => {
-    if (compresso) {
-      // Se compresso, le frecce cambiano direttamente il giorno selezionato
-      const curIndex = datesFinestra.indexOf(selectedDate);
-      if (offset > 0) {
-        if (curIndex < datesFinestra.length - 1) onSelectDate(datesFinestra[curIndex + 1]);
-      } else {
-        if (curIndex > 0) onSelectDate(datesFinestra[curIndex - 1]);
+    // Sposta la data attiva al giorno di lezione precedente o successivo
+    const delta = offset > 0 ? 1 : -1;
+    const curIndex = datesFinestra.indexOf(selectedDate);
+    if (curIndex !== -1) {
+      const nextIdx = curIndex + delta;
+      if (nextIdx >= 0 && nextIdx < datesFinestra.length) {
+        onSelectDate(datesFinestra[nextIdx]);
       }
     } else {
-      // Se aperto, scorre fluidamente il carosello
-      const el = document.getElementById('panoramicaCarouselTrack');
-      if (el) el.scrollBy({ left: offset, behavior: 'smooth' });
+      // Se non presente nella finestra, usa il salto matematico scolastico
+      const nuova = spostaGiornoScolastico(selectedDate, delta, nascondiWeekend, giorniFestivi);
+      onSelectDate(nuova);
     }
   };
 
