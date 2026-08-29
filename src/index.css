@@ -6,6 +6,20 @@
   :root {
     --brand-dark: #0f172a;
   }
+
+  /* Prevenzione zoom indesiderato su mobile quando si digita negli input */
+  @media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"],
+    input[type="date"],
+    input[type="search"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @media print {
