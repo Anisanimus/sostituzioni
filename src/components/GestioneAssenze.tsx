@@ -725,8 +725,8 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                     onClick={() => setIsDropdownAccompagnatoriOpen(false)}
                   />
 
-                  {/* Finestra di selezione (Bottom sheet su mobile, dropdown absolute su desktop) */}
-                  <div className="fixed sm:absolute inset-x-0 bottom-0 sm:bottom-auto sm:top-full sm:left-0 sm:right-0 z-50 max-h-[85vh] sm:max-h-96 sm:mt-1.5 bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+                  {/* Finestra di selezione (Bottom sheet su mobile con top clearance e safe area, dropdown absolute su desktop) */}
+                  <div className="fixed sm:absolute inset-x-0 bottom-0 sm:bottom-auto sm:top-full sm:left-0 sm:right-0 z-50 max-h-[75dvh] sm:max-h-96 sm:mt-1.5 bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200 pb-[env(safe-area-inset-bottom,0px)]">
                     
                     {/* Header Modale Mobile / Dropdown Desktop */}
                     <div className="p-3.5 bg-amber-500 text-white flex items-center justify-between shrink-0">
