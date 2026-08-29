@@ -185,6 +185,8 @@ export const TabelloneSostituzioni: React.FC<{
   };
 
   // 1. Raggruppamento per ora (fino a 9 ore per giorno) con ordinamento dinamico interno
+  const personeUniche = getDocentiUnici(docenti);
+
   const oreRaggruppate = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(oraNum => {
     const items = oreScoperte
       .filter(os => os.ora === oraNum)
@@ -250,7 +252,6 @@ export const TabelloneSostituzioni: React.FC<{
   // ==============================================================================
   // CALCOLO SPECCHIETTO COMPATTO RISORSE DISPONIBILI (DIVISI PER ORA E TIPOLOGIA)
   // ==============================================================================
-  const personeUniche = getDocentiUnici(docenti);
   const oreGiornoList = [1, 2, 3, 4, 5, 6, 7, 8];
 
   const risorsePerOra = oreGiornoList.map(oraNum => {
