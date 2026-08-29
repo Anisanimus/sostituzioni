@@ -398,7 +398,7 @@ const MainApp: React.FC = () => {
 
             {/* FOOTER SIDEBAR */}
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
-              <span className="font-mono text-[11px] font-bold text-slate-600">Sistema Sostituzioni v0.0.4</span>
+              <span className="font-mono text-[11px] font-bold text-slate-600">Sostituzioni Smart v0.0.4</span>
               <span className="font-bold text-emerald-600 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Operativo
               </span>
