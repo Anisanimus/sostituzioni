@@ -214,7 +214,9 @@ export const TabelloneSostituzioni: React.FC<{
         return a.ora - b.ora;
       });
 
+    const personaUnica = personeUniche.find(p => p.nome === nomeDocente);
     const docAssente = items[0].docenteAssente;
+    const materiaVisualizzata = personaUnica ? personaUnica.materie.join(', ') : docAssente.materia;
     const totOreDoc = items.length;
     const sostsDoc = items.map(os => getSostituzione(os.ora, os.classe)).filter(Boolean);
     const totCoperteDoc = sostsDoc.length;
@@ -225,6 +227,7 @@ export const TabelloneSostituzioni: React.FC<{
     return {
       nomeDocente,
       docAssente,
+      materiaVisualizzata,
       totOreDoc,
       totCoperteDoc,
       totPubblicateDoc,
@@ -801,7 +804,7 @@ export const TabelloneSostituzioni: React.FC<{
                     <div>
                       <div className="flex items-center gap-2">
                         <strong className="text-sm font-black tracking-wide">{gruppoDoc.nomeDocente}</strong>
-                        <span className="text-xs text-indigo-300 font-semibold">({gruppoDoc.docAssente.materia})</span>
+                        <span className="text-xs text-indigo-300 font-semibold">({gruppoDoc.materiaVisualizzata})</span>
                         {gruppoDoc.docAssente.isCasoGraveSostegno && (
                           <span className="bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
                             ♿ GRAVE
