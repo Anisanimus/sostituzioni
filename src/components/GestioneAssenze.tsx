@@ -51,13 +51,18 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      // Su schermi desktop gestisci il click outside
+      if (window.innerWidth >= 640 && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownAccompagnatoriOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const tutteClassi = [
@@ -746,22 +751,32 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                       </button>
                     </div>
 
-                    {/* Barra Ricerca Interna */}
-                    <div className="p-2.5 border-b border-slate-100 bg-slate-50 flex items-center gap-2 shrink-0">
-                      <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                      <input
-                        type="text"
-                        placeholder="Filtra per cognome o materia..."
-                        value={cercaDocente}
-                        onChange={(e) => setCercaDocente(e.target.value)}
-                        className="w-full bg-transparent text-xs sm:text-sm outline-none font-semibold text-slate-800 placeholder:text-slate-400"
-                        autoFocus
-                      />
-                      {cercaDocente && (
-                        <button type="button" onClick={() => setCercaDocente('')} className="text-slate-400 hover:text-slate-600 p-1 text-xs font-bold">
-                          ✕
-                        </button>
-                      )}
+                    {/* Barra Ricerca Interna Touch-Optimized */}
+                    <div className="p-3 border-b border-slate-200 bg-slate-50 flex items-center gap-2.5 shrink-0">
+                      <div className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 flex items-center gap-2 shadow-2xs focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200">
+                        <Search className="w-4 h-4 text-slate-400 shrink-0" />
+                        <input
+                          type="text"
+                          inputMode="search"
+                          placeholder="Filtra per cognome o materia..."
+                          value={cercaDocente}
+                          onChange={(e) => setCercaDocente(e.target.value)}
+                          className="w-full bg-transparent text-sm sm:text-xs outline-none font-semibold text-slate-800 placeholder:text-slate-400"
+                        />
+                        {cercaDocente && (
+                          <button 
+                            type="button" 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setCercaDocente('');
+                            }} 
+                            className="text-slate-400 hover:text-slate-700 p-1 text-xs font-bold"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Selezioni Rapide se presenti */}
