@@ -49,8 +49,31 @@ export const LoginScreen: React.FC = () => {
               <span>Accedi con Google Workspace</span>
             </button>
             <p className="text-[11px] text-center text-slate-500 font-medium">
-              Usa l'account istituzionale <code className="font-mono bg-slate-100 px-1 py-0.5 rounded text-slate-700">@scuola.edu.it</code>
+              Usa l'account istituzionale <code className="font-mono bg-slate-100 px-1 py-0.5 rounded text-slate-700">@scuola.edu.it</code> o autorizzato
             </p>
+          </div>
+
+          <div className="relative flex items-center justify-center">
+            <div className="border-t border-slate-200 w-full" />
+            <span className="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">oppure accesso rapido</span>
+          </div>
+
+          {/* ACCESSO DIRETTO AMMINISTRATORE PER MOBILE PWA */}
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => bypassDemoLogin('VICEPRESIDENZA')}
+              className="w-full p-3.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-950 border border-indigo-200 rounded-2xl font-bold text-xs flex items-center justify-between transition cursor-pointer shadow-xs"
+            >
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                <div className="text-left">
+                  <span className="block font-black text-sm text-indigo-900">Entra come Vicepresidenza</span>
+                  <span className="text-[10px] text-indigo-600 font-normal">Accesso rapido amministratore</span>
+                </div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-indigo-600" />
+            </button>
           </div>
 
           {/* PRIVACY & PROTEZIONE STUDENTI */}
