@@ -12,7 +12,9 @@ export const DEFAULT_IMPOSTAZIONI_SCUOLA: ImpostazioniScuola = {
   vistaTabellonePredefinita: 'GRUPPI_ORA',
   nascondiWeekendCalendario: true,
   giorniFestivi: [],
-  pinPersonaleAta: '1234'
+  pinPersonaleAta: '1234',
+  dominiAutorizzatiGoogle: ['gmail.com', 'scuola.edu.it'],
+  emailVicepresidenzaGoogle: ['vicepresidenza@scuola.edu.it', 'admin@scuola.edu.it']
 };
 
 export const DEFAULT_PRIORITA_ASSENZE: CategoriaSostituto[] = [

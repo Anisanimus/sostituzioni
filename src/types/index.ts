@@ -154,6 +154,8 @@ export interface ImpostazioniScuola {
   nascondiWeekendCalendario: boolean;
   giorniFestivi?: string[]; // Array di date ISO YYYY-MM-DD per festività, ponti e chiusure
   pinPersonaleAta?: string; // PIN di accesso riservato per Personale ATA / Segreteria
+  dominiAutorizzatiGoogle?: string[]; // Domini email ammessi (es. ["icannafrank.edu.it", "scuola.edu.it"])
+  emailVicepresidenzaGoogle?: string[]; // Email con poteri di Vicepresidenza/Admin (es. ["vicepresidenza@..."])
 }
 
 export interface CandidatoSostituto {

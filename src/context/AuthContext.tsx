@@ -45,8 +45,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const email = user.email.toLowerCase();
         const dominio = email.split('@')[1] || '';
 
+        // Recupera impostazioni scuola salvate localmente o default
+        let dominiConsentiti = SCUOLA_DEFAULT.dominiAutorizzati;
+        let emailViceConsentite = SCUOLA_DEFAULT.emailVicepresidenza;
+
+        try {
+          const savedScuola = localStorage.getItem('orario_impostazioni_scuola');
+          if (savedScuola) {
+            const parsed = JSON.parse(savedScuola);
+            if (parsed.dominiAutorizzatiGoogle && parsed.dominiAutorizzatiGoogle.length > 0) {
+              dominiConsentiti = parsed.dominiAutorizzatiGoogle;
+            }
+            if (parsed.emailVicepresidenzaGoogle && parsed.emailVicepresidenzaGoogle.length > 0) {
+              emailViceConsentite = parsed.emailVicepresidenzaGoogle;
+            }
+          }
+        } catch (e) {
+          console.error('Errore lettura impostazioni scuola da localStorage', e);
+        }
+
         // 1. Verifica appartenenza dominio o admin
-        const isDominioValido = SCUOLA_DEFAULT.dominiAutorizzati.some(d => d.toLowerCase() === dominio.toLowerCase());
+        const isDominioValido = dominiConsentiti.some(d => d.toLowerCase() === dominio.toLowerCase()) || 
+                                emailViceConsentite.some(e => e.toLowerCase() === email);
 
         if (!isDominioValido) {
           setErroreAuth(`Accesso negato: il dominio @${dominio} non risulta registrato tra le scuole autorizzate.`);
@@ -56,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // 2. Determina Ruolo
-        const isVice = SCUOLA_DEFAULT.emailVicepresidenza.some(e => e.toLowerCase() === email) || email.includes('vice') || email.includes('admin');
+        const isVice = emailViceConsentite.some(e => e.toLowerCase() === email) || email.includes('vice') || email.includes('admin');
         
         const info: UtenteAutenticato = {
           uid: user.uid,

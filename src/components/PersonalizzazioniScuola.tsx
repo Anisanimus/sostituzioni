@@ -25,6 +25,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [giorniFestivi, setGiorniFestivi] = useState<string[]>(impostazioniScuola.giorniFestivi || []);
   const [nuovaDataFestiva, setNuovaDataFestiva] = useState('');
 
+  // Gestione Domini Google & Email Vicepresidenza
+  const [dominiGoogleStr, setDominiGoogleStr] = useState((impostazioniScuola.dominiAutorizzatiGoogle || ['gmail.com', 'scuola.edu.it']).join(', '));
+  const [emailViceStr, setEmailViceStr] = useState((impostazioniScuola.emailVicepresidenzaGoogle || ['vicepresidenza@scuola.edu.it']).join(', '));
+
   const [salvato, setSalvato] = useState(false);
   const fileBackupRef = React.useRef<HTMLInputElement>(null);
 
@@ -43,6 +47,17 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
   const handleSalva = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const dominiParsed = dominiGoogleStr
+      .split(',')
+      .map(d => d.trim().toLowerCase().replace('@', ''))
+      .filter(Boolean);
+
+    const emailViceParsed = emailViceStr
+      .split(',')
+      .map(e => e.trim().toLowerCase())
+      .filter(Boolean);
+
     updateImpostazioniScuola({
       nomeScuola: nomeScuola.trim() || 'Istituto Scolastico',
       pinPersonaleAta: pinPersonaleAta.trim() || '1234',
@@ -50,7 +65,9 @@ export const PersonalizzazioniScuola: React.FC = () => {
       tettoMaxAssembleeSindacaliAnno: Number(tettoAssemblee) || 10,
       vistaTabellonePredefinita: vistaTabellone,
       nascondiWeekendCalendario: nascondiWeekend,
-      giorniFestivi
+      giorniFestivi,
+      dominiAutorizzatiGoogle: dominiParsed.length > 0 ? dominiParsed : ['gmail.com', 'scuola.edu.it'],
+      emailVicepresidenzaGoogle: emailViceParsed.length > 0 ? emailViceParsed : ['vicepresidenza@scuola.edu.it']
     });
 
     setSalvato(true);
@@ -216,6 +233,41 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-black text-indigo-700 text-center tracking-widest outline-none focus:border-indigo-500"
                 maxLength={6}
                 required
+              />
+            </div>
+          </div>
+
+          {/* GESTIONE ACCESSI GOOGLE WORKSPACE & VICEPRESIDENZA */}
+          <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-1.5">
+              <label className="block text-xs font-black text-indigo-950">
+                🌐 Domini Google Workspace Autorizzati (Docenti & Personale)
+              </label>
+              <p className="text-[11px] text-slate-600">
+                Inserisci i domini consentiti separati da virgola (es. <code className="bg-white px-1 py-0.5 rounded border text-indigo-700 font-mono">icannafrank.edu.it, gmail.com</code>). Gli account esterni saranno bloccati.
+              </p>
+              <input
+                type="text"
+                value={dominiGoogleStr}
+                onChange={(e) => setDominiGoogleStr(e.target.value)}
+                placeholder="icannafrank.edu.it, scuola.edu.it"
+                className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+              />
+            </div>
+
+            <div className="p-3.5 bg-purple-50/50 rounded-xl border border-purple-100 space-y-1.5">
+              <label className="block text-xs font-black text-purple-950">
+                👑 Email Amministratori & Vicepresidenza
+              </label>
+              <p className="text-[11px] text-slate-600">
+                Email che hanno pieno accesso gestionale al Tabellone e alle Assenze (separate da virgola).
+              </p>
+              <input
+                type="text"
+                value={emailViceStr}
+                onChange={(e) => setEmailViceStr(e.target.value)}
+                placeholder="vicepresidenza@scuola.edu.it, preside@scuola.edu.it"
+                className="w-full bg-white border border-purple-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-purple-500"
               />
             </div>
           </div>
