@@ -159,35 +159,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setErroreAuth(null);
       setIsLoadingAuth(true);
       
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-      if (isIOS) {
-        // Su iPhone/iPad i popup vengono spesso bloccati o creano loop: usa direttamente il redirect nativo
-        await signInWithRedirect(auth, googleProvider);
-        return;
-      }
-
-      // Su desktop / Android prova prima il popup rapido
-      try {
-        await signInWithPopup(auth, googleProvider);
-      } catch (popupErr: any) {
-        console.warn('Popup login fallback to redirect:', popupErr);
-        if (
-          popupErr.code === 'auth/popup-blocked' ||
-          popupErr.code === 'auth/cancelled-popup-request' ||
-          popupErr.message?.includes('Cross-Origin-Opener-Policy') ||
-          popupErr.code === 'auth/popup-closed-by-user'
-        ) {
-          await signInWithRedirect(auth, googleProvider);
-          return;
-        }
-        throw popupErr;
+      // Prova popup diretto
+      const res = await signInWithPopup(auth, googleProvider);
+      if (res?.user) {
+        setCurrentUser(res.user);
       }
     } catch (err: any) {
-      console.error('Errore login Google:', err);
-      setErroreAuth(err.message || 'Errore durante l\'autenticazione con Google.');
+      console.warn('Login Google Popup notice:', err);
+      // Se il popup è bloccato (es. Safari popup blocker), tenta redirect pulito
+      if (
+        err.code === 'auth/popup-blocked' ||
+        err.code === 'auth/cancelled-popup-request' ||
+        err.message?.includes('Cross-Origin-Opener-Policy')
+      ) {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (redirectErr: any) {
+          setErroreAuth(redirectErr.message || 'Errore durante l\'autenticazione con Google.');
+        }
+      } else if (err.code !== 'auth/popup-closed-by-user') {
+        setErroreAuth(err.message || 'Errore durante l\'autenticazione.');
+      }
     } finally {
-      // Se non stiamo reindirizzando, sblocca il loading
       setIsLoadingAuth(false);
     }
   };
