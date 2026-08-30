@@ -242,6 +242,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
 
+        // Inizializza l'insieme degli ID già noti all'avvio per NON notificare vecchie sostituzioni pregresse
+        const knownSostituzioniIdsRef = new Set<string>();
+        let isFirstSyncSnapshot = true;
+
         // 1. Fetch iniziale immediato per caricare subito lo stato reale
         const initialSnap = await getDoc(scuolaDocRef);
         if (initialSnap.exists()) {
@@ -265,6 +269,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
             setSostituzioni(cloudData.sostituzioni);
             localStorage.setItem('scuola_sostituzioni', JSON.stringify(cloudData.sostituzioni));
+            cloudData.sostituzioni.forEach((s: any) => knownSostituzioniIdsRef.add(s.id));
           }
           if (cloudData.movimentiDebito && Array.isArray(cloudData.movimentiDebito)) {
             setMovimentiDebito(cloudData.movimentiDebito);
@@ -306,86 +311,96 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               setNotifiche(cloudData.notifiche);
               localStorage.setItem('scuola_notifiche', JSON.stringify(cloudData.notifiche));
             }
+
             // Controlla se sono arrivate nuove sostituzioni pubblicate o annullate e invia notifica push di sistema SOLO AL DOCENTE INTERESSATO
             if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
-              if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+              const currentCloudSosts: SostituzioneAssegnata[] = cloudData.sostituzioni;
+              const currentCloudIds = new Set(currentCloudSosts.map(s => s.id));
+
+              if (!isFirstSyncSnapshot && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
                 const loggedDocenteId = localStorage.getItem('portale_docente_loggato_id') || '';
-                const docentiAttuali = cloudData.docenti || docenti;
-                const loggedCollegatiIds = loggedDocenteId ? getDocentiCollegatiIds(loggedDocenteId, docentiAttuali) : [];
-
-                const vecchiePubblicate = (sostituzioni || []).filter(s => s.pubblicata);
-                const vecchiePubblicateIds = vecchiePubblicate.map(s => s.id);
                 
-                // 1. Nuove sostituzioni pubblicate (SOLO SE ASSEGNATE AL DOCENTE LOGGATO SU QUESTO DISPOSITIVO)
-                const nuoveAppenaPubblicate = cloudData.sostituzioni.filter(
-                  (s: SostituzioneAssegnata) => s.pubblicata && !vecchiePubblicateIds.includes(s.id) && s.docenteSostitutoId &&
-                  (!loggedDocenteId || loggedCollegatiIds.includes(s.docenteSostitutoId))
-                );
+                // NOTIFICA SOLO SE C'È UN DOCENTE EFFETTIVAMENTE LOGGATO
+                if (loggedDocenteId) {
+                  const docentiAttuali = cloudData.docenti || docenti;
+                  const loggedCollegatiIds = getDocentiCollegatiIds(loggedDocenteId, docentiAttuali);
 
-                if (nuoveAppenaPubblicate.length > 0) {
-                  nuoveAppenaPubblicate.forEach((s: SostituzioneAssegnata) => {
-                    const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
-                    try {
-                      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.ready.then(reg => {
-                          reg.showNotification('🔔 Nuova Sostituzione Assegnata!', {
-                            body: `Docente ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
-                            icon: '/favicon.svg'
+                  // 1. Nuove sostituzioni pubblicate appena arrivate (non erano nell'insieme dei noti)
+                  const nuoveAppenaPubblicate = currentCloudSosts.filter(
+                    s => s.pubblicata && !knownSostituzioniIdsRef.has(s.id) && s.docenteSostitutoId &&
+                    loggedCollegatiIds.includes(s.docenteSostitutoId)
+                  );
+
+                  if (nuoveAppenaPubblicate.length > 0) {
+                    nuoveAppenaPubblicate.forEach((s: SostituzioneAssegnata) => {
+                      const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
+                      try {
+                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                          navigator.serviceWorker.ready.then(reg => {
+                            reg.showNotification('🔔 Nuova Sostituzione Assegnata!', {
+                              body: `Prof. ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
+                              icon: '/favicon.svg'
+                            });
+                          }).catch(() => {
+                            new Notification('🔔 Nuova Sostituzione Assegnata!', {
+                              body: `Prof. ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
+                              icon: '/favicon.svg'
+                            });
                           });
-                        }).catch(() => {
+                        } else {
                           new Notification('🔔 Nuova Sostituzione Assegnata!', {
-                            body: `Docente ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
+                            body: `Prof. ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
                             icon: '/favicon.svg'
                           });
-                        });
-                      } else {
-                        new Notification('🔔 Nuova Sostituzione Assegnata!', {
-                          body: `Docente ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
-                          icon: '/favicon.svg'
-                        });
+                        }
+                      } catch (err) {
+                        console.warn('Errore trigger push notification:', err);
                       }
-                    } catch (err) {
-                      console.warn('Errore trigger push notification:', err);
-                    }
-                  });
-                }
+                    });
+                  }
 
-                // 2. Sostituzioni annullate o rimosse dalla Vicepresidenza (SOLO SE APPARTENEVANO AL DOCENTE LOGGATO)
-                const nuoveIds = cloudData.sostituzioni.map((s: SostituzioneAssegnata) => s.id);
-                const annullate = vecchiePubblicate.filter(
-                  s => !nuoveIds.includes(s.id) && s.docenteSostitutoId &&
-                  (!loggedDocenteId || loggedCollegatiIds.includes(s.docenteSostitutoId))
-                );
+                  // 2. Sostituzioni rimosse o annullate (erano nell'insieme dei noti ma non ci sono più nel cloud)
+                  const vecchieLocale = (sostituzioniRef.current || []).filter(s => s.pubblicata);
+                  const annullate = vecchieLocale.filter(
+                    s => !currentCloudIds.has(s.id) && s.docenteSostitutoId &&
+                    loggedCollegatiIds.includes(s.docenteSostitutoId)
+                  );
 
-                if (annullate.length > 0) {
-                  annullate.forEach((s: SostituzioneAssegnata) => {
-                    const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
-                    try {
-                      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.ready.then(reg => {
-                          reg.showNotification('⚠️ Supplenza Annullata', {
-                            body: `Docente ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
-                            icon: '/favicon.svg'
+                  if (annullate.length > 0) {
+                    annullate.forEach((s: SostituzioneAssegnata) => {
+                      const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
+                      try {
+                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                          navigator.serviceWorker.ready.then(reg => {
+                            reg.showNotification('⚠️ Supplenza Annullata', {
+                              body: `Prof. ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
+                              icon: '/favicon.svg'
+                            });
+                          }).catch(() => {
+                            new Notification('⚠️ Supplenza Annullata', {
+                              body: `Prof. ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
+                              icon: '/favicon.svg'
+                            });
                           });
-                        }).catch(() => {
+                        } else {
                           new Notification('⚠️ Supplenza Annullata', {
-                            body: `Docente ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
+                            body: `Prof. ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
                             icon: '/favicon.svg'
                           });
-                        });
-                      } else {
-                        new Notification('⚠️ Supplenza Annullata', {
-                          body: `Docente ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
-                          icon: '/favicon.svg'
-                        });
+                        }
+                      } catch (err) {
+                        console.warn('Errore trigger push notification annullamento:', err);
                       }
-                    } catch (err) {
-                      console.warn('Errore trigger push notification annullamento:', err);
-                    }
-                  });
+                    });
+                  }
                 }
               }
-              setSostituzioni(cloudData.sostituzioni);
+
+              // Aggiorna l'insieme noto
+              knownSostituzioniIdsRef.clear();
+              currentCloudSosts.forEach(s => knownSostituzioniIdsRef.add(s.id));
+              isFirstSyncSnapshot = false;
+              setSostituzioni(currentCloudSosts);
             }
 
             if (cloudData.movimentiDebito && Array.isArray(cloudData.movimentiDebito)) {
