@@ -337,6 +337,43 @@ export const AnagraficaOrario: React.FC = () => {
     }
   };
 
+  // MODELLO EXCEL VUOTO
+  const handleExportModelloVuoto = () => {
+    try {
+      const headerRow1 = ['docenti', 'materia'];
+      const headerRow2 = ['', ''];
+
+      GIORNI.forEach(g => {
+        headerRow1.push(g.toLowerCase());
+        for (let i = 1; i < 9; i++) headerRow1.push('');
+        for (let h = 1; h <= 9; h++) headerRow2.push(String(h));
+      });
+
+      headerRow1.push('email');
+      headerRow2.push('email istituzionale google');
+
+      // Alcune righe di esempio per guidare la compilazione
+      const rows: any[][] = [
+        headerRow1, 
+        headerRow2,
+        ['ROSSI MARIO', 'ITALIANO', '1A', '1A', '2B', 'D', '3C', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'mario.rossi@scuola.edu.it'],
+        ['BIANCHI ANNA', 'SOSTEGNO', '1A*', '1A*', '2B', '2B', '3C*', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'anna.bianchi@scuola.edu.it'],
+        ['VERDI LUCA', 'POTENZIAMENTO', '1B', '2A', 'P', '3C', 'D', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'luca.verdi@scuola.edu.it']
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Modello_Orario_Docenti');
+      XLSX.writeFile(wb, `Modello_Import_Orario_Docenti.xlsx`);
+    } catch (err) {
+      console.error(err);
+      alert('Errore durante il download del modello Excel.');
+    }
+  };
+
+  // STATO PER MOSTRARE LA GUIDA / ISTRUZIONI EXCEL (icona info)
+  const [mostraGuidaExcel, setMostraGuidaExcel] = useState<boolean>(false);
+
   const getCella = (giorno: GiornoSettimana, ora: number): CellaOrario => {
     return oreModificate.find(c => c.giorno === giorno && c.ora === ora) || {
       giorno,
@@ -476,6 +513,75 @@ export const AnagraficaOrario: React.FC = () => {
         </div>
       )}
 
+      {/* ========================================================= */}
+      {/* MODAL POPUP GUIDA & ISTRUZIONI COMPILAZIONE EXCEL         */}
+      {/* ========================================================= */}
+      {mostraGuidaExcel && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-xl w-full shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] overflow-y-auto">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                  <Info className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Come Compilare l'Orario Excel</h3>
+                  <p className="text-xs text-slate-500">Regole e notazioni supportate per l'importazione</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMostraGuidaExcel(false)}
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer text-sm font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-700 leading-relaxed">
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-1.5">
+                <strong className="text-slate-900 block text-xs font-black">📌 Notazioni nelle celle:</strong>
+                <ul className="space-y-1 pl-4 list-disc text-[11px] text-slate-600">
+                  <li><strong>Classi di Lezione:</strong> scrivi semplicemente la sezione (es. <code>1A</code>, <code>2B</code>, <code>3C</code>).</li>
+                  <li><strong>Disposizione (D):</strong> scrivi <code>D</code> per le ore a disposizione.</li>
+                  <li><strong>Potenziamento (P):</strong> scrivi <code>P</code> oppure la classe con cui fa compresenza (es. <code>3F P</code> o semplicemente la classe <code>3F</code> nella riga dedicata al Potenziamento).</li>
+                  <li><strong>Sostegno con Caso Grave:</strong> aggiungi un asterisco dopo la classe (es. <code>1A*</code>) per bloccare la sostituzione in quell'ora.</li>
+                  <li><strong>Email Docenti:</strong> puoi inserire l'email Google nella colonna finale del file Excel per l'accesso automatico.</li>
+                </ul>
+              </div>
+
+              <div className="bg-indigo-50/70 border border-indigo-200 p-3.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="font-black text-indigo-950 block text-xs">📥 Hai bisogno del file modello?</span>
+                  <span className="text-[11px] text-indigo-800">Scarica un file Excel pre-impostato e pronto da compilare.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleExportModelloVuoto}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-2 rounded-xl shadow-2xs transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Scarica Modello Excel</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setMostraGuidaExcel(false)}
+                className="px-4 py-2 rounded-xl text-xs font-black text-indigo-600 hover:bg-indigo-50 transition cursor-pointer"
+              >
+                Ho capito, Chiudi
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* HEADER ANAGRAFICA CON UPLOAD E DOWNLOAD */}
       <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100">
         <div>
@@ -555,12 +661,19 @@ export const AnagraficaOrario: React.FC = () => {
                     </span>
                   );
                 })()}
+
+                {/* PULSANTE (i) INFO & GUIDA COMPILAZIONE EXCEL */}
+                <button
+                  type="button"
+                  onClick={() => setMostraGuidaExcel(true)}
+                  className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-700 border border-slate-200 hover:border-indigo-300 flex items-center justify-center font-bold text-xs shadow-2xs transition cursor-pointer"
+                  title="Istruzioni su come compilare e caricare l'orario Excel (e scarica modello vuoto)"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
               </>
             )}
           </div>
-          <p className="text-xs text-slate-500">
-            Modifica le classi per ora, gestisci le <strong>Disposizioni (D)</strong>, i <strong>Potenziamenti (P)</strong> e le ore con <strong>Alunno a Caso Grave</strong>. Se fai upload di un orario, segna le ore dei sostegni bloccati con caso grave con un asterisco (es. <strong>1A*</strong>).
-          </p>
         </div>
 
         {/* AZIONI: UPLOAD, DOWNLOAD, RESET */}
