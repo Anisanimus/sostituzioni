@@ -36,7 +36,11 @@ const MainApp: React.FC = () => {
   const { docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola } = useApp();
   const { utenteInfo, logout, isLoadingAuth } = useAuth();
 
-  const [ruoloAttivo, setRuoloAttivo] = useState<'VICEPRESIDENZA' | 'PORTALE_DOCENTE' | 'QUADRO_SCUOLA'>('VICEPRESIDENZA');
+  const [ruoloAttivo, setRuoloAttivo] = useState<'VICEPRESIDENZA' | 'PORTALE_DOCENTE' | 'QUADRO_SCUOLA'>(() => {
+    if (utenteInfo?.ruolo === 'VICEPRESIDENZA') return 'VICEPRESIDENZA';
+    if (utenteInfo?.ruolo === 'PERSONALE_ATA') return 'QUADRO_SCUOLA';
+    return 'PORTALE_DOCENTE';
+  });
   const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'QUADRO_SCUOLA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'PERSONALIZZAZIONI'>('GESTIONE_GIORNALIERA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
@@ -45,12 +49,12 @@ const MainApp: React.FC = () => {
   // Sincronizza ruolo utente autenticato all'accesso
   React.useEffect(() => {
     if (utenteInfo) {
-      if (utenteInfo.ruolo === 'DOCENTE') {
-        setRuoloAttivo('PORTALE_DOCENTE');
+      if (utenteInfo.ruolo === 'VICEPRESIDENZA') {
+        setRuoloAttivo('VICEPRESIDENZA');
       } else if (utenteInfo.ruolo === 'PERSONALE_ATA') {
         setRuoloAttivo('QUADRO_SCUOLA');
       } else {
-        setRuoloAttivo('VICEPRESIDENZA');
+        setRuoloAttivo('PORTALE_DOCENTE');
       }
     }
   }, [utenteInfo]);

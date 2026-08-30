@@ -126,6 +126,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const isVice = email === 'cravero.anita@gmail.com' ||
                        emailViceConsentite.some(e => e === email);
         
+        console.log('Verifica Ruolo Utente:', { email, isVice, emailViceConsentite });
+
         const info: UtenteAutenticato = {
           uid: user.uid,
           email: user.email,
