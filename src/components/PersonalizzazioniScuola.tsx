@@ -91,7 +91,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
     const dominiParsed = dominiGoogleStr
       .split(',')
-      .map(d => d.trim().toLowerCase().replace('@', ''))
+      .map(d => d.trim().toLowerCase())
+      .map(d => d.startsWith('@') ? d.slice(1) : d)
       .filter(Boolean);
 
     const emailViceParsed = emailViceStr

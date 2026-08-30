@@ -102,12 +102,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // 1. Verifica se l'account appartiene a un dominio autorizzato o è un'email esplicitamente autorizzata
-        const isDominioValido = dominiConsentiti.some(d => d === dominio) || 
+        const isDominioValido = dominiConsentiti.some(d => {
+                                  if (d.includes('@')) {
+                                    // Se l'utente ha inserito una email intera nel campo domini (es: anita.cravero@icginostrada.it)
+                                    return d === email || d.split('@')[1] === dominio;
+                                  }
+                                  return d === dominio;
+                                }) || 
                                 emailViceConsentite.some(e => e === email) ||
                                 email === 'cravero.anita@gmail.com';
 
         if (!isDominioValido) {
-          setErroreAuth(`Accesso negato: l'account "${email}" non appartiene a un dominio autorizzato dalla scuola (${dominiConsentiti.join(', ')}).`);
+          const dominiVisualizzati = dominiConsentiti.map(d => d.includes('@') ? d.split('@')[1] : d);
+          setErroreAuth(`Accesso negato: l'account "${email}" non appartiene a un dominio autorizzato dalla scuola (${[...new Set(dominiVisualizzati)].join(', ')}).`);
           setUtenteInfo(null);
           setIsLoadingAuth(false);
           return;
