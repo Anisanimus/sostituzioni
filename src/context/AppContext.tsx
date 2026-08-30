@@ -736,8 +736,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     });
 
-    setUscite(prev => [uscita, ...prev]);
-    setAssenze(prev => [...assenzeAccompagnatori, ...prev]);
+    setUscite(prev => {
+      const updatedUscite = [uscita, ...prev];
+      setAssenze(prevAss => {
+        const updatedAssenze = [...assenzeAccompagnatori, ...prevAss];
+        triggerCloudSync({ uscite: updatedUscite, assenze: updatedAssenze });
+        return updatedAssenze;
+      });
+      return updatedUscite;
+    });
   };
 
   const annullaUscita = (id: string) => {
