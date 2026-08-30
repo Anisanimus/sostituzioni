@@ -649,7 +649,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
               const stileCard = getStileCardAssenza(motivoAssenza, isUscitaDoc, isOrariaDoc);
 
               return (
-                <div key={gIdx} className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden">
+                <div key={gIdx} className={`bg-white rounded-2xl border overflow-hidden transition-all ${stileCard.cardBorder}`}>
                   {/* Intestazione del Docente Assente con Avatar e Statistiche Dinamiche */}
                   <div className={`w-full ${stileCard.bgHeader} ${stileCard.textColor} px-4 py-3 flex flex-wrap items-center justify-between gap-2`}>
                     <div className="flex items-center gap-2.5">
@@ -672,7 +672,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                       {/* ORE COPERTE CON BADGE AMBRA/VERDE */}
                       <span className={`text-xs font-black px-3 py-1 rounded-xl shadow-2xs flex items-center gap-1.5 ${
                         isTuttoCoperto 
-                          ? 'bg-emerald-500 text-white' 
+                          ? 'bg-emerald-600 text-white' 
                           : 'bg-amber-500 text-white'
                       }`}>
                         <span>🕒 {totCoperteDoc}/{totOreDoc}</span>
@@ -682,7 +682,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                   </div>
 
                   {/* Elenco delle ore del docente come Card Moderne */}
-                  <div className="p-3 bg-slate-50/40 space-y-2">
+                  <div className={`p-3 ${stileCard.bodyBg} space-y-2`}>
                     {righeDocente.map((r, idx) => {
                       const isAssegnata = r.sostituti.length > 0;
                       const isNonSost = r.nonSostituita;

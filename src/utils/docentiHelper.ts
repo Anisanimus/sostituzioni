@@ -381,55 +381,63 @@ export function getDocenteAttivoInData(
 }
 
 /**
- * Ritorna le classi di stile Tailwind, icona ed etichetta per la testata delle card per docente
+ * Ritorna le classi di stile Tailwind, icona ed etichetta per la testata e il corpo delle card docente in tema chiaro
  */
 export function getStileCardAssenza(motivo: string = '', isUscita: boolean = false, isOraria: boolean = false) {
   const m = motivo.toLowerCase();
   
   if (isUscita || m.includes('uscita') || m.includes('gita') || m.includes('viaggio')) {
     return {
-      bgHeader: 'bg-amber-950 hover:bg-amber-900 border-b border-amber-800/80',
-      bgAvatar: 'bg-amber-500 text-amber-950 font-black ring-2 ring-amber-400/40',
-      textColor: 'text-amber-100',
-      subTextColor: 'text-amber-300',
-      accentColor: 'text-amber-200',
+      cardBorder: 'border-amber-300 ring-1 ring-amber-200/50 shadow-2xs',
+      bgHeader: 'bg-gradient-to-r from-amber-50 to-amber-100/70 hover:from-amber-100 hover:to-amber-100 border-b border-amber-200',
+      bgAvatar: 'bg-amber-500 text-white font-black shadow-2xs',
+      textColor: 'text-amber-950',
+      subTextColor: 'text-amber-800',
+      accentColor: 'text-amber-900',
       icon: '🚌',
-      label: 'Uscita Didattica / Gita'
+      label: 'Uscita Didattica / Gita',
+      bodyBg: 'bg-amber-50/20'
     };
   }
 
   if (m.includes('assemblea')) {
     return {
-      bgHeader: 'bg-rose-950 hover:bg-rose-900 border-b border-rose-800/80',
-      bgAvatar: 'bg-rose-500 text-white font-black ring-2 ring-rose-400/40',
-      textColor: 'text-rose-100',
-      subTextColor: 'text-rose-300',
-      accentColor: 'text-rose-200',
+      cardBorder: 'border-rose-300 ring-1 ring-rose-200/50 shadow-2xs',
+      bgHeader: 'bg-gradient-to-r from-rose-50 to-rose-100/70 hover:from-rose-100 hover:to-rose-100 border-b border-rose-200',
+      bgAvatar: 'bg-rose-500 text-white font-black shadow-2xs',
+      textColor: 'text-rose-950',
+      subTextColor: 'text-rose-800',
+      accentColor: 'text-rose-900',
       icon: '📢',
-      label: 'Assemblea Sindacale'
+      label: 'Assemblea Sindacale',
+      bodyBg: 'bg-rose-50/20'
     };
   }
 
   if (isOraria || m.includes('oraria') || m.includes('permesso') || m.includes('fascia')) {
     return {
-      bgHeader: 'bg-purple-950 hover:bg-purple-900 border-b border-purple-800/80',
-      bgAvatar: 'bg-purple-500 text-white font-black ring-2 ring-purple-400/40',
-      textColor: 'text-purple-100',
-      subTextColor: 'text-purple-300',
-      accentColor: 'text-purple-200',
+      cardBorder: 'border-purple-300 ring-1 ring-purple-200/50 shadow-2xs',
+      bgHeader: 'bg-gradient-to-r from-purple-50 to-purple-100/70 hover:from-purple-100 hover:to-purple-100 border-b border-purple-200',
+      bgAvatar: 'bg-purple-600 text-white font-black shadow-2xs',
+      textColor: 'text-purple-950',
+      subTextColor: 'text-purple-800',
+      accentColor: 'text-purple-900',
       icon: '⏱️',
-      label: 'Permesso Breve / Oraria'
+      label: 'Permesso Breve / Oraria',
+      bodyBg: 'bg-purple-50/20'
     };
   }
 
   // Default: Assenza Giornaliera (Malattia, congedo, ecc.)
   return {
-    bgHeader: 'bg-slate-900 hover:bg-slate-800 border-b border-slate-700/80',
-    bgAvatar: 'bg-indigo-500 text-white font-black ring-2 ring-indigo-400/40',
-    textColor: 'text-white',
-    subTextColor: 'text-indigo-300',
-    accentColor: 'text-indigo-200',
+    cardBorder: 'border-indigo-200 shadow-2xs',
+    bgHeader: 'bg-gradient-to-r from-indigo-50/70 to-slate-50 hover:from-indigo-100/80 hover:to-slate-100 border-b border-indigo-100',
+    bgAvatar: 'bg-indigo-600 text-white font-black shadow-2xs',
+    textColor: 'text-slate-900',
+    subTextColor: 'text-indigo-900',
+    accentColor: 'text-indigo-700',
     icon: '👤',
-    label: motivo || 'Assenza Giornaliera'
+    label: motivo || 'Assenza Giornaliera',
+    bodyBg: 'bg-slate-50/30'
   };
 }

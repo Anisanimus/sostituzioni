@@ -790,7 +790,7 @@ export const TabelloneSostituzioni: React.FC<{
             const stileCard = getStileCardAssenza(motivoPrimo, isUscitaDoc, isOrariaDoc);
 
             return (
-              <div key={gIdx} className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden">
+              <div key={gIdx} className={`bg-white rounded-2xl border overflow-hidden transition-all ${stileCard.cardBorder}`}>
                 {/* Intestazione del Docente Assente come Accordion Button Dinamico per Colore e Icona */}
                 <button
                   type="button"
@@ -804,7 +804,7 @@ export const TabelloneSostituzioni: React.FC<{
                   className={`w-full ${stileCard.bgHeader} ${stileCard.textColor} px-4 py-3 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-xl ${stileCard.bgAvatar} flex items-center justify-center font-black text-xs shadow-2xs`}>
+                    <div className={`w-8 h-8 rounded-xl ${stileCard.bgAvatar} flex items-center justify-center font-black text-xs`}>
                       {gruppoDoc.nomeDocente.split(' ').map(n => n[0]).slice(0, 2).join('')}
                     </div>
                     <div>
@@ -812,7 +812,7 @@ export const TabelloneSostituzioni: React.FC<{
                         <strong className="text-sm font-black tracking-wide">{gruppoDoc.nomeDocente}</strong>
                         <span className={`text-xs ${stileCard.subTextColor} font-semibold`}>({gruppoDoc.materiaVisualizzata})</span>
                         {gruppoDoc.docAssente.isCasoGraveSostegno && (
-                          <span className="bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
+                          <span className="bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded shadow-2xs">
                             ♿ GRAVE
                           </span>
                         )}
@@ -828,7 +828,7 @@ export const TabelloneSostituzioni: React.FC<{
                     {/* 1. ORE COPERTE CON ICONA OROLOGIO */}
                     <span className={`text-xs font-black px-2.5 py-1 rounded-xl shadow-2xs flex items-center gap-1 ${
                       gruppoDoc.totCoperteDoc === gruppoDoc.totOreDoc 
-                        ? 'bg-emerald-500 text-white' 
+                        ? 'bg-emerald-600 text-white' 
                         : 'bg-amber-500 text-white'
                     }`} title="Ore coperte per questo docente">
                       <span>🕒 {gruppoDoc.totCoperteDoc}/{gruppoDoc.totOreDoc}</span>
@@ -839,8 +839,8 @@ export const TabelloneSostituzioni: React.FC<{
                     {gruppoDoc.totCoperteDoc > 0 && (
                       <span className={`text-xs font-black px-2 py-1 rounded-xl border shadow-2xs flex items-center gap-1 transition ${
                         gruppoDoc.totPubblicateDoc === gruppoDoc.totCoperteDoc
-                          ? 'bg-emerald-500/30 text-emerald-200 border-emerald-400/50'
-                          : 'bg-sky-900/80 text-sky-100 border-sky-700'
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                          : 'bg-sky-100 text-sky-900 border-sky-300'
                       }`} title="Richieste inviate ai docenti">
                         <span>📤 {gruppoDoc.totPubblicateDoc}/{gruppoDoc.totCoperteDoc}</span>
                         {gruppoDoc.totPubblicateDoc === gruppoDoc.totCoperteDoc && <span>✓</span>}
@@ -851,10 +851,10 @@ export const TabelloneSostituzioni: React.FC<{
                     {gruppoDoc.totCoperteDoc > 0 && (
                       <span className={`text-xs font-black px-2 py-1 rounded-xl shadow-2xs flex items-center gap-1 transition ${
                         gruppoDoc.totFirmateDoc === gruppoDoc.totCoperteDoc
-                          ? 'bg-emerald-500 text-white border border-emerald-400'
+                          ? 'bg-emerald-600 text-white border border-emerald-700'
                           : gruppoDoc.totFirmateDoc > 0
-                            ? 'bg-indigo-900/80 text-indigo-100 border border-indigo-700'
-                            : 'bg-slate-800 text-slate-400 border border-slate-700'
+                            ? 'bg-indigo-100 text-indigo-900 border border-indigo-300'
+                            : 'bg-white text-slate-600 border border-slate-300'
                       }`} title="Prese visione (firme) effettuate dai docenti">
                         <span>✍️ {gruppoDoc.totFirmateDoc}/{gruppoDoc.totCoperteDoc}</span>
                         <span className="hidden sm:inline font-normal text-[10px]">firmate</span>
@@ -862,13 +862,13 @@ export const TabelloneSostituzioni: React.FC<{
                       </span>
                     )}
 
-                    <ChevronDown className={`w-4 h-4 text-slate-300 transition-transform duration-200 ${isAperto ? 'rotate-180 text-white' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isAperto ? 'rotate-180 text-slate-800' : ''}`} />
                   </div>
                 </button>
 
                 {/* Elenco delle ore del docente sotto l'intestazione */}
                 {isAperto && (
-                  <div className="divide-y divide-slate-100 p-2 sm:p-3 bg-slate-50/40 space-y-1.5 animate-in fade-in duration-150">
+                  <div className={`divide-y divide-slate-100 p-2 sm:p-3 ${stileCard.bodyBg} space-y-1.5 animate-in fade-in duration-150`}>
                 {gruppoDoc.items.map((os, idx) => {
                   const sosts = getSostituzioniList(os.ora, os.classe);
                   const isSelected = selectedOraScoperta?.ora === os.ora && selectedOraScoperta?.classe === os.classe;
