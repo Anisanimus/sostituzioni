@@ -307,15 +307,15 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
   return (
     <div className="bg-slate-50/70 rounded-2xl rounded-t-none p-2.5 sm:p-3 shadow-2xs border border-t border-slate-200 space-y-3">
       
-      {/* HEADER PULSANTERIA COMPATTA: RIGA 1 (+ ASSENTE, + GITA), RIGA 2 (REGISTRATI, RISORSE) SU MOBILE */}
-      <div className="space-y-2">
-        {/* RIGA 1: AZIONI PRINCIPALI */}
-        <div className="flex items-center justify-between sm:justify-start gap-2">
+      {/* HEADER PULSANTERIA UNIFICATA IN LINEA PER TUTTI I DISPOSITIVI */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* GRUPPO 1: AGGIUNGI (+ ASSENTE, + GITA) */}
+        <div className="flex items-center gap-2 flex-1 sm:flex-none">
           <button
             id="targetBtnAssente"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'DOCENTE' ? null : 'DOCENTE')}
-            className={`flex-1 sm:flex-none px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border cursor-pointer ${
+            className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border cursor-pointer ${
               modalitaAperta === 'DOCENTE'
                 ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
                 : 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100'
@@ -330,7 +330,7 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
             id="targetBtnGita"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'GITA' ? null : 'GITA')}
-            className={`flex-1 sm:flex-none px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border cursor-pointer ${
+            className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border cursor-pointer ${
               modalitaAperta === 'GITA'
                 ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
                 : 'bg-amber-50 text-amber-950 border-amber-200 hover:bg-amber-100'
@@ -342,20 +342,21 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
           </button>
         </div>
 
-        {/* RIGA 2 (SOLO MOBILE / COMPATTO): 2 PULSANTI AFFIANCATI "REGISTRATI (N)" E "RISORSE (N)" */}
-        <div className="flex items-center gap-2 lg:hidden pt-0.5">
+        {/* GRUPPO 2: PULSANTI "REGISTRATI (N)" E "RISORSE (N)" IN LINEA */}
+        <div className="flex items-center gap-2 flex-1 sm:flex-none">
           <button
             type="button"
             onClick={() => setMostraDettagliEventi(prev => !prev)}
-            className={`flex-1 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-between border cursor-pointer shadow-2xs ${
+            className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border cursor-pointer shadow-2xs ${
               mostraDettagliEventi
-                ? 'bg-slate-800 text-white border-slate-900'
+                ? 'bg-slate-800 text-white border-slate-900 ring-2 ring-slate-400'
                 : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
             }`}
           >
             <div className="flex items-center gap-1.5">
-              <span className="text-sm">📋</span>
-              <span>Registrati</span>
+              <span>📋</span>
+              <span className="sm:hidden">Registrati</span>
+              <span className="hidden sm:inline">Eventi Registrati</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
               mostraDettagliEventi ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'
@@ -367,15 +368,16 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
           <button
             type="button"
             onClick={() => setMostraDettagliRisorse(prev => !prev)}
-            className={`flex-1 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-between border cursor-pointer shadow-2xs ${
+            className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border cursor-pointer shadow-2xs ${
               mostraDettagliRisorse
-                ? 'bg-amber-500 text-white border-amber-600'
+                ? 'bg-amber-500 text-white border-amber-600 ring-2 ring-amber-300'
                 : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
             }`}
           >
             <div className="flex items-center gap-1.5">
-              <span className="text-sm">⚡</span>
-              <span>Risorse</span>
+              <span>⚡</span>
+              <span className="sm:hidden">Risorse</span>
+              <span className="hidden sm:inline">Risorse Disponibili</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
               mostraDettagliRisorse ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 border border-amber-200'
@@ -923,31 +925,9 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
       {/* ========================================================= */}
       {/* 3. LISTA EVENTI REGISTRATI PER LA DATA SELEZIONATA        */}
       {/* ========================================================= */}
-      {(assenzeOggiDeduplicate.length > 0 || usciteOggi.length > 0) && (
-        <div className="pt-2 border-t border-slate-200 space-y-2">
-          {/* HEADER ACCORDION SOLO DESKTOP (SU MOBILE USIAMO I PULSANTI SOPRA) */}
-          <button
-            type="button"
-            onClick={() => setMostraDettagliEventi(prev => !prev)}
-            className="hidden lg:flex w-full items-center justify-between text-left p-1 rounded-xl hover:bg-slate-100/60 transition cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black text-slate-800 uppercase tracking-wider">
-                Eventi Registrati ({assenzeOggiDeduplicate.length + usciteOggi.length})
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-1.5 text-slate-400 hover:text-slate-600">
-              <span className="text-[10px] text-slate-400 font-normal">
-                {mostraDettagliEventi ? 'Nascondi dettagli' : 'Tocca per dettagli'}
-              </span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${mostraDettagliEventi ? 'rotate-180 text-slate-600' : ''}`} />
-            </div>
-          </button>
-
-          {/* CONTENUTO ESPANDIBILE EVENTI REGISTRATI */}
-          {mostraDettagliEventi && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 animate-in fade-in slide-in-from-top-1 duration-150 pt-1">
+      {(assenzeOggiDeduplicate.length > 0 || usciteOggi.length > 0) && mostraDettagliEventi && (
+        <div className="pt-2 border-t border-slate-200 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
               {/* Gite con Accompagnatori inclusi nello slot */}
               {usciteOggi.map(u => {
                 const isGiornaliera = (u.ore.length >= 5) || (u.note?.includes('Intera Giornata')) || (!u.oraInizio && !u.oraFine);
@@ -1018,17 +998,16 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                 );
               })}
             </div>
-          )}
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 4. CONTENUTO ESPANDIBILE RISORSE DISPONIBILI OGGI SU MOBILE               */}
+      {/* 4. CONTENUTO ESPANDIBILE RISORSE DISPONIBILI OGGI                         */}
       {/* ========================================================================= */}
       {totRisorseTotaliMobile > 0 && mostraDettagliRisorse && (
-        <div className="block lg:hidden pt-2 border-t border-slate-200 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="pt-2 border-t border-slate-200 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
           
-          {/* HEADER RISORSE MOBILE CON ICONA FILTRI CLASSICA */}
+          {/* HEADER RISORSE CON ICONA FILTRI CLASSICA */}
           <div className="flex items-center justify-between gap-2 pb-1 border-b border-slate-100">
             <span className="text-[11px] font-black text-slate-800 flex items-center gap-1.5">
               <span>⚡ Risorse Docenti del Giorno</span>
