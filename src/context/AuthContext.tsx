@@ -11,9 +11,8 @@ interface AuthContextType {
   isLoadingAuth: boolean;
   erroreAuth: string | null;
   loginConGoogle: () => Promise<void>;
+  loginAtaConPin: (pin: string) => boolean;
   logout: () => Promise<void>;
-  bypassDemoLogin: (ruolo: 'VICEPRESIDENZA' | 'DOCENTE' | 'PERSONALE_ATA', docenteId?: string) => void;
-  isDemoMode: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -116,10 +115,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         setUtenteInfo(info);
-        setIsDemoMode(false);
       } else {
         setCurrentUser(null);
-        if (!isDemoMode) {
+        if (sessionStorage.getItem('auth_ata_logged') !== 'true') {
           setUtenteInfo(null);
         }
       }
@@ -131,7 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearTimeout(timeoutSafety);
       unsubscribe();
     };
-  }, [isDemoMode]);
+  }, []);
 
   const loginConGoogle = async () => {
     try {
@@ -155,29 +153,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const [isAtaLogged, setIsAtaLogged] = useState<boolean>(() => {
+    return sessionStorage.getItem('auth_ata_logged') === 'true';
+  });
+
+  const loginAtaConPin = (pin: string): boolean => {
+    let pinValido = '1234';
+    try {
+      const saved = localStorage.getItem('scuola_impostazioni_generali');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.pinPersonaleAta) pinValido = parsed.pinPersonaleAta;
+      }
+    } catch (e) {}
+
+    if (pin.trim() === pinValido.trim()) {
+      sessionStorage.setItem('auth_ata_logged', 'true');
+      setIsAtaLogged(true);
+      setUtenteInfo({
+        uid: 'ata-pin-user',
+        email: 'ata@scuola.local',
+        displayName: 'Personale ATA / Segreteria',
+        ruolo: 'PERSONALE_ATA',
+        scuolaId: SCUOLA_DEFAULT.id
+      });
+      setErroreAuth(null);
+      return true;
+    }
+    return false;
+  };
+
   const logout = async () => {
     try {
       await signOut(auth);
+      sessionStorage.removeItem('auth_ata_logged');
       setCurrentUser(null);
       setUtenteInfo(null);
-      setIsDemoMode(false);
+      setIsAtaLogged(false);
       setErroreAuth(null);
     } catch (err) {
       console.error('Errore logout:', err);
     }
-  };
-
-  const bypassDemoLogin = (ruolo: 'VICEPRESIDENZA' | 'DOCENTE' | 'PERSONALE_ATA', docenteId?: string) => {
-    setIsDemoMode(true);
-    setUtenteInfo({
-      uid: 'demo-local-user',
-      email: ruolo === 'VICEPRESIDENZA' ? 'vicepresidenza@icannafrank.edu.it' : 'docente@icannafrank.edu.it',
-      displayName: ruolo === 'VICEPRESIDENZA' ? 'Vicepresidenza (Demo)' : (docenteId || 'Docente Demo'),
-      ruolo,
-      scuolaId: SCUOLA_DEFAULT.id,
-      docenteCollegatoId: docenteId
-    });
-    setErroreAuth(null);
   };
 
   return (
@@ -188,9 +204,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoadingAuth,
       erroreAuth,
       loginConGoogle,
-      logout,
-      bypassDemoLogin,
-      isDemoMode
+      loginAtaConPin,
+      logout
     }}>
       {children}
     </AuthContext.Provider>
