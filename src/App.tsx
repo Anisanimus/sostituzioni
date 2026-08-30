@@ -439,7 +439,7 @@ const MainApp: React.FC = () => {
 
       {/* CONTENUTO PRINCIPALE */}
       <main className="max-w-7xl mx-auto px-3 sm:px-6 py-4 w-full flex-1 space-y-4">
-        {ruoloAttivo === 'PORTALE_DOCENTE' ? (
+        {ruoloAttivo === 'PORTALE_DOCENTE' || (ruoloAttivo === 'VICEPRESIDENZA' && utenteInfo.ruolo !== 'VICEPRESIDENZA') ? (
           <PortaleDocente />
         ) : ruoloAttivo === 'QUADRO_SCUOLA' ? (
           <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={false} />

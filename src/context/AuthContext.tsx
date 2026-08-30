@@ -55,55 +55,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Redirect result info:', err);
       });
 
-    // 2. Ascolta lo stato di autenticazione
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // 2. Ascolta lo stato di autenticazione con controllo severo e Firestore in tempo reale
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       clearTimeout(timeoutSafety);
       if (!isMounted) return;
 
       if (user && user.email) {
         setCurrentUser(user);
-        const email = user.email.toLowerCase();
+        const email = user.email.toLowerCase().trim();
         const dominio = email.split('@')[1] || '';
 
-        // Recupera impostazioni scuola
-        let dominiConsentiti = SCUOLA_DEFAULT.dominiAutorizzati;
-        let emailViceConsentite = [...SCUOLA_DEFAULT.emailVicepresidenza, 'cravero.anita@gmail.com'];
+        // Recupera le impostazioni scuola direttamente da Firestore per sicurezza assoluta
+        let dominiConsentiti = SCUOLA_DEFAULT.dominiAutorizzati.map(d => d.toLowerCase().trim());
+        let emailViceConsentite = SCUOLA_DEFAULT.emailVicepresidenza.map(e => e.toLowerCase().trim());
 
         try {
-          const savedScuola = localStorage.getItem('scuola_impostazioni_generali');
-          if (savedScuola) {
-            const parsed = JSON.parse(savedScuola);
-            if (parsed.dominiAutorizzatiGoogle && parsed.dominiAutorizzatiGoogle.length > 0) {
-              dominiConsentiti = [...dominiConsentiti, ...parsed.dominiAutorizzatiGoogle];
-            }
-            if (parsed.emailVicepresidenzaGoogle && parsed.emailVicepresidenzaGoogle.length > 0) {
-              emailViceConsentite = [...emailViceConsentite, ...parsed.emailVicepresidenzaGoogle];
+          const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_DEFAULT.id);
+          const snap = await getDoc(scuolaDocRef);
+          if (snap.exists()) {
+            const data = snap.data();
+            const impostazioni = data.impostazioniScuola;
+            if (impostazioni) {
+              if (impostazioni.dominiAutorizzatiGoogle && Array.isArray(impostazioni.dominiAutorizzatiGoogle)) {
+                dominiConsentiti = impostazioni.dominiAutorizzatiGoogle.map((d: string) => d.toLowerCase().trim()).filter(Boolean);
+              }
+              if (impostazioni.emailVicepresidenzaGoogle && Array.isArray(impostazioni.emailVicepresidenzaGoogle)) {
+                emailViceConsentite = impostazioni.emailVicepresidenzaGoogle.map((e: string) => e.toLowerCase().trim()).filter(Boolean);
+              }
             }
           }
         } catch (e) {
-          console.error('Errore lettura impostazioni scuola da localStorage', e);
+          console.error('Errore lettura impostazioni scuola da Firestore per autorizzazione:', e);
+          // Fallback a localStorage
+          try {
+            const savedScuola = localStorage.getItem('scuola_impostazioni_generali');
+            if (savedScuola) {
+              const parsed = JSON.parse(savedScuola);
+              if (parsed.dominiAutorizzatiGoogle && parsed.dominiAutorizzatiGoogle.length > 0) {
+                dominiConsentiti = parsed.dominiAutorizzatiGoogle.map((d: string) => d.toLowerCase().trim()).filter(Boolean);
+              }
+              if (parsed.emailVicepresidenzaGoogle && parsed.emailVicepresidenzaGoogle.length > 0) {
+                emailViceConsentite = parsed.emailVicepresidenzaGoogle.map((e: string) => e.toLowerCase().trim()).filter(Boolean);
+              }
+            }
+          } catch (err) {}
         }
 
-        // 1. Verifica appartenenza dominio o admin
-        const isDominioValido = dominiConsentiti.some(d => d.toLowerCase() === dominio.toLowerCase()) || 
-                                emailViceConsentite.some(e => e.toLowerCase() === email) ||
-                                email.includes('cravero') ||
-                                email.includes('anita');
+        // 1. Verifica se l'account appartiene a un dominio autorizzato o è un'email esplicitamente autorizzata
+        const isDominioValido = dominiConsentiti.some(d => d === dominio) || 
+                                emailViceConsentite.some(e => e === email) ||
+                                email === 'cravero.anita@gmail.com';
 
         if (!isDominioValido) {
-          setErroreAuth(`Accesso negato: l'account ${email} non risulta registrato tra gli utenti autorizzati.`);
+          setErroreAuth(`Accesso negato: l'account "${email}" non appartiene a un dominio autorizzato dalla scuola (${dominiConsentiti.join(', ')}).`);
           setUtenteInfo(null);
           setIsLoadingAuth(false);
           return;
         }
 
-        // 2. Determina Ruolo (cravero.anita@gmail.com o email in lista o vice/admin)
-        const isVice = email.includes('cravero') ||
-                       email.includes('anita') ||
-                       email === 'cravero.anita@gmail.com' ||
-                       emailViceConsentite.some(e => e.toLowerCase().trim() === email.trim()) || 
-                       email.includes('vice') || 
-                       email.includes('admin');
+        // 2. Controllo SEVERO del Ruolo VICEPRESIDENZA:
+        // L'accesso a Vicepresidenza è concesso SOLO ED ESCLUSIVAMENTE se l'indirizzo email esatto
+        // compare nella lista delle email autorizzate configurate nelle Impostazioni Scuola (oppure è l'admin principale cravero.anita@gmail.com).
+        const isVice = email === 'cravero.anita@gmail.com' ||
+                       emailViceConsentite.some(e => e === email);
         
         const info: UtenteAutenticato = {
           uid: user.uid,
