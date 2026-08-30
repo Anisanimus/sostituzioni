@@ -473,7 +473,7 @@ const MainApp: React.FC = () => {
             {tabVice === 'GESTIONE_GIORNALIERA' && (
               <div className="space-y-3 sm:space-y-4">
                 {/* BLOCCO UNIFICATO: AVANZAMENTO LAVORI + GESTIONE ASSENZE + EVENTI E RISORSE */}
-                <div className="shadow-2xs rounded-2xl overflow-hidden">
+                <div className="shadow-2xs rounded-2xl">
                   <PanoramicaLavori 
                     selectedDate={selectedDate} 
                     onSelectDate={(newDate) => setSelectedDate(newDate)} 
