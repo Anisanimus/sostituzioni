@@ -187,7 +187,10 @@ export const AnagraficaOrario: React.FC = () => {
   }, [selectedDocenteId, orariDocenti]);
 
   const handleCellValoreChange = (giorno: GiornoSettimana, ora: number, valRaw: string) => {
-    const val = valRaw.toUpperCase().trim();
+    const rawUpper = valRaw.toUpperCase().trim();
+    const hasAsterisk = rawUpper.includes('*');
+    const val = rawUpper.replace(/\*/g, '').trim();
+
     let tipo: TipoOra = 'LIBERO';
     if (val === 'D') tipo = 'D';
     else if (val === 'P') tipo = 'P';
@@ -198,7 +201,8 @@ export const AnagraficaOrario: React.FC = () => {
         return {
           ...c,
           valore: val,
-          tipo
+          tipo,
+          isCasoGrave: hasAsterisk ? true : (val === '' ? false : c.isCasoGrave)
         };
       }
       return c;
@@ -1020,8 +1024,8 @@ export const AnagraficaOrario: React.FC = () => {
                 </div>
               </div>
 
-              <span className="text-[10px] text-slate-400 italic">
-                Digita la classe (es. 1A, 2C), D, P oppure tocca 🔒 per segnare il Caso Grave
+              <span className="text-[10px] text-slate-500 font-medium">
+                Digita la classe (es. <code>1A</code>, <code>2C</code>), <code>D</code>, <code>P</code> o aggiungi l'asterisco (es. <code>1A*</code>) / tocca 🔒 per il Caso Grave
               </span>
             </div>
 
