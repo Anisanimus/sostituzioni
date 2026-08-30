@@ -795,19 +795,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ...nuovaSostituzione,
         id: 'sost_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4)
       };
-      return [...filtrate, sost];
+      const updatedSost = [...filtrate, sost];
+      triggerCloudSync({ sostituzioni: updatedSost });
+      return updatedSost;
     });
 
     // Se la sostituzione consuma debito, scala 1 ora da tutti gli account della persona fisica
     if (nuovaSostituzione.consumaDebito) {
       const collegatiIds = getDocentiCollegatiIds(nuovaSostituzione.docenteSostitutoId, docenti);
 
-      setDocenti(prev => prev.map(d => {
-        if (collegatiIds.includes(d.id)) {
-          return { ...d, oreDebitoPermesso: Math.max(0, (d.oreDebitoPermesso || 0) - 1) };
-        }
-        return d;
-      }));
+      setDocenti(prev => {
+        const updatedDoc = prev.map(d => {
+          if (collegatiIds.includes(d.id)) {
+            return { ...d, oreDebitoPermesso: Math.max(0, (d.oreDebitoPermesso || 0) - 1) };
+          }
+          return d;
+        });
+        triggerCloudSync({ docenti: updatedDoc });
+        return updatedDoc;
+      });
 
       const mov: MovimentoDebito = {
         id: 'mov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -819,7 +825,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         descrizione: `Recupero debito con supplenza in ${nuovaSostituzione.classe} alla ${nuovaSostituzione.ora}ª ora`,
         createdAt: new Date().toISOString()
       };
-      setMovimentiDebito(prev => [mov, ...prev]);
+      setMovimentiDebito(prev => {
+        const updatedMov = [mov, ...prev];
+        triggerCloudSync({ movimentiDebito: updatedMov });
+        return updatedMov;
+      });
     }
   };
 
@@ -862,12 +872,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (sost.consumaDebito) {
       const collegatiIds = getDocentiCollegatiIds(sost.docenteSostitutoId, docenti);
 
-      setDocenti(prev => prev.map(d => {
-        if (collegatiIds.includes(d.id)) {
-          return { ...d, oreDebitoPermesso: (d.oreDebitoPermesso || 0) + 1 };
-        }
-        return d;
-      }));
+      setDocenti(prev => {
+        const updated = prev.map(d => {
+          if (collegatiIds.includes(d.id)) {
+            return { ...d, oreDebitoPermesso: (d.oreDebitoPermesso || 0) + 1 };
+          }
+          return d;
+        });
+        triggerCloudSync({ docenti: updated });
+        return updated;
+      });
 
       const mov: MovimentoDebito = {
         id: 'mov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -879,22 +893,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         descrizione: `Ripristino ora di debito per cancellazione supplenza del ${sost.data}`,
         createdAt: new Date().toISOString()
       };
-      setMovimentiDebito(prev => [mov, ...prev]);
+      setMovimentiDebito(prev => {
+        const updated = [mov, ...prev];
+        triggerCloudSync({ movimentiDebito: updated });
+        return updated;
+      });
     }
 
-    setSostituzioni(prev => prev.filter(s => s.id !== id));
+    setSostituzioni(prev => {
+      const updated = prev.filter(s => s.id !== id);
+      triggerCloudSync({ sostituzioni: updated });
+      return updated;
+    });
   };
 
   const modificaDebitoManuale = (docenteId: string, deltaOre: number, descrizione: string) => {
     const collegatiIds = getDocentiCollegatiIds(docenteId, docenti);
 
-    setDocenti(prev => prev.map(d => {
-      if (collegatiIds.includes(d.id)) {
-        const nuovoVal = Math.max(0, (d.oreDebitoPermesso || 0) + deltaOre);
-        return { ...d, oreDebitoPermesso: nuovoVal };
-      }
-      return d;
-    }));
+    setDocenti(prev => {
+      const updated = prev.map(d => {
+        if (collegatiIds.includes(d.id)) {
+          const nuovoVal = Math.max(0, (d.oreDebitoPermesso || 0) + deltaOre);
+          return { ...d, oreDebitoPermesso: nuovoVal };
+        }
+        return d;
+      });
+      triggerCloudSync({ docenti: updated });
+      return updated;
+    });
 
     const todayStr = new Date().toISOString().split('T')[0];
     const mov: MovimentoDebito = {
@@ -907,34 +933,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       descrizione: descrizione || 'Modifica manuale debito ore',
       createdAt: new Date().toISOString()
     };
-    setMovimentiDebito(prev => [mov, ...prev]);
+    setMovimentiDebito(prev => {
+      const updated = [mov, ...prev];
+      triggerCloudSync({ movimentiDebito: updated });
+      return updated;
+    });
   };
 
   const pubblicaTutteSostituzioniData = (data: string) => {
-    setSostituzioni(prev => prev.map(s => {
-      if (s.data === data) {
-        return { ...s, pubblicata: true };
-      }
-      return s;
-    }));
+    setSostituzioni(prev => {
+      const updated = prev.map(s => {
+        if (s.data === data) {
+          return { ...s, pubblicata: true };
+        }
+        return s;
+      });
+      triggerCloudSync({ sostituzioni: updated });
+      return updated;
+    });
   };
 
   const pubblicaSingolaSostituzione = (sostituzioneId: string) => {
-    setSostituzioni(prev => prev.map(s => {
-      if (s.id === sostituzioneId) {
-        return { ...s, pubblicata: true };
-      }
-      return s;
-    }));
+    setSostituzioni(prev => {
+      const updated = prev.map(s => {
+        if (s.id === sostituzioneId) {
+          return { ...s, pubblicata: true };
+        }
+        return s;
+      });
+      triggerCloudSync({ sostituzioni: updated });
+      return updated;
+    });
   };
 
   const firmaSostituzione = (sostituzioneId: string) => {
-    setSostituzioni(prev => prev.map(s => {
-      if (s.id === sostituzioneId) {
-        return { ...s, firmata: true, dataFirma: new Date().toISOString() };
-      }
-      return s;
-    }));
+    setSostituzioni(prev => {
+      const updated = prev.map(s => {
+        if (s.id === sostituzioneId) {
+          return { ...s, firmata: true, dataFirma: new Date().toISOString() };
+        }
+        return s;
+      });
+      triggerCloudSync({ sostituzioni: updated });
+      return updated;
+    });
   };
 
   const segnaNotificheLette = (docenteId: string) => {
@@ -947,39 +989,75 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
-  const updateDocente = (docenteAggiornato: Docente) => {
-    setDocenti(prev => prev.map(d => d.id === docenteAggiornato.id ? docenteAggiornato : d));
-  };
-
-  const updateOrarioDocente = (docenteId: string, nuoveOre: any[]) => {
-    setOrariDocenti(prev => {
-      const index = prev.findIndex(o => o.docenteId === docenteId);
-      if (index >= 0) {
-        const copy = [...prev];
-        copy[index] = { docenteId, ore: nuoveOre };
-        return copy;
-      }
-      return [...prev, { docenteId, ore: nuoveOre }];
+  const updateDocente = async (docenteAggiornato: Docente) => {
+    setDocenti(prev => {
+      const updated = prev.map(d => d.id === docenteAggiornato.id ? docenteAggiornato : d);
+      // Salva DIRETTAMENTE e IMMEDIATAMENTE su Cloud Firestore
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      setDoc(scuolaDocRef, { docenti: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true })
+        .then(() => console.log('✅ Docente aggiornato sul Cloud!'))
+        .catch(err => console.error('Errore salvataggio docente su Cloud:', err));
+      return updated;
     });
   };
 
-  const resetOrarioPredefinito = () => {
+  const updateOrarioDocente = async (docenteId: string, nuoveOre: any[]) => {
+    setOrariDocenti(prev => {
+      const index = prev.findIndex(o => o.docenteId === docenteId);
+      let updated: OrarioDocente[];
+      if (index >= 0) {
+        const copy = [...prev];
+        copy[index] = { docenteId, ore: nuoveOre };
+        updated = copy;
+      } else {
+        updated = [...prev, { docenteId, ore: nuoveOre }];
+      }
+      // Salva DIRETTAMENTE e IMMEDIATAMENTE su Cloud Firestore
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      setDoc(scuolaDocRef, { orariDocenti: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true })
+        .then(() => console.log('✅ Orario docente aggiornato sul Cloud!'))
+        .catch(err => console.error('Errore salvataggio orario docente su Cloud:', err));
+      return updated;
+    });
+  };
+
+  const resetOrarioPredefinito = async () => {
     setDocenti(DOCENTI_PRECARICATI);
     setOrariDocenti(ORARI_DOCENTI_PRECARICATI);
     localStorage.removeItem('scuola_docenti');
     localStorage.removeItem('scuola_orari');
     localStorage.setItem('scuola_orario_version', CURRENT_TIMETABLE_VERSION);
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, {
+        docenti: DOCENTI_PRECARICATI,
+        orariDocenti: ORARI_DOCENTI_PRECARICATI,
+        ultimoAggiornamento: new Date().toISOString()
+      }, { merge: true });
+    } catch (e) {
+      console.error('Errore reset predefiniti su Cloud:', e);
+    }
   };
 
-  const azzeraDocentiEOrario = () => {
+  const azzeraDocentiEOrario = async () => {
     setDocenti([]);
     setOrariDocenti([]);
     try {
       localStorage.setItem('scuola_docenti', JSON.stringify([]));
       localStorage.setItem('scuola_orari', JSON.stringify([]));
       localStorage.setItem('scuola_orario_version', 'empty_' + Date.now());
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, {
+        docenti: [],
+        orariDocenti: [],
+        assenze: [],
+        uscite: [],
+        sostituzioni: [],
+        ultimoAggiornamento: new Date().toISOString()
+      }, { merge: true });
+      console.log('✅ Database azzerato su Cloud Firestore!');
     } catch (e) {
-      console.error('Errore durante l\'azzeramento in localStorage:', e);
+      console.error('Errore durante l\'azzeramento in Cloud/localStorage:', e);
     }
   };
 
