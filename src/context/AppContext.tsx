@@ -773,36 +773,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const annullaUscita = (id: string) => {
     const uscita = uscite.find(u => u.id === id);
-    if (!uscita) return;
-
-    setAssenze(prev => {
-      const updated = prev.map(a => {
-        if (a.data === uscita.data && a.dettagliUscita?.uscitaId === id) {
-          return { ...a, annullata: true, annullataIl: new Date().toISOString() };
-        }
-        return a;
+    if (!uscita) {
+      // Rimuovi comunque se presente per id
+      setUscite(prev => {
+        const updatedUscite = prev.filter(u => u.id !== id);
+        triggerCloudSync({ uscite: updatedUscite });
+        return updatedUscite;
       });
-      triggerCloudSync({ assenze: updated });
-      return updated;
-    });
+      return;
+    }
 
-    const tuttiAccompagnatoriIds = uscita.docentiAccompagnatoriIds.flatMap(docId => getDocentiCollegatiIds(docId, docenti));
+    const tuttiAccompagnatoriIds = (uscita.docentiAccompagnatoriIds || []).flatMap(docId => getDocentiCollegatiIds(docId, docenti));
 
-    setSostituzioni(prev => {
-      const updated = prev.filter(s => 
-        !(s.data === uscita.data && tuttiAccompagnatoriIds.includes(s.docenteAssenteId) && uscita.ore.includes(s.ora))
-      );
-      triggerCloudSync({ sostituzioni: updated });
-      return updated;
-    });
+    setAssenze(prevAss => {
+      const updatedAssenze = prevAss.filter(a => !(a.data === uscita.data && (a.dettagliUscita?.uscitaId === id || (tuttiAccompagnatoriIds.includes(a.docenteId) && a.motivo === 'Uscita'))));
+      
+      setSostituzioni(prevSost => {
+        const updatedSostituzioni = prevSost.filter(s => 
+          !(s.data === uscita.data && tuttiAccompagnatoriIds.includes(s.docenteAssenteId) && (uscita.ore || []).includes(s.ora))
+        );
 
-    setUscite(prev => {
-      const updated = prev.map(u => {
-        if (u.id === id) return { ...u, annullata: true, annullataIl: new Date().toISOString() };
-        return u;
+        setUscite(prevUsc => {
+          const updatedUscite = prevUsc.filter(u => u.id !== id);
+          triggerCloudSync({
+            uscite: updatedUscite,
+            assenze: updatedAssenze,
+            sostituzioni: updatedSostituzioni
+          });
+          return updatedUscite;
+        });
+
+        return updatedSostituzioni;
       });
-      triggerCloudSync({ uscite: updated });
-      return updated;
+
+      return updatedAssenze;
     });
   };
 
