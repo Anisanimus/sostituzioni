@@ -40,6 +40,7 @@ export const GestioneAssenze: React.FC<{
   const [modalitaAperta, setModalitaAperta] = useState<'DOCENTE' | 'GITA' | 'NOMINA' | null>(null);
   const [mostraInfo, setMostraInfo] = useState<boolean>(false);
   const [mostraDettagliEventi, setMostraDettagliEventi] = useState<boolean>(false);
+  const [mostraRisorseInlineMobile, setMostraRisorseInlineMobile] = useState<boolean>(false);
 
   // --- STATO NOMINA SUPPLENTE CATTEDRA ---
   const [docenteTitolareNominaId, setDocenteTitolareNominaId] = useState<string>('');
@@ -453,9 +454,15 @@ export const GestioneAssenze: React.FC<{
 
           <button
             type="button"
-            onClick={onToggleRisorseLaterale}
+            onClick={() => {
+              if (window.innerWidth < 640) {
+                setMostraRisorseInlineMobile(prev => !prev);
+              } else if (onToggleRisorseLaterale) {
+                onToggleRisorseLaterale();
+              }
+            }}
             className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer shadow-2xs ${
-              mostraRisorseLaterale
+              (window.innerWidth < 640 ? mostraRisorseInlineMobile : mostraRisorseLaterale)
                 ? 'bg-amber-500 text-white border-amber-600 ring-2 ring-amber-300'
                 : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
             }`}
@@ -466,7 +473,7 @@ export const GestioneAssenze: React.FC<{
               <span className="hidden sm:inline">Risorse Disponibili</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
-              mostraRisorseLaterale ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 border border-amber-200'
+              (window.innerWidth < 640 ? mostraRisorseInlineMobile : mostraRisorseLaterale) ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 border border-amber-200'
             }`}>
               {totRisorseTotaliMobile}
             </span>
@@ -1225,6 +1232,79 @@ export const GestioneAssenze: React.FC<{
                 );
               })}
             </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 4. LISTA RISORSE DISPONIBILI INLINE SU MOBILE             */}
+      {/* ========================================================= */}
+      {mostraRisorseInlineMobile && (
+        <div className="sm:hidden pt-2 border-t border-slate-200 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-black text-amber-950 flex items-center gap-1.5">
+              <span>⚡</span>
+              <span>Risorse Disponibili Oggi ({totRisorseTotaliMobile})</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setMostraRisorseInlineMobile(false)}
+              className="text-[10px] font-bold text-slate-500 hover:text-slate-800 bg-white border border-slate-200 px-2 py-0.5 rounded-lg"
+            >
+              Chiudi
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {risorsePerOraMobile.map(r => (
+              <div key={r.ora} className="bg-amber-50/60 border border-amber-200 rounded-xl p-2.5 space-y-1.5 text-xs shadow-2xs">
+                <div className="flex items-center justify-between font-black text-amber-950 border-b border-amber-200 pb-1">
+                  <span>{r.ora}ª ORA ({r.totDisponibili} disponibili)</span>
+                  <span className="text-[10px] bg-amber-200 text-amber-900 px-1.5 py-0.2 rounded-full">
+                    {r.potenziamentoList.length} Pot. • {r.disposizioniList.length} Disp. • {r.liberatiGitaList.length} Gita
+                  </span>
+                </div>
+
+                <div className="space-y-1 pt-0.5">
+                  {/* Potenziamento */}
+                  {r.potenziamentoList.map(p => (
+                    <div key={p.docenteId} className="flex items-center justify-between bg-white px-2 py-1 rounded-lg border border-purple-200 text-purple-950 text-[11px] font-bold">
+                      <span className="flex items-center gap-1">
+                        <span>🟣</span>
+                        <span>{p.nome}</span>
+                      </span>
+                      <span className="text-[9px] bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded">Potenziamento</span>
+                    </div>
+                  ))}
+
+                  {/* Disposizioni */}
+                  {r.disposizioniList.map(d => (
+                    <div key={d.docenteId} className="flex items-center justify-between bg-white px-2 py-1 rounded-lg border border-amber-200 text-amber-950 text-[11px] font-bold">
+                      <span className="flex items-center gap-1">
+                        <span>🟡</span>
+                        <span>{d.nome}</span>
+                      </span>
+                      <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">Disposizione (D)</span>
+                    </div>
+                  ))}
+
+                  {/* Liberati da Gita */}
+                  {r.liberatiGitaList.map(g => (
+                    <div key={g.docenteId} className="flex items-center justify-between bg-white px-2 py-1 rounded-lg border border-emerald-200 text-emerald-950 text-[11px] font-bold">
+                      <span className="flex items-center gap-1">
+                        <span>🟢</span>
+                        <span>{g.nome} ({g.classe})</span>
+                      </span>
+                      <span className="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded">Gita</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {risorsePerOraMobile.length === 0 && (
+              <p className="text-xs text-slate-400 italic text-center py-3">Nessuna risorsa libera registrata per questa giornata.</p>
+            )}
+          </div>
         </div>
       )}
     </div>
