@@ -163,15 +163,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   });
 
-  const updateImpostazioniPriorita = (nuove: ImpostazioniPriorita) => {
+  const updateImpostazioniPriorita = async (nuove: ImpostazioniPriorita) => {
     setImpostazioniPriorita(nuove);
+    localStorage.setItem('scuola_impostazioni_priorita', JSON.stringify(nuove));
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, { impostazioniPriorita: nuove }, { merge: true });
+    } catch (e) {
+      console.error('Errore salvataggio impostazioniPriorita su Cloud:', e);
+    }
   };
 
-  const resetImpostazioniPrioritaPredefinite = () => {
-    setImpostazioniPriorita({
+  const resetImpostazioniPrioritaPredefinite = async () => {
+    const defaultPrio = {
       prioritaAssenze: DEFAULT_PRIORITA_ASSENZE,
       prioritaGite: DEFAULT_PRIORITA_GITE
-    });
+    };
+    setImpostazioniPriorita(defaultPrio);
+    localStorage.setItem('scuola_impostazioni_priorita', JSON.stringify(defaultPrio));
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, { impostazioniPriorita: defaultPrio }, { merge: true });
+    } catch (e) {
+      console.error('Errore reset priorita su Cloud:', e);
+    }
   };
 
   const [impostazioniScuola, setImpostazioniScuola] = useState<ImpostazioniScuola>(() => {
@@ -185,8 +200,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return DEFAULT_IMPOSTAZIONI_SCUOLA;
   });
 
-  const updateImpostazioniScuola = (nuove: Partial<ImpostazioniScuola>) => {
-    setImpostazioniScuola(prev => ({ ...prev, ...nuove }));
+  const updateImpostazioniScuola = async (nuove: Partial<ImpostazioniScuola>) => {
+    setImpostazioniScuola(prev => {
+      const updated = { ...prev, ...nuove };
+      localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(updated));
+      // Salva DIRETTAMENTE e IMMEDIATAMENTE su Cloud Firestore
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      setDoc(scuolaDocRef, { impostazioniScuola: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true })
+        .then(() => console.log('✅ Impostazioni scuola salvate su Cloud!'))
+        .catch(err => console.error('Errore salvataggio impostazioni scuola su Cloud:', err));
+      return updated;
+    });
   };
 
   // ============================================================================
