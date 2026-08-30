@@ -2,9 +2,20 @@ import * as XLSX from 'xlsx';
 import { Docente, OrarioDocente, GiornoSettimana, TipoMateria, CellaOrario, TipoOra } from '../types';
 import { getBaseNomeDocente } from './docentiHelper';
 
+export interface ProblemaOrarioExcel {
+  tipo: 'SOVRAPPOSIZIONE_ORARIA' | 'POTENZIAMENTO_SENZA_CLASSE' | 'VALORE_SCONOSCIUTO';
+  docenteNome: string;
+  giorno: GiornoSettimana;
+  ora: number;
+  messaggio: string;
+  valore1?: string;
+  valore2?: string;
+}
+
 export interface ParseResult {
   docenti: Docente[];
   orariDocenti: OrarioDocente[];
+  problemi: ProblemaOrarioExcel[];
 }
 
 export function parseOrarioExcel(fileData: ArrayBuffer): ParseResult {
@@ -15,17 +26,10 @@ export function parseOrarioExcel(fileData: ArrayBuffer): ParseResult {
 
   const docenti: Docente[] = [];
   const orariDocenti: OrarioDocente[] = [];
+  const problemi: ProblemaOrarioExcel[] = [];
 
   const giorni: GiornoSettimana[] = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 
-  // Struttura fissa standard del file Excel:
-  // Colonna A (0): Nome Docente
-  // Colonna B (1): Materia
-  // Colonne C..K (2..10): Lunedì (9 ore)
-  // Colonne L..T (11..19): Martedì (9 ore)
-  // Colonne U..AC (20..28): Mercoledì (9 ore)
-  // Colonne AD..AL (29..37): Giovedì (9 ore)
-  // Colonne AM..AU (38..46): Venerdì (9 ore)
   const colsPerDay = 9;
   const startCol = 2;
 
@@ -77,15 +81,34 @@ export function parseOrarioExcel(fileData: ArrayBuffer): ParseResult {
         const hasAsterisk = rawVal.includes('*');
         let val = rawVal.replace(/\*/g, '').trim();
 
-        // Se la riga è di POTENZIAMENTO e c'è una X o P o testo, standardizzalo a P
-        if (isPotenziamento && val && val !== 'D' && val !== 'P') {
-          // se ha un valore lo consideriamo P
-          val = 'P';
+        // Controllo se è scritto solo 'P' (senza specificare la classe es. '2B POT')
+        if (val === 'P' || val === 'POT' || val === 'POTENZIAMENTO') {
+          problemi.push({
+            tipo: 'POTENZIAMENTO_SENZA_CLASSE',
+            docenteNome: baseNome,
+            giorno,
+            ora,
+            messaggio: `Cella con solo 'P' (Potenziamento puro). Suggerimento: puoi specificare la classe dove si trova in compresenza (es. '2B POT').`,
+            valore1: val
+          });
         }
+
+        // Supporto per notazioni miste tipo "2B POT" -> classe 2B ma con flag potenziamento
+        if (val.includes('POT') && val !== 'POT' && val !== 'POTENZIAMENTO') {
+          // es. '2B POT' -> classe '2B'
+          val = val.replace(/POTENZIAMENTO|POT/g, '').trim();
+        }
+
         let tipo: TipoOra = 'LIBERO';
-        if (val === 'D') tipo = 'D';
-        else if (val === 'P') tipo = 'P';
-        else if (val !== '') tipo = 'LEZIONE';
+        if (val === 'D' || val === 'DISP' || val === 'DISPOSIZIONE') {
+          tipo = 'D';
+          val = 'D';
+        } else if (val === 'P' || val === 'POT' || isPotenziamento) {
+          tipo = 'P';
+          if (!val || val === 'POT' || isPotenziamento) val = 'P';
+        } else if (val !== '') {
+          tipo = 'LEZIONE';
+        }
 
         const isCasoGrave = hasAsterisk || false;
 
@@ -100,7 +123,7 @@ export function parseOrarioExcel(fileData: ArrayBuffer): ParseResult {
       }
     }
 
-    // Cerca l'email nell'ultima colonna o dopo la 45esima ora (colonna 47 in base 0)
+    // Cerca l'email nell'ultima colonna o dopo la 45esima ora
     let emailParsed: string | undefined = undefined;
     for (let c = colIdx; c < row.length; c++) {
       const valStr = String(row[c] || '').trim();
@@ -137,5 +160,45 @@ export function parseOrarioExcel(fileData: ArrayBuffer): ParseResult {
     });
   }
 
-  return { docenti, orariDocenti };
+  // =========================================================================
+  // VALIDATORE SOVRAPPOSIZIONI MULTI-RIGA PER LO STESSO DOCENTE
+  // =========================================================================
+  const docentiPerNome: Record<string, { doc: Docente; orario: OrarioDocente }[]> = {};
+  docenti.forEach((d, idx) => {
+    const nome = d.nome;
+    if (!docentiPerNome[nome]) docentiPerNome[nome] = [];
+    docentiPerNome[nome].push({ doc: d, orario: orariDocenti[idx] });
+  });
+
+  Object.entries(docentiPerNome).forEach(([nome, listaProfili]) => {
+    if (listaProfili.length <= 1) return;
+
+    // Per ogni giorno e ora, verifica se ci sono 2 celle piene in contemporanea
+    giorni.forEach(giorno => {
+      for (let ora = 1; ora <= colsPerDay; ora++) {
+        const occupati = listaProfili.filter(p => {
+          const c = p.orario.ore.find(cell => cell.giorno === giorno && cell.ora === ora);
+          return c && c.valore && c.valore.trim() !== '';
+        });
+
+        if (occupati.length > 1) {
+          const dettagli = occupati.map(o => {
+            const cell = o.orario.ore.find(c => c.giorno === giorno && c.ora === ora)!;
+            return `${o.doc.materia} (${cell.valore})`;
+          }).join(' e ');
+
+          problemi.push({
+            tipo: 'SOVRAPPOSIZIONE_ORARIA',
+            docenteNome: nome,
+            giorno,
+            ora,
+            messaggio: `⚠️ Attenzione: ${nome} risulta impegnato contemporaneamente in più materie (${dettagli}) il ${giorno} alla ${ora}ª ora!`,
+            valore1: dettagli
+          });
+        }
+      }
+    });
+  });
+
+  return { docenti, orariDocenti, problemi };
 }

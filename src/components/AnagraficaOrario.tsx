@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Docente, OrarioDocente, GiornoSettimana, CellaOrario, TipoOra, CategoriaSostituto } from '../types';
 import { GIORNI } from '../data/initialData';
-import { parseOrarioExcel } from '../utils/excelParser';
+import { parseOrarioExcel, ParseResult } from '../utils/excelParser';
 import { getDocentiUnici, getBaseNomeDocente } from '../utils/docentiHelper';
 import * as XLSX from 'xlsx';
 import { 
@@ -165,8 +165,8 @@ export const AnagraficaOrario: React.FC = () => {
     setTimeout(() => setNotificaSalvataggio(null), 4000);
   };
 
-  // UPLOAD FILE EXCEL (CON SCELTA AGGIORNAMENTO / SOVRASCRITTURA CONSERVA-STORICO)
-  const [fileExcelInAttesa, setFileExcelInAttesa] = useState<{ docenti: Docente[]; orariDocenti: OrarioDocente[] } | null>(null);
+  // UPLOAD FILE EXCEL (CON SCELTA AGGIORNAMENTO / SOVRASCRITTURA CONSERVA-STORICO E REPORT ERRORI)
+  const [fileExcelInAttesa, setFileExcelInAttesa] = useState<ParseResult | null>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -302,12 +302,45 @@ export const AnagraficaOrario: React.FC = () => {
                 <Upload className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base sm:text-lg font-black text-slate-900">Tipo di Importazione Orario</h3>
+                <h3 className="text-base sm:text-lg font-black text-slate-900">Controllo e Importazione Orario Excel</h3>
                 <p className="text-xs text-slate-500">
-                  Rilevati <strong>{fileExcelInAttesa.docenti.length} docenti</strong> nel file Excel caricato.
+                  Rilevati <strong>{fileExcelInAttesa.docenti.length} docenti / cattedre</strong> nel file Excel caricato.
                 </p>
               </div>
             </div>
+
+            {/* SEGNALAZIONI ERRORI / SOVRAPPOSIZIONI O NOTAZIONI POTENZIAMENTO */}
+            {fileExcelInAttesa.problemi && fileExcelInAttesa.problemi.length > 0 && (
+              <div className="space-y-2 max-h-48 overflow-y-auto p-1">
+                {fileExcelInAttesa.problemi.filter(p => p.tipo === 'SOVRAPPOSIZIONE_ORARIA').length > 0 && (
+                  <div className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-3 space-y-1.5 text-xs text-rose-950">
+                    <div className="flex items-center gap-2 font-black text-rose-900">
+                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>Sovrapposizioni Orarie Rilevate ({fileExcelInAttesa.problemi.filter(p => p.tipo === 'SOVRAPPOSIZIONE_ORARIA').length})</span>
+                    </div>
+                    <div className="space-y-1 text-[11px] pl-6">
+                      {fileExcelInAttesa.problemi.filter(p => p.tipo === 'SOVRAPPOSIZIONE_ORARIA').map((prob, idx) => (
+                        <div key={idx} className="leading-tight">
+                          • {prob.messaggio}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {fileExcelInAttesa.problemi.filter(p => p.tipo === 'POTENZIAMENTO_SENZA_CLASSE').length > 0 && (
+                  <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3 space-y-1.5 text-xs text-amber-950">
+                    <div className="flex items-center gap-2 font-black text-amber-900">
+                      <Info className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>Notazione Potenziamento 'P' ({fileExcelInAttesa.problemi.filter(p => p.tipo === 'POTENZIAMENTO_SENZA_CLASSE').length} ore)</span>
+                    </div>
+                    <p className="text-[11px] pl-6 leading-relaxed">
+                      È presente solo <strong>'P'</strong> in alcune celle. Se lo desideri, in Excel puoi indicare la classe dove si trova in compresenza (es. <code>2B POT</code>) per sapere dove si trova ed utilizzarlo al meglio.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <p className="text-xs text-slate-600 leading-relaxed">
               Come desideri procedere con i dati attuali della scuola?
