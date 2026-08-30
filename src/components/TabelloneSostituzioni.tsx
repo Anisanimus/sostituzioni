@@ -1318,6 +1318,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
 
   const [ricercaManuale, setRicercaManuale] = useState<string>('');
   const [docenteManualeSelezionatoId, setDocenteManualeSelezionatoId] = useState<string>('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
   const docentiUnici = getDocentiUnici(docenti);
   const docentiFiltrati = docentiUnici.filter(d => 
@@ -1652,7 +1653,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
           )}
 
           {/* ========================================================================= */}
-          {/* SEZIONE 7: SCELTA MANUALE DA ELENCO COMPLETO DOCENTI (CON MATERIE TRA PARENTESI) */}
+          {/* SEZIONE 7: SCELTA MANUALE UNIFICATA CON AUTOCOMPLETAMENTO E SUGGERIMENTI */}
           {/* ========================================================================= */}
           <div className="p-3.5 bg-slate-50 border border-slate-300 rounded-xl space-y-2.5">
             <div className="flex items-center justify-between">
@@ -1660,24 +1661,45 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                 <span>📋 Scelta Manuale (Tutti i Docenti)</span>
               </span>
               <span className="text-[10px] text-slate-500 font-medium">
-                {docentiFiltrati.length} docenti disponibili
+                {docentiUnici.length} docenti in organico
               </span>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <select
-                  value={docenteManualeSelezionatoId}
-                  onChange={(e) => setDocenteManualeSelezionatoId(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                >
-                  <option value="">-- Seleziona un docente dall'elenco --</option>
-                  {docentiFiltrati.map(d => (
-                    <option key={d.id} value={d.id}>
-                      {d.nome} ({d.materie.join(', ')})
-                    </option>
-                  ))}
-                </select>
+            {/* CASELLA UNICA DIGITABILE CON SUGGERIMENTI INTERATTIVI */}
+            <div className="relative">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={ricercaManuale}
+                    onChange={(e) => {
+                      setRicercaManuale(e.target.value);
+                      setIsDropdownOpen(true);
+                      // Se l'utente digita, resetta l'id finché non sceglie
+                      const matchEsatto = docentiUnici.find(d => 
+                        d.nome.toLowerCase() === e.target.value.toLowerCase() ||
+                        `${d.nome} (${d.materie.join(', ')})`.toLowerCase() === e.target.value.toLowerCase()
+                      );
+                      setDocenteManualeSelezionatoId(matchEsatto ? matchEsatto.id : '');
+                    }}
+                    onFocus={() => setIsDropdownOpen(true)}
+                    placeholder="Digita nome docente o materia (es. Rossi, Matematica, Lettere)..."
+                    className="w-full bg-white border border-slate-300 rounded-xl pl-3 pr-8 py-2.5 text-xs font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none shadow-xs"
+                  />
+                  {ricercaManuale && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRicercaManuale('');
+                        setDocenteManualeSelezionatoId('');
+                        setIsDropdownOpen(false);
+                      }}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 font-bold text-xs p-1"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
 
                 <button
                   disabled={!docenteManualeSelezionatoId}
@@ -1741,7 +1763,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
 
                     onAssegna(docenteManualeSelezionatoId, 'STRAORDINARIO_D', false, false);
                   }}
-                  className={`px-4 py-2 rounded-lg font-bold text-xs shrink-0 transition shadow-xs flex items-center justify-center gap-1 ${
+                  className={`px-4 py-2.5 rounded-xl font-bold text-xs shrink-0 transition shadow-xs flex items-center justify-center gap-1 ${
                     docenteManualeSelezionatoId
                       ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
@@ -1751,13 +1773,43 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                 </button>
               </div>
 
-              <input
-                type="text"
-                value={ricercaManuale}
-                onChange={(e) => setRicercaManuale(e.target.value)}
-                placeholder="Filtra docente o materia (es. Matematica, Lettere)..."
-                className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-700 placeholder:text-slate-400 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-              />
+              {/* LISTA SUGGERIMENTI AUTOCOMPLETAMENTO */}
+              {isDropdownOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setIsDropdownOpen(false)}
+                  />
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-200 max-h-48 overflow-y-auto z-20 divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-100">
+                    {docentiFiltrati.length === 0 ? (
+                      <div className="p-3 text-center text-xs text-slate-400">
+                        Nessun docente trovato con "{ricercaManuale}"
+                      </div>
+                    ) : (
+                      docentiFiltrati.map(d => (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => {
+                            setDocenteManualeSelezionatoId(d.id);
+                            setRicercaManuale(`${d.nome} (${d.materie.join(', ')})`);
+                            setIsDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-3.5 py-2.5 text-xs hover:bg-indigo-50 transition flex items-center justify-between gap-2 cursor-pointer ${
+                            docenteManualeSelezionatoId === d.id ? 'bg-indigo-50 font-black text-indigo-900' : 'text-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold">{d.nome}</span>
+                            <span className="text-[11px] text-slate-400 font-normal">({d.materie.join(', ')})</span>
+                          </div>
+                          <span className="text-[10px] text-indigo-600 font-bold">Seleziona ➔</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
