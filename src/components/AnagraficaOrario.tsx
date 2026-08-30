@@ -14,10 +14,10 @@ import {
 
 const RichiestaCardItem: React.FC<{
   req: any;
-  docentiOrdinati: Docente[];
+  docentiUnici: ReturnType<typeof getDocentiUnici>;
   onApprova: (id: string, docenteId: string) => void;
   onRifiuta: (id: string) => void;
-}> = ({ req, docentiOrdinati, onApprova, onRifiuta }) => {
+}> = ({ req, docentiUnici, onApprova, onRifiuta }) => {
   const [docenteSceltoId, setDocenteSceltoId] = useState<string>(req.docenteSuggeritoId || '');
 
   return (
@@ -38,10 +38,10 @@ const RichiestaCardItem: React.FC<{
             <select
               value={docenteSceltoId}
               onChange={(e) => setDocenteSceltoId(e.target.value)}
-              className="border border-slate-300 rounded-lg p-1 text-xs font-bold bg-white text-slate-800 outline-none focus:border-indigo-500 max-w-[200px]"
+              className="border border-slate-300 rounded-lg p-1 text-xs font-bold bg-white text-slate-800 outline-none focus:border-indigo-500 max-w-[240px]"
             >
               <option value="">-- Seleziona Docente --</option>
-              {docentiOrdinati.map(d => (
+              {docentiUnici.map(d => (
                 <option key={d.id} value={d.id}>{d.nome}</option>
               ))}
             </select>
@@ -479,7 +479,7 @@ export const AnagraficaOrario: React.FC = () => {
                 <RichiestaCardItem 
                   key={req.id} 
                   req={req} 
-                  docentiOrdinati={docentiOrdinati} 
+                  docentiUnici={docentiUnici} 
                   onApprova={approvaRichiestaAccesso} 
                   onRifiuta={rifiutaRichiestaAccesso} 
                 />
@@ -505,11 +505,14 @@ export const AnagraficaOrario: React.FC = () => {
               className="w-full border border-slate-300 rounded-xl p-2.5 text-xs sm:text-sm font-bold bg-white text-slate-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs cursor-pointer"
             >
               <option value="">-- Scegli Docente --</option>
-              {docentiOrdinati.map(d => (
-                <option key={d.id} value={d.id}>
-                  {d.nome} ({d.materia}{d.isSostegno ? ' - Sost.' : ''}) {d.email ? `[✉️ ${d.email}]` : ''}
-                </option>
-              ))}
+              {docentiUnici.map(d => {
+                const docOriginale = docenti.find(orig => d.allIds.includes(orig.id));
+                return (
+                  <option key={d.id} value={d.id}>
+                    {d.nome} ({d.materie.join(', ')}) {docOriginale?.email ? `[✉️ ${docOriginale.email}]` : ''}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
