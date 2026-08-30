@@ -325,6 +325,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   const docentiAttuali = cloudData.docenti || docenti;
                   const loggedCollegatiIds = getDocentiCollegatiIds(loggedDocenteId, docentiAttuali);
 
+                  const playNotificationAudio = () => {
+                    try {
+                      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                      const osc = audioCtx.createOscillator();
+                      const gain = audioCtx.createGain();
+                      osc.type = 'sine';
+                      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+                      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                      osc.connect(gain);
+                      gain.connect(audioCtx.destination);
+                      osc.start();
+                      osc.stop(audioCtx.currentTime + 0.35);
+                    } catch (e) {
+                      console.log('Audio chime error:', e);
+                    }
+                  };
+
                   // 1. Nuove sostituzioni pubblicate appena arrivate (non erano nell'insieme dei noti)
                   const nuoveAppenaPubblicate = currentCloudSosts.filter(
                     s => s.pubblicata && !knownSostituzioniIdsRef.has(s.id) && s.docenteSostitutoId &&
@@ -332,15 +351,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   );
 
                   if (nuoveAppenaPubblicate.length > 0) {
+                    playNotificationAudio();
                     nuoveAppenaPubblicate.forEach((s: SostituzioneAssegnata) => {
                       const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
                       try {
-                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                        if ('serviceWorker' in navigator) {
                           navigator.serviceWorker.ready.then(reg => {
                             reg.showNotification('🔔 Nuova Sostituzione Assegnata!', {
                               body: `Prof. ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
                               icon: '/favicon.svg'
-                            });
+                            } as any);
                           }).catch(() => {
                             new Notification('🔔 Nuova Sostituzione Assegnata!', {
                               body: `Prof. ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
@@ -367,15 +387,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   );
 
                   if (annullate.length > 0) {
+                    playNotificationAudio();
                     annullate.forEach((s: SostituzioneAssegnata) => {
                       const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
                       try {
-                        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                        if ('serviceWorker' in navigator) {
                           navigator.serviceWorker.ready.then(reg => {
                             reg.showNotification('⚠️ Supplenza Annullata', {
                               body: `Prof. ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
                               icon: '/favicon.svg'
-                            });
+                            } as any);
                           }).catch(() => {
                             new Notification('⚠️ Supplenza Annullata', {
                               body: `Prof. ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
