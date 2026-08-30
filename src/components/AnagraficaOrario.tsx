@@ -553,6 +553,85 @@ export const AnagraficaOrario: React.FC = () => {
       )}
 
       {/* ========================================================= */}
+      {/* CONTROLLO COSTANTE ANOMALIE / SOVRAPPOSIZIONI ATTUALI     */}
+      {/* ========================================================= */}
+      {(() => {
+        const anomalieAttuali: { docenteNome: string; docenteId: string; giorno: GiornoSettimana; ora: number; dettaglio: string }[] = [];
+        docentiUnici.forEach(du => {
+          if (du.allIds.length <= 1) return;
+          const profili = docenti.filter(d => du.allIds.includes(d.id));
+          GIORNI.forEach(giorno => {
+            for (let ora = 1; ora <= 9; ora++) {
+              const occupati = profili.filter(p => {
+                const o = orariDocenti.find(ord => ord.docenteId === p.id);
+                const c = o?.ore.find(cell => cell.giorno === giorno && cell.ora === ora);
+                return c && c.valore && c.valore.trim() !== '';
+              });
+
+              if (occupati.length > 1) {
+                const dettaglio = occupati.map(p => {
+                  const o = orariDocenti.find(ord => ord.docenteId === p.id);
+                  const c = o?.ore.find(cell => cell.giorno === giorno && cell.ora === ora)!;
+                  return `${p.materia} (${c.valore})`;
+                }).join(' e ');
+
+                anomalieAttuali.push({
+                  docenteNome: du.nome,
+                  docenteId: du.id,
+                  giorno,
+                  ora,
+                  dettaglio
+                });
+              }
+            }
+          });
+        });
+
+        if (anomalieAttuali.length === 0) return null;
+
+        return (
+          <div className="bg-rose-50 border-2 border-rose-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-sm">
+                  <AlertTriangle className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-rose-950">
+                    Sovrapposizioni Orarie Rilevate nel Database ({anomalieAttuali.length})
+                  </h3>
+                  <p className="text-xs text-rose-800">
+                    I seguenti docenti risultano con due materie/classi diverse assegnate nella stessa identica ora.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {anomalieAttuali.map((anom, idx) => (
+                <div key={idx} className="bg-white border border-rose-200 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-2xs text-xs">
+                  <div>
+                    <strong className="text-slate-900 block font-black">{anom.docenteNome}</strong>
+                    <span className="text-rose-700 font-bold text-[11px]">
+                      {anom.giorno} - {anom.ora}ª ora:
+                    </span>{' '}
+                    <span className="text-slate-600 text-[11px]">{anom.dettaglio}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDocenteId(anom.docenteId)}
+                    className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-2xs transition cursor-pointer shrink-0"
+                  >
+                    Correggi →
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ========================================================= */}
       {/* SELETTORE DOCENTE STANDARD A TENDINA & GESTIONE EMAIL     */}
       {/* ========================================================= */}
       <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-2xs border border-slate-200 space-y-3">
