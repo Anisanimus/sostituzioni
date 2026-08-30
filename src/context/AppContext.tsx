@@ -3,7 +3,7 @@ import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAsseg
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente } from '../utils/docentiHelper';
 import { db } from '../firebase';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 
 const CURRENT_TIMETABLE_VERSION = 'v17_pdf_marchi_pellegrino_compresenza_fix';
 const SCUOLA_FIRESTORE_ID = 'IC_ANNA_FRANK';
@@ -202,49 +202,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const setupRealtimeSync = async () => {
       try {
-        const { getDoc } = await import('firebase/firestore');
         const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
 
-        // Fetch iniziale immediato compatibile con Safari iOS
+        // 1. Fetch iniziale immediato per caricare subito lo stato reale
         const initialSnap = await getDoc(scuolaDocRef);
         if (initialSnap.exists()) {
           const cloudData = initialSnap.data();
           if (cloudData.docenti && Array.isArray(cloudData.docenti) && cloudData.docenti.length > 0) {
             setDocenti(cloudData.docenti);
+            localStorage.setItem('scuola_docenti', JSON.stringify(cloudData.docenti));
           }
           if (cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti) && cloudData.orariDocenti.length > 0) {
             setOrariDocenti(cloudData.orariDocenti);
+            localStorage.setItem('scuola_orari', JSON.stringify(cloudData.orariDocenti));
           }
           if (cloudData.assenze && Array.isArray(cloudData.assenze)) {
             setAssenze(cloudData.assenze);
+            localStorage.setItem('scuola_assenze', JSON.stringify(cloudData.assenze));
           }
           if (cloudData.uscite && Array.isArray(cloudData.uscite)) {
             setUscite(cloudData.uscite);
+            localStorage.setItem('scuola_uscite', JSON.stringify(cloudData.uscite));
           }
           if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
             setSostituzioni(cloudData.sostituzioni);
+            localStorage.setItem('scuola_sostituzioni', JSON.stringify(cloudData.sostituzioni));
           }
           if (cloudData.movimentiDebito && Array.isArray(cloudData.movimentiDebito)) {
             setMovimentiDebito(cloudData.movimentiDebito);
+            localStorage.setItem('scuola_movimenti_debito', JSON.stringify(cloudData.movimentiDebito));
           }
           if (cloudData.impostazioniScuola) {
             setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
+            localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(cloudData.impostazioniScuola));
           }
-        } else {
-          // Se non esiste ancora su Firestore, salva i dati iniziali
-          await setDoc(scuolaDocRef, {
-            docenti: DOCENTI_PRECARICATI,
-            orariDocenti: ORARI_DOCENTI_PRECARICATI,
-            assenze: [],
-            uscite: [],
-            sostituzioni: [],
-            movimentiDebito: [],
-            impostazioniScuola: DEFAULT_IMPOSTAZIONI_SCUOLA,
-            ultimoAggiornamento: new Date().toISOString()
-          });
         }
 
-        // Ascolto in tempo reale continuo (Live Listener)
+        // 2. Ascolto in tempo reale continuo (Live Listener)
         unsubscribe = onSnapshot(scuolaDocRef, (docSnap) => {
           if (docSnap.exists()) {
             const cloudData = docSnap.data();
@@ -252,15 +246,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
             if (cloudData.docenti && Array.isArray(cloudData.docenti) && cloudData.docenti.length > 0) {
               setDocenti(cloudData.docenti);
+              localStorage.setItem('scuola_docenti', JSON.stringify(cloudData.docenti));
             }
             if (cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti) && cloudData.orariDocenti.length > 0) {
               setOrariDocenti(cloudData.orariDocenti);
+              localStorage.setItem('scuola_orari', JSON.stringify(cloudData.orariDocenti));
             }
             if (cloudData.assenze && Array.isArray(cloudData.assenze)) {
               setAssenze(cloudData.assenze);
+              localStorage.setItem('scuola_assenze', JSON.stringify(cloudData.assenze));
             }
             if (cloudData.uscite && Array.isArray(cloudData.uscite)) {
               setUscite(cloudData.uscite);
+              localStorage.setItem('scuola_uscite', JSON.stringify(cloudData.uscite));
             }
             // Controlla se sono arrivate nuove sostituzioni pubblicate o annullate e invia notifica push di sistema
             if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
