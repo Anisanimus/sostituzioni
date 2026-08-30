@@ -333,9 +333,19 @@ export const GestioneAssenze: React.FC<{
           materia: profAttivo.materia,
           usata: isUsata
         });
-      } else if (cellaVal === 'P' || cellaVal === 'POT' || cellaVal.startsWith('POTENZ')) {
+      } else if (
+        cellaVal === 'P' || 
+        cellaVal === 'POT' || 
+        cellaVal.endsWith(' P') || 
+        cellaVal.endsWith(' POT') || 
+        cellaVal.startsWith('P ') || 
+        cellaVal.startsWith('POT ') || 
+        cellaVal.includes('POTENZ') || 
+        profAttivo.isPotenziamento
+      ) {
+        const classeCompresenza = cellaVal.replace(/POTENZIAMENTO|POT|P/g, '').trim();
         potenziamentoList.push({
-          nome: getBaseNomeDocente(persona.nome),
+          nome: getBaseNomeDocente(persona.nome) + (classeCompresenza ? ` (in ${classeCompresenza})` : ''),
           docenteId: profAttivo.id,
           usata: isUsata
         });

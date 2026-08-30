@@ -334,10 +334,20 @@ export const TabelloneSostituzioni: React.FC<{
           usata: isUsata
         });
       }
-      // B) Potenziamento (P) - RIGOROSAMENTE SE LA CELLA È 'P' O 'POTENZIAMENTO'
-      else if (cellaVal === 'P' || cellaVal === 'POT' || cellaVal.startsWith('POTENZ')) {
+      // B) Potenziamento (P) - SE LA CELLA È 'P', 'POT', '3F P', '2B POT' O PROFILO POTENZIAMENTO
+      else if (
+        cellaVal === 'P' || 
+        cellaVal === 'POT' || 
+        cellaVal.endsWith(' P') || 
+        cellaVal.endsWith(' POT') || 
+        cellaVal.startsWith('P ') || 
+        cellaVal.startsWith('POT ') || 
+        cellaVal.includes('POTENZ') || 
+        profAttivo.isPotenziamento
+      ) {
+        const classeCompresenza = cellaVal.replace(/POTENZIAMENTO|POT|P/g, '').trim();
         potenziamentoList.push({
-          nome: getBaseNomeDocente(persona.nome),
+          nome: getBaseNomeDocente(persona.nome) + (classeCompresenza ? ` (in ${classeCompresenza})` : ''),
           docenteId: profAttivo.id,
           usata: isUsata
         });

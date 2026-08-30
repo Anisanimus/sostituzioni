@@ -192,13 +192,25 @@ export function trovaCandidatiSostituzione(
       return;
     }
 
-    // 3. Potenziamento P: RIGOROSAMENTE SOLO SE IN QUEST'ORA HA 'P'
-    if (cellaValEffettiva === 'P') {
+    // 3. Potenziamento P: SE IN QUEST'ORA HA 'P', 'POT', '3F P', '2B POT' O PROFILO POTENZIAMENTO
+    const isOraPotenziamento = cellaValEffettiva === 'P' || 
+      cellaValEffettiva === 'POT' || 
+      cellaValEffettiva.endsWith(' P') || 
+      cellaValEffettiva.endsWith(' POT') || 
+      cellaValEffettiva.startsWith('P ') || 
+      cellaValEffettiva.startsWith('POT ') || 
+      cellaValEffettiva.includes('POTENZ') || 
+      profiloAttivoNellOra.isPotenziamento;
+
+    if (isOraPotenziamento) {
+      const classeCompresenza = cellaValEffettiva.replace(/POTENZIAMENTO|POT|P/g, '').trim();
+      const dettaglioClasse = classeCompresenza ? ` • In compresenza su classe ${classeCompresenza}` : '';
+
       candidatiPerCategoria.POTENZIAMENTO.push({
         docente: profiloAttivoNellOra,
         categoria: 'POTENZIAMENTO',
         punteggioPriorita: 3,
-        dettagli: `Ora di Potenziamento (P) da orario (${nomePersona})`
+        dettagli: `Ora di Potenziamento (P) da orario (${nomePersona})${dettaglioClasse}`
       });
       return;
     }
