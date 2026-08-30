@@ -154,6 +154,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  const [notifiche, setNotifiche] = useState<NotificaDocente[]>(() => {
+    try {
+      const saved = localStorage.getItem('scuola_notifiche');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [impostazioniPriorita, setImpostazioniPriorita] = useState<ImpostazioniPriorita>(() => {
     try {
       const saved = localStorage.getItem('scuola_impostazioni_priorita');
@@ -398,6 +407,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, []);
 
+  // REFS PER EVITARE CLOSURE STALE IN TRIGGERCLOUDSYNC
+  const docentiRef = React.useRef(docenti);
+  docentiRef.current = docenti;
+  const orariDocentiRef = React.useRef(orariDocenti);
+  orariDocentiRef.current = orariDocenti;
+  const assenzeRef = React.useRef(assenze);
+  assenzeRef.current = assenze;
+  const usciteRef = React.useRef(uscite);
+  usciteRef.current = uscite;
+  const sostituzioniRef = React.useRef(sostituzioni);
+  sostituzioniRef.current = sostituzioni;
+  const movimentiDebitoRef = React.useRef(movimentiDebito);
+  movimentiDebitoRef.current = movimentiDebito;
+  const notificheRef = React.useRef(notifiche);
+  notificheRef.current = notifiche;
+  const impostazioniScuolaRef = React.useRef(impostazioniScuola);
+  impostazioniScuolaRef.current = impostazioniScuola;
+
   const triggerCloudSync = (override?: any) => {
     if (isIncomingRemoteUpdate.current) return;
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
@@ -405,14 +432,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     syncTimeoutRef.current = setTimeout(async () => {
       try {
         const payload = {
-          docenti,
-          orariDocenti,
-          assenze,
-          uscite,
-          sostituzioni,
-          movimentiDebito,
-          notifiche,
-          impostazioniScuola,
+          docenti: docentiRef.current,
+          orariDocenti: orariDocentiRef.current,
+          assenze: assenzeRef.current,
+          uscite: usciteRef.current,
+          sostituzioni: sostituzioniRef.current,
+          movimentiDebito: movimentiDebitoRef.current,
+          notifiche: notificheRef.current,
+          impostazioniScuola: impostazioniScuolaRef.current,
           ultimoAggiornamento: new Date().toISOString(),
           ...override
         };
@@ -422,7 +449,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (err) {
         console.error('Errore sincronizzazione Cloud:', err);
       }
-    }, 1000);
+    }, 150);
   };
 
   // Sincronizza localStorage passivamente solo per cache offline
@@ -966,15 +993,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
   };
-
-  const [notifiche, setNotifiche] = useState<NotificaDocente[]>(() => {
-    try {
-      const saved = localStorage.getItem('scuola_notifiche');
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      return [];
-    }
-  });
 
   useEffect(() => {
     localStorage.setItem('scuola_notifiche', JSON.stringify(notifiche));
