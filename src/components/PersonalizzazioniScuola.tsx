@@ -50,13 +50,36 @@ export const PersonalizzazioniScuola: React.FC = () => {
     return nuovaLista;
   };
 
+  const [tipoInserimentoFestivita, setTipoInserimentoFestivita] = useState<'SINGOLO' | 'PERIODO'>('SINGOLO');
+  const [nuovaDataFestivaFine, setNuovaDataFestivaFine] = useState('');
+
   const handleAggiungiFestivita = () => {
     if (!nuovaDataFestiva) return;
-    if (!giorniFestivi.includes(nuovaDataFestiva)) {
-      const agg = [...giorniFestivi, nuovaDataFestiva].sort();
-      setGiorniFestivi(agg);
-      setNuovaDataFestiva('');
+
+    const dateAggiunte: string[] = [];
+
+    if (tipoInserimentoFestivita === 'PERIODO' && nuovaDataFestivaFine) {
+      let curr = new Date(nuovaDataFestiva);
+      const end = new Date(nuovaDataFestivaFine);
+
+      if (curr > end) {
+        alert("La data di inizio non può essere successiva alla data di fine.");
+        return;
+      }
+
+      while (curr <= end) {
+        const dStr = curr.toISOString().split('T')[0];
+        dateAggiunte.push(dStr);
+        curr.setDate(curr.getDate() + 1);
+      }
+    } else {
+      dateAggiunte.push(nuovaDataFestiva);
     }
+
+    const nuoveFestivita = Array.from(new Set([...giorniFestivi, ...dateAggiunte])).sort();
+    setGiorniFestivi(nuoveFestivita);
+    setNuovaDataFestiva('');
+    setNuovaDataFestivaFine('');
   };
 
   const handleRimuoviFestivita = (dataDaRimuovere: string) => {
@@ -660,45 +683,119 @@ export const PersonalizzazioniScuola: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <input
-                type="date"
-                value={nuovaDataFestiva}
-                onChange={(e) => setNuovaDataFestiva(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-rose-500"
-              />
+          <div className="space-y-3.5">
+            {/* SELETTORE SINGOLO GIORNO / PERIODO */}
+            <div className="flex items-center gap-4 text-xs font-bold text-slate-700 pb-1">
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="tipoInserimentoFestivita"
+                  checked={tipoInserimentoFestivita === 'SINGOLO'}
+                  onChange={() => setTipoInserimentoFestivita('SINGOLO')}
+                  className="text-rose-600 focus:ring-rose-500"
+                />
+                <span>Giorno Singolo</span>
+              </label>
+
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="radio"
+                  name="tipoInserimentoFestivita"
+                  checked={tipoInserimentoFestivita === 'PERIODO'}
+                  onChange={() => setTipoInserimentoFestivita('PERIODO')}
+                  className="text-rose-600 focus:ring-rose-500"
+                />
+                <span>Intero Periodo / Vacanze (Dal ... Al ...)</span>
+              </label>
+            </div>
+
+            {/* FORM DI INSERIMENTO */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col">
+                  {tipoInserimentoFestivita === 'PERIODO' && (
+                    <span className="text-[10px] font-bold text-slate-500 mb-0.5">Dal:</span>
+                  )}
+                  <input
+                    type="date"
+                    value={nuovaDataFestiva}
+                    onChange={(e) => {
+                      setNuovaDataFestiva(e.target.value);
+                      if (tipoInserimentoFestivita === 'SINGOLO' || !nuovaDataFestivaFine) {
+                        setNuovaDataFestivaFine(e.target.value);
+                      }
+                    }}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-rose-500"
+                  />
+                </div>
+
+                {tipoInserimentoFestivita === 'PERIODO' && (
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-slate-500 mb-0.5">Al:</span>
+                    <input
+                      type="date"
+                      value={nuovaDataFestivaFine}
+                      min={nuovaDataFestiva}
+                      onChange={(e) => setNuovaDataFestivaFine(e.target.value)}
+                      className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-rose-500"
+                    />
+                  </div>
+                )}
+              </div>
+
               <button
                 type="button"
                 onClick={handleAggiungiFestivita}
-                className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                disabled={!nuovaDataFestiva || (tipoInserimentoFestivita === 'PERIODO' && !nuovaDataFestivaFine)}
+                className="bg-rose-600 hover:bg-rose-700 disabled:opacity-40 text-white font-bold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs self-end mt-auto"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Aggiungi Giorno Festivo / Chiusura</span>
+                <span>{tipoInserimentoFestivita === 'PERIODO' ? 'Aggiungi Periodo di Chiusura' : 'Aggiungi Festività'}</span>
               </button>
             </div>
 
             {/* LISTA FESTIVITÀ REGISTRATE */}
-            <div className="flex flex-wrap gap-2 pt-1">
-              {giorniFestivi.map(dataFest => (
-                <span
-                  key={dataFest}
-                  className="bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs px-3 py-1 rounded-xl flex items-center gap-2 shadow-2xs"
-                >
-                  <span>🎉 {formatDataItaliana(dataFest)}</span>
+            <div className="pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between pb-2">
+                <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                  Chiusure Registrate ({giorniFestivi.length} giorni)
+                </span>
+                {giorniFestivi.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => handleRimuoviFestivita(dataFest)}
-                    className="text-rose-400 hover:text-rose-700 transition"
-                    title="Rimuovi data"
+                    onClick={() => {
+                      if (window.confirm("Vuoi cancellare tutti i giorni festivi registrati?")) {
+                        setGiorniFestivi([]);
+                      }
+                    }}
+                    className="text-[10px] text-rose-600 hover:underline font-bold"
                   >
-                    ✕
+                    Rimuovi tutti
                   </button>
-                </span>
-              ))}
-              {giorniFestivi.length === 0 && (
-                <p className="text-xs text-slate-400 italic">Nessun giorno festivo o ponte scolastico registrato.</p>
-              )}
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1">
+                {giorniFestivi.map(dataFest => (
+                  <span
+                    key={dataFest}
+                    className="bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs px-2.5 py-1 rounded-xl flex items-center gap-2 shadow-2xs"
+                  >
+                    <span>🎉 {formatDataItaliana(dataFest)}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRimuoviFestivita(dataFest)}
+                      className="text-rose-400 hover:text-rose-700 transition"
+                      title="Rimuovi data"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+                {giorniFestivi.length === 0 && (
+                  <p className="text-xs text-slate-400 italic">Nessun giorno festivo o ponte scolastico registrato.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
