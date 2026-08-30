@@ -22,7 +22,13 @@ export const PortaleDocente: React.FC = () => {
       alert('PIN errato! (Il PIN predefinito è 1234)');
       return;
     }
+    localStorage.setItem('portale_docente_loggato_id', selectedDocenteId);
     setIsLogged(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('portale_docente_loggato_id');
+    setIsLogged(false);
   };
 
   const [mostraGuidaIos, setMostraGuidaIos] = useState<boolean>(false);
@@ -249,7 +255,7 @@ export const PortaleDocente: React.FC = () => {
           )}
 
           <button
-            onClick={() => setIsLogged(false)}
+            onClick={handleLogout}
             className="text-xs text-slate-500 hover:text-slate-800 underline p-2 cursor-pointer"
           >
             Esci

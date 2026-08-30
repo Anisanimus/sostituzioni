@@ -306,20 +306,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               setNotifiche(cloudData.notifiche);
               localStorage.setItem('scuola_notifiche', JSON.stringify(cloudData.notifiche));
             }
-            // Controlla se sono arrivate nuove sostituzioni pubblicate o annullate e invia notifica push di sistema
+            // Controlla se sono arrivate nuove sostituzioni pubblicate o annullate e invia notifica push di sistema SOLO AL DOCENTE INTERESSATO
             if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
               if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                const loggedDocenteId = localStorage.getItem('portale_docente_loggato_id') || '';
+                const docentiAttuali = cloudData.docenti || docenti;
+                const loggedCollegatiIds = loggedDocenteId ? getDocentiCollegatiIds(loggedDocenteId, docentiAttuali) : [];
+
                 const vecchiePubblicate = (sostituzioni || []).filter(s => s.pubblicata);
                 const vecchiePubblicateIds = vecchiePubblicate.map(s => s.id);
                 
-                // 1. Nuove sostituzioni pubblicate
+                // 1. Nuove sostituzioni pubblicate (SOLO SE ASSEGNATE AL DOCENTE LOGGATO SU QUESTO DISPOSITIVO)
                 const nuoveAppenaPubblicate = cloudData.sostituzioni.filter(
-                  (s: SostituzioneAssegnata) => s.pubblicata && !vecchiePubblicateIds.includes(s.id) && s.docenteSostitutoId
+                  (s: SostituzioneAssegnata) => s.pubblicata && !vecchiePubblicateIds.includes(s.id) && s.docenteSostitutoId &&
+                  (!loggedDocenteId || loggedCollegatiIds.includes(s.docenteSostitutoId))
                 );
 
                 if (nuoveAppenaPubblicate.length > 0) {
                   nuoveAppenaPubblicate.forEach((s: SostituzioneAssegnata) => {
-                    const docSostituto = (cloudData.docenti || docenti).find((d: any) => d.id === s.docenteSostitutoId);
+                    const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
                     try {
                       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                         navigator.serviceWorker.ready.then(reg => {
@@ -345,13 +350,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   });
                 }
 
-                // 2. Sostituzioni annullate o rimosse dalla Vicepresidenza
+                // 2. Sostituzioni annullate o rimosse dalla Vicepresidenza (SOLO SE APPARTENEVANO AL DOCENTE LOGGATO)
                 const nuoveIds = cloudData.sostituzioni.map((s: SostituzioneAssegnata) => s.id);
-                const annullate = vecchiePubblicate.filter(s => !nuoveIds.includes(s.id) && s.docenteSostitutoId);
+                const annullate = vecchiePubblicate.filter(
+                  s => !nuoveIds.includes(s.id) && s.docenteSostitutoId &&
+                  (!loggedDocenteId || loggedCollegatiIds.includes(s.docenteSostitutoId))
+                );
 
                 if (annullate.length > 0) {
                   annullate.forEach((s: SostituzioneAssegnata) => {
-                    const docSostituto = (cloudData.docenti || docenti).find((d: any) => d.id === s.docenteSostitutoId);
+                    const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
                     try {
                       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                         navigator.serviceWorker.ready.then(reg => {
