@@ -232,11 +232,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const initialSnap = await getDoc(scuolaDocRef);
         if (initialSnap.exists()) {
           const cloudData = initialSnap.data();
-          if (cloudData.docenti && Array.isArray(cloudData.docenti) && cloudData.docenti.length > 0) {
+          if (cloudData.docenti && Array.isArray(cloudData.docenti)) {
             setDocenti(cloudData.docenti);
             localStorage.setItem('scuola_docenti', JSON.stringify(cloudData.docenti));
           }
-          if (cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti) && cloudData.orariDocenti.length > 0) {
+          if (cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti)) {
             setOrariDocenti(cloudData.orariDocenti);
             localStorage.setItem('scuola_orari', JSON.stringify(cloudData.orariDocenti));
           }
@@ -268,11 +268,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const cloudData = docSnap.data();
             isIncomingRemoteUpdate.current = true;
 
-            if (cloudData.docenti && Array.isArray(cloudData.docenti) && cloudData.docenti.length > 0) {
+            if (cloudData.docenti && Array.isArray(cloudData.docenti)) {
               setDocenti(cloudData.docenti);
               localStorage.setItem('scuola_docenti', JSON.stringify(cloudData.docenti));
             }
-            if (cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti) && cloudData.orariDocenti.length > 0) {
+            if (cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti)) {
               setOrariDocenti(cloudData.orariDocenti);
               localStorage.setItem('scuola_orari', JSON.stringify(cloudData.orariDocenti));
             }
