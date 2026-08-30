@@ -1231,9 +1231,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const creaRichiestaAccessoDocente = async (richiesta: Omit<RichiestaAccessoDocente, 'id' | 'dataRichiesta' | 'stato'>) => {
     const nuovaRichiesta: RichiestaAccessoDocente = {
-      ...richiesta,
       id: 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      email: richiesta.email,
+      displayName: richiesta.displayName || richiesta.email.split('@')[0],
       dataRichiesta: new Date().toISOString(),
+      docenteSuggeritoId: richiesta.docenteSuggeritoId || '',
+      docenteSuggeritoNome: richiesta.docenteSuggeritoNome || '',
       stato: 'IN_ATTESA'
     };
 
@@ -1243,7 +1246,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const updated = [nuovaRichiesta, ...filtrate];
       localStorage.setItem('scuola_richieste_accesso_docenti', JSON.stringify(updated));
       const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
-      setDoc(scuolaDocRef, { richiesteAccessoDocenti: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true })
+      // Pulizia campi per Firestore
+      const cleanData = JSON.parse(JSON.stringify(updated));
+      setDoc(scuolaDocRef, { richiesteAccessoDocenti: cleanData, ultimoAggiornamento: new Date().toISOString() }, { merge: true })
         .then(() => console.log('✅ Richiesta accesso docente registrata su Cloud!'))
         .catch(err => console.error('Errore salvataggio richiesta:', err));
       return updated;

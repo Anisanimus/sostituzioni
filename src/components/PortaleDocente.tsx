@@ -55,15 +55,25 @@ export const PortaleDocente: React.FC = () => {
   }, [selectedDocenteId]);
 
   // Invia richiesta alla Vicepresidenza se la corrispondenza è parziale o assente
+  const [isInvioInCorso, setIsInvioInCorso] = useState(false);
+
   const handleInviaRichiestaVicepresidenza = async () => {
-    if (!userEmail) return;
-    await creaRichiestaAccessoDocente({
-      email: userEmail,
-      displayName: userDisplayName,
-      docenteSuggeritoId: matchRisultato?.docente?.id,
-      docenteSuggeritoNome: matchRisultato?.docente?.nome
-    });
-    setRichiestaInviata(true);
+    if (!userEmail || isInvioInCorso) return;
+    setIsInvioInCorso(true);
+    try {
+      await creaRichiestaAccessoDocente({
+        email: userEmail,
+        displayName: userDisplayName,
+        docenteSuggeritoId: matchRisultato?.docente?.id || '',
+        docenteSuggeritoNome: matchRisultato?.docente?.nome || ''
+      });
+      setRichiestaInviata(true);
+    } catch (e) {
+      console.error(e);
+      alert('Errore invio richiesta. Riprova tra poco.');
+    } finally {
+      setIsInvioInCorso(false);
+    }
   };
 
   // Inizializza stato permessi notifiche se già concessi
