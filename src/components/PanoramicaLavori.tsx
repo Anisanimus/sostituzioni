@@ -13,11 +13,28 @@ interface PanoramicaLavoriProps {
 export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate, onSelectDate }) => {
   const { docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola } = useApp();
   
-  // Stato visibilità banner - SU MOBILE default chiuso/compresso, su desktop aperto
+  // Stato visibilità banner - Di default CHIUSO / COMPRESSO sia su mobile che su desktop
   const [visibile, setVisibile] = useState(true);
-  const [compresso, setCompresso] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
+  const [compresso, setCompresso] = useState(true); // CHIUSO DI DEFAULT
   const [vista, setVista] = useState<'GIORNO' | 'SETTIMANA'>('GIORNO');
   const [offsetMeseBlocco, setOffsetMeseBlocco] = useState(0); // 0 = blocco corrente 30gg, -1 = 30gg prima, +1 = 30gg dopo
+
+  // Gestione toggle per vista Settimana e Mese:
+  // - Se è chiuso e clicco -> apro nella vista cliccata
+  // - Se è già aperto sulla stessa vista e riclicco -> chiudo
+  // - Se è aperto e clicco l'altra vista -> commuto rimanendo aperto
+  const handleToggleVista = (targetVista: 'GIORNO' | 'SETTIMANA') => {
+    if (compresso) {
+      setVista(targetVista);
+      setCompresso(false);
+    } else {
+      if (vista === targetVista) {
+        setCompresso(true);
+      } else {
+        setVista(targetVista);
+      }
+    }
+  };
 
   const todayStr = new Date().toISOString().split('T')[0];
   const nascondiWeekend = impostazioniScuola?.nascondiWeekendCalendario ?? true;
@@ -271,18 +288,40 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
           <div className="hidden sm:flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-bold shadow-inner mr-1">
             <button
               type="button"
-              onClick={() => setVista('GIORNO')}
+              onClick={() => handleToggleVista('GIORNO')}
               className={`px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1 ${
-                vista === 'GIORNO' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                !compresso && vista === 'GIORNO' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               <span>📅 Settimana</span>
             </button>
             <button
               type="button"
-              onClick={() => setVista('SETTIMANA')}
+              onClick={() => handleToggleVista('SETTIMANA')}
               className={`px-2.5 py-1 rounded-lg transition cursor-pointer flex items-center gap-1 ${
-                vista === 'SETTIMANA' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                !compresso && vista === 'SETTIMANA' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span>🗓️ Mese</span>
+            </button>
+          </div>
+
+          {/* SELETTORE VISTA MOBILE COMPATTO IN HEADER */}
+          <div className="flex sm:hidden items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-[11px] font-bold mr-0.5">
+            <button
+              type="button"
+              onClick={() => handleToggleVista('GIORNO')}
+              className={`px-2 py-1 rounded-lg transition cursor-pointer flex items-center gap-0.5 ${
+                !compresso && vista === 'GIORNO' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span>📅 Sett.</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleVista('SETTIMANA')}
+              className={`px-2 py-1 rounded-lg transition cursor-pointer flex items-center gap-0.5 ${
+                !compresso && vista === 'SETTIMANA' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               <span>🗓️ Mese</span>
