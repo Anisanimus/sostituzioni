@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente } from '../types';
+import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente } from '../utils/docentiHelper';
 import { db } from '../firebase';
@@ -69,6 +69,13 @@ interface AppContextType {
   setImpostazioniScuola: React.Dispatch<React.SetStateAction<ImpostazioniScuola>>;
   updateImpostazioniScuola: (nuove: Partial<ImpostazioniScuola>) => void;
   
+  richiesteAccessoDocenti: RichiestaAccessoDocente[];
+  setRichiesteAccessoDocenti: React.Dispatch<React.SetStateAction<RichiestaAccessoDocente[]>>;
+  associaEmailDocente: (docenteId: string, email: string) => Promise<void>;
+  creaRichiestaAccessoDocente: (richiesta: Omit<RichiestaAccessoDocente, 'id' | 'dataRichiesta' | 'stato'>) => Promise<void>;
+  approvaRichiestaAccesso: (richiestaId: string, docenteIdScelto: string) => Promise<void>;
+  rifiutaRichiestaAccesso: (richiestaId: string) => Promise<void>;
+
   addAssenza: (assenza: Omit<AssenzaDocente, 'id' | 'createdAt'>) => void;
   removeAssenza: (id: string) => void;
   annullaAssenza: (id: string, motivo?: string) => void;
@@ -157,6 +164,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notifiche, setNotifiche] = useState<NotificaDocente[]>(() => {
     try {
       const saved = localStorage.getItem('scuola_notifiche');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const [richiesteAccessoDocenti, setRichiesteAccessoDocenti] = useState<RichiestaAccessoDocente[]>(() => {
+    try {
+      const saved = localStorage.getItem('scuola_richieste_accesso_docenti');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -279,6 +295,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setNotifiche(cloudData.notifiche);
             localStorage.setItem('scuola_notifiche', JSON.stringify(cloudData.notifiche));
           }
+          if (cloudData.richiesteAccessoDocenti && Array.isArray(cloudData.richiesteAccessoDocenti)) {
+            setRichiesteAccessoDocenti(cloudData.richiesteAccessoDocenti);
+            localStorage.setItem('scuola_richieste_accesso_docenti', JSON.stringify(cloudData.richiesteAccessoDocenti));
+          }
           if (cloudData.impostazioniScuola) {
             setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
             localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(cloudData.impostazioniScuola));
@@ -310,6 +330,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (cloudData.notifiche && Array.isArray(cloudData.notifiche)) {
               setNotifiche(cloudData.notifiche);
               localStorage.setItem('scuola_notifiche', JSON.stringify(cloudData.notifiche));
+            }
+            if (cloudData.richiesteAccessoDocenti && Array.isArray(cloudData.richiesteAccessoDocenti)) {
+              setRichiesteAccessoDocenti(cloudData.richiesteAccessoDocenti);
+              localStorage.setItem('scuola_richieste_accesso_docenti', JSON.stringify(cloudData.richiesteAccessoDocenti));
             }
 
             // Controlla se sono arrivate nuove sostituzioni pubblicate o annullate e invia notifica push di sistema SOLO AL DOCENTE INTERESSATO
@@ -1185,6 +1209,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  const associaEmailDocente = async (docenteId: string, email: string) => {
+    const collegatiIds = getDocentiCollegatiIds(docenteId, docenti);
+    const emailPulita = email.trim().toLowerCase();
+
+    setDocenti(prev => {
+      const updated = prev.map(d => {
+        if (collegatiIds.includes(d.id)) {
+          return { ...d, email: emailPulita };
+        }
+        return d;
+      });
+      localStorage.setItem('scuola_docenti', JSON.stringify(updated));
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      setDoc(scuolaDocRef, { docenti: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true })
+        .then(() => console.log('✅ Email associata al docente su Cloud!'))
+        .catch(err => console.error('Errore associazione email docente:', err));
+      return updated;
+    });
+  };
+
+  const creaRichiestaAccessoDocente = async (richiesta: Omit<RichiestaAccessoDocente, 'id' | 'dataRichiesta' | 'stato'>) => {
+    const nuovaRichiesta: RichiestaAccessoDocente = {
+      ...richiesta,
+      id: 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      dataRichiesta: new Date().toISOString(),
+      stato: 'IN_ATTESA'
+    };
+
+    setRichiesteAccessoDocenti(prev => {
+      // Evita duplicati per la stessa email
+      const filtrate = prev.filter(r => r.email.toLowerCase() !== richiesta.email.toLowerCase() || r.stato !== 'IN_ATTESA');
+      const updated = [nuovaRichiesta, ...filtrate];
+      localStorage.setItem('scuola_richieste_accesso_docenti', JSON.stringify(updated));
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      setDoc(scuolaDocRef, { richiesteAccessoDocenti: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true })
+        .then(() => console.log('✅ Richiesta accesso docente registrata su Cloud!'))
+        .catch(err => console.error('Errore salvataggio richiesta:', err));
+      return updated;
+    });
+  };
+
+  const approvaRichiestaAccesso = async (richiestaId: string, docenteIdScelto: string) => {
+    const req = richiesteAccessoDocenti.find(r => r.id === richiestaId);
+    if (!req) return;
+
+    // 1. Associa l'email al docente
+    await associaEmailDocente(docenteIdScelto, req.email);
+
+    // 2. Aggiorna lo stato della richiesta
+    setRichiesteAccessoDocenti(prev => {
+      const updated = prev.map(r => r.id === richiestaId ? { ...r, stato: 'APPROVATA' as const } : r);
+      localStorage.setItem('scuola_richieste_accesso_docenti', JSON.stringify(updated));
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      setDoc(scuolaDocRef, { richiesteAccessoDocenti: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true });
+      return updated;
+    });
+  };
+
+  const rifiutaRichiestaAccesso = async (richiestaId: string) => {
+    setRichiesteAccessoDocenti(prev => {
+      const updated = prev.map(r => r.id === richiestaId ? { ...r, stato: 'RIFIUTATA' as const } : r);
+      localStorage.setItem('scuola_richieste_accesso_docenti', JSON.stringify(updated));
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      setDoc(scuolaDocRef, { richiesteAccessoDocenti: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true });
+      return updated;
+    });
+  };
+
   const updateDocente = async (docenteAggiornato: Docente) => {
     setDocenti(prev => {
       const updated = prev.map(d => d.id === docenteAggiornato.id ? docenteAggiornato : d);
@@ -1393,6 +1485,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       impostazioniScuola,
       setImpostazioniScuola,
       updateImpostazioniScuola,
+      richiesteAccessoDocenti,
+      setRichiesteAccessoDocenti,
+      associaEmailDocente,
+      creaRichiestaAccessoDocente,
+      approvaRichiestaAccesso,
+      rifiutaRichiestaAccesso,
       addAssenza,
       removeAssenza,
       annullaAssenza,

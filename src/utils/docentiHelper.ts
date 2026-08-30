@@ -214,3 +214,110 @@ export function getOrarioUnificatoDocente(
 
   return orarioFuso;
 }
+
+export interface RisultatoMatchDocente {
+  tipo: 'ESATTO' | 'SUGGERITO' | 'NESSUNO';
+  docente?: DocenteUnico;
+  confidenza: number; // da 0 a 100
+  motivo?: string;
+}
+
+/**
+ * Algoritmo intelligente di Corrispondenza Account Google -> Docente Organico
+ * Gestisce:
+ * 1. Email esatta già salvata nel profilo
+ * 2. Formati standard: nome.cognome@... o cognome.nome@...
+ * 3. Nomi composti (es: VASSIADIS MARIA SERENA -> VASSIADIS MARIA)
+ * 4. Token matching su display name Google ("Elena Bussino" -> "BUSSINO ELENA")
+ */
+export function trovaCorrispondenzaDocente(
+  email: string,
+  displayName: string,
+  docenti: Docente[]
+): RisultatoMatchDocente {
+  const docentiUnici = getDocentiUnici(docenti);
+  const emailNorm = (email || '').toLowerCase().trim();
+  const displayNorm = (displayName || '').toUpperCase().trim();
+
+  // 1. Match Esatto Diretto: Email già presente nell'anagrafica
+  const matchEmailDiretta = docentiUnici.find(d => {
+    const docOriginale = docenti.find(orig => d.allIds.includes(orig.id));
+    return docOriginale?.email?.toLowerCase().trim() === emailNorm;
+  });
+  if (matchEmailDiretta) {
+    return { tipo: 'ESATTO', docente: matchEmailDiretta, confidenza: 100, motivo: 'Email associata nell\'anagrafica' };
+  }
+
+  // Estrai token dall'email (es: "mario.rossi" -> ["MARIO", "ROSSI"])
+  const localPart = emailNorm.split('@')[0] || '';
+  const emailTokens = localPart
+    .split(/[\._\-0-9]/)
+    .map(t => t.toUpperCase().trim())
+    .filter(t => t.length >= 2);
+
+  // Estrai token dal displayName (es: "Maria Serena Vassiadis" -> ["MARIA", "SERENA", "VASSIADIS"])
+  const displayTokens = displayNorm
+    .split(/[\s\._\-]/)
+    .map(t => t.toUpperCase().trim())
+    .filter(t => t.length >= 2);
+
+  const tuttiIUserTokens = Array.from(new Set([...emailTokens, ...displayTokens]));
+
+  // Calcola punteggio di corrispondenza per ogni docente
+  const candidatiConPunteggio: { docente: DocenteUnico; score: number; isExactMatch: boolean; details: string }[] = [];
+
+  for (const doc of docentiUnici) {
+    const docNomeTokens = doc.nome.split(/\s+/).map(t => t.toUpperCase().trim()).filter(t => t.length >= 2);
+    if (docNomeTokens.length === 0) continue;
+
+    // Quanti token del docente sono presenti nei token dell'utente?
+    const matchTokens = docNomeTokens.filter(dt => tuttiIUserTokens.includes(dt));
+    
+    // Controlla se tutti i token del docente sono soddisfatti
+    const tuttiTokenDocenteTrovati = matchTokens.length === docNomeTokens.length;
+    
+    // Controlla se i token dell'utente contengono parole extra (es. secondo nome)
+    const paroleExtraUtente = tuttiIUserTokens.filter(ut => !docNomeTokens.includes(ut));
+
+    let score = (matchTokens.length / docNomeTokens.length) * 100;
+
+    if (tuttiTokenDocenteTrovati && paroleExtraUtente.length === 0) {
+      // Corrispondenza biunivoca perfetta al 100% (es. BUSSINO ELENA <=> elena.bussino)
+      candidatiConPunteggio.push({ docente: doc, score: 100, isExactMatch: true, details: 'Corrispondenza biunivoca perfetta' });
+    } else if (tuttiTokenDocenteTrovati && paroleExtraUtente.length > 0) {
+      // Nome composto o token aggiuntivo (es. VASSIADIS MARIA <=> vassiadis.mariaserena)
+      candidatiConPunteggio.push({ docente: doc, score: 90, isExactMatch: false, details: `Nome composto con token aggiuntivi (${paroleExtraUtente.join(', ')})` });
+    } else if (matchTokens.length >= 1 && docNomeTokens.length > 1) {
+      // Corrispondenza solo sul cognome (es. ROSSI <=> e.rossi)
+      candidatiConPunteggio.push({ docente: doc, score: 50, isExactMatch: false, details: 'Corrispondenza parziale (solo cognome o nome)' });
+    }
+  }
+
+  // Ordina per score decrescente
+  candidatiConPunteggio.sort((a, b) => b.score - a.score);
+
+  if (candidatiConPunteggio.length === 0 || candidatiConPunteggio[0].score < 50) {
+    return { tipo: 'NESSUNO', confidenza: 0, motivo: 'Nessun docente corrispondente trovato nell\'organico' };
+  }
+
+  const topMatch = candidatiConPunteggio[0];
+
+  // Se c'è un secondo candidato con lo stesso punteggio (es. omonimia), non può essere esatto
+  const isAmbiguo = candidatiConPunteggio.length > 1 && candidatiConPunteggio[1].score === topMatch.score;
+
+  if (topMatch.isExactMatch && !isAmbiguo) {
+    return {
+      tipo: 'ESATTO',
+      docente: topMatch.docente,
+      confidenza: 100,
+      motivo: topMatch.details
+    };
+  }
+
+  return {
+    tipo: 'SUGGERITO',
+    docente: topMatch.docente,
+    confidenza: topMatch.score,
+    motivo: isAmbiguo ? 'Possibile omonimia rilevata nell\'organico' : topMatch.details
+  };
+}

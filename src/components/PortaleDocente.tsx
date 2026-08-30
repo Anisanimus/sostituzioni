@@ -1,40 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, LayoutDashboard } from 'lucide-react';
-import { getDocentiCollegatiIds, getDocentiUnici } from '../utils/docentiHelper';
+import { useAuth } from '../context/AuthContext';
+import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, LayoutDashboard, Clock, ShieldCheck, RefreshCw } from 'lucide-react';
+import { getDocentiCollegatiIds, getDocentiUnici, trovaCorrispondenzaDocente } from '../utils/docentiHelper';
 import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
 
 export const PortaleDocente: React.FC = () => {
-  const { docenti, sostituzioni, notifiche, firmaSostituzione, segnaNotificheLette } = useApp();
-  const [selectedDocenteId, setSelectedDocenteId] = useState<string>('');
-  const [pin, setPin] = useState<string>('');
-  const [isLogged, setIsLogged] = useState<boolean>(false);
+  const { 
+    docenti, sostituzioni, notifiche, firmaSostituzione, segnaNotificheLette, 
+    richiesteAccessoDocenti, associaEmailDocente, creaRichiestaAccessoDocente 
+  } = useApp();
+  const { utenteInfo, logout } = useAuth();
+
   const [notificaAttiva, setNotificaAttiva] = useState<boolean>(false);
   const [tabDocente, setTabDocente] = useState<'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA'>('MIE_SOSTITUZIONI');
+  const [richiestaInviata, setRichiestaInviata] = useState<boolean>(false);
+  const [mostraGuidaIos, setMostraGuidaIos] = useState<boolean>(false);
 
+  // Calcola corrispondenza del docente autenticato
+  const userEmail = utenteInfo?.email || '';
+  const userDisplayName = utenteInfo?.displayName || '';
+
+  // 1. Cerca se c'è un docente già esplicitamente associato a questa email
+  const docenteAssociato = docenti.find(d => d.email && d.email.toLowerCase().trim() === userEmail.toLowerCase().trim());
+
+  // 2. Se non ancora associato, esegui il matching intelligente
+  const matchRisultato = React.useMemo(() => {
+    if (!userEmail) return null;
+    return trovaCorrispondenzaDocente(userEmail, userDisplayName, docenti);
+  }, [userEmail, userDisplayName, docenti]);
+
+  // Se c'è un match esatto al 100% (non ancora salvato su cloud), salvalo subito in automatico (Self-Onboarding Istantaneo)
+  useEffect(() => {
+    if (!docenteAssociato && matchRisultato?.tipo === 'ESATTO' && matchRisultato.docente) {
+      console.log('⚡ Auto-onboarding docente riuscito:', matchRisultato.docente.nome, userEmail);
+      associaEmailDocente(matchRisultato.docente.id, userEmail);
+    }
+  }, [docenteAssociato, matchRisultato, userEmail]);
+
+  // Controlla se c'è una richiesta in attesa per questa email
+  const richiestaEsistente = richiesteAccessoDocenti.find(
+    r => r.email.toLowerCase().trim() === userEmail.toLowerCase().trim() && r.stato === 'IN_ATTESA'
+  );
+
+  const selectedDocenteId = docenteAssociato?.id || (matchRisultato?.tipo === 'ESATTO' ? matchRisultato.docente?.id || '' : '');
   const docente = docenti.find(d => d.id === selectedDocenteId);
   const collegatiIds = selectedDocenteId ? getDocentiCollegatiIds(selectedDocenteId, docenti) : [];
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!docente) return;
-    if (docente.pinAccesso && pin !== docente.pinAccesso) {
-      alert('PIN errato! (Il PIN predefinito è 1234)');
-      return;
+  // Salva l'id del docente per le push notification
+  useEffect(() => {
+    if (selectedDocenteId) {
+      localStorage.setItem('portale_docente_loggato_id', selectedDocenteId);
     }
-    localStorage.setItem('portale_docente_loggato_id', selectedDocenteId);
-    setIsLogged(true);
+  }, [selectedDocenteId]);
+
+  // Invia richiesta alla Vicepresidenza se la corrispondenza è parziale o assente
+  const handleInviaRichiestaVicepresidenza = async () => {
+    if (!userEmail) return;
+    await creaRichiestaAccessoDocente({
+      email: userEmail,
+      displayName: userDisplayName,
+      docenteSuggeritoId: matchRisultato?.docente?.id,
+      docenteSuggeritoNome: matchRisultato?.docente?.nome
+    });
+    setRichiestaInviata(true);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('portale_docente_loggato_id');
-    setIsLogged(false);
-  };
-
-  const [mostraGuidaIos, setMostraGuidaIos] = useState<boolean>(false);
-
-  // Inizializza stato permessi se già concessi in precedenza
-  React.useEffect(() => {
+  // Inizializza stato permessi notifiche se già concessi
+  useEffect(() => {
     if ('Notification' in window && Notification.permission === 'granted') {
       setNotificaAttiva(true);
     }
@@ -46,8 +79,8 @@ export const PortaleDocente: React.FC = () => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); 
       gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
       osc.connect(gain);
@@ -73,26 +106,36 @@ export const PortaleDocente: React.FC = () => {
           } as any);
           return;
         }
-      } catch (err) {
-        console.warn('Fallback standard Notification:', err);
+      } catch (e) {
+        console.log('Fallback to standard notification:', e);
       }
     }
 
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(titolo, opzioni);
+      try {
+        new Notification(titolo, {
+          ...opzioni,
+          icon: '/favicon.svg',
+          badge: '/favicon.svg'
+        });
+      } catch (err) {
+        console.warn('Errore notifica desktop standard:', err);
+      }
     }
   };
 
   const handleRichiediNotifiche = async () => {
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    playNotificationSound();
+
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if (isIos && !(window.navigator as any).standalone) {
+      setMostraGuidaIos(true);
+    }
 
     if (!('Notification' in window)) {
-      if (isIos && !isStandalone) {
-        setMostraGuidaIos(true);
-      } else {
-        alert('Il browser attuale non supporta le notifiche Web Push. Su iPhone/iPad apri con Safari e tocca "Condividi" -> "Aggiungi a schermata Home".');
-      }
+      alert('Il tuo browser non supporta le notifiche di sistema.');
       return;
     }
 
@@ -100,27 +143,21 @@ export const PortaleDocente: React.FC = () => {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
         setNotificaAttiva(true);
-        await inviaNotificaSistema('🔔 Notifiche Attivate con Successo!', {
-          body: `Gentile ${docente?.nome || 'Docente'}, riceverai una notifica ogni volta che ti viene assegnata una supplenza.`
+        inviaNotificaSistema('🔔 Notifiche Attivate con Successo!', {
+          body: `Riceverai un avviso sonoro e visivo ogni volta che ti viene assegnata o revocata una supplenza.`
         });
-      } else if (permission === 'denied') {
-        alert('Le notifiche sono bloccate nelle impostazioni del browser per questo sito. Clicca sull\'icona del lucchetto vicino all\'URL per consentirle.');
+      } else {
+        alert('Hai rifiutato i permessi per le notifiche. Puoi abilitarli dalle impostazioni del browser.');
       }
-    } catch (e) {
-      if (isIos && !isStandalone) {
-        setMostraGuidaIos(true);
-      }
+    } catch (error) {
+      console.error('Errore richiesta permessi notifica:', error);
     }
   };
 
-  const handleInviaNotificaTest = async () => {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      await inviaNotificaSistema('🔔 Sostituzioni Smart - Test Notifica', {
-        body: 'Hai una nuova supplenza assegnata per la 3ª ora in classe 2B! (Test riuscito)'
-      });
-    } else {
-      await handleRichiediNotifiche();
-    }
+  const handleInviaNotificaTest = () => {
+    inviaNotificaSistema('🔔 Prova Notifica Sonora e Visiva', {
+      body: `Test di ricezione completato! Il tuo dispositivo è pronto a ricevere le supplenze.`
+    });
   };
 
   const mieSostituzioni = sostituzioni.filter(
@@ -133,57 +170,84 @@ export const PortaleDocente: React.FC = () => {
 
   const getDocenteNome = (id: string) => docenti.find(d => d.id === id)?.nome || id;
 
-  if (!isLogged) {
+  // =========================================================================
+  // SCHERMATA DI ATTESA / MATCHING IN CORSO
+  // =========================================================================
+  if (!docente) {
     return (
-      <div className="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-lg border border-slate-200 mt-10">
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center mx-auto mb-3">
-            <User className="w-7 h-7" />
-          </div>
-          <h3 className="text-xl font-bold text-slate-800">Area Personale Docente</h3>
-          <p className="text-xs text-slate-500 mt-1">Accedi per consultare e firmare le tue sostituzioni settimanali</p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Seleziona il tuo Nome</label>
-            <select
-              value={selectedDocenteId}
-              onChange={(e) => setSelectedDocenteId(e.target.value)}
-              className="w-full border border-slate-300 rounded-xl p-3 text-sm bg-white font-semibold shadow-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-              required
-            >
-              <option value="">-- Scegli Docente --</option>
-              {getDocentiUnici(docenti).map(d => (
-                <option key={d.id} value={d.id}>
-                  {d.nome} ({d.materie.join(', ')})
-                </option>
-              ))}
-            </select>
+      <div className="max-w-md mx-auto py-10 px-4 animate-in fade-in duration-200">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 text-center space-y-5">
+          
+          <div className="w-16 h-16 bg-amber-500/10 text-amber-600 rounded-2xl flex items-center justify-center mx-auto border border-amber-200">
+            <Clock className="w-8 h-8 animate-pulse" />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">PIN Personale</label>
-            <div className="relative">
-              <input
-                type="password"
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                placeholder="Inserisci PIN (1234)"
-                required
-                className="w-full border border-slate-300 rounded-lg p-2.5 text-sm pl-9"
-              />
-              <Key className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+            <span className="text-[10px] font-black text-amber-800 uppercase tracking-widest bg-amber-100 px-2.5 py-1 rounded-full border border-amber-200">
+              Account in Verifica
+            </span>
+            <h3 className="text-lg font-black text-slate-900 mt-2">Associazione Docente Richiesta</h3>
+            <p className="text-xs text-slate-600 mt-1">
+              Account autenticato: <strong className="text-slate-900 font-mono">{userEmail}</strong>
+            </p>
+          </div>
+
+          {matchRisultato?.tipo === 'SUGGERITO' && matchRisultato.docente && (
+            <div className="p-4 bg-indigo-50/80 rounded-2xl border border-indigo-200 text-left space-y-2">
+              <div className="flex items-center gap-2 text-xs font-black text-indigo-950">
+                <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                <span>Corrispondenza Suggerita</span>
+              </div>
+              <p className="text-xs text-slate-700">
+                L'algoritmo ha rilevato che il tuo account potrebbe corrispondere a <strong>{matchRisultato.docente.nome}</strong>.
+              </p>
+              <span className="text-[11px] text-indigo-700 italic block">
+                Motivo: {matchRisultato.motivo} (Affidabilità: {matchRisultato.confidenza}%)
+              </span>
             </div>
+          )}
+
+          {richiestaEsistente || richiestaInviata ? (
+            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-left flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-emerald-900">Richiesta inviata alla Vicepresidenza</h4>
+                <p className="text-[11px] text-emerald-700 mt-0.5">
+                  La Vicepresidenza ha ricevuto la notifica per abilitare il tuo accesso. Ricarica la pagina non appena approvato.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleInviaRichiestaVicepresidenza}
+              className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-2"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Invia Richiesta di Associazione alla Vicepresidenza</span>
+            </button>
+          )}
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="text-xs font-bold text-indigo-600 hover:bg-indigo-50 px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Verifica Approvazione</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={logout}
+              className="text-xs text-slate-400 hover:text-slate-700 underline cursor-pointer"
+            >
+              Disconnetti account
+            </button>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg transition text-sm shadow-md"
-          >
-            Accedi all'Area Riservata
-          </button>
-        </form>
+        </div>
       </div>
     );
   }
@@ -255,7 +319,7 @@ export const PortaleDocente: React.FC = () => {
           )}
 
           <button
-            onClick={handleLogout}
+            onClick={logout}
             className="text-xs text-slate-500 hover:text-slate-800 underline p-2 cursor-pointer"
           >
             Esci

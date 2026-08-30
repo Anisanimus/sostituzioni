@@ -16,7 +16,7 @@ export const AnagraficaOrario: React.FC = () => {
   const { 
     docenti, setDocenti, orariDocenti, setOrariDocenti, 
     updateDocente, updateOrarioDocente, resetOrarioPredefinito, azzeraDocentiEOrario, importaNuovoOrarioCompleto,
-    aggiornaOrarioSenzaCancellareStorico
+    aggiornaOrarioSenzaCancellareStorico, richiesteAccessoDocenti, associaEmailDocente, approvaRichiestaAccesso, rifiutaRichiestaAccesso
   } = useApp();
 
   const docentiUnici = React.useMemo(() => getDocentiUnici(docenti), [docenti]);
@@ -391,9 +391,69 @@ export const AnagraficaOrario: React.FC = () => {
       </div>
 
       {/* ========================================================= */}
-      {/* SELETTORE DOCENTE STANDARD A TENDINA (COME AGGIUNGI ASSENTE) */}
+      {/* BANNER RICHIESTE ASSOCIAZIONE ACCOUNT DOCENTI IN SOSPESO  */}
       {/* ========================================================= */}
-      <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-2xs border border-slate-200">
+      {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length > 0 && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-amber-950">
+                  Richieste di Associazione Account Google ({richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length})
+                </h3>
+                <p className="text-xs text-amber-800">
+                  I seguenti docenti hanno effettuato il primo accesso e attendono la tua conferma per entrare.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2.5">
+            {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').map(req => (
+              <div key={req.id} className="bg-white rounded-2xl p-3.5 border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-slate-900 text-xs sm:text-sm">{req.displayName}</span>
+                    <span className="text-[11px] font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">{req.email}</span>
+                  </div>
+                  {req.docenteSuggeritoNome && (
+                    <p className="text-xs text-slate-600">
+                      💡 Corrispondenza suggerita: <strong className="text-slate-900">{req.docenteSuggeritoNome}</strong>
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => approvaRichiestaAccesso(req.id, req.docenteSuggeritoId || '')}
+                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer flex items-center gap-1"
+                  >
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>Conferma e Collega</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => rifiutaRichiestaAccesso(req.id)}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
+                  >
+                    Rifiuta
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* SELETTORE DOCENTE STANDARD A TENDINA & GESTIONE EMAIL     */}
+      {/* ========================================================= */}
+      <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-2xs border border-slate-200 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           
           <div className="flex-1">
@@ -408,7 +468,7 @@ export const AnagraficaOrario: React.FC = () => {
               <option value="">-- Scegli Docente --</option>
               {docentiOrdinati.map(d => (
                 <option key={d.id} value={d.id}>
-                  {d.nome} ({d.materia}{d.isSostegno ? ' - Sost.' : ''})
+                  {d.nome} ({d.materia}{d.isSostegno ? ' - Sost.' : ''}) {d.email ? `[✉️ ${d.email}]` : ''}
                 </option>
               ))}
             </select>
@@ -430,6 +490,33 @@ export const AnagraficaOrario: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* CAMPO EMAIL GOOGLE WORKSPACE DEL DOCENTE SELEZIONATO */}
+        {docenteSelezionato && (
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex-1">
+              <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                Email Istituzionale Google Workspace (per Accesso Senza PIN):
+              </label>
+              <input
+                type="email"
+                value={docenteSelezionato.email || ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  associaEmailDocente(docenteSelezionato.id, val);
+                }}
+                placeholder="es. nome.cognome@scuola.edu.it"
+                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500"
+              />
+            </div>
+            {docenteSelezionato.email && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-lg shrink-0 self-start sm:self-end">
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>Account Google Associato</span>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ========================================================= */}

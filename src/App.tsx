@@ -33,7 +33,7 @@ import { LoginScreen } from './components/LoginScreen';
 import { LogOut } from 'lucide-react';
 
 const MainApp: React.FC = () => {
-  const { docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola } = useApp();
+  const { docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola, richiesteAccessoDocenti } = useApp();
   const { utenteInfo, logout, isLoadingAuth } = useAuth();
 
   const [ruoloAttivo, setRuoloAttivo] = useState<'VICEPRESIDENZA' | 'PORTALE_DOCENTE' | 'QUADRO_SCUOLA'>(() => {
@@ -395,8 +395,15 @@ const MainApp: React.FC = () => {
                     <Users className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="block font-black text-sm">Anagrafica & Orario</span>
-                    <span className="text-[11px] text-slate-500 font-normal">Gestione docenti e quadro orario</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="block font-black text-sm">Anagrafica & Orario</span>
+                      {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length > 0 && (
+                        <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+                          {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-slate-500 font-normal">Gestione docenti, account ed orari</span>
                   </div>
                 </div>
                 {tabVice === 'DOCENTI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}

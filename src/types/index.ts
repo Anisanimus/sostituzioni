@@ -204,3 +204,14 @@ export interface NotificaDocente {
   createdAt: string;
 }
 
+export interface RichiestaAccessoDocente {
+  id: string;
+  email: string;
+  displayName: string;
+  dataRichiesta: string;
+  docenteSuggeritoId?: string;
+  docenteSuggeritoNome?: string;
+  stato: 'IN_ATTESA' | 'APPROVATA' | 'RIFIUTATA';
+}
+
+
