@@ -159,27 +159,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setErroreAuth(null);
       setIsLoadingAuth(true);
       
-      // Su dispositivi touch/mobile o browser con restrizioni COOP popup, prova popup e fallback a redirect
-      await signInWithPopup(auth, googleProvider);
-    } catch (err: any) {
-      console.warn('Login Google Popup notice:', err);
-      if (
-        err.code === 'auth/popup-blocked' ||
-        err.code === 'auth/cancelled-popup-request' ||
-        err.message?.includes('Cross-Origin-Opener-Policy') ||
-        err.code === 'auth/popup-closed-by-user'
-      ) {
-        // Se il popup viene chiuso o bloccato dalle policy del browser, effettua il redirect pulito
-        try {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+      if (isIOS) {
+        // Su iPhone/iPad i popup vengono spesso bloccati o creano loop: usa direttamente il redirect nativo
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
+
+      // Su desktop / Android prova prima il popup rapido
+      try {
+        await signInWithPopup(auth, googleProvider);
+      } catch (popupErr: any) {
+        console.warn('Popup login fallback to redirect:', popupErr);
+        if (
+          popupErr.code === 'auth/popup-blocked' ||
+          popupErr.code === 'auth/cancelled-popup-request' ||
+          popupErr.message?.includes('Cross-Origin-Opener-Policy') ||
+          popupErr.code === 'auth/popup-closed-by-user'
+        ) {
           await signInWithRedirect(auth, googleProvider);
           return;
-        } catch (redirectErr: any) {
-          setErroreAuth(redirectErr.message || 'Errore durante l\'autenticazione con Google.');
         }
-      } else {
-        setErroreAuth(err.message || 'Errore durante l\'autenticazione.');
+        throw popupErr;
       }
+    } catch (err: any) {
+      console.error('Errore login Google:', err);
+      setErroreAuth(err.message || 'Errore durante l\'autenticazione con Google.');
     } finally {
+      // Se non stiamo reindirizzando, sblocca il loading
       setIsLoadingAuth(false);
     }
   };

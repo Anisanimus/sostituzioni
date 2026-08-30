@@ -5,7 +5,7 @@ import {
   Search, Filter, Printer, KeyRound, ShieldAlert,
   ChevronLeft, ChevronRight, User, AlertCircle
 } from 'lucide-react';
-import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds, getStileCardAssenza } from '../utils/docentiHelper';
+import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
 
 interface QuadroSostituzioniScuolaProps {
   initialDate?: string;
@@ -571,13 +571,24 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                         <div className="font-black text-slate-900 leading-tight truncate">
                           {r.docenteAssente}
                         </div>
-                        <div className="text-[9px] sm:text-[10px] text-slate-500 leading-tight truncate mt-0.5">
+                        <div className="text-[9px] sm:text-[10px] text-slate-500 leading-tight truncate mt-0.5 flex flex-wrap items-center gap-1">
                           <span>{r.materia}</span>
                           {r.isUscita ? (
-                            <span className="text-amber-700 font-bold ml-1">• Uscita</span>
+                            <span className="text-amber-700 font-bold">• Uscita</span>
                           ) : (
-                            <span className="text-slate-400 ml-1">• {r.motivo}</span>
+                            <span className="text-slate-400">• {r.motivo}</span>
                           )}
+                          {/* REMIND EDUCATORE IN COMPRESENZA */}
+                          {(() => {
+                            const eds = getEducatoriInClasseNellOra(r.classe, giornoSettimana as any, r.ora, docenti, orariDocenti);
+                            if (eds.length === 0) return null;
+                            return eds.map(ed => (
+                              <span key={ed.id} className="bg-teal-50 text-teal-800 border border-teal-300 font-bold px-1.5 py-0.2 rounded text-[9px] flex items-center gap-0.5">
+                                <span>🎓</span>
+                                <span>Educatore: {getBaseNomeDocente(ed.nome)}</span>
+                              </span>
+                            ));
+                          })()}
                         </div>
                       </td>
 
@@ -705,10 +716,21 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                             </div>
 
                             <div className="leading-tight">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="bg-indigo-50 text-indigo-700 text-[11px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 uppercase">
                                   {r.materia}
                                 </span>
+                                {/* REMIND EDUCATORE IN COMPRESENZA */}
+                                {(() => {
+                                  const eds = getEducatoriInClasseNellOra(r.classe, giornoSettimana as any, r.ora, docenti, orariDocenti);
+                                  if (eds.length === 0) return null;
+                                  return eds.map(ed => (
+                                    <span key={ed.id} className="bg-teal-50 text-teal-800 border border-teal-300 font-bold px-2 py-0.5 rounded-md text-[10px] flex items-center gap-1 shadow-2xs">
+                                      <span>🎓</span>
+                                      <span>Educatore: {getBaseNomeDocente(ed.nome)}</span>
+                                    </span>
+                                  ));
+                                })()}
                               </div>
                             </div>
                           </div>
