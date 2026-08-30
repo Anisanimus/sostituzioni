@@ -796,9 +796,9 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                     )}
 
                     {/* Elenco Docenti con Checkbox Touch-Friendly */}
-                    <div className="overflow-y-auto divide-y divide-slate-100 p-1.5 flex-1">
+                    <div className="overflow-y-auto divide-y divide-slate-100 p-1 sm:p-1.5 flex-1">
                       {docentiFiltratiPerTendina.length === 0 ? (
-                        <div className="p-6 text-center text-xs text-slate-400 italic">
+                        <div className="p-4 sm:p-6 text-center text-xs text-slate-400 italic">
                           Nessun docente trovato con "{cercaDocente}".
                         </div>
                       ) : (
@@ -808,23 +808,23 @@ export const GestioneAssenze: React.FC<{ selectedDate: string; selectedGiorno: a
                             <div
                               key={d.id}
                               onClick={() => toggleAccompagnatore(d.id)}
-                              className={`p-3 rounded-xl flex items-center justify-between text-xs sm:text-sm cursor-pointer transition select-none ${
+                              className={`p-2.5 sm:py-1.5 sm:px-2.5 rounded-lg sm:rounded-xl flex items-center justify-between text-xs cursor-pointer transition select-none ${
                                 isSelected ? 'bg-amber-100/70 text-amber-950 font-bold' : 'hover:bg-slate-50 text-slate-800'
                               }`}
                             >
-                              <div className="flex items-center gap-3">
-                                <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition shrink-0 ${
+                              <div className="flex items-center gap-2.5">
+                                <div className={`w-4 h-4 sm:w-4 sm:h-4 rounded border-2 flex items-center justify-center transition shrink-0 ${
                                   isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'border-slate-300 bg-white'
                                 }`}>
-                                  {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                  {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                                 </div>
-                                <div className="flex flex-col">
-                                  <span className="font-bold text-slate-900">{d.nome}</span>
+                                <div className="flex flex-col leading-tight">
+                                  <span className="font-bold text-slate-900 text-xs">{d.nome}</span>
                                   <span className="text-[10px] text-slate-500 font-medium">{d.materie.join(', ')}</span>
                                 </div>
                               </div>
                               {isSelected && (
-                                <span className="text-[10px] bg-amber-200/80 text-amber-900 font-bold px-2 py-0.5 rounded-full">
+                                <span className="text-[9px] bg-amber-200/80 text-amber-900 font-black px-2 py-0.5 rounded-full">
                                   Scelto
                                 </span>
                               )}
