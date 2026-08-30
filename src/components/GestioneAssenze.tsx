@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { MotivoAssenza, GiornoSettimana } from '../types';
-import { UserMinus, Bus, Plus, Trash2, Calendar, Clock, MapPin, Users, ChevronDown, Check, X, Search, Ban, LayoutDashboard, ChevronLeft, ChevronRight, Info, Filter } from 'lucide-react';
+import { UserMinus, Bus, Plus, Trash2, Calendar, Clock, MapPin, Users, ChevronDown, Check, X, Search, Ban, LayoutDashboard, ChevronLeft, ChevronRight, Info, Filter, UserCheck, ShieldCheck } from 'lucide-react';
 import { FASCE_ORARIE } from '../utils/fasceOrarie';
 import { getDocentiUnici, getDocentiCollegatiIds, getBaseNomeDocente, formatDataItaliana } from '../utils/docentiHelper';
 
@@ -18,12 +18,40 @@ export const GestioneAssenze: React.FC<{
   mostraRisorseLaterale = false,
   onToggleRisorseLaterale
 }) => {
-  const { docenti, orariDocenti, assenze, addAssenza, removeAssenza, annullaAssenza, uscite, addUscitaConAccompagnatori, removeUscita, annullaUscita, sostituzioni } = useApp();
+  const { 
+    docenti, 
+    orariDocenti, 
+    assenze, 
+    addAssenza, 
+    removeAssenza, 
+    annullaAssenza, 
+    uscite, 
+    addUscitaConAccompagnatori, 
+    removeUscita, 
+    annullaUscita, 
+    sostituzioni,
+    nomineSupplenti,
+    addNominaSupplente,
+    rimuoviNominaSupplente,
+    prorogaNominaSupplente
+  } = useApp();
 
-  // Finestra aperta: null (chiusa), 'DOCENTE', o 'GITA'
-  const [modalitaAperta, setModalitaAperta] = useState<'DOCENTE' | 'GITA' | null>(null);
+  // Finestra aperta: null (chiusa), 'DOCENTE', 'GITA', o 'NOMINA'
+  const [modalitaAperta, setModalitaAperta] = useState<'DOCENTE' | 'GITA' | 'NOMINA' | null>(null);
   const [mostraInfo, setMostraInfo] = useState<boolean>(false);
   const [mostraDettagliEventi, setMostraDettagliEventi] = useState<boolean>(false);
+
+  // --- STATO NOMINA SUPPLENTE CATTEDRA ---
+  const [docenteTitolareNominaId, setDocenteTitolareNominaId] = useState<string>('');
+  const [supplenteNome, setSupplenteNome] = useState<string>('');
+  const [supplenteEmail, setSupplenteEmail] = useState<string>('');
+  const [dataNominaInizio, setDataNominaInizio] = useState<string>(selectedDate);
+  const [dataNominaFine, setDataNominaFine] = useState<string>(() => {
+    // Default: fine anno scolastico o fine mese
+    return selectedDate;
+  });
+  const [motivoNomina, setMotivoNomina] = useState<string>('Maternità / Congedo');
+  const [docenteSostituitoDaNominaId, setDocenteSostituitoDaNominaId] = useState<string>('');
 
   // --- STATO ASSENZA DOCENTE ---
   const [dataDocente, setDataDocente] = useState<string>(selectedDate);
@@ -190,6 +218,32 @@ export const GestioneAssenze: React.FC<{
     setModalitaAperta(null);
   };
 
+  // Salvataggio Nomina Supplente Cattedra
+  const handleSalvaNomina = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!docenteTitolareNominaId || !supplenteNome.trim() || !dataNominaInizio || !dataNominaFine) return;
+
+    const titolareDoc = docenti.find(d => d.id === docenteTitolareNominaId);
+    const titolareNome = titolareDoc ? titolareDoc.nome : docenteTitolareNominaId;
+
+    await addNominaSupplente({
+      docenteTitolareId: docenteTitolareNominaId,
+      docenteTitolareNome: titolareNome,
+      docenteSostituitoDaNominaId: docenteSostituitoDaNominaId || undefined,
+      supplenteNome: supplenteNome.trim().toUpperCase(),
+      supplenteEmail: supplenteEmail.trim().toLowerCase() || undefined,
+      dataInizio: dataNominaInizio,
+      dataFine: dataNominaFine,
+      motivo: motivoNomina
+    });
+
+    setDocenteTitolareNominaId('');
+    setSupplenteNome('');
+    setSupplenteEmail('');
+    setDocenteSostituitoDaNominaId('');
+    setModalitaAperta(null);
+  };
+
   // Lista deduplicata di persone fisiche (singolo nome con materie aggregate)
   const docentiUnici = getDocentiUnici(docenti);
 
@@ -315,8 +369,8 @@ export const GestioneAssenze: React.FC<{
       
       {/* HEADER PULSANTERIA UNIFICATA IN LINEA PER TUTTI I DISPOSITIVI */}
       <div className="flex flex-wrap items-center justify-between gap-2">
-        {/* GRUPPO 1: AGGIUNGI (+ ASSENTE, + GITA) */}
-        <div className="flex items-center gap-2 flex-1 sm:flex-none">
+        {/* GRUPPO 1: AGGIUNGI (+ ASSENTE, + GITA, + NOMINA SUPPLENTE) */}
+        <div className="flex flex-wrap items-center gap-2 flex-1 sm:flex-none">
           <button
             id="targetBtnAssente"
             type="button"
@@ -346,6 +400,29 @@ export const GestioneAssenze: React.FC<{
             <span className="sm:hidden">+ Gita</span>
             <span className="hidden sm:inline">+ Aggiungi Gita</span>
           </button>
+
+          {/* 🔥 NUOVO PULSANTE NOMINA SUPPLENTE CATTEDRA (BORDO VERDE EMERALD) */}
+          <button
+            id="targetBtnNomina"
+            type="button"
+            onClick={() => setModalitaAperta(modalitaAperta === 'NOMINA' ? null : 'NOMINA')}
+            className={`w-full sm:w-auto px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border cursor-pointer ${
+              modalitaAperta === 'NOMINA'
+                ? 'bg-emerald-700 text-white border-emerald-800 ring-2 ring-emerald-300'
+                : 'bg-emerald-50 text-emerald-950 border-emerald-300 hover:bg-emerald-100'
+            }`}
+          >
+            <UserCheck className="w-4 h-4 text-emerald-600" />
+            <span className="sm:hidden">+ Nomina</span>
+            <span className="hidden sm:inline">+ Nomina Supplente</span>
+            {nomineSupplenti.length > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                modalitaAperta === 'NOMINA' ? 'bg-emerald-900 text-white' : 'bg-emerald-200 text-emerald-900'
+              }`}>
+                {nomineSupplenti.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* GRUPPO 2: PULSANTI "REGISTRATI (N)" E "RISORSE (N)" IN LINEA */}
@@ -367,7 +444,10 @@ export const GestioneAssenze: React.FC<{
             <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
               mostraDettagliEventi ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'
             }`}>
-              {assenzeOggiDeduplicate.length + usciteOggi.length}
+              {assenzeOggiDeduplicate.length + usciteOggi.length + nomineSupplenti.filter(n => {
+                const dIso = selectedDate.split('T')[0];
+                return dIso >= n.dataInizio.split('T')[0] && dIso <= n.dataFine.split('T')[0];
+              }).length}
             </span>
           </button>
 
@@ -559,6 +639,136 @@ export const GestioneAssenze: React.FC<{
           </div>
         </form>
       </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* FINESTRINA POPUP / MODALE COMPATTA PER NOMINA SUPPLENTE   */}
+      {/* ========================================================= */}
+      {modalitaAperta === 'NOMINA' && (
+        <div className="bg-emerald-50/60 border-2 border-emerald-300 rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-md relative animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between border-b border-emerald-200 pb-2">
+            <span className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
+              <UserCheck className="w-4 h-4 text-emerald-600" />
+              <span>Assegna Supplente da Graduatoria su Cattedra (Supplenza / Maternità)</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setModalitaAperta(null)}
+              className="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 rounded-lg p-1 transition border border-slate-200"
+              title="Chiudi"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSalvaNomina} className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 items-end">
+              
+              {/* 1. DOCENTE TITOLARE */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">Docente Titolare</label>
+                <select
+                  value={docenteTitolareNominaId}
+                  onChange={(e) => setDocenteTitolareNominaId(e.target.value)}
+                  required
+                  className="w-full border border-slate-300 rounded-lg p-2 text-xs font-bold bg-white text-slate-900 outline-none focus:border-emerald-500"
+                >
+                  <option value="">-- Scegli Titolare --</option>
+                  {docentiUnici.map(d => (
+                    <option key={d.id} value={d.id}>
+                      {d.nome} ({d.materie.join(', ')})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 2. DATE PRESA DI SERVIZIO E FINE */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">Presa di Servizio (Da)</label>
+                <input
+                  type="date"
+                  value={dataNominaInizio}
+                  onChange={(e) => setDataNominaInizio(e.target.value)}
+                  required
+                  className="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">Fine Nomina (A)</label>
+                <input
+                  type="date"
+                  value={dataNominaFine}
+                  onChange={(e) => setDataNominaFine(e.target.value)}
+                  required
+                  className="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              {/* 3. NOME SUPPLENTE */}
+              <div>
+                <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">Nome Supplente Nominato</label>
+                <input
+                  type="text"
+                  placeholder="es. ROSSI MARCO"
+                  value={supplenteNome}
+                  onChange={(e) => setSupplenteNome(e.target.value)}
+                  required
+                  className="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white outline-none focus:border-emerald-500"
+                />
+              </div>
+
+            </div>
+
+            {/* RIGA 2: EMAIL ISTITUZIONALE + MOTIVO + SUBMIT */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end pt-1 border-t border-emerald-100">
+              
+              <div className="sm:col-span-4">
+                <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Email Istituzionale (Accesso Portale Docente):</label>
+                <input
+                  type="email"
+                  placeholder="es. marco.rossi@icginostrada.it"
+                  value={supplenteEmail}
+                  onChange={(e) => setSupplenteEmail(e.target.value)}
+                  className="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-mono bg-white outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="sm:col-span-4">
+                <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Tipologia Assenza Titolare:</label>
+                <select
+                  value={motivoNomina}
+                  onChange={(e) => setMotivoNomina(e.target.value)}
+                  className="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white outline-none focus:border-emerald-500"
+                >
+                  <option value="Maternità / Congedo">Maternità / Congedo</option>
+                  <option value="Infortunio">Infortunio</option>
+                  <option value="Malattia Lunga">Malattia Lunga</option>
+                  <option value="Aspettativa / Dottorato">Aspettativa / Dottorato</option>
+                  <option value="Altro">Altro</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-4 flex items-center gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setModalitaAperta(null)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-1.5 rounded-lg text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Attiva Nomina</span>
+                </button>
+              </div>
+
+            </div>
+          </form>
+        </div>
       )}
 
       {/* ========================================================= */}
@@ -903,7 +1113,10 @@ export const GestioneAssenze: React.FC<{
       {/* ========================================================= */}
       {/* 3. LISTA EVENTI REGISTRATI PER LA DATA SELEZIONATA        */}
       {/* ========================================================= */}
-      {(assenzeOggiDeduplicate.length > 0 || usciteOggi.length > 0) && mostraDettagliEventi && (
+      {(assenzeOggiDeduplicate.length > 0 || usciteOggi.length > 0 || nomineSupplenti.some(n => {
+        const dIso = selectedDate.split('T')[0];
+        return dIso >= n.dataInizio.split('T')[0] && dIso <= n.dataFine.split('T')[0];
+      })) && mostraDettagliEventi && (
         <div className="pt-2 border-t border-slate-200 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
               {/* Gite con Accompagnatori inclusi nello slot */}
@@ -945,6 +1158,42 @@ export const GestioneAssenze: React.FC<{
                   </div>
                 );
               })}
+
+              {/* Nomine Supplenti Attive nella data selezionata */}
+              {nomineSupplenti.filter(n => {
+                const dIso = selectedDate.split('T')[0];
+                return dIso >= n.dataInizio.split('T')[0] && dIso <= n.dataFine.split('T')[0];
+              }).map(n => (
+                <div key={n.id} className="bg-emerald-50/90 border border-emerald-300 rounded-xl p-2.5 flex items-start justify-between gap-2 text-xs shadow-2xs">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-950">
+                      <UserCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                      <span>{n.supplenteNome}</span>
+                      <span className="bg-emerald-200 text-emerald-900 font-bold text-[9px] px-1.5 py-0.2 rounded-full">
+                        Supplente Cattedra
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-emerald-900">
+                      <strong className="text-emerald-950">Sostituisce:</strong> {n.docenteTitolareNome} ({n.motivo || 'Maternità / Congedo'})
+                    </div>
+                    <div className="text-[10px] text-emerald-800 font-medium">
+                      Periodo: {formatDataItaliana(n.dataInizio)} ➔ {formatDataItaliana(n.dataFine)}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(`Vuoi revocare la nomina del supplente ${n.supplenteNome} su ${n.docenteTitolareNome}?`)) {
+                        rimuoviNominaSupplente(n.id);
+                      }
+                    }}
+                    className="text-emerald-700 hover:text-red-600 p-1 hover:bg-emerald-100 rounded transition shrink-0"
+                    title="Revoca nomina supplente"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
 
               {/* Assenze Docenti Deduplicate */}
               {assenzeOggiDeduplicate.map(a => {

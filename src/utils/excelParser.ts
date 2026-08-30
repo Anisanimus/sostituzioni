@@ -100,6 +100,16 @@ export function parseOrarioExcel(fileData: ArrayBuffer): ParseResult {
       }
     }
 
+    // Cerca l'email nell'ultima colonna o dopo la 45esima ora (colonna 47 in base 0)
+    let emailParsed: string | undefined = undefined;
+    for (let c = colIdx; c < row.length; c++) {
+      const valStr = String(row[c] || '').trim();
+      if (valStr.includes('@') && valStr.includes('.')) {
+        emailParsed = valStr.toLowerCase();
+        break;
+      }
+    }
+
     let id = `${baseNome.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${materia.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
     if (docenti.some(d => d.id === id)) {
       id = `${id}_${docenti.length + 1}`;
@@ -108,6 +118,7 @@ export function parseOrarioExcel(fileData: ArrayBuffer): ParseResult {
     const docente: Docente = {
       id,
       nome: baseNome,
+      email: emailParsed,
       materia,
       dettaglioMateria: materiaRaw || materia,
       isSostegno,

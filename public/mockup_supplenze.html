@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mockup Compatto Gestione Nomine Supplenti</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-200/80 p-3 sm:p-6 min-h-screen text-slate-800 antialiased">
+
+  <div class="max-w-5xl mx-auto space-y-4">
+
+    <!-- BARRA STRUMENTI UNIFICATA ESATTAMENTE COME IN GESTIONE ASSENZE -->
+    <div class="bg-white rounded-2xl p-3 sm:p-3.5 shadow-2xs border border-slate-200 space-y-3">
+      
+      <div class="flex flex-wrap items-center justify-between gap-2.5">
+        
+        <!-- GRUPPO PULSANTI AZIONE: ASSENTE, GITA E IL NUOVO NOMINA -->
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          
+          <!-- PULSANTE 1: ASSENTE (INDIGO) -->
+          <button class="flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border border-indigo-200 bg-indigo-50 text-indigo-900 opacity-60 cursor-not-allowed">
+            <i class="fa-solid fa-user-minus text-indigo-600 text-xs"></i>
+            <span class="sm:hidden">+ Assente</span>
+            <span class="hidden sm:inline">+ Aggiungi Assente</span>
+          </button>
+
+          <!-- PULSANTE 2: GITA (AMBER) -->
+          <button class="flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border border-amber-200 bg-amber-50 text-amber-950 opacity-60 cursor-not-allowed">
+            <i class="fa-solid fa-bus text-amber-600 text-xs"></i>
+            <span class="sm:hidden">+ Gita</span>
+            <span class="hidden sm:inline">+ Aggiungi Gita</span>
+          </button>
+
+          <!-- 🔥 NUOVO PULSANTE: NOMINA SUPPLENTE (COORDINATO A BORDO VERDE EMERALD) -->
+          <button 
+            id="btnNomina"
+            onclick="toggleFormNomina()"
+            class="w-full sm:w-auto px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border border-emerald-300 bg-emerald-50 text-emerald-950 hover:bg-emerald-100 cursor-pointer"
+          >
+            <i class="fa-solid fa-user-tie text-emerald-600 text-xs"></i>
+            <span class="sm:hidden">+ Nomina</span>
+            <span class="hidden sm:inline">+ Nomina Supplente</span>
+            <span class="text-[10px] bg-emerald-200 text-emerald-900 px-1.5 py-0.2 rounded-full font-bold">1</span>
+          </button>
+        </div>
+
+        <!-- GRUPPO 2: EVENTI REGISTRATI & RISORSE (ALLINEATO A DESTRA) -->
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button class="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 flex items-center gap-1.5">
+            <span>📋</span>
+            <span class="hidden sm:inline">Eventi Registrati</span>
+            <span class="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded-full font-bold">2</span>
+          </button>
+          <button class="px-3 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-700 flex items-center gap-1.5">
+            <span>⚡</span>
+            <span class="hidden sm:inline">Risorse Disponibili</span>
+            <span class="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.2 rounded-full font-bold">4</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- FINESTRA INLINE COMPATTA PER INSERIMENTO NOMINA SUPPLENTE  -->
+      <!-- ========================================================= -->
+      <div id="formNomina" class="bg-emerald-50/60 border-2 border-emerald-200 rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-md animate-in fade-in duration-150">
+        
+        <div class="flex items-center justify-between border-b border-emerald-100 pb-2">
+          <div class="flex items-center gap-1.5">
+            <i class="fa-solid fa-user-tie text-emerald-700 text-xs"></i>
+            <span class="text-xs font-black text-emerald-950">Assegna Supplente da Graduatoria su Cattedra</span>
+          </div>
+          <button 
+            type="button" 
+            onclick="toggleFormNomina()" 
+            class="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 rounded-lg p-1 transition border border-slate-200 text-xs"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onsubmit="event.preventDefault(); alert('Nomina salvata con successo!');" class="space-y-3">
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 items-end">
+            
+            <!-- 1. DOCENTE TITOLARE -->
+            <div>
+              <label class="block text-[10px] font-black text-slate-600 uppercase mb-1">Docente Titolare</label>
+              <select class="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold bg-white outline-none focus:border-emerald-500" required>
+                <option value="">-- Scegli Titolare --</option>
+                <option value="bussino">BUSSINO ELENA (INGLESE)</option>
+                <option value="agueci">AGUECI BARBARA (SOSTEGNO)</option>
+                <option value="brutti">BRUTTI ILARIO (STRUMENTO)</option>
+              </select>
+            </div>
+
+            <!-- 2. DATE PRESA SERVIZIO E FINE -->
+            <div>
+              <label class="block text-[10px] font-black text-slate-600 uppercase mb-1">Presa di Servizio (Da)</label>
+              <input type="date" value="2026-10-15" class="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white outline-none focus:border-emerald-500" required>
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-black text-slate-600 uppercase mb-1">Fine Nomina (A)</label>
+              <input type="date" value="2027-06-30" class="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white outline-none focus:border-emerald-500" required>
+            </div>
+
+            <!-- 3. NOME SUPPLENTE -->
+            <div>
+              <label class="block text-[10px] font-black text-slate-600 uppercase mb-1">Nome Supplente</label>
+              <input type="text" placeholder="es. ROSSI MARCO" class="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-bold bg-white outline-none focus:border-emerald-500" required>
+            </div>
+
+          </div>
+
+          <!-- RIGA 2: EMAIL ISTITUZIONALE + PULSANTE SALVATAGGIO COMPATTO -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end pt-1 border-t border-emerald-100/80">
+            
+            <div class="sm:col-span-2">
+              <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Email Istituzionale Google (per accesso Portale Docente):</label>
+              <input type="email" placeholder="es. marco.rossi@icginostrada.it (opzionale)" class="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-mono bg-white outline-none focus:border-emerald-500">
+            </div>
+
+            <div class="flex items-center gap-2 justify-end">
+              <button 
+                type="button" 
+                onclick="toggleFormNomina()" 
+                class="px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+              >
+                Annulla
+              </button>
+              <button 
+                type="submit" 
+                class="px-4 py-2 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <i class="fa-solid fa-check text-xs"></i>
+                <span>Attiva Nomina</span>
+              </button>
+            </div>
+
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+
+    <!-- PANNELLO CATENA SUPPLENZE ATTIVE (COMPATTO) -->
+    <div class="bg-white rounded-2xl p-3.5 sm:p-4 shadow-2xs border border-slate-200 space-y-2.5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h4 class="text-xs font-black text-slate-900 flex items-center gap-1.5">
+          <i class="fa-solid fa-layer-group text-emerald-600 text-xs"></i>
+          <span>Nomine & Supplenze su Cattedra Attive (1)</span>
+        </h4>
+      </div>
+
+      <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+        <div class="space-y-0.5">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="font-black text-slate-900">BUSSINO ELENA (INGLESE)</span>
+            <span class="text-slate-400">➔</span>
+            <span class="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md border border-emerald-200">
+              1° Supplente: BIANCHI MARIO
+            </span>
+            <span class="text-[11px] font-mono text-slate-500">[mario.bianchi@scuola.edu.it]</span>
+          </div>
+          <p class="text-[11px] text-slate-500">
+            Periodo attivo: <strong>01/10/2026 ➔ 30/06/2027</strong> (Cattedra coperta regolarmente)
+          </p>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button class="px-2.5 py-1 rounded-lg text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200">
+            + Sub-supplente
+          </button>
+          <button class="px-2 py-1 rounded-lg text-[11px] font-bold text-rose-700 hover:bg-rose-50 border border-transparent hover:border-rose-200">
+            Revoca
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function toggleFormNomina() {
+      const form = document.getElementById('formNomina');
+      form.classList.toggle('hidden');
+    }
+  </script>
+
+</body>
+</html>

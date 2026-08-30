@@ -321,3 +321,61 @@ export function trovaCorrispondenzaDocente(
     motivo: isAmbiguo ? 'Possibile omonimia rilevata nell\'organico' : topMatch.details
   };
 }
+
+/**
+ * Risolve chi è il docente effettivamente in servizio su una cattedra in una specifica data,
+ * percorrendo l'intera catena di nomine e sub-supplenze ricorsive.
+ */
+export function getDocenteAttivoInData(
+  docenteIdOrNome: string,
+  dataStr: string,
+  nomine: import('../types').NominaSupplente[],
+  docenti: Docente[]
+): {
+  id: string;
+  nome: string;
+  isSupplente: boolean;
+  titolareOriginaleNome: string;
+  catenaNomine: import('../types').NominaSupplente[];
+} {
+  const baseNome = getBaseNomeDocente(docenteIdOrNome);
+  const docOriginale = docenti.find(d => getBaseNomeDocente(d.nome) === baseNome || d.id === docenteIdOrNome);
+  const titolareNome = docOriginale?.nome || baseNome;
+
+  const dataIso = (dataStr || '').split('T')[0];
+  const catena: import('../types').NominaSupplente[] = [];
+
+  // Funzione ricorsiva per trovare l'ultimo supplente attivo
+  let currentTargetId = docOriginale?.id || docenteIdOrNome;
+  let currentTargetNome = titolareNome;
+  let trovato = true;
+
+  while (trovato) {
+    // Cerca una nomina attiva per currentTarget in questa data
+    const nominaAttiva = nomine.find(n => {
+      const matchDoc = n.docenteTitolareId === currentTargetId || 
+                         getBaseNomeDocente(n.docenteTitolareNome) === getBaseNomeDocente(currentTargetNome);
+      if (!matchDoc) return false;
+      const dInizio = n.dataInizio.split('T')[0];
+      const dFine = n.dataFine.split('T')[0];
+      return dataIso >= dInizio && dataIso <= dFine;
+    });
+
+    if (nominaAttiva) {
+      catena.push(nominaAttiva);
+      currentTargetId = nominaAttiva.id;
+      currentTargetNome = nominaAttiva.supplenteNome;
+    } else {
+      trovato = false;
+    }
+  }
+
+  const isSupplente = catena.length > 0;
+  return {
+    id: isSupplente ? catena[catena.length - 1].id : (docOriginale?.id || docenteIdOrNome),
+    nome: isSupplente ? catena[catena.length - 1].supplenteNome : titolareNome,
+    isSupplente,
+    titolareOriginaleNome: titolareNome,
+    catenaNomine: catena
+  };
+}

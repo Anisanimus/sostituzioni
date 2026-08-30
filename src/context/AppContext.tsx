@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente } from '../types';
+import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente, NominaSupplente } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente } from '../utils/docentiHelper';
 import { db } from '../firebase';
@@ -75,6 +75,12 @@ interface AppContextType {
   creaRichiestaAccessoDocente: (richiesta: Omit<RichiestaAccessoDocente, 'id' | 'dataRichiesta' | 'stato'>) => Promise<void>;
   approvaRichiestaAccesso: (richiestaId: string, docenteIdScelto: string) => Promise<void>;
   rifiutaRichiestaAccesso: (richiestaId: string) => Promise<void>;
+
+  nomineSupplenti: NominaSupplente[];
+  setNomineSupplenti: React.Dispatch<React.SetStateAction<NominaSupplente[]>>;
+  addNominaSupplente: (nomina: Omit<NominaSupplente, 'id' | 'creataIl'>) => Promise<void>;
+  rimuoviNominaSupplente: (nominaId: string) => Promise<void>;
+  prorogaNominaSupplente: (nominaId: string, nuovaDataFine: string) => Promise<void>;
 
   addAssenza: (assenza: Omit<AssenzaDocente, 'id' | 'createdAt'>) => void;
   removeAssenza: (id: string) => void;
@@ -173,6 +179,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [richiesteAccessoDocenti, setRichiesteAccessoDocenti] = useState<RichiestaAccessoDocente[]>(() => {
     try {
       const saved = localStorage.getItem('scuola_richieste_accesso_docenti');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const [nomineSupplenti, setNomineSupplenti] = useState<NominaSupplente[]>(() => {
+    try {
+      const saved = localStorage.getItem('scuola_nomine_supplenti');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -299,6 +314,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setRichiesteAccessoDocenti(cloudData.richiesteAccessoDocenti);
             localStorage.setItem('scuola_richieste_accesso_docenti', JSON.stringify(cloudData.richiesteAccessoDocenti));
           }
+          if (cloudData.nomineSupplenti && Array.isArray(cloudData.nomineSupplenti)) {
+            setNomineSupplenti(cloudData.nomineSupplenti);
+            localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(cloudData.nomineSupplenti));
+          }
           if (cloudData.impostazioniScuola) {
             setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
             localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(cloudData.impostazioniScuola));
@@ -334,6 +353,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (cloudData.richiesteAccessoDocenti && Array.isArray(cloudData.richiesteAccessoDocenti)) {
               setRichiesteAccessoDocenti(cloudData.richiesteAccessoDocenti);
               localStorage.setItem('scuola_richieste_accesso_docenti', JSON.stringify(cloudData.richiesteAccessoDocenti));
+            }
+            if (cloudData.nomineSupplenti && Array.isArray(cloudData.nomineSupplenti)) {
+              setNomineSupplenti(cloudData.nomineSupplenti);
+              localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(cloudData.nomineSupplenti));
             }
 
             // Controlla se sono arrivate nuove sostituzioni pubblicate o annullate e invia notifica push di sistema SOLO AL DOCENTE INTERESSATO
@@ -495,6 +518,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   notificheRef.current = notifiche;
   const richiesteAccessoDocentiRef = React.useRef(richiesteAccessoDocenti);
   richiesteAccessoDocentiRef.current = richiesteAccessoDocenti;
+  const nomineSupplentiRef = React.useRef(nomineSupplenti);
+  nomineSupplentiRef.current = nomineSupplenti;
   const impostazioniScuolaRef = React.useRef(impostazioniScuola);
   impostazioniScuolaRef.current = impostazioniScuola;
 
@@ -513,6 +538,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           movimentiDebito: movimentiDebitoRef.current,
           notifiche: notificheRef.current,
           richiesteAccessoDocenti: richiesteAccessoDocentiRef.current,
+          nomineSupplenti: nomineSupplentiRef.current,
           impostazioniScuola: impostazioniScuolaRef.current,
           ultimoAggiornamento: new Date().toISOString(),
           ...override
@@ -1293,6 +1319,90 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  // =========================================================================
+  // GESTIONE NOMINE SUPPLENTI & CATENE RICORSIVE SU CATTEDRA
+  // =========================================================================
+  const addNominaSupplente = async (nominaData: Omit<NominaSupplente, 'id' | 'creataIl'>) => {
+    const nuovaNomina: NominaSupplente = {
+      ...nominaData,
+      id: 'nom_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      creataIl: new Date().toISOString()
+    };
+
+    const prevNomine = nomineSupplentiRef.current || [];
+    const updatedNomine = [nuovaNomina, ...prevNomine];
+    setNomineSupplenti(updatedNomine);
+    localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(updatedNomine));
+
+    // PULIZIA AUTOMATICA ASSENZE FUTURE DEL TITOLARE SOSTITUITO
+    // Dalla data di presa di servizio (dataInizio) in poi, le assenze registrate sul titolare
+    // vengono revocate / rimosse perché da quella data la cattedra è coperta dal nuovo supplente nominato.
+    const dataPresaServizio = nuovaNomina.dataInizio.split('T')[0];
+    const titolareCollegatiIds = getDocentiCollegatiIds(nuovaNomina.docenteTitolareId, docentiRef.current);
+
+    setAssenze(prevAssenze => {
+      const pulite = prevAssenze.filter(a => {
+        const isStessoDoc = titolareCollegatiIds.includes(a.docenteId) || a.docenteId === nuovaNomina.docenteTitolareId;
+        if (!isStessoDoc) return true;
+        const dataAss = a.data.split('T')[0];
+        // Conserva le assenze antecedenti alla presa di servizio (PASSATO)
+        // Rimuove quelle pari o successive (FUTURO coperto dal supplente)
+        return dataAss < dataPresaServizio;
+      });
+      localStorage.setItem('scuola_assenze', JSON.stringify(pulite));
+      return pulite;
+    });
+
+    // Salva immediatamente su Cloud Firestore
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, {
+        nomineSupplenti: JSON.parse(JSON.stringify(updatedNomine)),
+        ultimoAggiornamento: new Date().toISOString()
+      }, { merge: true });
+      triggerCloudSync();
+      console.log('✅ Nomina supplente salvata con successo su Firestore!');
+    } catch (e) {
+      console.error('Errore salvataggio nomina:', e);
+    }
+  };
+
+  const rimuoviNominaSupplente = async (nominaId: string) => {
+    const updated = (nomineSupplentiRef.current || []).filter(n => n.id !== nominaId);
+    setNomineSupplenti(updated);
+    localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(updated));
+
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, {
+        nomineSupplenti: JSON.parse(JSON.stringify(updated)),
+        ultimoAggiornamento: new Date().toISOString()
+      }, { merge: true });
+      triggerCloudSync();
+    } catch (e) {
+      console.error('Errore rimozione nomina:', e);
+    }
+  };
+
+  const prorogaNominaSupplente = async (nominaId: string, nuovaDataFine: string) => {
+    const updated = (nomineSupplentiRef.current || []).map(n => 
+      n.id === nominaId ? { ...n, dataFine: nuovaDataFine } : n
+    );
+    setNomineSupplenti(updated);
+    localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(updated));
+
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, {
+        nomineSupplenti: JSON.parse(JSON.stringify(updated)),
+        ultimoAggiornamento: new Date().toISOString()
+      }, { merge: true });
+      triggerCloudSync();
+    } catch (e) {
+      console.error('Errore proroga nomina:', e);
+    }
+  };
+
   const updateDocente = async (docenteAggiornato: Docente) => {
     setDocenti(prev => {
       const updated = prev.map(d => d.id === docenteAggiornato.id ? docenteAggiornato : d);
@@ -1403,12 +1513,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const aggiornaOrarioSenzaCancellareStorico = async (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => {
-    // Mantiene lo storico dei debiti pregresso per i docenti già esistenti
+    // Mantiene lo storico dei debiti pregresso e le email già registrate per i docenti esistenti
     const docentiAggiornati = nuoviDocenti.map(nd => {
       const docEsistente = docenti.find(d => getBaseNomeDocente(d.nome) === getBaseNomeDocente(nd.nome));
       if (docEsistente) {
         return {
           ...nd,
+          email: nd.email || docEsistente.email, // Usa nuova email se presente in Excel, altrimenti conserva quella già collegata
           oreDebitoPermesso: docEsistente.oreDebitoPermesso || 0,
           pinAccesso: docEsistente.pinAccesso || nd.pinAccesso
         };
@@ -1507,6 +1618,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       creaRichiestaAccessoDocente,
       approvaRichiestaAccesso,
       rifiutaRichiestaAccesso,
+      nomineSupplenti,
+      setNomineSupplenti,
+      addNominaSupplente,
+      rimuoviNominaSupplente,
+      prorogaNominaSupplente,
       addAssenza,
       removeAssenza,
       annullaAssenza,

@@ -223,6 +223,10 @@ export const AnagraficaOrario: React.FC = () => {
         for (let h = 1; h <= 9; h++) headerRow2.push(String(h));
       });
 
+      // Aggiungi Colonna EMAIL finale
+      headerRow1.push('email');
+      headerRow2.push('email istituzionale google');
+
       const rows: any[][] = [headerRow1, headerRow2];
 
       docenti.forEach(doc => {
@@ -239,6 +243,9 @@ export const AnagraficaOrario: React.FC = () => {
             rowData.push(v);
           }
         });
+
+        // Colonna Email associata
+        rowData.push(doc.email || '');
 
         rows.push(rowData);
       });
@@ -368,9 +375,32 @@ export const AnagraficaOrario: React.FC = () => {
               <span>Anagrafica & Modifica Orario Docenti</span>
             </h3>
             {docentiUnici.length > 0 && (
-              <span className="bg-indigo-50 text-indigo-700 font-bold text-xs px-2.5 py-0.5 rounded-lg border border-indigo-200">
-                {docentiUnici.length} Docenti Effettivi ({docenti.length} Righe / Cattedre)
-              </span>
+              <>
+                <span className="bg-indigo-50 text-indigo-700 font-bold text-xs px-2.5 py-0.5 rounded-lg border border-indigo-200">
+                  {docentiUnici.length} Docenti Effettivi ({docenti.length} Righe / Cattedre)
+                </span>
+                
+                {(() => {
+                  const docentiConEmail = docentiUnici.filter(d => {
+                    const orig = docenti.find(o => d.allIds.includes(o.id));
+                    return !!orig?.email;
+                  }).length;
+                  const perc = Math.round((docentiConEmail / docentiUnici.length) * 100);
+                  const isCompleto = docentiConEmail === docentiUnici.length && docentiUnici.length > 0;
+                  return (
+                    <span className={`font-bold text-xs px-2.5 py-0.5 rounded-lg border flex items-center gap-1.5 ${
+                      isCompleto 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-300' 
+                        : docentiConEmail > 0 
+                        ? 'bg-amber-50 text-amber-800 border-amber-300' 
+                        : 'bg-slate-100 text-slate-600 border-slate-300'
+                    }`}>
+                      <span>✉️</span>
+                      <span>{docentiConEmail} / {docentiUnici.length} Email Associate ({perc}%)</span>
+                    </span>
+                  );
+                })()}
+              </>
             )}
           </div>
           <p className="text-xs text-slate-500">

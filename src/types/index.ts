@@ -214,4 +214,18 @@ export interface RichiestaAccessoDocente {
   stato: 'IN_ATTESA' | 'APPROVATA' | 'RIFIUTATA';
 }
 
+export interface NominaSupplente {
+  id: string;
+  docenteTitolareId: string;       // ID o baseNome del titolare di cattedra
+  docenteTitolareNome: string;     // Nome del docente di ruolo
+  docenteSostituitoDaNominaId?: string; // Se è una sub-supplenza, l'ID della nomina padre
+  supplenteNome: string;           // Nome del supplente nominato
+  supplenteEmail?: string;         // Email Google per accesso portale docente
+  dataInizio: string;              // YYYY-MM-DD (Presa di servizio)
+  dataFine: string;                // YYYY-MM-DD
+  motivo?: string;                 // es. Maternità, Infortunio, Malattia Lunga
+  note?: string;
+  creataIl: string;
+}
+
 

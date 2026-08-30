@@ -11,7 +11,7 @@ import * as XLSX from 'xlsx';
 type PeriodoFiltro = 'MESE' | 'QUADRIMESTRE_1' | 'QUADRIMESTRE_2' | 'ANNO_INTERO';
 
 export const ReportStatistiche: React.FC = () => {
-  const { docenti, assenze, uscite, sostituzioni, movimentiDebito, impostazioniScuola } = useApp();
+  const { docenti, assenze, uscite, sostituzioni, movimentiDebito, impostazioniScuola, nomineSupplenti } = useApp();
 
   const tettoPermessi = impostazioniScuola?.tettoMaxPermessiBreviAnno || 12;
   const tettoAssemblee = impostazioniScuola?.tettoMaxAssembleeSindacaliAnno || 10;
@@ -21,7 +21,7 @@ export const ReportStatistiche: React.FC = () => {
 
   const [periodo, setPeriodo] = useState<PeriodoFiltro>('ANNO_INTERO');
   const [meseSelezionato, setMeseSelezionato] = useState<string>(currentMonthStr);
-  const [tabReport, setTabReport] = useState<'SOSTEGNI' | 'PERMESSI' | 'ASSENZE' | 'USCITE' | 'STRAORDINARI'>('SOSTEGNI');
+  const [tabReport, setTabReport] = useState<'SOSTEGNI' | 'PERMESSI' | 'ASSENZE' | 'USCITE' | 'STRAORDINARI' | 'NOMINE'>('SOSTEGNI');
 
   // Calcolo range date attivo in base al filtro periodo
   const { dataInizioFiltro, dataFineFiltro } = useMemo(() => {
@@ -467,6 +467,18 @@ export const ReportStatistiche: React.FC = () => {
         >
           <span>💶 Ore Straordinario / D</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setTabReport('NOMINE')}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            tabReport === 'NOMINE'
+              ? 'bg-emerald-600 text-white shadow-2xs'
+              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <span>🧑‍🏫 Registro Nomine Supplenti ({nomineSupplenti.length})</span>
+        </button>
       </div>
 
       {/* CONTENUTO SCHEDA 1: EQUITÀ SOSTEGNI */}
@@ -712,6 +724,70 @@ export const ReportStatistiche: React.FC = () => {
             ))}
             {statisticheStraordinari.lista.length === 0 && (
               <p className="text-xs text-slate-400 italic">Nessuna ora di straordinario maturata nel periodo selezionato.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CONTENUTO SCHEDA 6: REGISTRO NOMINE SUPPLENTI & CATENE */}
+      {tabReport === 'NOMINE' && (
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div>
+              <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+                <span>🧑‍🏫 Registro Storico Nomine & Supplenze Cattedra</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Storico completo di tutte le nomine temporanee da graduatoria, maternità e sub-supplenze a catena.
+              </p>
+            </div>
+            <span className="text-xs font-black bg-emerald-50 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-200">
+              {nomineSupplenti.length} {nomineSupplenti.length === 1 ? 'Nomina Registrata' : 'Nomine Registrate'}
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {nomineSupplenti.map((nom, idx) => (
+              <div key={nom.id} className="p-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-2xs">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="w-5 h-5 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
+                      {idx + 1}
+                    </span>
+                    <span className="font-black text-slate-900 text-sm">{nom.supplenteNome}</span>
+                    <span className="text-emerald-800 bg-emerald-100 font-bold px-2 py-0.5 rounded-md border border-emerald-200 text-[11px]">
+                      Supplente su cattedra
+                    </span>
+                    {nom.supplenteEmail && (
+                      <span className="text-indigo-700 bg-indigo-50 font-mono text-[11px] px-2 py-0.5 rounded-md border border-indigo-100">
+                        ✉️ {nom.supplenteEmail}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-slate-700">
+                    Sostituisce il docente titolare: <strong className="text-slate-900">{nom.docenteTitolareNome}</strong> ({nom.motivo || 'Maternità / Congedo'})
+                  </p>
+
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    🗓️ Presa di servizio dal <strong>{formatDataItaliana(nom.dataInizio)}</strong> fino al <strong>{formatDataItaliana(nom.dataFine)}</strong>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  <span className="text-[10px] font-bold text-emerald-800 bg-white border border-emerald-200 px-2.5 py-1 rounded-lg">
+                    Attiva a Sistema
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {nomineSupplenti.length === 0 && (
+              <div className="text-center py-8 text-slate-400 space-y-2">
+                <Users className="w-8 h-8 mx-auto text-slate-300" />
+                <p className="text-xs italic">Nessuna nomina di supplenza su cattedra registrata.</p>
+                <p className="text-[11px] text-slate-400">Puoi aggiungere una nuova nomina con il pulsante "+ Nomina Supplente" nella Gestione Assenze.</p>
+              </div>
             )}
           </div>
         </div>
