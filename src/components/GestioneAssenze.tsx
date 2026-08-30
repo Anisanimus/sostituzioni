@@ -367,22 +367,22 @@ export const GestioneAssenze: React.FC<{
   return (
     <div className="bg-slate-50/70 rounded-2xl rounded-t-none p-2.5 sm:p-3 shadow-2xs border border-t border-slate-200 space-y-3">
       
-      {/* HEADER PULSANTERIA UNIFICATA IN LINEA PER TUTTI I DISPOSITIVI */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {/* GRUPPO 1: AGGIUNGI (+ ASSENTE, + GITA, + NOMINA SUPPLENTE) */}
-        <div className="flex flex-wrap items-center gap-2 flex-1 sm:flex-none">
+      {/* HEADER PULSANTERIA UNIFICATA PER TUTTI I DISPOSITIVI */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        {/* GRUPPO 1: AGGIUNGI (+ ASSENTE, + GITA, + NOMINA SUPPLENTE) A 3 COLONNE SU MOBILE */}
+        <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5 sm:gap-2 flex-1 sm:flex-none">
           <button
             id="targetBtnAssente"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'DOCENTE' ? null : 'DOCENTE')}
-            className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border cursor-pointer ${
+            className={`px-2 sm:px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 shadow-2xs border cursor-pointer ${
               modalitaAperta === 'DOCENTE'
                 ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
                 : 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100'
             }`}
           >
-            <UserMinus className="w-4 h-4 text-indigo-600" />
-            <span className="sm:hidden">+ Assente</span>
+            <UserMinus className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+            <span className="sm:hidden text-[11px]">+ Assente</span>
             <span className="hidden sm:inline">+ Aggiungi Assente</span>
           </button>
 
@@ -390,14 +390,14 @@ export const GestioneAssenze: React.FC<{
             id="targetBtnGita"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'GITA' ? null : 'GITA')}
-            className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border cursor-pointer ${
+            className={`px-2 sm:px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 shadow-2xs border cursor-pointer ${
               modalitaAperta === 'GITA'
                 ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
                 : 'bg-amber-50 text-amber-950 border-amber-200 hover:bg-amber-100'
             }`}
           >
-            <Bus className="w-4 h-4 text-amber-600" />
-            <span className="sm:hidden">+ Gita</span>
+            <Bus className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span className="sm:hidden text-[11px]">+ Gita</span>
             <span className="hidden sm:inline">+ Aggiungi Gita</span>
           </button>
 
@@ -406,17 +406,17 @@ export const GestioneAssenze: React.FC<{
             id="targetBtnNomina"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'NOMINA' ? null : 'NOMINA')}
-            className={`w-full sm:w-auto px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs border cursor-pointer ${
+            className={`px-2 sm:px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 shadow-2xs border cursor-pointer ${
               modalitaAperta === 'NOMINA'
                 ? 'bg-emerald-700 text-white border-emerald-800 ring-2 ring-emerald-300'
                 : 'bg-emerald-50 text-emerald-950 border-emerald-300 hover:bg-emerald-100'
             }`}
           >
-            <UserCheck className="w-4 h-4 text-emerald-600" />
-            <span className="sm:hidden">+ Nomina</span>
+            <UserCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="sm:hidden text-[11px]">+ Nomina</span>
             <span className="hidden sm:inline">+ Nomina Supplente</span>
             {nomineSupplenti.length > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+              <span className={`text-[9px] px-1 py-0.2 rounded-full font-bold ${
                 modalitaAperta === 'NOMINA' ? 'bg-emerald-900 text-white' : 'bg-emerald-200 text-emerald-900'
               }`}>
                 {nomineSupplenti.length}
@@ -425,20 +425,20 @@ export const GestioneAssenze: React.FC<{
           </button>
         </div>
 
-        {/* GRUPPO 2: PULSANTI "REGISTRATI (N)" E "RISORSE (N)" IN LINEA */}
-        <div className="flex items-center gap-2 flex-1 sm:flex-none">
+        {/* GRUPPO 2: PULSANTI "REGISTRATI (N)" E "RISORSE (N)" IN LINEA A 2 COLONNE SU MOBILE */}
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2 flex-1 sm:flex-none">
           <button
             type="button"
             onClick={() => setMostraDettagliEventi(prev => !prev)}
-            className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border cursor-pointer shadow-2xs ${
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer shadow-2xs ${
               mostraDettagliEventi
                 ? 'bg-slate-800 text-white border-slate-900 ring-2 ring-slate-400'
                 : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
             }`}
           >
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <span>📋</span>
-              <span className="sm:hidden">Registrati</span>
+              <span className="sm:hidden text-[11px]">Eventi</span>
               <span className="hidden sm:inline">Eventi Registrati</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
@@ -454,15 +454,15 @@ export const GestioneAssenze: React.FC<{
           <button
             type="button"
             onClick={onToggleRisorseLaterale}
-            className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 border cursor-pointer shadow-2xs ${
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer shadow-2xs ${
               mostraRisorseLaterale
                 ? 'bg-amber-500 text-white border-amber-600 ring-2 ring-amber-300'
                 : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
             }`}
           >
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <span>⚡</span>
-              <span className="sm:hidden">Risorse</span>
+              <span className="sm:hidden text-[11px]">Risorse</span>
               <span className="hidden sm:inline">Risorse Disponibili</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${

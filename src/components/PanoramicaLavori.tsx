@@ -264,28 +264,29 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
   return (
     <div className="bg-white text-slate-800 rounded-2xl rounded-b-none p-3 sm:p-3.5 shadow-2xs border border-b-0 border-slate-200 space-y-2.5 transition-all">
       
-      {/* HEADER PANORAMICA */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
-        {/* TITOLO + DATA BEN VISIBILE CON FONT PIÙ GRANDE */}
+      {/* ========================================================================= */}
+      {/* 1. HEADER DESKTOP (SM+)                                                   */}
+      {/* ========================================================================= */}
+      <div className="hidden sm:flex sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+        {/* TITOLO + DATA */}
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <span className="text-base sm:text-lg font-black tracking-tight text-slate-900">
+            <span className="text-lg font-black tracking-tight text-slate-900">
               Sostituzioni
             </span>
-            <span className="bg-indigo-600 text-white text-xs sm:text-sm font-black px-3 py-1 rounded-xl shadow-xs">
+            <span className="bg-indigo-600 text-white text-sm font-black px-3 py-1 rounded-xl shadow-xs">
               {currentStat.giornoNome} {new Date(selectedDate).getDate()}/{new Date(selectedDate).getMonth() + 1}
             </span>
           </div>
         </div>
 
-        {/* CONTROLLI: VISTA SETTIMANA/MESE (DESKTOP) + CALENDARIO + FRECCE + BADGE + TOGGLE COMPRIMI */}
-        <div className="flex items-center justify-between sm:justify-end gap-2 pt-1 sm:pt-0">
-          
+        {/* CONTROLLI DESKTOP */}
+        <div className="flex items-center gap-2">
           {/* SELETTORE VISTA DESKTOP: SETTIMANA / MESE */}
-          <div className="hidden sm:flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-bold shadow-inner mr-1">
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-xs font-bold shadow-inner mr-1">
             <button
               type="button"
               onClick={() => handleToggleVista('GIORNO')}
@@ -306,146 +307,185 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
             </button>
           </div>
 
-          {/* SELETTORE VISTA MOBILE COMPATTO IN HEADER */}
-          <div className="flex sm:hidden items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200 text-[11px] font-bold mr-0.5">
+          {/* FRECCE SCORRIMENTO */}
+          <div className="flex items-center gap-0.5 bg-slate-50 p-0.5 rounded-lg border border-slate-200">
             <button
               type="button"
-              onClick={() => handleToggleVista('GIORNO')}
-              className={`px-2 py-1 rounded-lg transition cursor-pointer flex items-center gap-0.5 ${
-                !compresso && vista === 'GIORNO' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
-              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                scrollCarousel(-1);
+              }}
+              className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+              title="Giorno precedente"
             >
-              <span>📅 Sett.</span>
+              ❮
             </button>
             <button
               type="button"
-              onClick={() => handleToggleVista('SETTIMANA')}
-              className={`px-2 py-1 rounded-lg transition cursor-pointer flex items-center gap-0.5 ${
-                !compresso && vista === 'SETTIMANA' ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500 hover:text-slate-900'
-              }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                scrollCarousel(1);
+              }}
+              className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+              title="Giorno successivo"
             >
-              <span>🗓️ Mese</span>
+              ❯
             </button>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            {/* PULSANTE ICONA CALENDARIO */}
-            <div className="relative flex items-center justify-center">
-              <input 
-                id="calendarInputPanoramica"
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  if (e.target.value) onSelectDate(e.target.value);
-                }}
-                className="sr-only"
-              />
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const el = document.getElementById('calendarInputPanoramica') as HTMLInputElement | null;
-                  if (el) {
-                    if (typeof (el as any).showPicker === 'function') {
-                      try {
-                        (el as any).showPicker();
-                      } catch {
-                        el.focus();
-                      }
-                    } else {
-                      el.focus();
-                    }
-                  }
-                }}
-                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-indigo-900 border border-slate-200 shadow-2xs flex items-center justify-center cursor-pointer transition"
-                title="Scegli giorno dal calendario"
-              >
-                <Calendar className="w-4 h-4 text-indigo-700" />
-              </button>
-            </div>
+          {/* BADGES AVANZAMENTO */}
+          <span className={`text-[11px] font-black px-2.5 py-1 rounded-full border flex items-center gap-1 ${
+            totGiornoScoperte === 0 
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              : percentualeGiorno === 100 
+                ? 'bg-emerald-600 text-white border-emerald-700'
+                : 'bg-amber-50 text-amber-900 border-amber-200'
+          }`}>
+            <span>🕒 {totGiornoCoperte}/{totGiornoScoperte}</span>
+            <span className="font-bold">ore assegnate</span>
+            {totGiornoCoperte === totGiornoScoperte && totGiornoScoperte > 0 && <span>✓</span>}
+          </span>
 
-            {/* FRECCE SCORRIMENTO NORMALI (❮ / ❯) */}
-            <div className="flex items-center gap-0.5 bg-slate-50 p-0.5 rounded-lg border border-slate-200">
+          {totGiornoCoperte > 0 && (
+            <span className={`text-[11px] font-black px-2 py-1 rounded-full border flex items-center gap-1 transition ${
+              currentStat.totPubblicate === totGiornoCoperte
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
+                : currentStat.totPubblicate > 0
+                  ? 'bg-sky-50 text-sky-900 border-sky-200'
+                  : 'bg-slate-100 text-slate-600 border-slate-200'
+            }`}>
+              <span>📤 {currentStat.totPubblicate}/{totGiornoCoperte}</span>
+              <span className="font-normal text-[10px]">inviate</span>
+              {currentStat.totPubblicate === totGiornoCoperte && <span>✓</span>}
+            </span>
+          )}
+
+          {totGiornoCoperte > 0 && (
+            <span className={`text-[11px] font-black px-2 py-1 rounded-full border flex items-center gap-1 transition ${
+              currentStat.totFirmate === totGiornoCoperte
+                ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                : currentStat.totFirmate > 0
+                  ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
+                  : 'bg-slate-100 text-slate-600 border-slate-200'
+            }`}>
+              <span>✍️ {currentStat.totFirmate}/{totGiornoCoperte}</span>
+              <span className="font-normal text-[10px]">firmate</span>
+              {currentStat.totFirmate === totGiornoCoperte && <span>✓</span>}
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setCompresso(!compresso)}
+            className="text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
+            title={compresso ? "Espandi" : "Comprimi"}
+          >
+            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${compresso ? '' : 'rotate-180'}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. HEADER MOBILE (SMARTPHONE REDESIGN RAFFINATO ED ELEGANTE)              */}
+      {/* ========================================================================= */}
+      <div className="sm:hidden space-y-2 pb-1 border-b border-slate-100">
+        
+        {/* RIGA 1: TITOLO + DATA (A SINISTRA) | FRECCE SCORRIMENTO + ICONA TREND (A DESTRA) */}
+        <div className="flex items-center justify-between gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-base font-black tracking-tight text-slate-900 shrink-0">
+              Sostituzioni
+            </span>
+            <span className="bg-indigo-600 text-white text-xs font-black px-2.5 py-1 rounded-xl shadow-xs truncate">
+              {currentStat.giornoNome} {new Date(selectedDate).getDate()}/{new Date(selectedDate).getMonth() + 1}
+            </span>
+          </div>
+
+          {/* FRECCINE < > RAPIDE + ICONA ANDAMENTO FUTURO 📈 */}
+          <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  scrollCarousel(-1);
-                }}
-                className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+                onClick={() => scrollCarousel(-1)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-black shadow-2xs border border-slate-200 transition cursor-pointer"
                 title="Giorno precedente"
               >
                 ❮
               </button>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  scrollCarousel(1);
-                }}
-                className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-200 text-slate-700 text-xs font-black transition cursor-pointer"
+                onClick={() => scrollCarousel(1)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-black shadow-2xs border border-slate-200 transition cursor-pointer"
                 title="Giorno successivo"
               >
                 ❯
               </button>
             </div>
-          </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-            {/* 1. ORE COPERTE CON ICONA OROLOGIO (DESKTOP: ORE ASSEGNATE, MOBILE: SOLO ICONA E CONTEGGIO) */}
-            <span className={`text-[10px] sm:text-[11px] font-black px-2.5 py-1 rounded-full border flex items-center gap-1 ${
-              totGiornoScoperte === 0 
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                : percentualeGiorno === 100 
-                  ? 'bg-emerald-600 text-white border-emerald-700'
-                  : 'bg-amber-50 text-amber-900 border-amber-200'
-            }`} title="Ore assegnate / Totale ore">
-              <span>🕒 {totGiornoCoperte}/{totGiornoScoperte}</span>
-              <span className="hidden sm:inline font-bold">ore assegnate</span>
-              {totGiornoCoperte === totGiornoScoperte && totGiornoScoperte > 0 && <span>✓</span>}
-            </span>
-
-            {/* 3. RICHIESTE INVIATE (PUBBLICATE) */}
-            {totGiornoCoperte > 0 && (
-              <span className={`text-[10px] sm:text-[11px] font-black px-2 py-1 rounded-full border flex items-center gap-1 transition ${
-                currentStat.totPubblicate === totGiornoCoperte
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
-                  : currentStat.totPubblicate > 0
-                    ? 'bg-sky-50 text-sky-900 border-sky-200'
-                    : 'bg-slate-100 text-slate-600 border-slate-200'
-              }`} title="Richieste di sostituzione pubblicate / inviate ai docenti">
-                <span>📤 {currentStat.totPubblicate}/{totGiornoCoperte}</span>
-                <span className="hidden sm:inline font-normal text-[10px]">inviate</span>
-                {currentStat.totPubblicate === totGiornoCoperte && <span>✓</span>}
-              </span>
-            )}
-
-            {/* 4. PRESE VISIONE (FIRMATE) */}
-            {totGiornoCoperte > 0 && (
-              <span className={`text-[10px] sm:text-[11px] font-black px-2 py-1 rounded-full border flex items-center gap-1 transition ${
-                currentStat.totFirmate === totGiornoCoperte
-                  ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
-                  : currentStat.totFirmate > 0
-                    ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
-                    : 'bg-slate-100 text-slate-600 border-slate-200'
-              }`} title="Prese visione (firme) effettuate dai docenti">
-                <span>✍️ {currentStat.totFirmate}/{totGiornoCoperte}</span>
-                <span className="hidden sm:inline font-normal text-[10px]">firmate</span>
-                {currentStat.totFirmate === totGiornoCoperte && <span>✓</span>}
-              </span>
-            )}
-
+            {/* PULSANTE ANDAMENTO FUTURO & TREND 📈 (TOGGLE SETTIMANA / MESE) */}
             <button
               type="button"
-              onClick={() => setCompresso(!compresso)}
-              className="text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 border border-slate-200 sm:border-transparent transition cursor-pointer"
-              title={compresso ? "Espandi" : "Comprimi"}
+              onClick={() => handleToggleVista(vista || 'GIORNO')}
+              className={`p-1.5 rounded-xl border transition flex items-center justify-center cursor-pointer ${
+                !compresso
+                  ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-200 shadow-xs'
+                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
+              }`}
+              title="Mostra andamento e prospetto futuro"
             >
-              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${compresso ? '' : 'rotate-180'}`} />
+              <TrendingUp className="w-4 h-4" />
             </button>
           </div>
-
         </div>
+
+        {/* RIGA 2: I 3 STATI DI AVANZAMENTO LAVORI IN UN'UNICA RIGA ORIZZONTALE */}
+        <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+          {/* STATO 1: ASSEGNATE */}
+          <div className={`text-center py-1 px-1 rounded-xl border flex flex-col items-center justify-center ${
+            totGiornoScoperte === 0 
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              : percentualeGiorno === 100 
+                ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                : 'bg-amber-50 text-amber-950 border-amber-200'
+          }`}>
+            <span className="text-[11px] font-black leading-tight flex items-center gap-0.5">
+              🕒 {totGiornoCoperte}/{totGiornoScoperte}
+              {totGiornoCoperte === totGiornoScoperte && totGiornoScoperte > 0 && <span className="text-[10px]">✓</span>}
+            </span>
+            <span className="text-[9px] font-bold opacity-80 leading-none mt-0.5">Assegnate</span>
+          </div>
+
+          {/* STATO 2: INVIATE */}
+          <div className={`text-center py-1 px-1 rounded-xl border flex flex-col items-center justify-center ${
+            currentStat.totPubblicate === totGiornoCoperte && totGiornoCoperte > 0
+              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+              : currentStat.totPubblicate > 0
+                ? 'bg-sky-50 text-sky-900 border-sky-200'
+                : 'bg-slate-50 text-slate-500 border-slate-200'
+          }`}>
+            <span className="text-[11px] font-black leading-tight flex items-center gap-0.5">
+              📤 {currentStat.totPubblicate}/{totGiornoCoperte}
+              {currentStat.totPubblicate === totGiornoCoperte && totGiornoCoperte > 0 && <span className="text-[10px]">✓</span>}
+            </span>
+            <span className="text-[9px] font-bold opacity-80 leading-none mt-0.5">Inviate</span>
+          </div>
+
+          {/* STATO 3: FIRMATE */}
+          <div className={`text-center py-1 px-1 rounded-xl border flex flex-col items-center justify-center ${
+            currentStat.totFirmate === totGiornoCoperte && totGiornoCoperte > 0
+              ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+              : currentStat.totFirmate > 0
+                ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
+                : 'bg-slate-50 text-slate-500 border-slate-200'
+          }`}>
+            <span className="text-[11px] font-black leading-tight flex items-center gap-0.5">
+              ✍️ {currentStat.totFirmate}/{totGiornoCoperte}
+              {currentStat.totFirmate === totGiornoCoperte && totGiornoCoperte > 0 && <span className="text-[10px]">✓</span>}
+            </span>
+            <span className="text-[9px] font-bold opacity-80 leading-none mt-0.5">Firmate</span>
+          </div>
+        </div>
+
       </div>
 
       {/* CONTENUTO ESPANSO */}
