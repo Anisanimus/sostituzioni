@@ -8,7 +8,7 @@ import * as XLSX from 'xlsx';
 import { 
   Users, Edit, Save, Lock, Unlock, Search, CheckCircle, 
   AlertTriangle, RotateCcw, ShieldCheck, Sparkles, Plus, Clock, Filter,
-  Upload, Download, FileSpreadsheet, ChevronDown, UserCheck, User,
+  Upload, Download, FileSpreadsheet, ChevronDown, ChevronUp, UserCheck, User,
   Sliders, ArrowUp, ArrowDown, Info, Bus, UserMinus, Trash2
 } from 'lucide-react';
 
@@ -394,6 +394,7 @@ export const AnagraficaOrario: React.FC = () => {
 
   // STATO VISTA MACRO-TO-MICRO ('TUTTI', 'CONFLITTI', 'POTENZIAMENTO', 'EMAIL', null)
   const [macroFiltroAttivo, setMacroFiltroAttivo] = useState<'TUTTI' | 'CONFLITTI' | 'POTENZIAMENTO' | 'EMAIL' | null>('TUTTI');
+  const [macroAccordionEspanso, setMacroAccordionEspanso] = useState<boolean>(true);
   const [ricercaDocente, setRicercaDocente] = useState<string>('');
   const [filtroMateria, setFiltroMateria] = useState<string>('TUTTE');
 
@@ -637,7 +638,7 @@ export const AnagraficaOrario: React.FC = () => {
       {/* 1. LIVELLO MACRO: HEADER E GRANDI CARD INTERATTIVE        */}
       {/* ========================================================= */}
       <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
-        {/* TITOLO + AZIONI GENERALI (UPLOAD / DOWNLOAD / RESET) */}
+        {/* TITOLO + AZIONI GENERALI (UPLOAD / DOWNLOAD / RESET / ACCORDION) */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
             <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
@@ -699,104 +700,68 @@ export const AnagraficaOrario: React.FC = () => {
               <Trash2 className="w-3.5 h-3.5" />
               <span>Azzera</span>
             </button>
+
+            {/* FRECCIOLINA ACCORDION APRI / CHIUDI */}
+            <button
+              type="button"
+              onClick={() => setMacroAccordionEspanso(prev => !prev)}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1 text-xs font-bold shadow-2xs cursor-pointer ml-1"
+              title={macroAccordionEspanso ? 'Comprimi cruscotto in icone' : 'Espandi cruscotto completo'}
+            >
+              {macroAccordionEspanso ? (
+                <>
+                  <ChevronUp className="w-4 h-4" />
+                  <span className="text-[11px] hidden sm:inline">Comprimi</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4" />
+                  <span className="text-[11px] hidden sm:inline">Espandi</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* 4 CARD MACRO CRUSCOTTO */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          
-          {/* MACRO CARD 1: DOCENTI & CATTEDRE */}
-          <div
-            onClick={() => setMacroFiltroAttivo('TUTTI')}
-            className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
-              macroFiltroAttivo === 'TUTTI'
-                ? 'bg-indigo-50/70 border-indigo-500 ring-2 ring-indigo-200'
-                : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50/60'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Docenti e Cattedre</span>
-              <div className="p-1.5 bg-indigo-100 text-indigo-700 rounded-xl">
-                <Users className="w-4 h-4" />
-              </div>
-            </div>
-            <div>
-              <div className="text-xl font-black text-slate-900">{docentiUnici.length} Docenti</div>
-              <div className="text-xs text-indigo-700 font-semibold">{docenti.length} Cattedre totali</div>
-            </div>
-            <div className="text-[11px] font-bold text-indigo-600 flex items-center gap-1">
-              <span>{macroFiltroAttivo === 'TUTTI' ? '● Selezionato' : 'Esplora tutti →'}</span>
-            </div>
-          </div>
+        {/* CALCOLO DATI EMAIL PER LE VISTE */}
+        {(() => {
+          const docentiConEmail = docentiUnici.filter(d => {
+            const orig = docenti.find(o => d.allIds.includes(o.id));
+            return !!orig?.email;
+          }).length;
+          const percEmail = Math.round((docentiConEmail / docentiUnici.length) * 100);
 
-          {/* MACRO CARD 2: CONFLITTI ORARI */}
-          <div
-            onClick={() => setMacroFiltroAttivo(anomalieAttuali.length > 0 ? 'CONFLITTI' : 'TUTTI')}
-            className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
-              anomalieAttuali.length > 0
-                ? macroFiltroAttivo === 'CONFLITTI'
-                  ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-200'
-                  : 'bg-rose-50/50 border-rose-300 hover:bg-rose-100/60 animate-pulse'
-                : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conflitti Orari</span>
-              <div className={`p-1.5 rounded-xl ${anomalieAttuali.length > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                {anomalieAttuali.length > 0 ? <AlertTriangle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+          return macroAccordionEspanso ? (
+            /* ========================================================= */
+            /* VISTA ESPANSA: 4 GRANDI CARD (Email subito dopo Docenti)  */
+            /* ========================================================= */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 animate-in fade-in duration-200">
+              
+              {/* CARD 1: DOCENTI & CATTEDRE */}
+              <div
+                onClick={() => setMacroFiltroAttivo('TUTTI')}
+                className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
+                  macroFiltroAttivo === 'TUTTI'
+                    ? 'bg-indigo-50/70 border-indigo-500 ring-2 ring-indigo-200'
+                    : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50/60'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Docenti e Cattedre</span>
+                  <div className="p-1.5 bg-indigo-100 text-indigo-700 rounded-xl">
+                    <Users className="w-4 h-4" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xl font-black text-slate-900">{docentiUnici.length} Docenti</div>
+                  <div className="text-xs text-indigo-700 font-semibold">{docenti.length} Cattedre totali</div>
+                </div>
+                <div className="text-[11px] font-bold text-indigo-600 flex items-center gap-1">
+                  <span>{macroFiltroAttivo === 'TUTTI' ? '● Selezionato' : 'Esplora tutti →'}</span>
+                </div>
               </div>
-            </div>
-            <div>
-              <div className={`text-xl font-black ${anomalieAttuali.length > 0 ? 'text-rose-900' : 'text-emerald-900'}`}>
-                {anomalieAttuali.length > 0 ? `${anomalieAttuali.length} Conflitti` : '0 Conflitti'}
-              </div>
-              <div className="text-xs text-slate-500 font-medium">
-                {anomalieAttuali.length > 0 ? 'Sovrapposizioni da risolvere' : 'Nessuna sovrapposizione'}
-              </div>
-            </div>
-            <div className={`text-[11px] font-bold flex items-center gap-1 ${anomalieAttuali.length > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
-              <span>{anomalieAttuali.length > 0 ? (macroFiltroAttivo === 'CONFLITTI' ? '● Risolvi conflitti' : 'Risolvi subito →') : 'Tutto regolare ✓'}</span>
-            </div>
-          </div>
 
-          {/* MACRO CARD 3: POTENZIAMENTI */}
-          <div
-            onClick={() => setMacroFiltroAttivo(potenziamentiSenzaClasse.length > 0 ? 'POTENZIAMENTO' : 'TUTTI')}
-            className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
-              potenziamentiSenzaClasse.length > 0
-                ? macroFiltroAttivo === 'POTENZIAMENTO'
-                  ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-200'
-                  : 'bg-amber-50/50 border-amber-300 hover:bg-amber-100/60'
-                : 'bg-white border-slate-200 hover:border-purple-300'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Potenziamenti (P)</span>
-              <div className="p-1.5 bg-amber-100 text-amber-800 rounded-xl">
-                <Sparkles className="w-4 h-4" />
-              </div>
-            </div>
-            <div>
-              <div className="text-xl font-black text-amber-950">
-                {potenziamentiSenzaClasse.length} Ore 'P'
-              </div>
-              <div className="text-xs text-amber-800 font-medium">
-                {potenziamentiSenzaClasse.length > 0 ? 'Senza classe di compresenza' : 'Tutte con classe associata'}
-              </div>
-            </div>
-            <div className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
-              <span>{potenziamentiSenzaClasse.length > 0 ? (macroFiltroAttivo === 'POTENZIAMENTO' ? '● Assegna classi' : 'Assegna classi →') : 'Orario completo ✓'}</span>
-            </div>
-          </div>
-
-          {/* MACRO CARD 4: ACCOUNT GOOGLE / EMAIL */}
-          {(() => {
-            const docentiConEmail = docentiUnici.filter(d => {
-              const orig = docenti.find(o => d.allIds.includes(o.id));
-              return !!orig?.email;
-            }).length;
-            const perc = Math.round((docentiConEmail / docentiUnici.length) * 100);
-            return (
+              {/* CARD 2: ACCOUNT GOOGLE / EMAIL (SUBITO DOPO I DOCENTI) */}
               <div
                 onClick={() => setMacroFiltroAttivo('EMAIL')}
                 className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
@@ -813,16 +778,139 @@ export const AnagraficaOrario: React.FC = () => {
                 </div>
                 <div>
                   <div className="text-xl font-black text-slate-900">{docentiConEmail} / {docentiUnici.length}</div>
-                  <div className="text-xs text-blue-700 font-semibold">{perc}% Email associate</div>
+                  <div className="text-xs text-blue-700 font-semibold">{percEmail}% Email associate</div>
                 </div>
                 <div className="text-[11px] font-bold text-blue-600 flex items-center gap-1">
                   <span>{macroFiltroAttivo === 'EMAIL' ? '● Gestisci email' : 'Gestisci accessi →'}</span>
                 </div>
               </div>
-            );
-          })()}
 
-        </div>
+              {/* CARD 3: CONFLITTI ORARI */}
+              <div
+                onClick={() => setMacroFiltroAttivo(anomalieAttuali.length > 0 ? 'CONFLITTI' : 'TUTTI')}
+                className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
+                  anomalieAttuali.length > 0
+                    ? macroFiltroAttivo === 'CONFLITTI'
+                      ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-200'
+                      : 'bg-rose-50/50 border-rose-300 hover:bg-rose-100/60 animate-pulse'
+                    : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conflitti Orari</span>
+                  <div className={`p-1.5 rounded-xl ${anomalieAttuali.length > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                    {anomalieAttuali.length > 0 ? <AlertTriangle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                  </div>
+                </div>
+                <div>
+                  <div className={`text-xl font-black ${anomalieAttuali.length > 0 ? 'text-rose-900' : 'text-emerald-900'}`}>
+                    {anomalieAttuali.length > 0 ? `${anomalieAttuali.length} Conflitti` : '0 Conflitti'}
+                  </div>
+                  <div className="text-xs text-slate-500 font-medium">
+                    {anomalieAttuali.length > 0 ? 'Sovrapposizioni da risolvere' : 'Nessuna sovrapposizione'}
+                  </div>
+                </div>
+                <div className={`text-[11px] font-bold flex items-center gap-1 ${anomalieAttuali.length > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+                  <span>{anomalieAttuali.length > 0 ? (macroFiltroAttivo === 'CONFLITTI' ? '● Risolvi conflitti' : 'Risolvi subito →') : 'Tutto regolare ✓'}</span>
+                </div>
+              </div>
+
+              {/* CARD 4: POTENZIAMENTI */}
+              <div
+                onClick={() => setMacroFiltroAttivo(potenziamentiSenzaClasse.length > 0 ? 'POTENZIAMENTO' : 'TUTTI')}
+                className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
+                  potenziamentiSenzaClasse.length > 0
+                    ? macroFiltroAttivo === 'POTENZIAMENTO'
+                      ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-200'
+                      : 'bg-amber-50/50 border-amber-300 hover:bg-amber-100/60'
+                    : 'bg-white border-slate-200 hover:border-purple-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Potenziamenti (P)</span>
+                  <div className="p-1.5 bg-amber-100 text-amber-800 rounded-xl">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xl font-black text-amber-950">
+                    {potenziamentiSenzaClasse.length} Ore 'P'
+                  </div>
+                  <div className="text-xs text-amber-800 font-medium">
+                    {potenziamentiSenzaClasse.length > 0 ? 'Senza classe di compresenza' : 'Tutte con classe associata'}
+                  </div>
+                </div>
+                <div className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
+                  <span>{potenziamentiSenzaClasse.length > 0 ? (macroFiltroAttivo === 'POTENZIAMENTO' ? '● Assegna classi' : 'Assegna classi →') : 'Orario completo ✓'}</span>
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            /* ========================================================= */
+            /* VISTA COMPRESSA (ACCORDION CHIUSO): BARRA MINI ICONE      */
+            /* ========================================================= */
+            <div className="flex flex-wrap items-center gap-2 pt-1 animate-in fade-in duration-200">
+              {/* MINI PULSANTE 1: DOCENTI */}
+              <button
+                type="button"
+                onClick={() => setMacroFiltroAttivo('TUTTI')}
+                className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-2xs ${
+                  macroFiltroAttivo === 'TUTTI'
+                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                    : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Docenti ({docentiUnici.length})</span>
+              </button>
+
+              {/* MINI PULSANTE 2: EMAIL */}
+              <button
+                type="button"
+                onClick={() => setMacroFiltroAttivo('EMAIL')}
+                className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-2xs ${
+                  macroFiltroAttivo === 'EMAIL'
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
+                    : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
+                }`}
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Email ({docentiConEmail}/{docentiUnici.length})</span>
+              </button>
+
+              {/* MINI PULSANTE 3: CONFLITTI */}
+              <button
+                type="button"
+                onClick={() => setMacroFiltroAttivo(anomalieAttuali.length > 0 ? 'CONFLITTI' : 'TUTTI')}
+                className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-2xs ${
+                  anomalieAttuali.length > 0
+                    ? macroFiltroAttivo === 'CONFLITTI'
+                      ? 'bg-rose-600 text-white border-rose-700 shadow-sm'
+                      : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-300 animate-pulse'
+                    : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                }`}
+              >
+                {anomalieAttuali.length > 0 ? <AlertTriangle className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                <span>Conflitti ({anomalieAttuali.length})</span>
+              </button>
+
+              {/* MINI PULSANTE 4: POTENZIAMENTI */}
+              <button
+                type="button"
+                onClick={() => setMacroFiltroAttivo(potenziamentiSenzaClasse.length > 0 ? 'POTENZIAMENTO' : 'TUTTI')}
+                className={`px-3 py-1.5 rounded-xl border font-bold text-xs flex items-center gap-2 transition cursor-pointer shadow-2xs ${
+                  macroFiltroAttivo === 'POTENZIAMENTO'
+                    ? 'bg-amber-600 text-white border-amber-700 shadow-sm'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Potenziamenti 'P' ({potenziamentiSenzaClasse.length})</span>
+              </button>
+            </div>
+          );
+        })()}
       </div>
 
       {/* ========================================================= */}
