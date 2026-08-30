@@ -14,7 +14,8 @@ export const TabelloneSostituzioni: React.FC<{
   selectedDate: string; 
   selectedGiorno: any;
   onChangeDate?: (newDate: string) => void;
-}> = ({ selectedDate, selectedGiorno, onChangeDate }) => {
+  mostraRisorseLaterale?: boolean;
+}> = ({ selectedDate, selectedGiorno, onChangeDate, mostraRisorseLaterale = false }) => {
   const { 
     docenti, orariDocenti, assenze, uscite, sostituzioni, 
     impostazioniPriorita, impostazioniScuola, assegnaSostituzione, rimuoviSostituzione, 
@@ -393,12 +394,12 @@ export const TabelloneSostituzioni: React.FC<{
 
   return (
     <div className="space-y-3">
-      {/* AREA A 2 COLONNE: TABELLONE IN PRIMO PIANO A SINISTRA (8/12) + RISORSE (4/12)   */}
+      {/* AREA DINAMICA: TUTTA LARGHEZZA SE RISORSE È CHIUSO, A 2 COLONNE (8/12 + 4/12) SE APERTO */}
       {/* ============================================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      <div className={`grid grid-cols-1 ${mostraRisorseLaterale && risorsePerOra.length > 0 ? 'lg:grid-cols-12' : ''} gap-4 items-start`}>
 
-        {/* COLONNA TABELLONE PRINCIPALE (LG: 8/12) */}
-        <div className="lg:col-span-8 bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+        {/* COLONNA TABELLONE PRINCIPALE (A TUTTA LARGHEZZA SE RISORSE CHIUSO, 8/12 SE APERTO) */}
+        <div className={`${mostraRisorseLaterale && risorsePerOra.length > 0 ? 'lg:col-span-8' : 'w-full'} bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4`}>
           
           {/* HEADER UNIFICATO TABELLONE: TUTTO SU UNA SOLA RIGA SIA SU MOBILE CHE SU DESKTOP */}
           <div className="flex items-center justify-between gap-1.5 sm:gap-2 border-b border-slate-100 pb-3 flex-wrap sm:flex-nowrap">
@@ -1059,9 +1060,9 @@ export const TabelloneSostituzioni: React.FC<{
 
         </div>
 
-        {/* COLONNA LATERALE: SPECCHIETTO RISORSE DISPONIBILI (LG: 4/12) VISIBILE SOLO SU DESKTOP / TABLET >= LG */}
-        {risorsePerOra.length > 0 && (
-          <div className="hidden lg:block lg:col-span-4 space-y-3">
+        {/* COLONNA LATERALE: SPECCHIETTO RISORSE DISPONIBILI (LG: 4/12) VISIBILE SE APERTO */}
+        {mostraRisorseLaterale && risorsePerOra.length > 0 && (
+          <div className="lg:col-span-4 space-y-3 animate-in fade-in slide-in-from-right-2 duration-200">
             <div className="bg-white rounded-2xl p-4 shadow-2xs border border-slate-200 space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-1.5 border-b border-slate-100 pb-2">
                 <span id="targetSpecchiettoRisorse" className="text-xs font-black text-slate-800 uppercase tracking-wide flex items-center gap-1.5">

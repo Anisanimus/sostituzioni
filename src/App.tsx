@@ -40,6 +40,7 @@ const MainApp: React.FC = () => {
   const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'QUADRO_SCUOLA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'SOSTITUZIONI_SMART' | 'PERSONALIZZAZIONI'>('GESTIONE_GIORNALIERA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
+  const [mostraRisorseLaterale, setMostraRisorseLaterale] = useState(false);
 
   // Sincronizza ruolo utente autenticato all'accesso
   React.useEffect(() => {
@@ -482,14 +483,17 @@ const MainApp: React.FC = () => {
                     selectedDate={selectedDate} 
                     selectedGiorno={selectedGiorno} 
                     onChangeDate={(newDate) => setSelectedDate(newDate)}
+                    mostraRisorseLaterale={mostraRisorseLaterale}
+                    onToggleRisorseLaterale={() => setMostraRisorseLaterale(prev => !prev)}
                   />
                 </div>
 
-                {/* AREA PRINCIPALE: TABELLONE IN PRIMO PIANO (A SINISTRA SU DESKTOP) */}
+                {/* AREA PRINCIPALE: TABELLONE A TUTTA LARGHEZZA (O CON LATERALE SE APERTO) */}
                 <TabelloneSostituzioni 
                   selectedDate={selectedDate} 
                   selectedGiorno={selectedGiorno} 
                   onChangeDate={(newDate) => setSelectedDate(newDate)}
+                  mostraRisorseLaterale={mostraRisorseLaterale}
                 />
               </div>
             )}
