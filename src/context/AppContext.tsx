@@ -9,14 +9,14 @@ const CURRENT_TIMETABLE_VERSION = 'v17_pdf_marchi_pellegrino_compresenza_fix';
 const SCUOLA_FIRESTORE_ID = 'IC_ANNA_FRANK';
 
 export const DEFAULT_IMPOSTAZIONI_SCUOLA: ImpostazioniScuola = {
-  nomeScuola: 'I.C. Leonardo da Vinci',
+  nomeScuola: 'I.C. Anna Frank',
   tettoMaxPermessiBreviAnno: 12,
   tettoMaxAssembleeSindacaliAnno: 10,
   vistaTabellonePredefinita: 'GRUPPI_ORA',
   nascondiWeekendCalendario: true,
   giorniFestivi: [],
   pinPersonaleAta: '1234',
-  dominiAutorizzatiGoogle: ['gmail.com', 'scuola.edu.it', 'icannafrank.edu.it'],
+  dominiAutorizzatiGoogle: ['gmail.com', 'scuola.edu.it', 'icannafrank.edu.it', 'icginostrada.it'],
   emailVicepresidenzaGoogle: ['cravero.anita@gmail.com', 'vicepresidenza@scuola.edu.it', 'admin@scuola.edu.it']
 };
 

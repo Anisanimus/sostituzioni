@@ -14,7 +14,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
     impostazioniScuola, updateImpostazioniScuola, setImpostazioniScuola, updateImpostazioniPriorita, ripristinaBackupCompleto 
   } = useApp();
   
-  const [nomeScuola, setNomeScuola] = useState(impostazioniScuola.nomeScuola || 'I.C. Leonardo da Vinci');
+  const [nomeScuola, setNomeScuola] = useState(impostazioniScuola.nomeScuola || 'I.C. Anna Frank');
   const [pinPersonaleAta, setPinPersonaleAta] = useState(impostazioniScuola.pinPersonaleAta || '1234');
   const [tettoPermessi, setTettoPermessi] = useState(impostazioniScuola.tettoMaxPermessiBreviAnno || 12);
   const [tettoAssemblee, setTettoAssemblee] = useState(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
@@ -180,7 +180,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
         if (json.docenti && json.orariDocenti) {
           if (window.confirm(`Sei sicuro di voler ripristinare il backup del ${new Date(json.dataBackup || '').toLocaleDateString()}? I dati attuali verranno sostituiti con quelli del backup.`)) {
             ripristinaBackupCompleto(json);
-            setNomeScuola(json.impostazioniScuola?.nomeScuola || 'I.C. Leonardo da Vinci');
+            setNomeScuola(json.impostazioniScuola?.nomeScuola || 'I.C. Anna Frank');
             setTettoPermessi(json.impostazioniScuola?.tettoMaxPermessiBreviAnno || 12);
             setTettoAssemblee(json.impostazioniScuola?.tettoMaxAssembleeSindacaliAnno || 10);
             setVistaTabellone(json.impostazioniScuola?.vistaTabellonePredefinita || 'GRUPPI_ORA');
@@ -257,7 +257,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 type="text"
                 value={nomeScuola}
                 onChange={(e) => setNomeScuola(e.target.value)}
-                placeholder="es. I.C. Leonardo da Vinci - Roma"
+                placeholder="es. I.C. Anna Frank - Torino"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
                 required
               />
