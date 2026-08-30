@@ -87,9 +87,82 @@ export const AnagraficaOrario: React.FC = () => {
   const [selectedDocenteId, setSelectedDocenteId] = useState<string>('');
   const [notificaSalvataggio, setNotificaSalvataggio] = useState<string | null>(null);
 
-  // STATI PER IGNORARE / RIDURRE A PULSANTE I BOX DI AVVISO
-  const [ignoraSovrapposizioni, setIgnoraSovrapposizioni] = useState<boolean>(false);
-  const [ignoraPotSenzaClasse, setIgnoraPotSenzaClasse] = useState<boolean>(false);
+  // STATI PER IGNORARE / RIDURRE A BADGE I BOX DI AVVISO (default: minimizzati nei badge dell'header se l'utente vuole o espandibili al click)
+  const [mostraBoxSovrapposizioni, setMostraBoxSovrapposizioni] = useState<boolean>(false);
+  const [mostraBoxPotSenzaClasse, setMostraBoxPotSenzaClasse] = useState<boolean>(false);
+
+  // Calcolo Sovrapposizioni Orarie
+  const anomalieAttuali = React.useMemo(() => {
+    interface ProfiloConflitto {
+      docenteId: string;
+      materia: string;
+      valore: string;
+    }
+    const list: { docenteNome: string; giorno: GiornoSettimana; ora: number; profiliConflitto: ProfiloConflitto[] }[] = [];
+    docentiUnici.forEach(du => {
+      if (du.allIds.length <= 1) return;
+      const profili = docenti.filter(d => du.allIds.includes(d.id));
+      GIORNI.forEach(giorno => {
+        for (let ora = 1; ora <= 9; ora++) {
+          const occupati = profili.filter(p => {
+            const o = orariDocenti.find(ord => ord.docenteId === p.id);
+            const c = o?.ore.find(cell => cell.giorno === giorno && cell.ora === ora);
+            return c && c.valore && c.valore.trim() !== '';
+          });
+
+          if (occupati.length > 1) {
+            const profiliConflitto: ProfiloConflitto[] = occupati.map(p => {
+              const o = orariDocenti.find(ord => ord.docenteId === p.id);
+              const c = o?.ore.find(cell => cell.giorno === giorno && cell.ora === ora)!;
+              return {
+                docenteId: p.id,
+                materia: p.materia,
+                valore: c.valore
+              };
+            });
+
+            list.push({
+              docenteNome: du.nome,
+              giorno,
+              ora,
+              profiliConflitto
+            });
+          }
+        }
+      });
+    });
+    return list;
+  }, [docentiUnici, docenti, orariDocenti]);
+
+  // Calcolo Potenziamenti 'P' senza classe
+  const potenziamentiSenzaClasse = React.useMemo(() => {
+    interface PotenziamentoPuro {
+      docenteId: string;
+      docenteNome: string;
+      materia: string;
+      giorno: GiornoSettimana;
+      ora: number;
+    }
+    const list: PotenziamentoPuro[] = [];
+    docenti.forEach(d => {
+      const o = orariDocenti.find(ord => ord.docenteId === d.id);
+      if (!o) return;
+
+      o.ore.forEach(cell => {
+        const v = (cell.valore || '').trim().toUpperCase();
+        if (v === 'P' || v === 'POT' || v === 'POTENZIAMENTO') {
+          list.push({
+            docenteId: d.id,
+            docenteNome: d.nome,
+            materia: d.materia,
+            giorno: cell.giorno,
+            ora: cell.ora
+          });
+        }
+      });
+    });
+    return list;
+  }, [docenti, orariDocenti]);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -413,9 +486,54 @@ export const AnagraficaOrario: React.FC = () => {
             </h3>
             {docentiUnici.length > 0 && (
               <>
-                <span className="bg-indigo-50 text-indigo-700 font-bold text-xs px-2.5 py-0.5 rounded-lg border border-indigo-200">
-                  {docentiUnici.length} Docenti Effettivi ({docenti.length} Righe / Cattedre)
+                <span className="bg-indigo-50 text-indigo-700 font-bold text-xs px-2.5 py-1 rounded-xl border border-indigo-200 shadow-2xs">
+                  👥 {docentiUnici.length} Docenti ({docenti.length} Cattedre)
                 </span>
+
+                {/* BADGE CONFLITTI / SOVRAPPOSIZIONI ORARIE */}
+                {anomalieAttuali.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setMostraBoxSovrapposizioni(prev => !prev)}
+                    className={`font-black text-xs px-2.5 py-1 rounded-xl border flex items-center gap-1.5 transition cursor-pointer shadow-2xs ${
+                      mostraBoxSovrapposizioni
+                        ? 'bg-rose-600 text-white border-rose-700 ring-2 ring-rose-300'
+                        : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-300 animate-pulse'
+                    }`}
+                    title="Clicca per aprire/chiudere l'elenco dei conflitti orari"
+                  >
+                    <span>⚠️</span>
+                    <span>{anomalieAttuali.length} Conflitti Orari</span>
+                    <span className="text-[10px] bg-rose-200/60 text-rose-950 px-1 rounded font-mono">
+                      {mostraBoxSovrapposizioni ? 'Chiudi ▲' : 'Vedi ▼'}
+                    </span>
+                  </button>
+                ) : (
+                  <span className="bg-emerald-50 text-emerald-700 font-bold text-xs px-2.5 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5 shadow-2xs">
+                    <span>✅</span>
+                    <span>0 Conflitti</span>
+                  </span>
+                )}
+
+                {/* BADGE POTENZIAMENTO 'P' DA ASSOCIARE A CLASSE */}
+                {potenziamentiSenzaClasse.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setMostraBoxPotSenzaClasse(prev => !prev)}
+                    className={`font-black text-xs px-2.5 py-1 rounded-xl border flex items-center gap-1.5 transition cursor-pointer shadow-2xs ${
+                      mostraBoxPotSenzaClasse
+                        ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
+                        : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                    }`}
+                    title="Clicca per aprire/chiudere le ore di Potenziamento P senza classe"
+                  >
+                    <span>🟣</span>
+                    <span>{potenziamentiSenzaClasse.length} Potenziamenti 'P'</span>
+                    <span className="text-[10px] bg-amber-200/60 text-amber-950 px-1 rounded font-mono">
+                      {mostraBoxPotSenzaClasse ? 'Chiudi ▲' : 'Vedi ▼'}
+                    </span>
+                  </button>
+                )}
                 
                 {(() => {
                   const docentiConEmail = docentiUnici.filter(d => {
@@ -425,7 +543,7 @@ export const AnagraficaOrario: React.FC = () => {
                   const perc = Math.round((docentiConEmail / docentiUnici.length) * 100);
                   const isCompleto = docentiConEmail === docentiUnici.length && docentiUnici.length > 0;
                   return (
-                    <span className={`font-bold text-xs px-2.5 py-0.5 rounded-lg border flex items-center gap-1.5 ${
+                    <span className={`font-bold text-xs px-2.5 py-1 rounded-xl border flex items-center gap-1.5 shadow-2xs ${
                       isCompleto 
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-300' 
                         : docentiConEmail > 0 
@@ -433,7 +551,7 @@ export const AnagraficaOrario: React.FC = () => {
                         : 'bg-slate-100 text-slate-600 border-slate-300'
                     }`}>
                       <span>✉️</span>
-                      <span>{docentiConEmail} / {docentiUnici.length} Email Associate ({perc}%)</span>
+                      <span>{docentiConEmail} / {docentiUnici.length} Email ({perc}%)</span>
                     </span>
                   );
                 })()}
@@ -445,31 +563,8 @@ export const AnagraficaOrario: React.FC = () => {
           </p>
         </div>
 
-        {/* AZIONI: UPLOAD, DOWNLOAD, RESET E PULSANTI AVVISI MINIMIZZATI */}
+        {/* AZIONI: UPLOAD, DOWNLOAD, RESET */}
         <div className="flex flex-wrap items-center gap-2">
-          {ignoraSovrapposizioni && (
-            <button
-              type="button"
-              onClick={() => setIgnoraSovrapposizioni(false)}
-              className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs px-3 py-1.5 rounded-xl border border-rose-300 transition flex items-center gap-1.5 shadow-2xs animate-pulse cursor-pointer"
-              title="Riapri l'elenco delle sovrapposizioni orarie rilevate"
-            >
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
-              <span>⚠️ Sovrapposizioni</span>
-            </button>
-          )}
-
-          {ignoraPotSenzaClasse && (
-            <button
-              type="button"
-              onClick={() => setIgnoraPotSenzaClasse(false)}
-              className="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1.5 rounded-xl border border-amber-300 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
-              title="Riapri l'elenco dei potenziamenti 'P' da associare alle classi"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>🟣 Potenziamento P</span>
-            </button>
-          )}
 
           <input
             type="file"
@@ -583,209 +678,135 @@ export const AnagraficaOrario: React.FC = () => {
       {/* ========================================================= */}
       {/* CONTROLLO COSTANTE ANOMALIE / SOVRAPPOSIZIONI ATTUALI     */}
       {/* ========================================================= */}
-      {(() => {
-        interface ProfiloConflitto {
-          docenteId: string;
-          materia: string;
-          valore: string;
-        }
-        const anomalieAttuali: { docenteNome: string; giorno: GiornoSettimana; ora: number; profiliConflitto: ProfiloConflitto[] }[] = [];
-        docentiUnici.forEach(du => {
-          if (du.allIds.length <= 1) return;
-          const profili = docenti.filter(d => du.allIds.includes(d.id));
-          GIORNI.forEach(giorno => {
-            for (let ora = 1; ora <= 9; ora++) {
-              const occupati = profili.filter(p => {
-                const o = orariDocenti.find(ord => ord.docenteId === p.id);
-                const c = o?.ore.find(cell => cell.giorno === giorno && cell.ora === ora);
-                return c && c.valore && c.valore.trim() !== '';
-              });
+      {mostraBoxSovrapposizioni && anomalieAttuali.length > 0 && (
+        <div className="bg-rose-50 border-2 border-rose-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-sm">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-rose-950">
+                  Conflitti e Sovrapposizioni Orarie ({anomalieAttuali.length})
+                </h3>
+                <p className="text-xs text-rose-800">
+                  Scegli quale cattedra/materia vuoi aprire per correggere o svuotare l'ora in conflitto.
+                </p>
+              </div>
+            </div>
 
-              if (occupati.length > 1) {
-                const profiliConflitto: ProfiloConflitto[] = occupati.map(p => {
-                  const o = orariDocenti.find(ord => ord.docenteId === p.id);
-                  const c = o?.ore.find(cell => cell.giorno === giorno && cell.ora === ora)!;
-                  return {
-                    docenteId: p.id,
-                    materia: p.materia,
-                    valore: c.valore
-                  };
-                });
+            <button
+              type="button"
+              onClick={() => setMostraBoxSovrapposizioni(false)}
+              className="bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 px-3 py-1.5 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+              title="Chiudi questo riquadro"
+            >
+              <span>Chiudi</span>
+              <span>✕</span>
+            </button>
+          </div>
 
-                anomalieAttuali.push({
-                  docenteNome: du.nome,
-                  giorno,
-                  ora,
-                  profiliConflitto
-                });
-              }
-            }
-          });
-        });
-
-        if (anomalieAttuali.length === 0 || ignoraSovrapposizioni) return null;
-
-        return (
-          <div className="bg-rose-50 border-2 border-rose-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-sm">
-                  <AlertTriangle className="w-4 h-4" />
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+            {anomalieAttuali.map((anom, idx) => (
+              <div key={idx} className="bg-white border border-rose-200 rounded-xl p-3 flex flex-col justify-between gap-2 shadow-2xs text-xs">
                 <div>
-                  <h3 className="text-sm sm:text-base font-black text-rose-950">
-                    Sovrapposizioni Orarie Rilevate nel Database ({anomalieAttuali.length})
-                  </h3>
-                  <p className="text-xs text-rose-800">
-                    Scegli quale cattedra/materia vuoi aprire per correggere o svuotare l'ora in conflitto.
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <strong className="text-slate-900 font-black">{anom.docenteNome}</strong>
+                    <span className="text-rose-700 font-black text-[11px] bg-rose-100 px-2 py-0.5 rounded-md">
+                      {anom.giorno} - {anom.ora}ª ora
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-1 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] text-slate-500 font-bold">Apri Cattedra da Modificare:</span>
+                  {anom.profiliConflitto.map(p => (
+                    <button
+                      key={p.docenteId}
+                      type="button"
+                      onClick={() => {
+                        setSelectedDocenteId(p.docenteId);
+                        setTimeout(() => {
+                          const el = document.getElementById('sezioneModificaOrarioDocente');
+                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 100);
+                      }}
+                      className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-900 border border-indigo-200 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                      title={`Apri l'orario di ${p.materia} per modificare la classe ${p.valore}`}
+                    >
+                      <span>✏️ {p.materia}</span>
+                      <span className="font-mono bg-white text-slate-800 px-1 py-0.2 rounded text-[10px] border border-indigo-100">
+                        {p.valore}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setIgnoraSovrapposizioni(true)}
-                className="bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 px-3 py-1.5 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
-                title="Nascondi questo riquadro e lascialo accessibile come pulsante in alto"
-              >
-                <span>Nascondi / Ignora</span>
-                <span>✕</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-              {anomalieAttuali.map((anom, idx) => (
-                <div key={idx} className="bg-white border border-rose-200 rounded-xl p-3 flex flex-col justify-between gap-2 shadow-2xs text-xs">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <strong className="text-slate-900 font-black">{anom.docenteNome}</strong>
-                      <span className="text-rose-700 font-black text-[11px] bg-rose-100 px-2 py-0.5 rounded-md">
-                        {anom.giorno} - {anom.ora}ª ora
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="pt-1 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] text-slate-500 font-bold">Apri Cattedra da Modificare:</span>
-                    {anom.profiliConflitto.map(p => (
-                      <button
-                        key={p.docenteId}
-                        type="button"
-                        onClick={() => {
-                          setSelectedDocenteId(p.docenteId);
-                          setTimeout(() => {
-                            const el = document.getElementById('sezioneModificaOrarioDocente');
-                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }, 100);
-                        }}
-                        className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-900 border border-indigo-200 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
-                        title={`Apri l'orario di ${p.materia} per modificare la classe ${p.valore}`}
-                      >
-                        <span>✏️ {p.materia}</span>
-                        <span className="font-mono bg-white text-slate-800 px-1 py-0.2 rounded text-[10px] border border-indigo-100">
-                          {p.valore}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
-        );
-      })()}
+        </div>
+      )}
 
       {/* ========================================================= */}
       {/* SCANSIONE ORE DI POTENZIAMENTO 'P' SENZA CLASSE ASSOCIATA */}
       {/* ========================================================= */}
-      {(() => {
-        interface PotenziamentoPuro {
-          docenteId: string;
-          docenteNome: string;
-          materia: string;
-          giorno: GiornoSettimana;
-          ora: number;
-        }
-        const potenziamentiSenzaClasse: PotenziamentoPuro[] = [];
-
-        docenti.forEach(d => {
-          const o = orariDocenti.find(ord => ord.docenteId === d.id);
-          if (!o) return;
-
-          o.ore.forEach(cell => {
-            const v = (cell.valore || '').trim().toUpperCase();
-            if (v === 'P' || v === 'POT' || v === 'POTENZIAMENTO') {
-              potenziamentiSenzaClasse.push({
-                docenteId: d.id,
-                docenteNome: d.nome,
-                materia: d.materia,
-                giorno: cell.giorno,
-                ora: cell.ora
-              });
-            }
-          });
-        });
-
-        if (potenziamentiSenzaClasse.length === 0 || ignoraPotSenzaClasse) return null;
-
-        return (
-          <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-black text-amber-950">
-                    Ore di Potenziamento (P) Senza Classe Indicata ({potenziamentiSenzaClasse.length})
-                  </h3>
-                  <p className="text-xs text-amber-900">
-                    In queste ore è indicato solo <strong>'P'</strong>. Puoi specificare la classe dove si trova in compresenza (es. <code>2B POT</code>) per sapere dove si trova ed utilizzarlo al meglio.
-                  </p>
-                </div>
+      {mostraBoxPotSenzaClasse && potenziamentiSenzaClasse.length > 0 && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
+                <Sparkles className="w-4 h-4" />
               </div>
-
-              <button
-                type="button"
-                onClick={() => setIgnoraPotSenzaClasse(true)}
-                className="bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
-                title="Nascondi questo riquadro e lascialo accessibile come pulsante in alto"
-              >
-                <span>Nascondi / Ignora</span>
-                <span>✕</span>
-              </button>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-amber-950">
+                  Ore di Potenziamento (P) Senza Classe Indicata ({potenziamentiSenzaClasse.length})
+                </h3>
+                <p className="text-xs text-amber-900">
+                  In queste ore è indicato solo <strong>'P'</strong>. Puoi specificare la classe dove si trova in compresenza (es. <code>2B POT</code>) per sapere dove si trova ed utilizzarlo al meglio.
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {potenziamentiSenzaClasse.map((pot, idx) => (
-                <div key={idx} className="bg-white border border-amber-200 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-2xs text-xs">
-                  <div>
-                    <strong className="text-slate-900 block font-black">{pot.docenteNome}</strong>
-                    <span className="text-amber-800 font-bold text-[11px]">
-                      {pot.giorno} - {pot.ora}ª ora
-                    </span>{' '}
-                    <span className="text-purple-700 font-semibold text-[10px]">({pot.materia})</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedDocenteId(pot.docenteId);
-                      setTimeout(() => {
-                        const el = document.getElementById('sezioneModificaOrarioDocente');
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }, 100);
-                    }}
-                    className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black px-2.5 py-1.5 rounded-lg shadow-2xs transition cursor-pointer shrink-0 flex items-center gap-1"
-                    title={`Associa una classe all'ora di potenziamento di ${pot.docenteNome}`}
-                  >
-                    <span>Associa Classe →</span>
-                  </button>
-                </div>
-              ))}
-            </div>
+            <button
+              type="button"
+              onClick={() => setMostraBoxPotSenzaClasse(false)}
+              className="bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+              title="Chiudi questo riquadro"
+            >
+              <span>Chiudi</span>
+              <span>✕</span>
+            </button>
           </div>
-        );
-      })()}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            {potenziamentiSenzaClasse.map((pot, idx) => (
+              <div key={idx} className="bg-white border border-amber-200 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-2xs text-xs">
+                <div>
+                  <strong className="text-slate-900 block font-black">{pot.docenteNome}</strong>
+                  <span className="text-amber-800 font-bold text-[11px]">
+                    {pot.giorno} - {pot.ora}ª ora
+                  </span>{' '}
+                  <span className="text-purple-700 font-semibold text-[10px]">({pot.materia})</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedDocenteId(pot.docenteId);
+                    setTimeout(() => {
+                      const el = document.getElementById('sezioneModificaOrarioDocente');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                  }}
+                  className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black px-2.5 py-1.5 rounded-lg shadow-2xs transition cursor-pointer shrink-0 flex items-center gap-1"
+                  title={`Associa una classe all'ora di potenziamento di ${pot.docenteNome}`}
+                >
+                  <span>Associa Classe →</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ========================================================= */}
       {/* SELETTORE DOCENTE STANDARD A TENDINA & GESTIONE EMAIL     */}
