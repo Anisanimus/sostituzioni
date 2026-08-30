@@ -456,6 +456,32 @@ const MainApp: React.FC = () => {
           <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={false} />
         ) : (
           <>
+            {/* AVVISO GLOBALE RICHIESTE DOCENTI IN SOSPESO PER LA VICEPRESIDENZA */}
+            {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length > 0 && tabVice !== 'DOCENTI' && (
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 sm:p-4 shadow-sm flex items-center justify-between gap-3 animate-in fade-in">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-amber-950">
+                      Ci sono {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length} richieste di associazione account docente in sospeso!
+                    </h4>
+                    <p className="text-[11px] text-amber-800">
+                      Un docente ha eseguito l'accesso e attende la tua conferma per entrare nel Portale Docenti.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setTabVice('DOCENTI')}
+                  className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer shrink-0"
+                >
+                  Gestisci Richieste →
+                </button>
+              </div>
+            )}
 
             {/* VISTA PRINCIPALE A 2 COLONNE CON TABELLONE IN PRIMO PIANO */}
             {tabVice === 'GESTIONE_GIORNALIERA' && (
