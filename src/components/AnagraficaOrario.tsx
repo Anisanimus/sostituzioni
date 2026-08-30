@@ -86,6 +86,10 @@ export const AnagraficaOrario: React.FC = () => {
   // Nessun docente selezionato di default (inizia vuoto)
   const [selectedDocenteId, setSelectedDocenteId] = useState<string>('');
   const [notificaSalvataggio, setNotificaSalvataggio] = useState<string | null>(null);
+
+  // STATI PER IGNORARE / RIDURRE A PULSANTE I BOX DI AVVISO
+  const [ignoraSovrapposizioni, setIgnoraSovrapposizioni] = useState<boolean>(false);
+  const [ignoraPotSenzaClasse, setIgnoraPotSenzaClasse] = useState<boolean>(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -441,8 +445,32 @@ export const AnagraficaOrario: React.FC = () => {
           </p>
         </div>
 
-        {/* AZIONI: UPLOAD, DOWNLOAD, RESET */}
+        {/* AZIONI: UPLOAD, DOWNLOAD, RESET E PULSANTI AVVISI MINIMIZZATI */}
         <div className="flex flex-wrap items-center gap-2">
+          {ignoraSovrapposizioni && (
+            <button
+              type="button"
+              onClick={() => setIgnoraSovrapposizioni(false)}
+              className="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs px-3 py-1.5 rounded-xl border border-rose-300 transition flex items-center gap-1.5 shadow-2xs animate-pulse cursor-pointer"
+              title="Riapri l'elenco delle sovrapposizioni orarie rilevate"
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+              <span>⚠️ Sovrapposizioni</span>
+            </button>
+          )}
+
+          {ignoraPotSenzaClasse && (
+            <button
+              type="button"
+              onClick={() => setIgnoraPotSenzaClasse(false)}
+              className="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1.5 rounded-xl border border-amber-300 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              title="Riapri l'elenco dei potenziamenti 'P' da associare alle classi"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span>🟣 Potenziamento P</span>
+            </button>
+          )}
+
           <input
             type="file"
             ref={fileInputRef}
@@ -595,7 +623,7 @@ export const AnagraficaOrario: React.FC = () => {
           });
         });
 
-        if (anomalieAttuali.length === 0) return null;
+        if (anomalieAttuali.length === 0 || ignoraSovrapposizioni) return null;
 
         return (
           <div className="bg-rose-50 border-2 border-rose-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
@@ -613,6 +641,16 @@ export const AnagraficaOrario: React.FC = () => {
                   </p>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setIgnoraSovrapposizioni(true)}
+                className="bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 px-3 py-1.5 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                title="Nascondi questo riquadro e lascialo accessibile come pulsante in alto"
+              >
+                <span>Nascondi / Ignora</span>
+                <span>✕</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -688,7 +726,7 @@ export const AnagraficaOrario: React.FC = () => {
           });
         });
 
-        if (potenziamentiSenzaClasse.length === 0) return null;
+        if (potenziamentiSenzaClasse.length === 0 || ignoraPotSenzaClasse) return null;
 
         return (
           <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
@@ -706,6 +744,16 @@ export const AnagraficaOrario: React.FC = () => {
                   </p>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setIgnoraPotSenzaClasse(true)}
+                className="bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                title="Nascondi questo riquadro e lascialo accessibile come pulsante in alto"
+              >
+                <span>Nascondi / Ignora</span>
+                <span>✕</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
