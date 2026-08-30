@@ -624,15 +624,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const targetDocenteBase = docenti.find(d => d.id === assenza.docenteId);
     const targetBaseNome = targetDocenteBase ? getBaseNomeDocente(targetDocenteBase.nome) : assenza.docenteId.toUpperCase();
 
-    setAssenze(prev => prev.filter(a => {
-      if (a.id === id) return false;
-      const currentDoc = docenti.find(d => d.id === a.docenteId);
-      const currentBaseNome = currentDoc ? getBaseNomeDocente(currentDoc.nome) : a.docenteId.toUpperCase();
-      if (a.data === assenza.data && (collegatiIds.includes(a.docenteId) || a.docenteId === assenza.docenteId || currentBaseNome === targetBaseNome)) {
-        return false;
-      }
-      return true;
-    }));
+    setAssenze(prev => {
+      const updated = prev.filter(a => {
+        if (a.id === id) return false;
+        const currentDoc = docenti.find(d => d.id === a.docenteId);
+        const currentBaseNome = currentDoc ? getBaseNomeDocente(currentDoc.nome) : a.docenteId.toUpperCase();
+        if (a.data === assenza.data && (collegatiIds.includes(a.docenteId) || a.docenteId === assenza.docenteId || currentBaseNome === targetBaseNome)) {
+          return false;
+        }
+        return true;
+      });
+      triggerCloudSync({ assenze: updated });
+      return updated;
+    });
   };
 
   // Rimuovi o escludi una singola ora da un'assenza o da un'uscita (senza cancellare l'intero blocco del giorno se ci sono altre ore)
@@ -653,17 +657,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 2. Modifica le assenze del docente per quella data: rimuovi l'ora dalla lista oreInteressate
     setAssenze(prev => {
-      return prev.map(a => {
+      const updated = prev.map(a => {
         if (a.data === data && (collegatiIds.includes(a.docenteId) || a.docenteId === docenteId)) {
           const nuoveOre = a.oreInteressate.filter(o => o !== ora);
           // Se aveva debito ed era oraria, ricalcola/storna 1 ora di debito
           if (a.oreDebitoGenerate && a.oreDebitoGenerate > 0 && a.oreInteressate.includes(ora)) {
-            setDocenti(prevDocs => prevDocs.map(d => {
-              if (collegatiIds.includes(d.id)) {
-                return { ...d, oreDebitoPermesso: Math.max(0, (d.oreDebitoPermesso || 0) - 1) };
-              }
-              return d;
-            }));
+            setDocenti(prevDocs => {
+              const updatedDocs = prevDocs.map(d => {
+                if (collegatiIds.includes(d.id)) {
+                  return { ...d, oreDebitoPermesso: Math.max(0, (d.oreDebitoPermesso || 0) - 1) };
+                }
+                return d;
+              });
+              triggerCloudSync({ docenti: updatedDocs });
+              return updatedDocs;
+            });
 
             const mov: MovimentoDebito = {
               id: 'mov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -675,7 +683,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               descrizione: `Storno 1h debito per rimozione ${ora}ª ora assenza del ${a.data}`,
               createdAt: new Date().toISOString()
             };
-            setMovimentiDebito(prevMovs => [mov, ...prevMovs]);
+            setMovimentiDebito(prevMovs => {
+              const updatedMovs = [mov, ...prevMovs];
+              triggerCloudSync({ movimentiDebito: updatedMovs });
+              return updatedMovs;
+            });
           }
 
           if (nuoveOre.length === 0) {
@@ -689,19 +701,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
         return a;
       }).filter(a => !(a.annullata && a.oreInteressate.length === 0));
+
+      triggerCloudSync({ assenze: updated });
+      return updated;
     });
 
     // 3. Se l'assenza derivava da un'uscita/gita per cui il docente era accompagnatore, rimuovi l'ora o aggiorna
-    setUscite(prev => prev.map(u => {
-      if (u.data === data && u.docentiAccompagnatoriIds.some(dId => collegatiIds.includes(dId))) {
-        const nuoveOre = u.ore.filter(o => o !== ora);
-        if (nuoveOre.length === 0) {
-          return { ...u, annullata: true, annullataIl: new Date().toISOString(), ore: [] };
+    setUscite(prev => {
+      const updated = prev.map(u => {
+        if (u.data === data && u.docentiAccompagnatoriIds.some(dId => collegatiIds.includes(dId))) {
+          const nuoveOre = u.ore.filter(o => o !== ora);
+          if (nuoveOre.length === 0) {
+            return { ...u, annullata: true, annullataIl: new Date().toISOString(), ore: [] };
+          }
+          return { ...u, ore: nuoveOre };
         }
-        return { ...u, ore: nuoveOre };
-      }
-      return u;
-    }));
+        return u;
+      });
+      triggerCloudSync({ uscite: updated });
+      return updated;
+    });
   };
 
   const removeAssenza = (id: string) => {
