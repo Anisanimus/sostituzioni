@@ -6,9 +6,9 @@ import {
   Users, AlertCircle, CheckCircle, Clock, ArrowRight, UserPlus, 
   HelpCircle, Trash2, Bus, ShieldAlert, Sparkles, Filter, ChevronRight, ChevronLeft, ChevronDown,
   Printer, LayoutGrid, List, MessageSquare, AlertTriangle, Accessibility, Lock,
-  UserCheck, UserX, UserMinus
+  UserCheck, UserX, UserMinus, GraduationCap
 } from 'lucide-react';
-import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente, getStileCardAssenza } from '../utils/docentiHelper';
+import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
 
 export const TabelloneSostituzioni: React.FC<{ 
   selectedDate: string; 
@@ -629,6 +629,18 @@ export const TabelloneSostituzioni: React.FC<{
                                 <span>GRAVE</span>
                               </span>
                             )}
+
+                            {/* REMIND EDUCATORE IN COMPRESENZA NELLA CLASSE */}
+                            {(() => {
+                              const eds = getEducatoriInClasseNellOra(os.classe, selectedGiorno, os.ora, docenti, orariDocenti);
+                              if (eds.length === 0) return null;
+                              return eds.map(ed => (
+                                <span key={ed.id} className="bg-teal-50 text-teal-800 border border-teal-300 font-bold px-2 py-0.5 rounded-md text-[10px] flex items-center gap-1 shadow-2xs">
+                                  <span>🎓</span>
+                                  <span>Educatore: {getBaseNomeDocente(ed.nome)}</span>
+                                </span>
+                              ));
+                            })()}
                           </div>
                           <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-2 mt-0.5">
                             <span>Tipologia: <strong className="text-slate-700">{os.motivo}</strong></span>
@@ -919,6 +931,17 @@ export const TabelloneSostituzioni: React.FC<{
                                 <span>♿</span> GRAVE
                               </span>
                             )}
+                            {/* REMIND EDUCATORE IN COMPRESENZA */}
+                            {(() => {
+                              const eds = getEducatoriInClasseNellOra(os.classe, selectedGiorno, os.ora, docenti, orariDocenti);
+                              if (eds.length === 0) return null;
+                              return eds.map(ed => (
+                                <span key={ed.id} className="bg-teal-50 text-teal-800 border border-teal-300 font-bold px-2 py-0.5 rounded-md text-[10px] flex items-center gap-1 shadow-2xs">
+                                  <span>🎓</span>
+                                  <span>Educatore: {getBaseNomeDocente(ed.nome)}</span>
+                                </span>
+                              ));
+                            })()}
                           </div>
                         </div>
                       </div>
@@ -1324,6 +1347,21 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
               <p className="text-xs text-slate-300">
                 Assente: <strong className="text-white">{oraScoperta.docenteAssente.nome}</strong> ({oraScoperta.docenteAssente.materia})
               </p>
+
+              {/* REMIND EDUCATORE PRESENTE NELLA CLASSE */}
+              {(() => {
+                const eds = getEducatoriInClasseNellOra(oraScoperta.classe, selectedGiorno, oraScoperta.ora, docenti, orariDocenti);
+                if (eds.length === 0) return null;
+                return (
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1 text-[11px]">
+                    <span className="bg-teal-900/90 text-teal-200 border border-teal-600 px-2 py-0.5 rounded font-bold flex items-center gap-1 shadow-2xs">
+                      <span>🎓</span>
+                      <span>Educatore in classe: <strong>{eds.map(e => getBaseNomeDocente(e.nome)).join(', ')}</strong></span>
+                    </span>
+                  </div>
+                );
+              })()}
+
               {/* Mostra eventuali sostituti già assegnati per questa ora */}
               {(() => {
                 const giaAssegnati = sostituzioni.filter(s => s.data === selectedDate && s.ora === oraScoperta.ora && s.classe === oraScoperta.classe && s.categoria !== 'NON_SOSTITUIRE');

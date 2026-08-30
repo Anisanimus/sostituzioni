@@ -441,3 +441,46 @@ export function getStileCardAssenza(motivo: string = '', isUscita: boolean = fal
     bodyBg: 'bg-slate-50/30'
   };
 }
+
+/**
+ * Restituisce l'elenco degli educatori presenti in una determinata classe, giorno e ora
+ */
+export function getEducatoriInClasseNellOra(
+  classe: string,
+  giorno: GiornoSettimana,
+  ora: number,
+  docenti: Docente[],
+  orariDocenti: OrarioDocente[]
+): Docente[] {
+  if (!classe) return [];
+  const classeNorm = classe.toUpperCase().trim();
+
+  // Trova tutti i profili marcati come Educatore
+  const educatori = docenti.filter(d => 
+    d.isEducatore || 
+    d.materia?.toUpperCase().includes('EDUCATORE') || 
+    d.nome?.toUpperCase().includes('EDUCATORE') ||
+    d.dettaglioMateria?.toUpperCase().includes('EDUCATORE')
+  );
+
+  const presenti: Docente[] = [];
+
+  educatori.forEach(ed => {
+    const orario = orariDocenti.find(o => o.docenteId === ed.id);
+    if (!orario) return;
+
+    const cella = orario.ore.find(c => c.giorno === giorno && c.ora === ora);
+    if (cella && cella.valore) {
+      const v = cella.valore.toUpperCase().trim();
+      // Match classe esatta (es. 1A, 2B, 3F)
+      if (v === classeNorm || v.startsWith(classeNorm + ' ') || v.endsWith(' ' + classeNorm)) {
+        if (!presenti.some(p => getBaseNomeDocente(p.nome) === getBaseNomeDocente(ed.nome))) {
+          presenti.push(ed);
+        }
+      }
+    }
+  });
+
+  return presenti;
+}
+
