@@ -619,7 +619,13 @@ export const AnagraficaOrario: React.FC = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setSelectedDocenteId(anom.docenteId)}
+                    onClick={() => {
+                      setSelectedDocenteId(anom.docenteId);
+                      setTimeout(() => {
+                        const el = document.getElementById('sezioneModificaOrarioDocente');
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 100);
+                    }}
                     className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-2xs transition cursor-pointer shrink-0"
                   >
                     Correggi →
@@ -634,27 +640,24 @@ export const AnagraficaOrario: React.FC = () => {
       {/* ========================================================= */}
       {/* SELETTORE DOCENTE STANDARD A TENDINA & GESTIONE EMAIL     */}
       {/* ========================================================= */}
-      <div className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-2xs border border-slate-200 space-y-3">
+      <div id="sezioneModificaOrarioDocente" className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-2xs border border-slate-200 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           
           <div className="flex-1">
             <label className="block text-[11px] font-black text-slate-700 uppercase mb-1.5 tracking-wider">
-              Docente da Modificare:
+              Docente / Cattedra da Modificare:
             </label>
             <select
               value={selectedDocenteId}
               onChange={(e) => setSelectedDocenteId(e.target.value)}
               className="w-full border border-slate-300 rounded-xl p-2.5 text-xs sm:text-sm font-bold bg-white text-slate-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs cursor-pointer"
             >
-              <option value="">-- Scegli Docente --</option>
-              {docentiUnici.map(d => {
-                const docOriginale = docenti.find(orig => d.allIds.includes(orig.id));
-                return (
-                  <option key={d.id} value={d.id}>
-                    {d.nome} ({d.materie.join(', ')}) {docOriginale?.email ? `[✉️ ${docOriginale.email}]` : ''}
-                  </option>
-                );
-              })}
+              <option value="">-- Scegli Docente / Cattedra --</option>
+              {docenti.map(d => (
+                <option key={d.id} value={d.id}>
+                  {d.nome} - {d.materia} {d.email ? `[✉️ ${d.email}]` : ''}
+                </option>
+              ))}
             </select>
           </div>
 
