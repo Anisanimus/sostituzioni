@@ -759,34 +759,6 @@ export const GestioneAssenze: React.FC<{
                       </button>
                     </div>
 
-                    {/* Barra Ricerca Interna Touch-Optimized */}
-                    <div className="p-3 border-b border-slate-200 bg-slate-50 flex items-center gap-2.5 shrink-0">
-                      <div className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 flex items-center gap-2 shadow-2xs focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-200">
-                        <Search className="w-4 h-4 text-slate-400 shrink-0" />
-                        <input
-                          type="text"
-                          inputMode="search"
-                          placeholder="Filtra per cognome o materia..."
-                          value={cercaDocente}
-                          onChange={(e) => setCercaDocente(e.target.value)}
-                          className="w-full bg-transparent text-sm sm:text-xs outline-none font-semibold text-slate-800 placeholder:text-slate-400"
-                        />
-                        {cercaDocente && (
-                          <button 
-                            type="button" 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setCercaDocente('');
-                            }} 
-                            className="text-slate-400 hover:text-slate-700 p-1 text-xs font-bold"
-                          >
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
                     {/* Selezioni Rapide se presenti */}
                     {accompagnatoriIds.length > 0 && (
                       <div className="px-3 py-1.5 bg-amber-50/70 border-b border-amber-100 flex items-center justify-between text-[11px] shrink-0">
