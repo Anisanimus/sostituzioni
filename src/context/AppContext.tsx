@@ -451,6 +451,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (cloudData.movimentiDebito && Array.isArray(cloudData.movimentiDebito)) {
               setMovimentiDebito(cloudData.movimentiDebito);
             }
+            if (cloudData.richiesteAccessoDocenti && Array.isArray(cloudData.richiesteAccessoDocenti)) {
+              setRichiesteAccessoDocenti(cloudData.richiesteAccessoDocenti);
+            }
             if (cloudData.impostazioniScuola) {
               setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
             }
@@ -490,6 +493,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   movimentiDebitoRef.current = movimentiDebito;
   const notificheRef = React.useRef(notifiche);
   notificheRef.current = notifiche;
+  const richiesteAccessoDocentiRef = React.useRef(richiesteAccessoDocenti);
+  richiesteAccessoDocentiRef.current = richiesteAccessoDocenti;
   const impostazioniScuolaRef = React.useRef(impostazioniScuola);
   impostazioniScuolaRef.current = impostazioniScuola;
 
@@ -507,6 +512,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           sostituzioni: sostituzioniRef.current,
           movimentiDebito: movimentiDebitoRef.current,
           notifiche: notificheRef.current,
+          richiesteAccessoDocenti: richiesteAccessoDocentiRef.current,
           impostazioniScuola: impostazioniScuolaRef.current,
           ultimoAggiornamento: new Date().toISOString(),
           ...override
