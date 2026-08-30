@@ -96,7 +96,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
       nonSostituita: boolean;
     }> = [];
 
-    // 1. Assenze ordinarie
+    // 1. Assenze ordinarie & Accompagnatori Uscite
     assenzeOggi.forEach(assenza => {
       const collegatiIds = getDocentiCollegatiIds(assenza.docenteId, docenti);
       const profiliPersona = docenti.filter(d => collegatiIds.includes(d.id));
@@ -112,112 +112,60 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           const val = cella ? cella.valore.trim().toUpperCase() : '';
 
           if (val && val !== 'D' && val !== 'P') {
-            // Evita duplicati
-            const giaInserita = items.some(it => 
-              it.ora === ora && 
-              it.classe === val && 
-              it.docenteAssente === nomeAssente
-            );
-
-            if (!giaInserita) {
-              let materiaOra = prof.materia;
-              if (prof.isAlternativa || prof.nome.toUpperCase().includes('ALTERNATIVA')) {
-                materiaOra = 'ALTERNATIVA';
-              } else if (prof.isPotenziamento || prof.nome.toUpperCase().includes('POTENZIAMENTO')) {
-                materiaOra = 'POTENZIAMENTO';
-              } else if (prof.isSostegno || prof.nome.toUpperCase().includes('SOSTEGNO')) {
-                materiaOra = 'SOSTEGNO';
-              }
-
-              const sosts = sostituzioniOggi.filter(s => 
-                s.ora === ora && 
-                s.classe === val &&
-                (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId)
-              );
-              const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE');
-
-              items.push({
-                ora,
-                classe: val,
-                docenteAssente: nomeAssente,
-                materia: materiaOra,
-                motivo: assenza.motivo,
-                isUscita: false,
-                nonSostituita: nonSost,
-                sostituti: sosts
-                  .filter(s => s.categoria !== 'NON_SOSTITUIRE')
-                  .map(s => {
-                    const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
-                    return {
-                      id: s.id,
-                      nomeSostituto: docSost ? getBaseNomeDocente(docSost.nome) : 'Docente Sostituto',
-                      categoria: s.categoria.replace(/_/g, ' '),
-                      firmata: !!s.firmata,
-                      pubblicata: !!s.pubblicata
-                    };
-                  })
-              });
-            }
-          }
-        });
-      });
-    });
-
-    // 2. Uscite didattiche / Gite
-    usciteOggi.forEach(uscita => {
-      uscita.docentiAccompagnatoriIds.forEach(docId => {
-        const orarioFuso = getOrarioUnificatoDocente(docId, docenti, orariDocenti);
-        const collegatiIds = getDocentiCollegatiIds(docId, docenti);
-        const doc = docenti.find(d => d.id === docId);
-        const nomeAccompagnatore = doc ? getBaseNomeDocente(doc.nome) : 'Docente';
-        const materiaDoc = doc?.materia || 'Materia';
-
-        const oreLezione = orarioFuso.filter(c => 
-          c.giorno === giornoSettimana && 
-          c.valore !== '' && 
-          c.valore !== 'D' && 
-          c.valore !== 'P' &&
-          !uscita.classi.includes(c.valore) && 
-          uscita.ore.includes(c.ora)
-        );
-
-        oreLezione.forEach(c => {
-          // Evita duplicati se l'ora è già stata inserita (es. tramite il record assenza dell'accompagnatore)
-          const giaInserita = items.some(it => 
-            it.ora === c.ora && 
-            it.classe === c.valore && 
-            it.docenteAssente === nomeAccompagnatore
-          );
-
-          if (!giaInserita) {
-            const sosts = sostituzioniOggi.filter(s => 
-              s.ora === c.ora && 
-              s.classe === c.valore &&
-              (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === docId)
-            );
-            const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE');
-
-            items.push({
-              ora: c.ora,
-              classe: c.valore,
-              docenteAssente: nomeAccompagnatore,
-              materia: materiaDoc,
-              motivo: `Uscita ${uscita.classi.join(', ')}`,
-              isUscita: true,
-              nonSostituita: nonSost,
-              sostituti: sosts
-                .filter(s => s.categoria !== 'NON_SOSTITUIRE')
-                .map(s => {
-                  const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
-                  return {
-                    id: s.id,
-                    nomeSostituto: docSost ? getBaseNomeDocente(docSost.nome) : 'Docente Sostituto',
-                    categoria: s.categoria.replace(/_/g, ' '),
-                    firmata: !!s.firmata,
-                    pubblicata: !!s.pubblicata
-                  };
-                })
+            // Se la classe stessa è in gita/uscita in quell'ora, NON genera un'ora scoperta
+            const classeInUscita = usciteOggi.some(u => {
+              const classiList = u.classi || [(u as any).classe];
+              return classiList.map(c => c.toUpperCase().trim()).includes(val) && u.ore.includes(ora);
             });
+
+            if (!classeInUscita) {
+              // Evita duplicati
+              const giaInserita = items.some(it => 
+                it.ora === ora && 
+                it.classe === val && 
+                it.docenteAssente === nomeAssente
+              );
+
+              if (!giaInserita) {
+                let materiaOra = prof.materia;
+                if (prof.isAlternativa || prof.nome.toUpperCase().includes('ALTERNATIVA')) {
+                  materiaOra = 'ALTERNATIVA';
+                } else if (prof.isPotenziamento || prof.nome.toUpperCase().includes('POTENZIAMENTO')) {
+                  materiaOra = 'POTENZIAMENTO';
+                } else if (prof.isSostegno || prof.nome.toUpperCase().includes('SOSTEGNO')) {
+                  materiaOra = 'SOSTEGNO';
+                }
+
+                const sosts = sostituzioniOggi.filter(s => 
+                  s.ora === ora && 
+                  s.classe === val &&
+                  (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId)
+                );
+                const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE');
+
+                items.push({
+                  ora,
+                  classe: val,
+                  docenteAssente: nomeAssente,
+                  materia: materiaOra,
+                  motivo: assenza.motivo,
+                  isUscita: assenza.motivo === 'Uscita',
+                  nonSostituita: nonSost,
+                  sostituti: sosts
+                    .filter(s => s.categoria !== 'NON_SOSTITUIRE')
+                    .map(s => {
+                      const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
+                      return {
+                        id: s.id,
+                        nomeSostituto: docSost ? getBaseNomeDocente(docSost.nome) : 'Docente Sostituto',
+                        categoria: s.categoria.replace(/_/g, ' '),
+                        firmata: !!s.firmata,
+                        pubblicata: !!s.pubblicata
+                      };
+                    })
+                });
+              }
+            }
           }
         });
       });
