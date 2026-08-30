@@ -182,34 +182,43 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
         );
 
         oreLezione.forEach(c => {
-          const sosts = sostituzioniOggi.filter(s => 
-            s.ora === c.ora && 
-            s.classe === c.valore &&
-            (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === docId)
+          // Evita duplicati se l'ora è già stata inserita (es. tramite il record assenza dell'accompagnatore)
+          const giaInserita = items.some(it => 
+            it.ora === c.ora && 
+            it.classe === c.valore && 
+            it.docenteAssente === nomeAccompagnatore
           );
-          const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE');
 
-          items.push({
-            ora: c.ora,
-            classe: c.valore,
-            docenteAssente: nomeAccompagnatore,
-            materia: materiaDoc,
-            motivo: `Uscita ${uscita.classi.join(', ')}`,
-            isUscita: true,
-            nonSostituita: nonSost,
-            sostituti: sosts
-              .filter(s => s.categoria !== 'NON_SOSTITUIRE')
-              .map(s => {
-                const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
-                return {
-                  id: s.id,
-                  nomeSostituto: docSost ? getBaseNomeDocente(docSost.nome) : 'Docente Sostituto',
-                  categoria: s.categoria.replace(/_/g, ' '),
-                  firmata: !!s.firmata,
-                  pubblicata: !!s.pubblicata
-                };
-              })
-          });
+          if (!giaInserita) {
+            const sosts = sostituzioniOggi.filter(s => 
+              s.ora === c.ora && 
+              s.classe === c.valore &&
+              (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === docId)
+            );
+            const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE');
+
+            items.push({
+              ora: c.ora,
+              classe: c.valore,
+              docenteAssente: nomeAccompagnatore,
+              materia: materiaDoc,
+              motivo: `Uscita ${uscita.classi.join(', ')}`,
+              isUscita: true,
+              nonSostituita: nonSost,
+              sostituti: sosts
+                .filter(s => s.categoria !== 'NON_SOSTITUIRE')
+                .map(s => {
+                  const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
+                  return {
+                    id: s.id,
+                    nomeSostituto: docSost ? getBaseNomeDocente(docSost.nome) : 'Docente Sostituto',
+                    categoria: s.categoria.replace(/_/g, ' '),
+                    firmata: !!s.firmata,
+                    pubblicata: !!s.pubblicata
+                  };
+                })
+            });
+          }
         });
       });
     });
