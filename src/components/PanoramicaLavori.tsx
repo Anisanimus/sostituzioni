@@ -401,35 +401,33 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
             </span>
           </div>
 
-          {/* FRECCINE < > RAPIDE + ICONA ANDAMENTO FUTURO 📈 */}
-          <div className="flex items-center gap-1 shrink-0">
-            <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
-              <button
-                type="button"
-                onClick={() => scrollCarousel(-1)}
-                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-black shadow-2xs border border-slate-200 transition cursor-pointer"
-                title="Giorno precedente"
-              >
-                ❮
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollCarousel(1)}
-                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-black shadow-2xs border border-slate-200 transition cursor-pointer"
-                title="Giorno successivo"
-              >
-                ❯
-              </button>
-            </div>
+          {/* FRECCINE < > SEPARATE E DISTANZIATE + ICONA ANDAMENTO FUTURO 📈 */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => scrollCarousel(-1)}
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 text-xs font-black shadow-2xs border border-slate-300 transition cursor-pointer"
+              title="Giorno precedente"
+            >
+              ❮
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollCarousel(1)}
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 text-xs font-black shadow-2xs border border-slate-300 transition cursor-pointer"
+              title="Giorno successivo"
+            >
+              ❯
+            </button>
 
-            {/* PULSANTE ANDAMENTO FUTURO & TREND 📈 (TOGGLE SETTIMANA / MESE) */}
+            {/* PULSANTE ANDAMENTO FUTURO & TREND 📈 (DISTANZIATO) */}
             <button
               type="button"
               onClick={() => handleToggleVista(vista || 'GIORNO')}
-              className={`p-1.5 rounded-xl border transition flex items-center justify-center cursor-pointer ${
+              className={`w-8 h-8 rounded-xl border transition flex items-center justify-center cursor-pointer ml-0.5 ${
                 !compresso
                   ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-200 shadow-xs'
-                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
+                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200 shadow-2xs'
               }`}
               title="Mostra andamento e prospetto futuro"
             >
