@@ -37,7 +37,7 @@ const MainApp: React.FC = () => {
   const { utenteInfo, logout, isLoadingAuth } = useAuth();
 
   const [ruoloAttivo, setRuoloAttivo] = useState<'VICEPRESIDENZA' | 'PORTALE_DOCENTE' | 'QUADRO_SCUOLA'>('VICEPRESIDENZA');
-  const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'QUADRO_SCUOLA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'SOSTITUZIONI_SMART' | 'PERSONALIZZAZIONI'>('GESTIONE_GIORNALIERA');
+  const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'QUADRO_SCUOLA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'PERSONALIZZAZIONI'>('GESTIONE_GIORNALIERA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [mostraRisorseLaterale, setMostraRisorseLaterale] = useState(false);
@@ -401,30 +401,6 @@ const MainApp: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
-                  setTabVice('SOSTITUZIONI_SMART');
-                  setIsSidebarOpen(false);
-                }}
-                className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
-                  tabVice === 'SOSTITUZIONI_SMART'
-                    ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${tabVice === 'SOSTITUZIONI_SMART' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="block font-black text-sm">Sostituzioni Smart</span>
-                    <span className="text-[11px] text-slate-500 font-normal">Priorità algoritmi e recupero debiti</span>
-                  </div>
-                </div>
-                {tabVice === 'SOSTITUZIONI_SMART' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
                   setTabVice('PERSONALIZZAZIONI');
                   setIsSidebarOpen(false);
                 }}
@@ -440,7 +416,7 @@ const MainApp: React.FC = () => {
                   </div>
                   <div>
                     <span className="block font-black text-sm">Personalizzazioni</span>
-                    <span className="text-[11px] text-slate-500 font-normal">Nome scuola, tetti orari e vista</span>
+                    <span className="text-[11px] text-slate-500 font-normal">Nome scuola, regole Sostitutore Smart e vista</span>
                   </div>
                 </div>
                 {tabVice === 'PERSONALIZZAZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -512,10 +488,6 @@ const MainApp: React.FC = () => {
 
             {tabVice === 'DOCENTI' && (
               <AnagraficaOrario />
-            )}
-
-            {tabVice === 'SOSTITUZIONI_SMART' && (
-              <ImpostazioniPriorita />
             )}
 
             {tabVice === 'PERSONALIZZAZIONI' && (
