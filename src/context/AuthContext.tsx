@@ -156,10 +156,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setErroreAuth(null);
       setIsLoadingAuth(true);
+      
+      // Su dispositivi touch/mobile o browser con restrizioni COOP popup, prova popup e fallback a redirect
       await signInWithPopup(auth, googleProvider);
     } catch (err: any) {
-      console.error('Errore login Google Popup:', err);
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+      console.warn('Login Google Popup notice:', err);
+      if (
+        err.code === 'auth/popup-blocked' ||
+        err.code === 'auth/cancelled-popup-request' ||
+        err.message?.includes('Cross-Origin-Opener-Policy') ||
+        err.code === 'auth/popup-closed-by-user'
+      ) {
+        // Se il popup viene chiuso o bloccato dalle policy del browser, effettua il redirect pulito
         try {
           await signInWithRedirect(auth, googleProvider);
           return;
