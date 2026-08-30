@@ -12,6 +12,68 @@ import {
   Sliders, ArrowUp, ArrowDown, Info, Bus, UserMinus, Trash2
 } from 'lucide-react';
 
+const RichiestaCardItem: React.FC<{
+  req: any;
+  docentiOrdinati: Docente[];
+  onApprova: (id: string, docenteId: string) => void;
+  onRifiuta: (id: string) => void;
+}> = ({ req, docentiOrdinati, onApprova, onRifiuta }) => {
+  const [docenteSceltoId, setDocenteSceltoId] = useState<string>(req.docenteSuggeritoId || '');
+
+  return (
+    <div className="bg-white rounded-2xl p-3.5 border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
+      <div className="space-y-1 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-black text-slate-900 text-xs sm:text-sm">{req.displayName}</span>
+          <span className="text-[11px] font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">{req.email}</span>
+        </div>
+        
+        {req.docenteSuggeritoNome ? (
+          <p className="text-xs text-slate-600">
+            💡 Corrispondenza suggerita: <strong className="text-slate-900">{req.docenteSuggeritoNome}</strong>
+          </p>
+        ) : (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-xs font-bold text-slate-600">Collega a:</span>
+            <select
+              value={docenteSceltoId}
+              onChange={(e) => setDocenteSceltoId(e.target.value)}
+              className="border border-slate-300 rounded-lg p-1 text-xs font-bold bg-white text-slate-800 outline-none focus:border-indigo-500 max-w-[200px]"
+            >
+              <option value="">-- Seleziona Docente --</option>
+              {docentiOrdinati.map(d => (
+                <option key={d.id} value={d.id}>{d.nome}</option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          type="button"
+          disabled={!docenteSceltoId}
+          onClick={() => onApprova(req.id, docenteSceltoId)}
+          className={`px-3.5 py-1.5 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer flex items-center gap-1 ${
+            docenteSceltoId ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-300 cursor-not-allowed text-slate-500'
+          }`}
+        >
+          <CheckCircle className="w-3.5 h-3.5" />
+          <span>Conferma e Collega</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onRifiuta(req.id)}
+          className="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
+        >
+          Rifiuta
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export const AnagraficaOrario: React.FC = () => {
   const { 
     docenti, setDocenti, orariDocenti, setOrariDocenti, 
@@ -412,40 +474,17 @@ export const AnagraficaOrario: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-2.5">
-            {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').map(req => (
-              <div key={req.id} className="bg-white rounded-2xl p-3.5 border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-slate-900 text-xs sm:text-sm">{req.displayName}</span>
-                    <span className="text-[11px] font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">{req.email}</span>
-                  </div>
-                  {req.docenteSuggeritoNome && (
-                    <p className="text-xs text-slate-600">
-                      💡 Corrispondenza suggerita: <strong className="text-slate-900">{req.docenteSuggeritoNome}</strong>
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => approvaRichiestaAccesso(req.id, req.docenteSuggeritoId || '')}
-                    className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer flex items-center gap-1"
-                  >
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    <span>Conferma e Collega</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => rifiutaRichiestaAccesso(req.id)}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
-                  >
-                    Rifiuta
-                  </button>
-                </div>
-              </div>
-            ))}
+            {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').map(req => {
+              return (
+                <RichiestaCardItem 
+                  key={req.id} 
+                  req={req} 
+                  docentiOrdinati={docentiOrdinati} 
+                  onApprova={approvaRichiestaAccesso} 
+                  onRifiuta={rifiutaRichiestaAccesso} 
+                />
+              );
+            })}
           </div>
         </div>
       )}
