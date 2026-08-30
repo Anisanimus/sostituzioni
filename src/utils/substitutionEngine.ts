@@ -88,10 +88,10 @@ export function trovaCandidatiSostituzione(
     if (personeAssentiNomi.has(nomePersona)) return;
     if (personeImpegnateNomi.has(nomePersona)) return;
 
-    // Recupera tutti i profili orari associati a questa persona (es. cattedra sostegno + alternativa)
+    // Recupera tutti i profili orari associati a questa persona (es. cattedra sostegno + alternativa + curricolare)
     const profiliCollegati = docenti.filter(d => persona.allIds.includes(d.id));
 
-    // Determina l'impegno esatto della persona in quest'ora specifica
+    // Determina l'impegno esatto della persona in quest'ora specifica attraverso TUTTI i suoi profili
     let cellaValEffettiva = '';
     let profiloAttivoNellOra: Docente = profiliCollegati[0];
     let isCellaCasoGrave = false;
@@ -102,13 +102,20 @@ export function trovaCandidatiSostituzione(
         const c = orario.ore.find(cell => cell.giorno === giorno && cell.ora === ora);
         const val = (c?.valore || '').trim().toUpperCase();
         if (val !== '') {
-          // Trovato l'impegno effettivo in quest'ora (Lezione, Sostegno, P, D, ecc.)
+          // Trovato l'impegno effettivo in quest'ora (Lezione es. '3A', Sostegno, P, D, ecc.)
+          // Se troviamo una classe o impegno reale, ha la precedenza assoluta
           cellaValEffettiva = val;
           profiloAttivoNellOra = prof;
           if (c?.isCasoGrave) isCellaCasoGrave = true;
           break;
         }
       }
+    }
+
+    // Se cellaValEffettiva è ancora vuota, significa che la persona non ha NESSUNA cella occupata in NESSUNO dei suoi profili in quest'ora
+    // Impostiamo il profilo primario per la materia corretta
+    if (cellaValEffettiva === '') {
+      profiloAttivoNellOra = profiliCollegati[0];
     }
 
     // Verifica se è marcato caso grave (singola ora o tutto il profilo)
