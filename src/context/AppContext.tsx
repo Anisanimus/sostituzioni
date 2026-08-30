@@ -261,6 +261,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setMovimentiDebito(cloudData.movimentiDebito);
             localStorage.setItem('scuola_movimenti_debito', JSON.stringify(cloudData.movimentiDebito));
           }
+          if (cloudData.notifiche && Array.isArray(cloudData.notifiche)) {
+            setNotifiche(cloudData.notifiche);
+            localStorage.setItem('scuola_notifiche', JSON.stringify(cloudData.notifiche));
+          }
           if (cloudData.impostazioniScuola) {
             setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
             localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(cloudData.impostazioniScuola));
@@ -289,6 +293,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               setUscite(cloudData.uscite);
               localStorage.setItem('scuola_uscite', JSON.stringify(cloudData.uscite));
             }
+            if (cloudData.notifiche && Array.isArray(cloudData.notifiche)) {
+              setNotifiche(cloudData.notifiche);
+              localStorage.setItem('scuola_notifiche', JSON.stringify(cloudData.notifiche));
+            }
             // Controlla se sono arrivate nuove sostituzioni pubblicate o annullate e invia notifica push di sistema
             if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
               if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
@@ -304,10 +312,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   nuoveAppenaPubblicate.forEach((s: SostituzioneAssegnata) => {
                     const docSostituto = (cloudData.docenti || docenti).find((d: any) => d.id === s.docenteSostitutoId);
                     try {
-                      new Notification('🔔 Nuova Sostituzione Assegnata!', {
-                        body: `Docente ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
-                        icon: '/favicon.svg'
-                      });
+                      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.ready.then(reg => {
+                          reg.showNotification('🔔 Nuova Sostituzione Assegnata!', {
+                            body: `Docente ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
+                            icon: '/favicon.svg'
+                          });
+                        }).catch(() => {
+                          new Notification('🔔 Nuova Sostituzione Assegnata!', {
+                            body: `Docente ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
+                            icon: '/favicon.svg'
+                          });
+                        });
+                      } else {
+                        new Notification('🔔 Nuova Sostituzione Assegnata!', {
+                          body: `Docente ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
+                          icon: '/favicon.svg'
+                        });
+                      }
                     } catch (err) {
                       console.warn('Errore trigger push notification:', err);
                     }
@@ -322,10 +344,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   annullate.forEach((s: SostituzioneAssegnata) => {
                     const docSostituto = (cloudData.docenti || docenti).find((d: any) => d.id === s.docenteSostitutoId);
                     try {
-                      new Notification('⚠️ Supplenza Annullata', {
-                        body: `Docente ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
-                        icon: '/favicon.svg'
-                      });
+                      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.ready.then(reg => {
+                          reg.showNotification('⚠️ Supplenza Annullata', {
+                            body: `Docente ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
+                            icon: '/favicon.svg'
+                          });
+                        }).catch(() => {
+                          new Notification('⚠️ Supplenza Annullata', {
+                            body: `Docente ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
+                            icon: '/favicon.svg'
+                          });
+                        });
+                      } else {
+                        new Notification('⚠️ Supplenza Annullata', {
+                          body: `Docente ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
+                          icon: '/favicon.svg'
+                        });
+                      }
                     } catch (err) {
                       console.warn('Errore trigger push notification annullamento:', err);
                     }
@@ -375,6 +411,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           uscite,
           sostituzioni,
           movimentiDebito,
+          notifiche,
           impostazioniScuola,
           ultimoAggiornamento: new Date().toISOString(),
           ...override
@@ -529,17 +566,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!assenza) return;
 
     const collegatiIds = getDocentiCollegatiIds(assenza.docenteId, docenti);
+    const docenteAssente = docenti.find(d => d.id === assenza.docenteId);
+    const docenteAssenteNome = docenteAssente ? getBaseNomeDocente(docenteAssente.nome) : 'Docente';
 
-    // Rimuovi eventuali sostituzioni collegate
-    setSostituzioni(prev => {
-      const updated = prev.filter(s => 
-        !(s.data === assenza.data && collegatiIds.includes(s.docenteAssenteId) && assenza.oreInteressate.includes(s.ora))
-      );
-      triggerCloudSync({ sostituzioni: updated });
-      return updated;
+    // 1. Identifica le sostituzioni che verranno rimosse e genera le relative notifiche ai sostituti
+    const nuoveNotifiche: NotificaDocente[] = [];
+    sostituzioni.forEach(s => {
+      if (s.data === assenza.data && (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId) && (assenza.oreInteressate || []).includes(s.ora)) {
+        if ((s.pubblicata || s.firmata) && s.docenteSostitutoId && s.categoria !== 'NON_SOSTITUIRE') {
+          nuoveNotifiche.push({
+            id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            docenteId: s.docenteSostitutoId,
+            data: s.data,
+            ora: s.ora,
+            classe: s.classe,
+            tipo: 'SOSTITUZIONE_ANNULLATA',
+            titolo: 'Supplenza Annullata',
+            messaggio: `L'assenza del Prof. ${docenteAssenteNome} è stata revocata. La tua supplenza del ${s.data} (${s.ora}ª ora in ${s.classe}) è stata quindi annullata.`,
+            letta: false,
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
     });
 
-    // Se aveva generato debito, storna il debito
+    if (nuoveNotifiche.length > 0) {
+      setNotifiche(prev => {
+        const updatedNotifiche = [...nuoveNotifiche, ...prev];
+        triggerCloudSync({ notifiche: updatedNotifiche });
+        return updatedNotifiche;
+      });
+    }
+
+    // 2. Rimuovi le sostituzioni collegate e sincronizza
+    setSostituzioni(prev => {
+      const updatedSostituzioni = prev.filter(s => 
+        !(s.data === assenza.data && (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId) && (assenza.oreInteressate || []).includes(s.ora))
+      );
+      triggerCloudSync({ sostituzioni: updatedSostituzioni });
+      return updatedSostituzioni;
+    });
+
+    // 3. Se aveva generato debito, storna il debito
     if (assenza.oreDebitoGenerate && assenza.oreDebitoGenerate > 0 && !assenza.annullata) {
       setDocenti(prev => {
         const updated = prev.map(d => {
@@ -569,13 +637,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
 
+    // 4. Rimuovi fisicamente l'assenza
     setAssenze(prev => {
-      const updated = prev.map(a => {
-        if (a.id === id) {
-          return { ...a, annullata: true, annullataIl: new Date().toISOString() };
-        }
-        return a;
-      });
+      const updated = prev.filter(a => a.id !== id);
       triggerCloudSync({ assenze: updated });
       return updated;
     });
@@ -592,11 +656,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const collegatiIds = getDocentiCollegatiIds(assenza.docenteId, docenti);
+    const docenteAssente = docenti.find(d => d.id === assenza.docenteId);
+    const docenteAssenteNome = docenteAssente ? getBaseNomeDocente(docenteAssente.nome) : 'Docente';
 
-    // Rimuovi eventuali sostituzioni collegate
-    setSostituzioni(prev => prev.filter(s => 
-      !(s.data === assenza.data && (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId) && (assenza.oreInteressate || []).includes(s.ora))
-    ));
+    // 1. Identifica le sostituzioni che verranno rimosse e genera le relative notifiche ai sostituti
+    const nuoveNotifiche: NotificaDocente[] = [];
+    sostituzioni.forEach(s => {
+      if (s.data === assenza.data && (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId) && (assenza.oreInteressate || []).includes(s.ora)) {
+        if ((s.pubblicata || s.firmata) && s.docenteSostitutoId && s.categoria !== 'NON_SOSTITUIRE') {
+          nuoveNotifiche.push({
+            id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            docenteId: s.docenteSostitutoId,
+            data: s.data,
+            ora: s.ora,
+            classe: s.classe,
+            tipo: 'SOSTITUZIONE_ANNULLATA',
+            titolo: 'Supplenza Annullata',
+            messaggio: `L'assenza del Prof. ${docenteAssenteNome} è stata cancellata. La tua supplenza del ${s.data} (${s.ora}ª ora in ${s.classe}) è stata revocata.`,
+            letta: false,
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
+    });
+
+    if (nuoveNotifiche.length > 0) {
+      setNotifiche(prev => {
+        const updatedNotifiche = [...nuoveNotifiche, ...prev];
+        triggerCloudSync({ notifiche: updatedNotifiche });
+        return updatedNotifiche;
+      });
+    }
+
+    // 2. Rimuovi eventuali sostituzioni collegate
+    setSostituzioni(prev => {
+      const updatedSost = prev.filter(s => 
+        !(s.data === assenza.data && (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId) && (assenza.oreInteressate || []).includes(s.ora))
+      );
+      triggerCloudSync({ sostituzioni: updatedSost });
+      return updatedSost;
+    });
 
     // Se non era ancora stata annullata e aveva debito, storna il debito
     if (assenza.oreDebitoGenerate && assenza.oreDebitoGenerate > 0 && !assenza.annullata) {
