@@ -27,6 +27,56 @@ export const PortaleDocente: React.FC = () => {
 
   const [mostraGuidaIos, setMostraGuidaIos] = useState<boolean>(false);
 
+  // Inizializza stato permessi se già concessi in precedenza
+  React.useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      setNotificaAttiva(true);
+    }
+  }, []);
+
+  const playNotificationSound = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1); // A5
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.35);
+    } catch (err) {
+      console.log('Audio feedback not permitted:', err);
+    }
+  };
+
+  const inviaNotificaSistema = async (titolo: string, opzioni: NotificationOptions) => {
+    playNotificationSound();
+
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        if (registration && registration.showNotification) {
+          await registration.showNotification(titolo, {
+            ...opzioni,
+            icon: '/favicon.svg',
+            badge: '/favicon.svg'
+          } as any);
+          return;
+        }
+      } catch (err) {
+        console.warn('Fallback standard Notification:', err);
+      }
+    }
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification(titolo, opzioni);
+    }
+  };
+
   const handleRichiediNotifiche = async () => {
     const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
@@ -35,7 +85,7 @@ export const PortaleDocente: React.FC = () => {
       if (isIos && !isStandalone) {
         setMostraGuidaIos(true);
       } else {
-        alert('Il browser attuale non supporta le notifiche Web Push. Su iPhone apri con Safari e aggiungi l\'app a Home.');
+        alert('Il browser attuale non supporta le notifiche Web Push. Su iPhone/iPad apri con Safari e tocca "Condividi" -> "Aggiungi a schermata Home".');
       }
       return;
     }
@@ -44,11 +94,11 @@ export const PortaleDocente: React.FC = () => {
       const permission = await Notification.requestPermission();
       if (permission === 'granted') {
         setNotificaAttiva(true);
-        new Notification('🔔 Notifiche Attivate con Successo!', {
-          body: `Gentile ${docente?.nome || 'Docente'}, riceverai una notifica sonora ogni volta che ti viene assegnata una supplenza.`
+        await inviaNotificaSistema('🔔 Notifiche Attivate con Successo!', {
+          body: `Gentile ${docente?.nome || 'Docente'}, riceverai una notifica ogni volta che ti viene assegnata una supplenza.`
         });
       } else if (permission === 'denied') {
-        alert('Le notifiche sono state bloccate nelle impostazioni del browser. Per attivarle, consenti le notifiche per questo sito.');
+        alert('Le notifiche sono bloccate nelle impostazioni del browser per questo sito. Clicca sull\'icona del lucchetto vicino all\'URL per consentirle.');
       }
     } catch (e) {
       if (isIos && !isStandalone) {
@@ -57,13 +107,13 @@ export const PortaleDocente: React.FC = () => {
     }
   };
 
-  const handleInviaNotificaTest = () => {
+  const handleInviaNotificaTest = async () => {
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('🔔 Sostituzioni Smart - Test Notifica', {
+      await inviaNotificaSistema('🔔 Sostituzioni Smart - Test Notifica', {
         body: 'Hai una nuova supplenza assegnata per la 3ª ora in classe 2B! (Test riuscito)'
       });
     } else {
-      handleRichiediNotifiche();
+      await handleRichiediNotifiche();
     }
   };
 
