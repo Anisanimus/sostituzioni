@@ -5,13 +5,13 @@ import {
   Save, School, Sliders, ShieldAlert, Sparkles, LayoutGrid, List,
   Download, Upload, Plus, Trash2, ShieldCheck, Database
 } from 'lucide-react';
-import { DEFAULT_IMPOSTAZIONI_SCUOLA } from '../context/AppContext';
+import { DEFAULT_IMPOSTAZIONI_SCUOLA, DEFAULT_IMPOSTAZIONI_PRIORITA } from '../context/AppContext';
 import { formatDataItaliana } from '../utils/docentiHelper';
 
 export const PersonalizzazioniScuola: React.FC = () => {
   const { 
     docenti, orariDocenti, assenze, uscite, sostituzioni, movimentiDebito, impostazioniPriorita,
-    impostazioniScuola, updateImpostazioniScuola, setImpostazioniScuola, ripristinaBackupCompleto 
+    impostazioniScuola, updateImpostazioniScuola, setImpostazioniScuola, updateImpostazioniPriorita, ripristinaBackupCompleto 
   } = useApp();
   
   const [nomeScuola, setNomeScuola] = useState(impostazioniScuola.nomeScuola || 'I.C. Leonardo da Vinci');
@@ -20,6 +20,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [tettoAssemblee, setTettoAssemblee] = useState(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
   const [vistaTabellone, setVistaTabellone] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>(impostazioniScuola.vistaTabellonePredefinita || 'GRUPPI_ORA');
   const [nascondiWeekend, setNascondiWeekend] = useState(impostazioniScuola.nascondiWeekendCalendario ?? true);
+
+  // Gestione Priorità Algoritmo Sostitutore Smart
+  const [prioritaAssenze, setPrioritaAssenze] = useState(impostazioniPriorita.prioritaAssenze);
+  const [prioritaGite, setPrioritaGite] = useState(impostazioniPriorita.prioritaGite);
   
   // Gestione Giorni Festivi / Ponti / Chiusure
   const [giorniFestivi, setGiorniFestivi] = useState<string[]>(impostazioniScuola.giorniFestivi || []);
@@ -35,6 +39,16 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
   const [salvato, setSalvato] = useState(false);
   const fileBackupRef = React.useRef<HTMLInputElement>(null);
+
+  const spostaElemento = (lista: any[], index: number, direzione: 'SU' | 'GIU') => {
+    const nuovaLista = [...lista];
+    const targetIndex = direzione === 'SU' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= nuovaLista.length) return lista;
+    const temp = nuovaLista[index];
+    nuovaLista[index] = nuovaLista[targetIndex];
+    nuovaLista[targetIndex] = temp;
+    return nuovaLista;
+  };
 
   const handleAggiungiFestivita = () => {
     if (!nuovaDataFestiva) return;
@@ -72,6 +86,12 @@ export const PersonalizzazioniScuola: React.FC = () => {
       giorniFestivi,
       dominiAutorizzatiGoogle: dominiParsed.length > 0 ? dominiParsed : ['gmail.com', 'scuola.edu.it'],
       emailVicepresidenzaGoogle: emailViceParsed.length > 0 ? emailViceParsed : ['vicepresidenza@scuola.edu.it']
+    });
+
+    // Salva le priorità dell'algoritmo Sostitutore Smart
+    updateImpostazioniPriorita({
+      prioritaAssenze,
+      prioritaGite
     });
 
     setSalvato(true);
@@ -477,7 +497,158 @@ export const PersonalizzazioniScuola: React.FC = () => {
           </div>
         </div>
 
-        {/* SEZIONE 4: GIORNI FESTIVI, PONTI E CHIUSURE SCUOLA */}
+        {/* SEZIONE 4: SOSTITUTORE SMART & PRIORITÀ ALGORITMO */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Sostitutore Smart & Priorità Assegnazione</h3>
+                <p className="text-xs text-slate-500">Imposta la sequenza di priorità con cui il sistema propone e assegna automaticamente i docenti.</p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setPrioritaAssenze(DEFAULT_IMPOSTAZIONI_PRIORITA.prioritaAssenze);
+                setPrioritaGite(DEFAULT_IMPOSTAZIONI_PRIORITA.prioritaGite);
+              }}
+              className="text-xs font-bold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Priorità Predefinite</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1">
+            {/* PRIORITÀ ASSENZE ORDINARIE */}
+            <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200 space-y-3">
+              <span className="block text-xs font-black text-slate-900 uppercase tracking-wider">
+                1. Priorità Assenze Ordinarie
+              </span>
+              <p className="text-[11px] text-slate-500">
+                L'algoritmo verificherà i candidati dall'alto verso il basso (1ª scelta, 2ª scelta, ecc.).
+              </p>
+
+              <div className="space-y-1.5">
+                {prioritaAssenze.map((cat, idx) => {
+                  const labelMap: Record<string, string> = {
+                    'COMPRESENTE_CLASSE': '👥 Docente Compresente in Classe',
+                    'RECUPERO_STESSA_CLASSE': '🔄 Recupero Docente Stessa Classe (Debito)',
+                    'POTENZIAMENTO': '⚡ Docente in Potenziamento',
+                    'SOSTEGNO': '♿ Docente di Sostegno (Senza Caso Grave)',
+                    'RECUPERO_GENERICO': '🔄 Recupero Generico (Debito / A Disposizione)',
+                    'STRAORDINARIO_D': '💰 Ora a Disposizione / Straordinario'
+                  };
+
+                  return (
+                    <div
+                      key={cat}
+                      className="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xs gap-2"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="w-5 h-5 rounded-lg bg-indigo-50 text-indigo-700 font-black text-[11px] flex items-center justify-center shrink-0">
+                          {idx + 1}
+                        </span>
+                        <span className="text-xs font-bold text-slate-800 truncate">
+                          {labelMap[cat] || cat}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => setPrioritaAssenze(prev => spostaElemento(prev, idx, 'SU'))}
+                          className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
+                          title="Sposta su"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === prioritaAssenze.length - 1}
+                          onClick={() => setPrioritaAssenze(prev => spostaElemento(prev, idx, 'GIU'))}
+                          className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
+                          title="Sposta giù"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* PRIORITÀ GITE / USCITE DIDATTICHE */}
+            <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200 space-y-3">
+              <span className="block text-xs font-black text-slate-900 uppercase tracking-wider">
+                2. Priorità Uscite & Gite Didattiche
+              </span>
+              <p className="text-[11px] text-slate-500">
+                Priorità quando una o più classi sono in uscita e liberano i docenti titolari.
+              </p>
+
+              <div className="space-y-1.5">
+                {prioritaGite.map((cat, idx) => {
+                  const labelMap: Record<string, string> = {
+                    'COMPRESENTE_CLASSE': '👥 Compresente in Classe',
+                    'LIBERATO_STESSA_CLASSE': '🚌 Liberato da Gita (Stessa Classe)',
+                    'LIBERATO_STESSA_MATERIA': '🚌 Liberato da Gita (Stessa Materia)',
+                    'LIBERATO_ALTRA_CLASSE': '🚌 Liberato da Gita (Altra Classe)',
+                    'RECUPERO_STESSA_CLASSE': '🔄 Recupero Debito Stessa Classe',
+                    'POTENZIAMENTO': '⚡ Docente in Potenziamento',
+                    'SOSTEGNO': '♿ Sostegno (Senza Caso Grave)',
+                    'STRAORDINARIO_D': '💰 Ora a Disposizione / Straordinario'
+                  };
+
+                  return (
+                    <div
+                      key={cat}
+                      className="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xs gap-2"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="w-5 h-5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-[11px] flex items-center justify-center shrink-0">
+                          {idx + 1}
+                        </span>
+                        <span className="text-xs font-bold text-slate-800 truncate">
+                          {labelMap[cat] || cat}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          disabled={idx === 0}
+                          onClick={() => setPrioritaGite(prev => spostaElemento(prev, idx, 'SU'))}
+                          className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
+                          title="Sposta su"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === prioritaGite.length - 1}
+                          onClick={() => setPrioritaGite(prev => spostaElemento(prev, idx, 'GIU'))}
+                          className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
+                          title="Sposta giù"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SEZIONE 5: GIORNI FESTIVI, PONTI E CHIUSURE SCUOLA */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-3">
           <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
             <div className="p-2 bg-rose-50 text-rose-700 rounded-xl">

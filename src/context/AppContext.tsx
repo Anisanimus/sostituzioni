@@ -40,6 +40,11 @@ export const DEFAULT_PRIORITA_GITE: CategoriaSostituto[] = [
   'STRAORDINARIO_D'
 ];
 
+export const DEFAULT_IMPOSTAZIONI_PRIORITA: ImpostazioniPriorita = {
+  prioritaAssenze: DEFAULT_PRIORITA_ASSENZE,
+  prioritaGite: DEFAULT_PRIORITA_GITE
+};
+
 interface AppContextType {
   docenti: Docente[];
   setDocenti: React.Dispatch<React.SetStateAction<Docente[]>>;
