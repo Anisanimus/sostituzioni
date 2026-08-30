@@ -334,16 +334,19 @@ export const TabelloneSostituzioni: React.FC<{
           usata: isUsata
         });
       }
-      // B) Potenziamento (P) - SE LA CELLA È 'P', 'POT', '3F P', '2B POT' O PROFILO POTENZIAMENTO
+      // B) Potenziamento (P) - SE LA CELLA È 'P', 'POT', '3F P' O PROFILO/RIGA POTENZIAMENTO
       else if (
-        cellaVal === 'P' || 
-        cellaVal === 'POT' || 
-        cellaVal.endsWith(' P') || 
-        cellaVal.endsWith(' POT') || 
-        cellaVal.startsWith('P ') || 
-        cellaVal.startsWith('POT ') || 
-        cellaVal.includes('POTENZ') || 
-        profAttivo.isPotenziamento
+        (
+          cellaVal === 'P' || 
+          cellaVal === 'POT' || 
+          cellaVal.endsWith(' P') || 
+          cellaVal.endsWith(' POT') || 
+          cellaVal.startsWith('P ') || 
+          cellaVal.startsWith('POT ') || 
+          cellaVal.includes('POTENZ') || 
+          profAttivo.isPotenziamento ||
+          profAttivo.materia === 'POTENZIAMENTO'
+        ) && cellaVal !== '' && cellaVal !== 'D'
       ) {
         const classeCompresenza = cellaVal.replace(/POTENZIAMENTO|POT|P/g, '').trim();
         potenziamentoList.push({

@@ -105,7 +105,8 @@ export function parseOrarioExcel(fileData: ArrayBuffer): ParseResult {
           val = 'D';
         } else if (val === 'P' || val === 'POT' || isPotenziamento) {
           tipo = 'P';
-          if (!val || val === 'POT' || isPotenziamento) val = 'P';
+          // Se la riga è di potenziamento e non c'è scritto nulla o c'è scritto POT, impostiamo 'P', altrimenti preserviamo la classe scritta (es. '3F')
+          if (!val || val === 'POT') val = 'P';
         } else if (val !== '') {
           tipo = 'LEZIONE';
         }

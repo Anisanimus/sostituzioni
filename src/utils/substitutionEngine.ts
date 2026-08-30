@@ -192,7 +192,7 @@ export function trovaCandidatiSostituzione(
       return;
     }
 
-    // 3. Potenziamento P: SE IN QUEST'ORA HA 'P', 'POT', '3F P', '2B POT' O PROFILO POTENZIAMENTO
+    // 3. Potenziamento P: SE IN QUEST'ORA HA 'P', 'POT', NOTAZIONE CLASSE + P, O È NELLA RIGA DEDICATA DI POTENZIAMENTO
     const isOraPotenziamento = cellaValEffettiva === 'P' || 
       cellaValEffettiva === 'POT' || 
       cellaValEffettiva.endsWith(' P') || 
@@ -200,9 +200,10 @@ export function trovaCandidatiSostituzione(
       cellaValEffettiva.startsWith('P ') || 
       cellaValEffettiva.startsWith('POT ') || 
       cellaValEffettiva.includes('POTENZ') || 
-      profiloAttivoNellOra.isPotenziamento;
+      profiloAttivoNellOra.isPotenziamento ||
+      profiloAttivoNellOra.materia === 'POTENZIAMENTO';
 
-    if (isOraPotenziamento) {
+    if (isOraPotenziamento && cellaValEffettiva !== '' && cellaValEffettiva !== 'D') {
       const classeCompresenza = cellaValEffettiva.replace(/POTENZIAMENTO|POT|P/g, '').trim();
       const dettaglioClasse = classeCompresenza ? ` • In compresenza su classe ${classeCompresenza}` : '';
 
