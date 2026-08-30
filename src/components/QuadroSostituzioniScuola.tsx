@@ -5,7 +5,7 @@ import {
   Search, Filter, Printer, KeyRound, ShieldAlert,
   ChevronLeft, ChevronRight, User, AlertCircle
 } from 'lucide-react';
-import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds } from '../utils/docentiHelper';
+import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds, getStileCardAssenza } from '../utils/docentiHelper';
 
 interface QuadroSostituzioniScuolaProps {
   initialDate?: string;
@@ -644,22 +644,26 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
               const isTuttoCoperto = totCoperteDoc === totOreDoc;
               const materiaDoc = righeDocente[0]?.materia || '';
               const motivoAssenza = righeDocente[0]?.motivo || 'Assenza';
+              const isUscitaDoc = righeDocente[0]?.isUscita || false;
+              const isOrariaDoc = motivoAssenza.toLowerCase().includes('oraria') || motivoAssenza.toLowerCase().includes('permesso');
+              const stileCard = getStileCardAssenza(motivoAssenza, isUscitaDoc, isOrariaDoc);
 
               return (
                 <div key={gIdx} className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden">
-                  {/* Intestazione del Docente Assente con Avatar e Statistiche */}
-                  <div className="w-full bg-slate-900 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                  {/* Intestazione del Docente Assente con Avatar e Statistiche Dinamiche */}
+                  <div className={`w-full ${stileCard.bgHeader} ${stileCard.textColor} px-4 py-3 flex flex-wrap items-center justify-between gap-2`}>
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-black text-xs shadow-2xs">
+                      <div className={`w-9 h-9 rounded-xl ${stileCard.bgAvatar} flex items-center justify-center font-black text-xs shadow-2xs`}>
                         {docenteNome.split(' ').map(n => n[0]).slice(0, 2).join('')}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <strong className="text-sm font-black tracking-wide">{docenteNome}</strong>
-                          <span className="text-xs text-indigo-300 font-semibold">({materiaDoc})</span>
+                          <span className={`text-xs ${stileCard.subTextColor} font-semibold`}>({materiaDoc})</span>
                         </div>
-                        <span className="text-[11px] text-slate-300 block">
-                          Tipologia assenza: {motivoAssenza}
+                        <span className={`text-[11px] ${stileCard.subTextColor} flex items-center gap-1 mt-0.5 font-medium`}>
+                          <span>{stileCard.icon}</span>
+                          <span>Tipologia assenza: <strong>{stileCard.label}</strong></span>
                         </span>
                       </div>
                     </div>

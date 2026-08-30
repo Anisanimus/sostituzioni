@@ -379,3 +379,57 @@ export function getDocenteAttivoInData(
     catenaNomine: catena
   };
 }
+
+/**
+ * Ritorna le classi di stile Tailwind, icona ed etichetta per la testata delle card per docente
+ */
+export function getStileCardAssenza(motivo: string = '', isUscita: boolean = false, isOraria: boolean = false) {
+  const m = motivo.toLowerCase();
+  
+  if (isUscita || m.includes('uscita') || m.includes('gita') || m.includes('viaggio')) {
+    return {
+      bgHeader: 'bg-amber-950 hover:bg-amber-900 border-b border-amber-800/80',
+      bgAvatar: 'bg-amber-500 text-amber-950 font-black ring-2 ring-amber-400/40',
+      textColor: 'text-amber-100',
+      subTextColor: 'text-amber-300',
+      accentColor: 'text-amber-200',
+      icon: '🚌',
+      label: 'Uscita Didattica / Gita'
+    };
+  }
+
+  if (m.includes('assemblea')) {
+    return {
+      bgHeader: 'bg-rose-950 hover:bg-rose-900 border-b border-rose-800/80',
+      bgAvatar: 'bg-rose-500 text-white font-black ring-2 ring-rose-400/40',
+      textColor: 'text-rose-100',
+      subTextColor: 'text-rose-300',
+      accentColor: 'text-rose-200',
+      icon: '📢',
+      label: 'Assemblea Sindacale'
+    };
+  }
+
+  if (isOraria || m.includes('oraria') || m.includes('permesso') || m.includes('fascia')) {
+    return {
+      bgHeader: 'bg-purple-950 hover:bg-purple-900 border-b border-purple-800/80',
+      bgAvatar: 'bg-purple-500 text-white font-black ring-2 ring-purple-400/40',
+      textColor: 'text-purple-100',
+      subTextColor: 'text-purple-300',
+      accentColor: 'text-purple-200',
+      icon: '⏱️',
+      label: 'Permesso Breve / Oraria'
+    };
+  }
+
+  // Default: Assenza Giornaliera (Malattia, congedo, ecc.)
+  return {
+    bgHeader: 'bg-slate-900 hover:bg-slate-800 border-b border-slate-700/80',
+    bgAvatar: 'bg-indigo-500 text-white font-black ring-2 ring-indigo-400/40',
+    textColor: 'text-white',
+    subTextColor: 'text-indigo-300',
+    accentColor: 'text-indigo-200',
+    icon: '👤',
+    label: motivo || 'Assenza Giornaliera'
+  };
+}

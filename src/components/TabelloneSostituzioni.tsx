@@ -8,7 +8,7 @@ import {
   Printer, LayoutGrid, List, MessageSquare, AlertTriangle, Accessibility, Lock,
   UserCheck, UserX, UserMinus
 } from 'lucide-react';
-import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente } from '../utils/docentiHelper';
+import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente, getStileCardAssenza } from '../utils/docentiHelper';
 
 export const TabelloneSostituzioni: React.FC<{ 
   selectedDate: string; 
@@ -784,10 +784,14 @@ export const TabelloneSostituzioni: React.FC<{
         <div className="space-y-4">
           {docentiAssentiRaggruppati.map((gruppoDoc, gIdx) => {
             const isAperto = docentiAperti.includes(gruppoDoc.docAssente.id);
+            const motivoPrimo = gruppoDoc.items[0]?.motivo || 'Giornaliera';
+            const isUscitaDoc = gruppoDoc.items[0]?.isUscita || false;
+            const isOrariaDoc = motivoPrimo.toLowerCase().includes('oraria') || motivoPrimo.toLowerCase().includes('permesso');
+            const stileCard = getStileCardAssenza(motivoPrimo, isUscitaDoc, isOrariaDoc);
 
             return (
               <div key={gIdx} className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden">
-                {/* Intestazione del Docente Assente come Accordion Button */}
+                {/* Intestazione del Docente Assente come Accordion Button Dinamico per Colore e Icona */}
                 <button
                   type="button"
                   onClick={() => {
@@ -797,24 +801,25 @@ export const TabelloneSostituzioni: React.FC<{
                         : [...prev, gruppoDoc.docAssente.id]
                     );
                   }}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left"
+                  className={`w-full ${stileCard.bgHeader} ${stileCard.textColor} px-4 py-3 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-500 text-white flex items-center justify-center font-black text-xs shadow-2xs">
+                    <div className={`w-8 h-8 rounded-xl ${stileCard.bgAvatar} flex items-center justify-center font-black text-xs shadow-2xs`}>
                       {gruppoDoc.nomeDocente.split(' ').map(n => n[0]).slice(0, 2).join('')}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <strong className="text-sm font-black tracking-wide">{gruppoDoc.nomeDocente}</strong>
-                        <span className="text-xs text-indigo-300 font-semibold">({gruppoDoc.materiaVisualizzata})</span>
+                        <span className={`text-xs ${stileCard.subTextColor} font-semibold`}>({gruppoDoc.materiaVisualizzata})</span>
                         {gruppoDoc.docAssente.isCasoGraveSostegno && (
                           <span className="bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded">
                             ♿ GRAVE
                           </span>
                         )}
                       </div>
-                      <span className="text-[11px] text-slate-300 block">
-                        Tipologia assenza: {gruppoDoc.items[0]?.motivo}
+                      <span className={`text-[11px] ${stileCard.subTextColor} flex items-center gap-1 mt-0.5 font-medium`}>
+                        <span>{stileCard.icon}</span>
+                        <span>Tipologia assenza: <strong>{stileCard.label}</strong></span>
                       </span>
                     </div>
                   </div>
