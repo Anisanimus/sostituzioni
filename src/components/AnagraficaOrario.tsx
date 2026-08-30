@@ -556,7 +556,12 @@ export const AnagraficaOrario: React.FC = () => {
       {/* CONTROLLO COSTANTE ANOMALIE / SOVRAPPOSIZIONI ATTUALI     */}
       {/* ========================================================= */}
       {(() => {
-        const anomalieAttuali: { docenteNome: string; docenteId: string; giorno: GiornoSettimana; ora: number; dettaglio: string }[] = [];
+        interface ProfiloConflitto {
+          docenteId: string;
+          materia: string;
+          valore: string;
+        }
+        const anomalieAttuali: { docenteNome: string; giorno: GiornoSettimana; ora: number; profiliConflitto: ProfiloConflitto[] }[] = [];
         docentiUnici.forEach(du => {
           if (du.allIds.length <= 1) return;
           const profili = docenti.filter(d => du.allIds.includes(d.id));
@@ -569,18 +574,21 @@ export const AnagraficaOrario: React.FC = () => {
               });
 
               if (occupati.length > 1) {
-                const dettaglio = occupati.map(p => {
+                const profiliConflitto: ProfiloConflitto[] = occupati.map(p => {
                   const o = orariDocenti.find(ord => ord.docenteId === p.id);
                   const c = o?.ore.find(cell => cell.giorno === giorno && cell.ora === ora)!;
-                  return `${p.materia} (${c.valore})`;
-                }).join(' e ');
+                  return {
+                    docenteId: p.id,
+                    materia: p.materia,
+                    valore: c.valore
+                  };
+                });
 
                 anomalieAttuali.push({
                   docenteNome: du.nome,
-                  docenteId: du.id,
                   giorno,
                   ora,
-                  dettaglio
+                  profiliConflitto
                 });
               }
             }
@@ -601,35 +609,47 @@ export const AnagraficaOrario: React.FC = () => {
                     Sovrapposizioni Orarie Rilevate nel Database ({anomalieAttuali.length})
                   </h3>
                   <p className="text-xs text-rose-800">
-                    I seguenti docenti risultano con due materie/classi diverse assegnate nella stessa identica ora.
+                    Scegli quale cattedra/materia vuoi aprire per correggere o svuotare l'ora in conflitto.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
               {anomalieAttuali.map((anom, idx) => (
-                <div key={idx} className="bg-white border border-rose-200 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-2xs text-xs">
+                <div key={idx} className="bg-white border border-rose-200 rounded-xl p-3 flex flex-col justify-between gap-2 shadow-2xs text-xs">
                   <div>
-                    <strong className="text-slate-900 block font-black">{anom.docenteNome}</strong>
-                    <span className="text-rose-700 font-bold text-[11px]">
-                      {anom.giorno} - {anom.ora}ª ora:
-                    </span>{' '}
-                    <span className="text-slate-600 text-[11px]">{anom.dettaglio}</span>
+                    <div className="flex items-center justify-between">
+                      <strong className="text-slate-900 font-black">{anom.docenteNome}</strong>
+                      <span className="text-rose-700 font-black text-[11px] bg-rose-100 px-2 py-0.5 rounded-md">
+                        {anom.giorno} - {anom.ora}ª ora
+                      </span>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedDocenteId(anom.docenteId);
-                      setTimeout(() => {
-                        const el = document.getElementById('sezioneModificaOrarioDocente');
-                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }, 100);
-                    }}
-                    className="bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-2xs transition cursor-pointer shrink-0"
-                  >
-                    Correggi →
-                  </button>
+
+                  <div className="pt-1 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
+                    <span className="text-[10px] text-slate-500 font-bold">Apri Cattedra da Modificare:</span>
+                    {anom.profiliConflitto.map(p => (
+                      <button
+                        key={p.docenteId}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDocenteId(p.docenteId);
+                          setTimeout(() => {
+                            const el = document.getElementById('sezioneModificaOrarioDocente');
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }, 100);
+                        }}
+                        className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-900 border border-indigo-200 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                        title={`Apri l'orario di ${p.materia} per modificare la classe ${p.valore}`}
+                      >
+                        <span>✏️ {p.materia}</span>
+                        <span className="font-mono bg-white text-slate-800 px-1 py-0.2 rounded text-[10px] border border-indigo-100">
+                          {p.valore}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>
