@@ -17,7 +17,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
   isEmbedInVicepresidenza = false 
 }) => {
   const { 
-    docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola 
+    docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola, nomineSupplenti 
   } = useApp();
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -434,6 +434,47 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           </div>
         )}
       </div>
+
+      {/* BANNER NOMINE SUPPLENTI ATTIVE OGGI (PER PERSONALE ATA & SEGRETERIA / ACCOGLIENZA) */}
+      {(() => {
+        const nomineOggi = nomineSupplenti.filter(n => {
+          const dIso = selectedDate.split('T')[0];
+          return dIso >= n.dataInizio.split('T')[0] && dIso <= n.dataFine.split('T')[0];
+        });
+
+        if (nomineOggi.length === 0) return null;
+
+        return (
+          <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-3.5 sm:p-4 shadow-sm space-y-2 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">
+                🧑‍🏫
+              </span>
+              <h3 className="text-xs sm:text-sm font-black text-emerald-950">
+                Supplenti in Servizio su Cattedra ({nomineOggi.length})
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {nomineOggi.map(nom => (
+                <div key={nom.id} className="bg-white p-2.5 rounded-xl border border-emerald-200 text-xs shadow-2xs space-y-0.5">
+                  <div className="flex items-center justify-between">
+                    <strong className="text-slate-900 text-xs sm:text-sm">{nom.supplenteNome}</strong>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-900 font-bold px-1.5 py-0.2 rounded">
+                      Supplente
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Sostituisce: <strong className="text-slate-800">{nom.docenteTitolareNome}</strong> ({nom.motivo || 'Maternità / Congedo'})
+                  </p>
+                  <p className="text-[10px] text-slate-400">
+                    Periodo: {formatDataItaliana(nom.dataInizio)} ➔ {formatDataItaliana(nom.dataFine)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ELENCO SOSTITUZIONI: TABELLA COMPATTA ORIZZONTALE AL 100% (ZERO SCROLL / ZERO SWIPE SU MOBILE) */}
       <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">

@@ -1338,19 +1338,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Dalla data di presa di servizio (dataInizio) in poi, le assenze registrate sul titolare
     // vengono revocate / rimosse perché da quella data la cattedra è coperta dal nuovo supplente nominato.
     const dataPresaServizio = nuovaNomina.dataInizio.split('T')[0];
+    const titolareBaseNome = getBaseNomeDocente(nuovaNomina.docenteTitolareNome);
     const titolareCollegatiIds = getDocentiCollegatiIds(nuovaNomina.docenteTitolareId, docentiRef.current);
 
+    let puliteAssenze: AssenzaDocente[] = [];
     setAssenze(prevAssenze => {
-      const pulite = prevAssenze.filter(a => {
-        const isStessoDoc = titolareCollegatiIds.includes(a.docenteId) || a.docenteId === nuovaNomina.docenteTitolareId;
+      puliteAssenze = prevAssenze.filter(a => {
+        const docAss = docentiRef.current.find(d => d.id === a.docenteId);
+        const isStessoDoc = (docAss && getBaseNomeDocente(docAss.nome) === titolareBaseNome) ||
+                            titolareCollegatiIds.includes(a.docenteId) || 
+                            a.docenteId === nuovaNomina.docenteTitolareId;
         if (!isStessoDoc) return true;
         const dataAss = a.data.split('T')[0];
         // Conserva le assenze antecedenti alla presa di servizio (PASSATO)
         // Rimuove quelle pari o successive (FUTURO coperto dal supplente)
         return dataAss < dataPresaServizio;
       });
-      localStorage.setItem('scuola_assenze', JSON.stringify(pulite));
-      return pulite;
+      localStorage.setItem('scuola_assenze', JSON.stringify(puliteAssenze));
+      return puliteAssenze;
     });
 
     // Salva immediatamente su Cloud Firestore
@@ -1358,10 +1363,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
       await setDoc(scuolaDocRef, {
         nomineSupplenti: JSON.parse(JSON.stringify(updatedNomine)),
+        assenze: JSON.parse(JSON.stringify(puliteAssenze)),
         ultimoAggiornamento: new Date().toISOString()
       }, { merge: true });
       triggerCloudSync();
-      console.log('✅ Nomina supplente salvata con successo su Firestore!');
+      console.log('✅ Nomina supplente salvata e assenze future revocate su Firestore!');
     } catch (e) {
       console.error('Errore salvataggio nomina:', e);
     }
