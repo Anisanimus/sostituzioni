@@ -658,6 +658,88 @@ export const AnagraficaOrario: React.FC = () => {
       })()}
 
       {/* ========================================================= */}
+      {/* SCANSIONE ORE DI POTENZIAMENTO 'P' SENZA CLASSE ASSOCIATA */}
+      {/* ========================================================= */}
+      {(() => {
+        interface PotenziamentoPuro {
+          docenteId: string;
+          docenteNome: string;
+          materia: string;
+          giorno: GiornoSettimana;
+          ora: number;
+        }
+        const potenziamentiSenzaClasse: PotenziamentoPuro[] = [];
+
+        docenti.forEach(d => {
+          const o = orariDocenti.find(ord => ord.docenteId === d.id);
+          if (!o) return;
+
+          o.ore.forEach(cell => {
+            const v = (cell.valore || '').trim().toUpperCase();
+            if (v === 'P' || v === 'POT' || v === 'POTENZIAMENTO') {
+              potenziamentiSenzaClasse.push({
+                docenteId: d.id,
+                docenteNome: d.nome,
+                materia: d.materia,
+                giorno: cell.giorno,
+                ora: cell.ora
+              });
+            }
+          });
+        });
+
+        if (potenziamentiSenzaClasse.length === 0) return null;
+
+        return (
+          <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-amber-950">
+                    Ore di Potenziamento (P) Senza Classe Indicata ({potenziamentiSenzaClasse.length})
+                  </h3>
+                  <p className="text-xs text-amber-900">
+                    In queste ore è indicato solo <strong>'P'</strong>. Puoi specificare la classe dove si trova in compresenza (es. <code>2B POT</code>) per sapere dove si trova ed utilizzarlo al meglio.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {potenziamentiSenzaClasse.map((pot, idx) => (
+                <div key={idx} className="bg-white border border-amber-200 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-2xs text-xs">
+                  <div>
+                    <strong className="text-slate-900 block font-black">{pot.docenteNome}</strong>
+                    <span className="text-amber-800 font-bold text-[11px]">
+                      {pot.giorno} - {pot.ora}ª ora
+                    </span>{' '}
+                    <span className="text-purple-700 font-semibold text-[10px]">({pot.materia})</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedDocenteId(pot.docenteId);
+                      setTimeout(() => {
+                        const el = document.getElementById('sezioneModificaOrarioDocente');
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 100);
+                    }}
+                    className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black px-2.5 py-1.5 rounded-lg shadow-2xs transition cursor-pointer shrink-0 flex items-center gap-1"
+                    title={`Associa una classe all'ora di potenziamento di ${pot.docenteNome}`}
+                  >
+                    <span>Associa Classe →</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ========================================================= */}
       {/* SELETTORE DOCENTE STANDARD A TENDINA & GESTIONE EMAIL     */}
       {/* ========================================================= */}
       <div id="sezioneModificaOrarioDocente" className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-2xs border border-slate-200 space-y-3">
