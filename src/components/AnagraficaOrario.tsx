@@ -392,6 +392,54 @@ export const AnagraficaOrario: React.FC = () => {
     .filter(d => !d.isEducatore)
     .sort((a, b) => a.nome.localeCompare(b.nome));
 
+  // STATO VISTA MACRO-TO-MICRO ('TUTTI', 'CONFLITTI', 'POTENZIAMENTO', 'EMAIL', null)
+  const [macroFiltroAttivo, setMacroFiltroAttivo] = useState<'TUTTI' | 'CONFLITTI' | 'POTENZIAMENTO' | 'EMAIL' | null>('TUTTI');
+  const [ricercaDocente, setRicercaDocente] = useState<string>('');
+  const [filtroMateria, setFiltroMateria] = useState<string>('TUTTE');
+
+  // Materie uniche per chip di filtro
+  const tutteMaterie = React.useMemo(() => {
+    const setM = new Set<string>();
+    docenti.forEach(d => {
+      if (d.materia) setM.add(d.materia);
+    });
+    return Array.from(setM).sort();
+  }, [docenti]);
+
+  // Lista docenti filtrata in base al Macro Card cliccato e alla ricerca
+  const docentiFiltrati = React.useMemo(() => {
+    return docenti.filter(d => {
+      // Filtro ricerca testuale
+      if (ricercaDocente.trim() !== '') {
+        const query = ricercaDocente.toLowerCase().trim();
+        const matchNome = d.nome.toLowerCase().includes(query);
+        const matchMateria = d.materia.toLowerCase().includes(query);
+        const matchEmail = (d.email || '').toLowerCase().includes(query);
+        if (!matchNome && !matchMateria && !matchEmail) return false;
+      }
+
+      // Filtro materia specifica
+      if (filtroMateria !== 'TUTTE' && d.materia !== filtroMateria) {
+        return false;
+      }
+
+      // Filtro da Macro Card
+      if (macroFiltroAttivo === 'CONFLITTI') {
+        return anomalieAttuali.some(a => a.profiliConflitto.some(p => p.docenteId === d.id));
+      }
+
+      if (macroFiltroAttivo === 'POTENZIAMENTO') {
+        return potenziamentiSenzaClasse.some(p => p.docenteId === d.id) || d.isPotenziamento || d.materia === 'POTENZIAMENTO';
+      }
+
+      if (macroFiltroAttivo === 'EMAIL') {
+        return !d.email; // Mostra chi non ha ancora l'email o tutti per completarle
+      }
+
+      return true;
+    });
+  }, [docenti, ricercaDocente, filtroMateria, macroFiltroAttivo, anomalieAttuali, potenziamentiSenzaClasse]);
+
   return (
     <div className="space-y-4">
       {/* NOTIFICA SALVATAGGIO E BUON FINE */}
@@ -581,564 +629,529 @@ export const AnagraficaOrario: React.FC = () => {
                 Ho capito, Chiudi
               </button>
             </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* HEADER ANAGRAFICA CON UPLOAD E DOWNLOAD */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
-              <Users className="w-5 h-5 text-indigo-600" />
-              <span>Anagrafica e Orario</span>
-            </h3>
-            {/* PULSANTE ⓘ INFO & GUIDA COMPILAZIONE EXCEL */}
-            <button
-              type="button"
-              onClick={() => setMostraGuidaExcel(true)}
-              className="w-6 h-6 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center justify-center font-bold text-xs shadow-2xs transition cursor-pointer"
-              title="Istruzioni su come compilare e caricare l'orario Excel (e scarica modello vuoto)"
-            >
-              <Info className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* FILA CONTATORI & REPORT A CAPO */}
-          {docentiUnici.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="bg-indigo-50 text-indigo-700 font-bold text-xs px-2.5 py-1 rounded-xl border border-indigo-200 shadow-2xs">
-                👥 {docentiUnici.length} Docenti ({docenti.length} Cattedre)
-              </span>
-
-              {/* BADGE CONFLITTI / SOVRAPPOSIZIONI ORARIE */}
-              {anomalieAttuali.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={() => setMostraBoxSovrapposizioni(prev => !prev)}
-                  className={`font-black text-xs px-2.5 py-1 rounded-xl border flex items-center gap-1.5 transition cursor-pointer shadow-2xs ${
-                    mostraBoxSovrapposizioni
-                      ? 'bg-rose-600 text-white border-rose-700 ring-2 ring-rose-300'
-                      : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-300 animate-pulse'
-                  }`}
-                  title="Clicca per aprire/chiudere l'elenco dei conflitti orari"
-                >
-                  <span>⚠️</span>
-                  <span>{anomalieAttuali.length} Conflitti Orari</span>
-                  <span className="text-[10px] bg-rose-200/60 text-rose-950 px-1 rounded font-mono">
-                    {mostraBoxSovrapposizioni ? 'Chiudi ▲' : 'Vedi ▼'}
-                  </span>
-                </button>
-              ) : (
-                <span className="bg-emerald-50 text-emerald-700 font-bold text-xs px-2.5 py-1 rounded-xl border border-emerald-200 flex items-center gap-1.5 shadow-2xs">
-                  <span>✅</span>
-                  <span>0 Conflitti</span>
-                </span>
-              )}
-
-              {/* BADGE POTENZIAMENTO 'P' DA ASSOCIARE A CLASSE */}
-              {potenziamentiSenzaClasse.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setMostraBoxPotSenzaClasse(prev => !prev)}
-                  className={`font-black text-xs px-2.5 py-1 rounded-xl border flex items-center gap-1.5 transition cursor-pointer shadow-2xs ${
-                    mostraBoxPotSenzaClasse
-                      ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
-                      : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
-                  }`}
-                  title="Clicca per aprire/chiudere le ore di Potenziamento P senza classe"
-                >
-                  <span>🟣</span>
-                  <span>{potenziamentiSenzaClasse.length} Potenziamenti 'P'</span>
-                  <span className="text-[10px] bg-amber-200/60 text-amber-950 px-1 rounded font-mono">
-                    {mostraBoxPotSenzaClasse ? 'Chiudi ▲' : 'Vedi ▼'}
-                  </span>
-                </button>
-              )}
-              
-              {(() => {
-                const docentiConEmail = docentiUnici.filter(d => {
-                  const orig = docenti.find(o => d.allIds.includes(o.id));
-                  return !!orig?.email;
-                }).length;
-                const perc = Math.round((docentiConEmail / docentiUnici.length) * 100);
-                const isCompleto = docentiConEmail === docentiUnici.length && docentiUnici.length > 0;
-                return (
-                  <span className={`font-bold text-xs px-2.5 py-1 rounded-xl border flex items-center gap-1.5 shadow-2xs ${
-                    isCompleto 
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-300' 
-                      : docentiConEmail > 0 
-                      ? 'bg-amber-50 text-amber-800 border-amber-300' 
-                      : 'bg-slate-100 text-slate-600 border-slate-300'
-                  }`}>
-                    <span>✉️</span>
-                    <span>{docentiConEmail} / {docentiUnici.length} Email ({perc}%)</span>
-                  </span>
-                );
-              })()}
-            </div>
-          )}
-        </div>
-
-        {/* AZIONI: UPLOAD, DOWNLOAD, RESET */}
-        <div className="flex flex-wrap items-center gap-2">
-
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept=".xlsx,.xls,.ods,.csv"
-            className="hidden"
-          />
-
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-3 py-1.5 rounded-xl border border-indigo-200 transition flex items-center gap-1.5 shadow-2xs"
-            title="Importa o aggiorna l'orario caricando un file Excel"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            <span>Carica Excel</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleExportExcel}
-            className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs px-3 py-1.5 rounded-xl border border-emerald-200 transition flex items-center gap-1.5 shadow-2xs"
-            title="Scarica l'orario attuale completo in formato Excel .xlsx"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Scarica Excel</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (window.confirm('Sei sicuro di voler azzerare tutti i docenti e l\'intero orario?')) {
-                azzeraDocentiEOrario();
-                setSelectedDocenteId('');
-                setNotificaSalvataggio('Docenti e orario azzerati con successo.');
-              }
-            }}
-            className="text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 font-bold text-xs px-3 py-1.5 rounded-xl border border-red-200 transition flex items-center gap-1.5 shadow-2xs"
-            title="Azzera tutti i docenti e l'orario"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-red-600" />
-            <span>Azzera Dati</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (window.confirm('Vuoi ricaricare l\'orario predefinito demo?')) {
-                resetOrarioPredefinito();
-                setNotificaSalvataggio('Orario predefinito ripristinato.');
-              }
-            }}
-            className="text-slate-500 hover:text-slate-700 font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 transition flex items-center gap-1.5"
-            title="Ripristina orario demo originale"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Ripristina Demo</span>
-          </button>
-
-          {docenteSelezionato && (
-            <button
-              type="button"
-              onClick={handleSalvaOrario}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-1.5 rounded-xl shadow-2xs transition flex items-center gap-1.5"
-            >
-              <Save className="w-3.5 h-3.5" />
-              <span>Salva Modifiche</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ========================================================= */}
-      {/* BANNER RICHIESTE ASSOCIAZIONE ACCOUNT DOCENTI IN SOSPESO  */}
-      {/* ========================================================= */}
-      {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length > 0 && (
-        <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-black text-amber-950">
-                  Richieste di Associazione Account Google ({richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length})
-                </h3>
-                <p className="text-xs text-amber-800">
-                  I seguenti docenti hanno effettuato il primo accesso e attendono la tua conferma per entrare.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-2.5">
-            {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').map(req => {
-              return (
-                <RichiestaCardItem 
-                  key={req.id} 
-                  req={req} 
-                  docentiUnici={docentiUnici} 
-                  onApprova={approvaRichiestaAccesso} 
-                  onRifiuta={rifiutaRichiestaAccesso} 
-                />
-              );
-            })}
           </div>
         </div>
       )}
 
       {/* ========================================================= */}
-      {/* CONTROLLO COSTANTE ANOMALIE / SOVRAPPOSIZIONI ATTUALI     */}
+      {/* 1. LIVELLO MACRO: HEADER E GRANDI CARD INTERATTIVE        */}
       {/* ========================================================= */}
-      {mostraBoxSovrapposizioni && anomalieAttuali.length > 0 && (
-        <div className="bg-rose-50 border-2 border-rose-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-sm">
-                <AlertTriangle className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-black text-rose-950">
-                  Conflitti e Sovrapposizioni Orarie ({anomalieAttuali.length})
-                </h3>
-                <p className="text-xs text-rose-800">
-                  Scegli quale cattedra/materia vuoi aprire per correggere o svuotare l'ora in conflitto.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setMostraBoxSovrapposizioni(false)}
-              className="bg-white hover:bg-rose-100 text-rose-800 border border-rose-300 px-3 py-1.5 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
-              title="Chiudi questo riquadro"
-            >
-              <span>Chiudi</span>
-              <span>✕</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-            {anomalieAttuali.map((anom, idx) => (
-              <div key={idx} className="bg-white border border-rose-200 rounded-xl p-3 flex flex-col justify-between gap-2 shadow-2xs text-xs">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <strong className="text-slate-900 font-black">{anom.docenteNome}</strong>
-                    <span className="text-rose-700 font-black text-[11px] bg-rose-100 px-2 py-0.5 rounded-md">
-                      {anom.giorno} - {anom.ora}ª ora
-                    </span>
-                  </div>
-                </div>
-
-                <div className="pt-1 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
-                  <span className="text-[10px] text-slate-500 font-bold">Apri Cattedra da Modificare:</span>
-                  {anom.profiliConflitto.map(p => (
-                    <button
-                      key={p.docenteId}
-                      type="button"
-                      onClick={() => {
-                        setSelectedDocenteId(p.docenteId);
-                        setTimeout(() => {
-                          const el = document.getElementById('sezioneModificaOrarioDocente');
-                          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }, 100);
-                      }}
-                      className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-900 border border-indigo-200 rounded-lg text-[11px] font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
-                      title={`Apri l'orario di ${p.materia} per modificare la classe ${p.valore}`}
-                    >
-                      <span>✏️ {p.materia}</span>
-                      <span className="font-mono bg-white text-slate-800 px-1 py-0.2 rounded text-[10px] border border-indigo-100">
-                        {p.valore}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================= */}
-      {/* SCANSIONE ORE DI POTENZIAMENTO 'P' SENZA CLASSE ASSOCIATA */}
-      {/* ========================================================= */}
-      {mostraBoxPotSenzaClasse && potenziamentiSenzaClasse.length > 0 && (
-        <div className="bg-amber-50 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-md space-y-3 animate-in fade-in">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-black text-amber-950">
-                  Ore di Potenziamento (P) Senza Classe Indicata ({potenziamentiSenzaClasse.length})
-                </h3>
-                <p className="text-xs text-amber-900">
-                  In queste ore è indicato solo <strong>'P'</strong>. Puoi specificare la classe dove si trova in compresenza (es. <code>2B POT</code>) per sapere dove si trova ed utilizzarlo al meglio.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setMostraBoxPotSenzaClasse(false)}
-              className="bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-black shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
-              title="Chiudi questo riquadro"
-            >
-              <span>Chiudi</span>
-              <span>✕</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-            {potenziamentiSenzaClasse.map((pot, idx) => (
-              <div key={idx} className="bg-white border border-amber-200 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-2xs text-xs">
-                <div>
-                  <strong className="text-slate-900 block font-black">{pot.docenteNome}</strong>
-                  <span className="text-amber-800 font-bold text-[11px]">
-                    {pot.giorno} - {pot.ora}ª ora
-                  </span>{' '}
-                  <span className="text-purple-700 font-semibold text-[10px]">({pot.materia})</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedDocenteId(pot.docenteId);
-                    setTimeout(() => {
-                      const el = document.getElementById('sezioneModificaOrarioDocente');
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 100);
-                  }}
-                  className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black px-2.5 py-1.5 rounded-lg shadow-2xs transition cursor-pointer shrink-0 flex items-center gap-1"
-                  title={`Associa una classe all'ora di potenziamento di ${pot.docenteNome}`}
-                >
-                  <span>Associa Classe →</span>
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================= */}
-      {/* SELETTORE DOCENTE STANDARD A TENDINA & GESTIONE EMAIL     */}
-      {/* ========================================================= */}
-      <div id="sezioneModificaOrarioDocente" className="bg-white rounded-2xl p-3.5 sm:p-4 shadow-2xs border border-slate-200 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          
-          <div className="flex-1">
-            <label className="block text-[11px] font-black text-slate-700 uppercase mb-1.5 tracking-wider">
-              Docente / Cattedra da Modificare:
-            </label>
-            <select
-              value={selectedDocenteId}
-              onChange={(e) => setSelectedDocenteId(e.target.value)}
-              className="w-full border border-slate-300 rounded-xl p-2.5 text-xs sm:text-sm font-bold bg-white text-slate-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs cursor-pointer"
-            >
-              <option value="">-- Scegli Docente / Cattedra --</option>
-              {docenti.map(d => (
-                <option key={d.id} value={d.id}>
-                  {d.nome} - {d.materia} {d.email ? `[✉️ ${d.email}]` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Switch Caso Grave Rapido se Sostegno */}
-          {docenteSelezionato?.isSostegno && (
-            <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 px-3.5 py-2.5 rounded-xl shrink-0 self-start sm:self-end">
-              <input
-                type="checkbox"
-                id="toggleTuttoGrave"
-                checked={docenteSelezionato.isCasoGraveSostegno || false}
-                onChange={handleToggleTuttoGraveDocente}
-                className="rounded text-rose-600 w-4 h-4 cursor-pointer"
-              />
-              <label htmlFor="toggleTuttoGrave" className="text-xs font-bold text-rose-900 cursor-pointer">
-                Tutte le ore sono Caso Grave (Bloccato 100%)
-              </label>
-            </div>
-          )}
-        </div>
-
-        {/* CAMPO EMAIL GOOGLE WORKSPACE DEL DOCENTE SELEZIONATO */}
-        {docenteSelezionato && (
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex-1">
-              <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                Email Istituzionale Google Workspace (per Accesso Senza PIN):
-              </label>
-              <input
-                type="email"
-                value={docenteSelezionato.email || ''}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  associaEmailDocente(docenteSelezionato.id, val);
-                }}
-                placeholder="es. nome.cognome@scuola.edu.it"
-                className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500"
-              />
-            </div>
-            {docenteSelezionato.email && (
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-lg shrink-0 self-start sm:self-end">
-                <CheckCircle className="w-3.5 h-3.5" />
-                <span>Account Google Associato</span>
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* ========================================================= */}
-      {/* TABELLA EDITABILE 9 ORE x 5 GIORNI                       */}
-      {/* ========================================================= */}
-      <div className="bg-white rounded-2xl p-3.5 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
-        {docenteSelezionato ? (
-          <>
-            {/* LEGENDA E ISTRUZIONI RAPIDE */}
-            <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="font-bold text-slate-600 text-[11px]">Legenda Cella:</span>
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-emerald-100 border border-emerald-400"></span>
-                  <span className="text-[10px] text-slate-700">Lezione/Sostegno</span>
-                </div>
-                {docenteSelezionato.isSostegno && (
-                  <div className="flex items-center gap-1">
-                    <span className="w-3 h-3 rounded bg-rose-500 border border-rose-600"></span>
-                    <span className="text-[10px] font-black text-rose-700">🔒 Caso Grave (Bloccato)</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-amber-100 border border-amber-300"></span>
-                  <span className="text-[10px] text-slate-700">D (Disposizione)</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="w-3 h-3 rounded bg-indigo-100 border border-indigo-300"></span>
-                  <span className="text-[10px] text-slate-700">P (Potenziamento)</span>
-                </div>
-              </div>
-
-              <span className="text-[10px] text-slate-500 font-medium">
-                Digita la classe (es. <code>1A</code>, <code>2C</code>), <code>D</code>, <code>P</code> o aggiungi l'asterisco (es. <code>1A*</code>) / tocca 🔒 per il Caso Grave
-              </span>
-            </div>
-
-            {/* TABELLA EDITABILE 9 ORE x 5 GIORNI */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-center text-xs border-collapse min-w-[650px]">
-                <thead>
-                  <tr className="bg-slate-800 text-white font-bold text-[11px]">
-                    <th className="p-2 text-left rounded-tl-xl w-20">Giorno</th>
-                    <th className="p-1.5 w-14">1ª (8-9)</th>
-                    <th className="p-1.5 w-14">2ª (9-10)</th>
-                    <th className="p-1.5 w-14">3ª (10-11)</th>
-                    <th className="p-1.5 w-14">4ª (11-12)</th>
-                    <th className="p-1.5 w-14">5ª (12-13)</th>
-                    <th className="p-1.5 w-14">6ª (13-14)</th>
-                    <th className="p-1.5 w-14">7ª (14-15)</th>
-                    <th className="p-1.5 w-14">8ª (15-16)</th>
-                    <th className="p-1.5 w-14 rounded-tr-xl">9ª (16-17)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {GIORNI.map(giorno => (
-                    <tr key={giorno} className="hover:bg-slate-50/50">
-                      <td className="p-2 font-black text-slate-700 text-left bg-slate-50">
-                        {giorno}
-                      </td>
-
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(oraNum => {
-                        const cella = getCella(giorno, oraNum);
-                        const val = cella.valore;
-                        const isGrave = cella.isCasoGrave || false;
-                        const isD = val === 'D';
-                        const isP = val === 'P';
-                        const isLezione = val !== '' && !isD && !isP;
-
-                        let bgClass = 'bg-slate-50 border-slate-200 text-slate-400';
-                        if (isGrave) {
-                          bgClass = 'bg-rose-500 border-rose-600 text-white shadow-2xs';
-                        } else if (isD) {
-                          bgClass = 'bg-amber-100 border-amber-300 text-amber-950 font-bold';
-                        } else if (isP) {
-                          bgClass = 'bg-indigo-100 border-indigo-300 text-indigo-950 font-bold';
-                        } else if (isLezione) {
-                          bgClass = 'bg-emerald-50 border-emerald-300 text-emerald-950 font-bold';
-                        }
-
-                        return (
-                          <td key={oraNum} className="p-1">
-                            <div className={`border rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${bgClass}`}>
-                              <input
-                                type="text"
-                                value={val}
-                                placeholder="-"
-                                onChange={(e) => handleCellValoreChange(giorno, oraNum, e.target.value)}
-                                className={`w-full text-center text-xs font-black outline-none bg-transparent ${
-                                  isGrave ? 'text-white' : ''
-                                }`}
-                              />
-
-                              {/* Pulsante Caso Grave per docenti di sostegno */}
-                              {docenteSelezionato.isSostegno && isLezione && (
-                                <button
-                                  type="button"
-                                  onClick={() => toggleCasoGraveCella(giorno, oraNum)}
-                                  className={`w-full text-[9px] py-0.2 rounded font-black flex items-center justify-center gap-0.5 transition ${
-                                    isGrave 
-                                      ? 'bg-rose-700 text-rose-100 hover:bg-rose-800' 
-                                      : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
-                                  }`}
-                                  title={isGrave ? 'Rimuovi Caso Grave' : 'Segna come Caso Grave'}
-                                >
-                                  <Lock className="w-2.5 h-2.5" />
-                                  <span>{isGrave ? 'GRAVE' : 'Grave'}</span>
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* SALVATAGGIO IN CALCE */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
-              <div className="flex items-center gap-2 text-slate-500">
-                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Le modifiche avranno effetto immediato su tutte le prossime proposte di sostituzione.</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleSalvaOrario}
-                className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl transition shadow-xs flex items-center justify-center gap-1.5"
-              >
-                <Save className="w-3.5 h-3.5" />
-                <span>Conferma & Salva Orario</span>
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="py-12 px-4 text-center space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto shadow-2xs">
+      <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+        {/* TITOLO + AZIONI GENERALI (UPLOAD / DOWNLOAD / RESET) */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
               <Users className="w-6 h-6" />
             </div>
-            <h4 className="text-sm font-black text-slate-800">Nessun docente selezionato</h4>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Scegli un docente dal menu a tendina in alto per visualizzare e modificare il suo orario.
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-black text-slate-900">Anagrafica e Orario</h3>
+                <button
+                  type="button"
+                  onClick={() => setMostraGuidaExcel(true)}
+                  className="w-6 h-6 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center justify-center font-bold text-xs shadow-2xs transition cursor-pointer"
+                  title="Istruzioni orario Excel"
+                >
+                  <Info className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-500">Gestisci docenti, cattedre, disposizioni e potenziamenti</p>
+            </div>
           </div>
-        )}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".xlsx,.xls,.ods,.csv"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs px-3 py-2 rounded-xl border border-indigo-200 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span>Carica Excel</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs px-3 py-2 rounded-xl border border-emerald-200 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Scarica Excel</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('Sei sicuro di voler azzerare tutti i docenti e l\'intero orario?')) {
+                  azzeraDocentiEOrario();
+                  setSelectedDocenteId('');
+                  setNotificaSalvataggio('Docenti e orario azzerati con successo.');
+                }
+              }}
+              className="text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 font-bold text-xs px-3 py-2 rounded-xl border border-red-200 transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Azzera</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 4 CARD MACRO CRUSCOTTO */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          
+          {/* MACRO CARD 1: DOCENTI & CATTEDRE */}
+          <div
+            onClick={() => setMacroFiltroAttivo('TUTTI')}
+            className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
+              macroFiltroAttivo === 'TUTTI'
+                ? 'bg-indigo-50/70 border-indigo-500 ring-2 ring-indigo-200'
+                : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50/60'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Docenti e Cattedre</span>
+              <div className="p-1.5 bg-indigo-100 text-indigo-700 rounded-xl">
+                <Users className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <div className="text-xl font-black text-slate-900">{docentiUnici.length} Docenti</div>
+              <div className="text-xs text-indigo-700 font-semibold">{docenti.length} Cattedre totali</div>
+            </div>
+            <div className="text-[11px] font-bold text-indigo-600 flex items-center gap-1">
+              <span>{macroFiltroAttivo === 'TUTTI' ? '● Selezionato' : 'Esplora tutti →'}</span>
+            </div>
+          </div>
+
+          {/* MACRO CARD 2: CONFLITTI ORARI */}
+          <div
+            onClick={() => setMacroFiltroAttivo(anomalieAttuali.length > 0 ? 'CONFLITTI' : 'TUTTI')}
+            className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
+              anomalieAttuali.length > 0
+                ? macroFiltroAttivo === 'CONFLITTI'
+                  ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-200'
+                  : 'bg-rose-50/50 border-rose-300 hover:bg-rose-100/60 animate-pulse'
+                : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Conflitti Orari</span>
+              <div className={`p-1.5 rounded-xl ${anomalieAttuali.length > 0 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                {anomalieAttuali.length > 0 ? <AlertTriangle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+              </div>
+            </div>
+            <div>
+              <div className={`text-xl font-black ${anomalieAttuali.length > 0 ? 'text-rose-900' : 'text-emerald-900'}`}>
+                {anomalieAttuali.length > 0 ? `${anomalieAttuali.length} Conflitti` : '0 Conflitti'}
+              </div>
+              <div className="text-xs text-slate-500 font-medium">
+                {anomalieAttuali.length > 0 ? 'Sovrapposizioni da risolvere' : 'Nessuna sovrapposizione'}
+              </div>
+            </div>
+            <div className={`text-[11px] font-bold flex items-center gap-1 ${anomalieAttuali.length > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+              <span>{anomalieAttuali.length > 0 ? (macroFiltroAttivo === 'CONFLITTI' ? '● Risolvi conflitti' : 'Risolvi subito →') : 'Tutto regolare ✓'}</span>
+            </div>
+          </div>
+
+          {/* MACRO CARD 3: POTENZIAMENTI */}
+          <div
+            onClick={() => setMacroFiltroAttivo(potenziamentiSenzaClasse.length > 0 ? 'POTENZIAMENTO' : 'TUTTI')}
+            className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
+              potenziamentiSenzaClasse.length > 0
+                ? macroFiltroAttivo === 'POTENZIAMENTO'
+                  ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-200'
+                  : 'bg-amber-50/50 border-amber-300 hover:bg-amber-100/60'
+                : 'bg-white border-slate-200 hover:border-purple-300'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Potenziamenti (P)</span>
+              <div className="p-1.5 bg-amber-100 text-amber-800 rounded-xl">
+                <Sparkles className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <div className="text-xl font-black text-amber-950">
+                {potenziamentiSenzaClasse.length} Ore 'P'
+              </div>
+              <div className="text-xs text-amber-800 font-medium">
+                {potenziamentiSenzaClasse.length > 0 ? 'Senza classe di compresenza' : 'Tutte con classe associata'}
+              </div>
+            </div>
+            <div className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
+              <span>{potenziamentiSenzaClasse.length > 0 ? (macroFiltroAttivo === 'POTENZIAMENTO' ? '● Assegna classi' : 'Assegna classi →') : 'Orario completo ✓'}</span>
+            </div>
+          </div>
+
+          {/* MACRO CARD 4: ACCOUNT GOOGLE / EMAIL */}
+          {(() => {
+            const docentiConEmail = docentiUnici.filter(d => {
+              const orig = docenti.find(o => d.allIds.includes(o.id));
+              return !!orig?.email;
+            }).length;
+            const perc = Math.round((docentiConEmail / docentiUnici.length) * 100);
+            return (
+              <div
+                onClick={() => setMacroFiltroAttivo('EMAIL')}
+                className={`p-4 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex flex-col justify-between gap-3 ${
+                  macroFiltroAttivo === 'EMAIL'
+                    ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-200'
+                    : 'bg-white border-slate-200 hover:border-blue-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Account Google</span>
+                  <div className="p-1.5 bg-blue-100 text-blue-700 rounded-xl">
+                    <UserCheck className="w-4 h-4" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xl font-black text-slate-900">{docentiConEmail} / {docentiUnici.length}</div>
+                  <div className="text-xs text-blue-700 font-semibold">{perc}% Email associate</div>
+                </div>
+                <div className="text-[11px] font-bold text-blue-600 flex items-center gap-1">
+                  <span>{macroFiltroAttivo === 'EMAIL' ? '● Gestisci email' : 'Gestisci accessi →'}</span>
+                </div>
+              </div>
+            );
+          })()}
+
+        </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* 2. LIVELLO MEDIO & 3. LIVELLO MICRO: GRIGLIA MACRO-TO-MICRO */}
+      {/* ========================================================= */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        
+        {/* COLONNA SINISTRA (LIVELLO MEDIO): LISTA DOCENTI INTERATTIVA CON RICERCA */}
+        <div className="lg:col-span-4 bg-white rounded-3xl p-4 shadow-2xs border border-slate-200 space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h4 className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+              <span>📋 Seleziona Docente</span>
+              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
+                {docentiFiltrati.length}
+              </span>
+            </h4>
+
+            {macroFiltroAttivo && macroFiltroAttivo !== 'TUTTI' && (
+              <button
+                type="button"
+                onClick={() => setMacroFiltroAttivo('TUTTI')}
+                className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-1 rounded-lg transition cursor-pointer"
+              >
+                Mostra Tutti ✕
+              </button>
+            )}
+          </div>
+
+          {/* BARRA DI RICERCA VELOCE */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={ricercaDocente}
+              onChange={(e) => setRicercaDocente(e.target.value)}
+              placeholder="Cerca docente o materia..."
+              className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-500 focus:bg-white transition"
+            />
+          </div>
+
+          {/* FILTRO PER MATERIA */}
+          {tutteMaterie.length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px]">
+              <button
+                type="button"
+                onClick={() => setFiltroMateria('TUTTE')}
+                className={`px-2 py-1 rounded-lg font-bold transition shrink-0 cursor-pointer ${
+                  filtroMateria === 'TUTTE' ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                Tutte
+              </button>
+              {tutteMaterie.slice(0, 5).map(mat => (
+                <button
+                  key={mat}
+                  type="button"
+                  onClick={() => setFiltroMateria(mat)}
+                  className={`px-2 py-1 rounded-lg font-bold transition shrink-0 cursor-pointer ${
+                    filtroMateria === mat ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {mat}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* LISTA DOCENTI SCORREVOLE */}
+          <div className="space-y-1.5 max-h-[460px] overflow-y-auto pr-1">
+            {docentiFiltrati.length > 0 ? (
+              docentiFiltrati.map(d => {
+                const isSelected = d.id === selectedDocenteId;
+                const haConflitti = anomalieAttuali.some(a => a.profiliConflitto.some(p => p.docenteId === d.id));
+                const haPotSenzaClasse = potenziamentiSenzaClasse.some(p => p.docenteId === d.id);
+
+                return (
+                  <div
+                    key={d.id}
+                    onClick={() => setSelectedDocenteId(d.id)}
+                    className={`p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between gap-2.5 ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 text-slate-800'
+                    }`}
+                  >
+                    <div className="space-y-0.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <strong className={`block text-xs font-black truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+                          {d.nome}
+                        </strong>
+                        {haConflitti && (
+                          <span className="text-[10px] bg-rose-500 text-white px-1.5 py-0.2 rounded font-black shrink-0">
+                            ⚠️ Conflitto
+                          </span>
+                        )}
+                        {haPotSenzaClasse && (
+                          <span className="text-[10px] bg-amber-500 text-white px-1.5 py-0.2 rounded font-black shrink-0">
+                            🟣 'P'
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px]">
+                        <span className={isSelected ? 'text-indigo-100 font-bold' : 'text-indigo-700 font-semibold'}>
+                          {d.materia}
+                        </span>
+                        {d.email && (
+                          <span className={`truncate font-mono ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>
+                            ✉️ {d.email}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 ${
+                      isSelected ? 'bg-white/20 text-white' : 'text-slate-400'
+                    }`}>
+                      →
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="p-6 text-center text-xs text-slate-400">
+                Nessun docente trovato con i filtri attuali.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* COLONNA DESTRA (LIVELLO MICRO): DETTAGLIO ORARIO & MODIFICA */}
+        <div className="lg:col-span-8 space-y-3">
+          {docenteSelezionato ? (
+            <div className="bg-white rounded-3xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4 animate-in fade-in">
+              
+              {/* TESTATA DOCENTE SELEZIONATO */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-base sm:text-lg font-black text-slate-900">{docenteSelezionato.nome}</h4>
+                    <span className="bg-indigo-50 text-indigo-700 font-bold text-xs px-2.5 py-0.5 rounded-lg border border-indigo-200">
+                      {docenteSelezionato.materia}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Modifica le classi per ora, gestisci le Disposizioni (D), i Potenziamenti (P) e il Caso Grave (*).
+                  </p>
+                </div>
+
+                {docenteSelezionato.isSostegno && (
+                  <div className="flex items-center gap-2 bg-rose-50 border border-rose-200 px-3 py-2 rounded-xl shrink-0">
+                    <input
+                      type="checkbox"
+                      id="toggleTuttoGrave"
+                      checked={docenteSelezionato.isCasoGraveSostegno || false}
+                      onChange={handleToggleTuttoGraveDocente}
+                      className="rounded text-rose-600 w-4 h-4 cursor-pointer"
+                    />
+                    <label htmlFor="toggleTuttoGrave" className="text-xs font-bold text-rose-900 cursor-pointer">
+                      Caso Grave 100%
+                    </label>
+                  </div>
+                )}
+              </div>
+
+              {/* CAMPO EMAIL GOOGLE WORKSPACE */}
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="flex-1">
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
+                    Email Google Workspace (per Accesso Senza PIN):
+                  </label>
+                  <input
+                    type="email"
+                    value={docenteSelezionato.email || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      associaEmailDocente(docenteSelezionato.id, val);
+                    }}
+                    placeholder="es. nome.cognome@scuola.edu.it"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500"
+                  />
+                </div>
+                {docenteSelezionato.email && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1.5 rounded-xl shrink-0 self-start sm:self-end">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>Associato</span>
+                  </span>
+                )}
+              </div>
+
+              {/* LEGENDA CELLE */}
+              <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="font-bold text-slate-600 text-[11px]">Legenda:</span>
+                  <div className="flex items-center gap-1">
+                    <span className="w-3 h-3 rounded bg-emerald-100 border border-emerald-400"></span>
+                    <span className="text-[10px] text-slate-700">Lezione</span>
+                  </div>
+                  {docenteSelezionato.isSostegno && (
+                    <div className="flex items-center gap-1">
+                      <span className="w-3 h-3 rounded bg-rose-500 border border-rose-600"></span>
+                      <span className="text-[10px] font-black text-rose-700">🔒 Caso Grave (*)</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1">
+                    <span className="w-3 h-3 rounded bg-amber-100 border border-amber-300"></span>
+                    <span className="text-[10px] text-slate-700">D (Disposizione)</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="w-3 h-3 rounded bg-indigo-100 border border-indigo-300"></span>
+                    <span className="text-[10px] text-slate-700">P (Potenziamento)</span>
+                  </div>
+                </div>
+
+                <span className="text-[10px] text-slate-500 font-medium">
+                  Digita la classe (es. <code>1A</code>, <code>2C</code>), <code>D</code>, <code>P</code> o aggiungi l'asterisco (es. <code>1A*</code>)
+                </span>
+              </div>
+
+              {/* TABELLA ORARIO 9 ORE x 5 GIORNI */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-center text-xs border-collapse min-w-[580px]">
+                  <thead>
+                    <tr className="bg-slate-800 text-white font-bold text-[11px]">
+                      <th className="p-2 text-left rounded-tl-xl w-20">Giorno</th>
+                      <th className="p-1.5 w-12">1ª (8-9)</th>
+                      <th className="p-1.5 w-12">2ª (9-10)</th>
+                      <th className="p-1.5 w-12">3ª (10-11)</th>
+                      <th className="p-1.5 w-12">4ª (11-12)</th>
+                      <th className="p-1.5 w-12">5ª (12-13)</th>
+                      <th className="p-1.5 w-12">6ª (13-14)</th>
+                      <th className="p-1.5 w-12">7ª (14-15)</th>
+                      <th className="p-1.5 w-12">8ª (15-16)</th>
+                      <th className="p-1.5 w-12 rounded-tr-xl">9ª (16-17)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {GIORNI.map(giorno => (
+                      <tr key={giorno} className="hover:bg-slate-50/50">
+                        <td className="p-2 font-black text-slate-700 text-left bg-slate-50">
+                          {giorno}
+                        </td>
+
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(oraNum => {
+                          const cella = getCella(giorno, oraNum);
+                          const val = cella.valore;
+                          const isGrave = cella.isCasoGrave || false;
+                          const isD = val === 'D';
+                          const isP = val === 'P' || val === 'POT';
+                          const isLezione = val !== '' && !isD && !isP;
+
+                          let bgClass = 'bg-slate-50 border-slate-200 text-slate-400';
+                          if (isGrave) {
+                            bgClass = 'bg-rose-500 border-rose-600 text-white shadow-2xs';
+                          } else if (isD) {
+                            bgClass = 'bg-amber-100 border-amber-300 text-amber-950 font-bold';
+                          } else if (isP) {
+                            bgClass = 'bg-indigo-100 border-indigo-300 text-indigo-950 font-bold';
+                          } else if (isLezione) {
+                            bgClass = 'bg-emerald-50 border-emerald-300 text-emerald-950 font-bold';
+                          }
+
+                          return (
+                            <td key={oraNum} className="p-1">
+                              <div className={`border rounded-lg p-1 transition flex flex-col items-center justify-center gap-0.5 ${bgClass}`}>
+                                <input
+                                  type="text"
+                                  value={val}
+                                  placeholder="-"
+                                  onChange={(e) => handleCellValoreChange(giorno, oraNum, e.target.value)}
+                                  className={`w-full text-center text-xs font-black outline-none bg-transparent ${
+                                    isGrave ? 'text-white' : ''
+                                  }`}
+                                />
+
+                                {docenteSelezionato.isSostegno && isLezione && (
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleCasoGraveCella(giorno, oraNum)}
+                                    className={`w-full text-[9px] py-0.2 rounded font-black flex items-center justify-center gap-0.5 transition ${
+                                      isGrave 
+                                        ? 'bg-rose-700 text-rose-100 hover:bg-rose-800' 
+                                        : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                                    }`}
+                                    title={isGrave ? 'Rimuovi Caso Grave' : 'Segna come Caso Grave'}
+                                  >
+                                    <Lock className="w-2.5 h-2.5" />
+                                    <span>{isGrave ? 'GRAVE' : 'Grave'}</span>
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* SALVATAGGIO IN CALCE */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+                <div className="flex items-center gap-2 text-slate-500">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Modifiche attive immediatamente per le prossime sostituzioni.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSalvaOrario}
+                  className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2.5 rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Conferma & Salva Orario</span>
+                </button>
+              </div>
+
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl p-12 text-center space-y-3 border border-slate-200 shadow-2xs">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto shadow-2xs">
+                <Users className="w-7 h-7" />
+              </div>
+              <h4 className="text-base font-black text-slate-800">Seleziona un docente dalla lista</h4>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                Clicca su un docente nell'elenco a sinistra per visualizzare, verificare e modificare la sua griglia oraria.
+              </p>
+            </div>
+          )}
+        </div>
+
       </div>
 
     </div>
