@@ -1360,7 +1360,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                     const ore = Array.from({ length: maxOra }, (_, i) => i + 1);
 
                     return (
-                      <div key={cl} className="print-landscape-page p-2">
+                      <div key={cl} className="print-portrait-page p-2">
                         {/* INTESTAZIONE ISTITUZIONALE PULITA */}
                         <div className="flex items-center justify-between border-b-2 border-slate-900 pb-2 mb-3">
                           <div>
@@ -1381,13 +1381,13 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                           </div>
                         </div>
 
-                        {/* TABELLA ORARIO ORIZZONTALE CLASSE */}
+                        {/* TABELLA ORARIO VERTICALE CLASSE */}
                         <table className="w-full border-collapse border border-slate-400 text-center text-[10pt]">
                           <thead>
                             <tr className="bg-slate-200 text-slate-900 font-black border-b border-slate-400 text-[10pt] uppercase">
-                              <th className="py-2 px-2 w-16 border-r border-slate-400">Ora</th>
+                              <th className="py-2.5 px-2 w-14 border-r border-slate-400">Ora</th>
                               {GIORNI_SETTIMANA.map(g => (
-                                <th key={g} className="py-2 px-2 border-r border-slate-400 last:border-r-0">
+                                <th key={g} className="py-2.5 px-2 border-r border-slate-400 last:border-r-0">
                                   {g}
                                 </th>
                               ))}
@@ -1396,7 +1396,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                           <tbody>
                             {ore.map(oraNum => (
                               <tr key={oraNum} className="border-b border-slate-300">
-                                <td className="py-2.5 px-2 font-black bg-slate-100 border-r border-slate-400 text-[11pt]">
+                                <td className="py-3 px-2 font-black bg-slate-100 border-r border-slate-400 text-[11pt]">
                                   {oraNum}ª
                                 </td>
                                 {GIORNI_SETTIMANA.map(giorno => {
@@ -1404,11 +1404,11 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                                   const hasQualcosa = comp.curricolari.length > 0 || comp.sostegni.length > 0 || comp.educatori.length > 0;
 
                                   if (!hasQualcosa) {
-                                    return <td key={giorno} className="py-2 px-2 border-r border-slate-300 last:border-r-0 text-slate-300">-</td>;
+                                    return <td key={giorno} className="py-2.5 px-2 border-r border-slate-300 last:border-r-0 text-slate-300">-</td>;
                                   }
 
                                   return (
-                                    <td key={giorno} className="py-2 px-2 border-r border-slate-300 last:border-r-0 align-top text-left">
+                                    <td key={giorno} className="py-2.5 px-2 border-r border-slate-300 last:border-r-0 align-top text-left">
                                       <div className="space-y-1">
                                         {comp.curricolari.map(c => (
                                           <div key={c.id} className="leading-tight">
