@@ -21,51 +21,59 @@ const RichiestaCardItem: React.FC<{
   const [docenteSceltoId, setDocenteSceltoId] = useState<string>(req.docenteSuggeritoId || '');
 
   return (
-    <div className="bg-white rounded-2xl p-3.5 border border-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs">
-      <div className="space-y-1 flex-1">
+    <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-amber-300 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
+      <div className="space-y-1.5 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-black text-slate-900 text-xs sm:text-sm">{req.displayName}</span>
-          <span className="text-[11px] font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">{req.email}</span>
+          <span className="font-black text-slate-900 text-sm">{req.displayName || 'Docente'}</span>
+          <span className="text-xs font-mono text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-200">
+            {req.email}
+          </span>
+          <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-md">
+            In Attesa di Assegnazione Cattedra
+          </span>
         </div>
         
-        {req.docenteSuggeritoNome ? (
-          <p className="text-xs text-slate-600">
-            💡 Corrispondenza suggerita: <strong className="text-slate-900">{req.docenteSuggeritoNome}</strong>
-          </p>
-        ) : (
-          <div className="flex items-center gap-2 pt-1">
-            <span className="text-xs font-bold text-slate-600">Collega a:</span>
-            <select
-              value={docenteSceltoId}
-              onChange={(e) => setDocenteSceltoId(e.target.value)}
-              className="border border-slate-300 rounded-lg p-1 text-xs font-bold bg-white text-slate-800 outline-none focus:border-indigo-500 max-w-[240px]"
-            >
-              <option value="">-- Seleziona Docente --</option>
-              {docentiUnici.map(d => (
-                <option key={d.id} value={d.id}>{d.nome}</option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <span className="text-xs font-bold text-slate-700">Assegna alla Cattedra / Docente:</span>
+          <select
+            value={docenteSceltoId}
+            onChange={(e) => setDocenteSceltoId(e.target.value)}
+            className="border-2 border-indigo-300 rounded-xl px-2.5 py-1 text-xs font-black bg-indigo-50/50 text-indigo-950 outline-none focus:border-indigo-600 focus:bg-white transition max-w-[320px]"
+          >
+            <option value="">-- Seleziona Docente / Cattedra --</option>
+            {docentiUnici.map(d => (
+              <option key={d.id} value={d.id}>
+                {d.nome} {d.materie?.length ? `(${d.materie.join(', ')})` : ''}
+              </option>
+            ))}
+          </select>
+          {req.docenteSuggeritoNome && (
+            <span className="text-[11px] text-slate-500 italic">
+              (Suggerito: <strong>{req.docenteSuggeritoNome}</strong>)
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
         <button
           type="button"
           disabled={!docenteSceltoId}
           onClick={() => onApprova(req.id, docenteSceltoId)}
-          className={`px-3.5 py-1.5 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer flex items-center gap-1 ${
-            docenteSceltoId ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-slate-300 cursor-not-allowed text-slate-500'
+          className={`px-4 py-2 text-white text-xs font-black rounded-xl shadow-sm transition cursor-pointer flex items-center gap-1.5 ${
+            docenteSceltoId 
+              ? 'bg-emerald-600 hover:bg-emerald-700 hover:shadow-md active:scale-95' 
+              : 'bg-slate-300 cursor-not-allowed text-slate-500'
           }`}
         >
-          <CheckCircle className="w-3.5 h-3.5" />
-          <span>Conferma e Collega</span>
+          <CheckCircle className="w-4 h-4" />
+          <span>Assegna Cattedra & Abilita Accesso</span>
         </button>
 
         <button
           type="button"
           onClick={() => onRifiuta(req.id)}
-          className="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
+          className="px-3 py-2 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 text-xs font-bold rounded-xl transition cursor-pointer"
         >
           Rifiuta
         </button>
@@ -630,6 +638,57 @@ export const AnagraficaOrario: React.FC = () => {
                 Ho capito, Chiudi
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* RICHIESTE DI ACCESSO DOCENTI IN SOSPESO (COMPILAZIONE & ASSEGNAZIONE) */}
+      {/* ========================================================= */}
+      {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length > 0 && (
+        <div className="bg-amber-50/90 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 shadow-sm space-y-3.5 animate-in fade-in">
+          <div className="flex items-center justify-between gap-3 border-b border-amber-200/80 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-2xl bg-amber-600 text-white flex items-center justify-center font-bold text-base shadow-2xs">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-amber-950 flex items-center gap-2">
+                  <span>Richieste di Accesso Docenti in Sospeso</span>
+                  <span className="bg-amber-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                    {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length} da gestire
+                  </span>
+                </h3>
+                <p className="text-xs text-amber-800">
+                  I docenti hanno effettuato il login con Google: seleziona la cattedra corrispondente per collegare l'account e dare l'accesso.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            {richiesteAccessoDocenti
+              .filter(r => r.stato === 'IN_ATTESA')
+              .map(req => (
+                <RichiestaCardItem
+                  key={req.id}
+                  req={req}
+                  docentiUnici={docentiUnici}
+                  onApprova={(reqId, docId) => {
+                    const docTrovato = docentiUnici.find(d => d.id === docId);
+                    approvaRichiestaAccesso(reqId, docId);
+                    setNotificaSalvataggio(`✅ Cattedra ${docTrovato?.nome || ''} assegnata con successo a ${req.email}! Accesso abilitato.`);
+                    setTimeout(() => setNotificaSalvataggio(null), 5000);
+                  }}
+                  onRifiuta={(reqId) => {
+                    if (window.confirm(`Sei sicuro di voler rifiutare la richiesta per ${req.email}?`)) {
+                      rifiutaRichiestaAccesso(reqId);
+                      setNotificaSalvataggio(`Richiesta di accesso per ${req.email} rifiutata.`);
+                      setTimeout(() => setNotificaSalvataggio(null), 4000);
+                    }
+                  }}
+                />
+              ))}
           </div>
         </div>
       )}
