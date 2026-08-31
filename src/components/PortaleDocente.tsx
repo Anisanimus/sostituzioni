@@ -232,13 +232,21 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
     });
   };
 
-  const mieSostituzioni = sostituzioni.filter(
-    s => collegatiIds.includes(s.docenteSostitutoId) && s.pubblicata
-  );
+  const mieSostituzioni = React.useMemo(() => {
+    return sostituzioni
+      .filter(s => collegatiIds.includes(s.docenteSostitutoId) && s.pubblicata)
+      .sort((a, b) => {
+        const cmpData = (a.data || '').localeCompare(b.data || '');
+        if (cmpData !== 0) return cmpData;
+        return (a.ora || 0) - (b.ora || 0);
+      });
+  }, [sostituzioni, collegatiIds]);
 
-  const mieNotificheNonLette = notifiche.filter(
-    n => collegatiIds.includes(n.docenteId) && !n.letta
-  );
+  const mieNotificheNonLette = React.useMemo(() => {
+    return notifiche
+      .filter(n => collegatiIds.includes(n.docenteId) && !n.letta)
+      .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  }, [notifiche, collegatiIds]);
 
   const getDocenteNome = (id: string) => docenti.find(d => d.id === id)?.nome || id;
 
