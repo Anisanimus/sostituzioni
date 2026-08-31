@@ -259,20 +259,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return DEFAULT_IMPOSTAZIONI_SCUOLA;
   });
 
-  const cleanUndefined = (obj: any): any => {
-    return JSON.parse(JSON.stringify(obj, (_, v) => (v === undefined ? null : v)));
+  const deepCleanUndefined = (obj: any): any => {
+    if (obj === null || obj === undefined) return '';
+    if (typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(deepCleanUndefined);
+    const cleaned: Record<string, any> = {};
+    for (const key of Object.keys(obj)) {
+      const val = obj[key];
+      if (val !== undefined) {
+        cleaned[key] = deepCleanUndefined(val);
+      }
+    }
+    return cleaned;
   };
 
   const updateImpostazioniScuola = async (nuove: Partial<ImpostazioniScuola>) => {
     setImpostazioniScuola(prev => {
       const merged = { ...prev, ...nuove };
-      const updated = cleanUndefined(merged);
+      const updated = deepCleanUndefined(merged);
       localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(updated));
       // Salva DIRETTAMENTE e IMMEDIATAMENTE su Cloud Firestore (100% pulito da undefined)
-      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
-      setDoc(scuolaDocRef, { impostazioniScuola: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true })
-        .then(() => console.log('✅ Impostazioni scuola salvate su Cloud!'))
-        .catch(err => console.error('Errore salvataggio impostazioni scuola su Cloud:', err));
+      try {
+        const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+        setDoc(scuolaDocRef, { impostazioniScuola: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true })
+          .then(() => console.log('✅ Impostazioni scuola salvate su Cloud!'))
+          .catch(err => console.error('Errore salvataggio impostazioni scuola su Cloud:', err));
+      } catch (e) {
+        console.error('Errore chiamata setDoc impostazioni:', e);
+      }
       return updated;
     });
   };
@@ -680,7 +694,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     syncTimeoutRef.current = setTimeout(async () => {
       try {
-        const payload = {
+        const payload = deepCleanUndefined({
           docenti: docentiRef.current,
           orariDocenti: orariDocentiRef.current,
           assenze: assenzeRef.current,
@@ -693,7 +707,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           impostazioniScuola: impostazioniScuolaRef.current,
           ultimoAggiornamento: new Date().toISOString(),
           ...override
-        };
+        });
         const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
         await setDoc(scuolaDocRef, payload, { merge: true });
         console.log('☁️ Sincronizzato con successo su Firestore!');
