@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, LayoutDashboard, Clock, ShieldCheck, RefreshCw, Table, Search, BookOpen, GraduationCap, Accessibility } from 'lucide-react';
-import { getDocentiCollegatiIds, getDocentiUnici, trovaCorrispondenzaDocente, formatDataItaliana, getOrarioUnificatoDocente, getBaseNomeDocente, getDocentiCompresentiInClasseNellOra } from '../utils/docentiHelper';
+import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, LayoutDashboard, Clock, ShieldCheck, RefreshCw, Table, Search, BookOpen, GraduationCap, Accessibility, Users, School } from 'lucide-react';
+import { 
+  getDocentiCollegatiIds, getDocentiUnici, trovaCorrispondenzaDocente, 
+  formatDataItaliana, getOrarioUnificatoDocente, getBaseNomeDocente, 
+  getDocentiCompresentiInClasseNellOra, getClassiUniche, getDocentiConsiglioClasse 
+} from '../utils/docentiHelper';
 import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
 import { GiornoSettimana } from '../types';
 
 const GIORNI_SETTIMANA: GiornoSettimana[] = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 
-export const PortaleDocente: React.FC = () => {
+export type TabDocenteType = 'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE';
+
+interface PortaleDocenteProps {
+  currentTab?: TabDocenteType;
+  onTabChange?: (tab: TabDocenteType) => void;
+}
+
+export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTabChange }) => {
   const { 
     docenti, orariDocenti, sostituzioni, notifiche, firmaSostituzione, segnaNotificheLette, 
     richiesteAccessoDocenti, associaEmailDocente, creaRichiestaAccessoDocente 
@@ -16,13 +27,24 @@ export const PortaleDocente: React.FC = () => {
   const { utenteInfo, logout } = useAuth();
 
   const [notificaAttiva, setNotificaAttiva] = useState<boolean>(false);
-  const [tabDocente, setTabDocente] = useState<'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA' | 'MIO_ORARIO'>('MIE_SOSTITUZIONI');
+  const [internalTab, setInternalTab] = useState<TabDocenteType>('MIE_SOSTITUZIONI');
   const [richiestaInviata, setRichiestaInviata] = useState<boolean>(false);
   const [mostraGuidaIos, setMostraGuidaIos] = useState<boolean>(false);
 
-  // Stato per la visualizzazione dell'Orario: di default l'ID del docente loggato
+  // Tab effettivo sincronizzato tra props e stato interno
+  const tabDocente = currentTab || internalTab;
+  const setTabDocente = (tab: TabDocenteType) => {
+    setInternalTab(tab);
+    if (onTabChange) onTabChange(tab);
+  };
+
+  // Stato per la visualizzazione dell'Orario: modalità Docente o Classe
+  const [tipoVistaOrario, setTipoVistaOrario] = useState<'DOCENTE' | 'CLASSE'>('DOCENTE');
   const [docenteOrarioSelezionatoId, setDocenteOrarioSelezionatoId] = useState<string>('');
-  const [ricercaCollega, setRicercaCollega] = useState<string>('');
+  const [classeOrarioSelezionata, setClasseOrarioSelezionata] = useState<string>('');
+
+  // Stato per Consigli di Classe
+  const [classeConsiglioSelezionata, setClasseConsiglioSelezionata] = useState<string>('');
 
   // Calcola corrispondenza del docente autenticato
   const userEmail = utenteInfo?.email || '';
@@ -54,12 +76,25 @@ export const PortaleDocente: React.FC = () => {
   const docente = docenti.find(d => d.id === selectedDocenteId);
   const collegatiIds = selectedDocenteId ? getDocentiCollegatiIds(selectedDocenteId, docenti) : [];
 
+  // Lista delle classi uniche
+  const classiDisponibili = React.useMemo(() => {
+    return getClassiUniche(docenti, orariDocenti);
+  }, [docenti, orariDocenti]);
+
   // Inizializza il docente visualizzato nell'orario con se stesso
   useEffect(() => {
     if (selectedDocenteId && !docenteOrarioSelezionatoId) {
       setDocenteOrarioSelezionatoId(selectedDocenteId);
     }
   }, [selectedDocenteId, docenteOrarioSelezionatoId]);
+
+  // Inizializza classi predefinite
+  useEffect(() => {
+    if (classiDisponibili.length > 0) {
+      if (!classeOrarioSelezionata) setClasseOrarioSelezionata(classiDisponibili[0]);
+      if (!classeConsiglioSelezionata) setClasseConsiglioSelezionata(classiDisponibili[0]);
+    }
+  }, [classiDisponibili, classeOrarioSelezionata, classeConsiglioSelezionata]);
 
   // Salva l'id del docente per le push notification
   useEffect(() => {
@@ -317,7 +352,7 @@ export const PortaleDocente: React.FC = () => {
 
               <button
                 onClick={() => segnaNotificheLette(selectedDocenteId)}
-                className="text-xs font-bold text-rose-700 hover:text-rose-900 bg-rose-100/80 hover:bg-rose-200 px-2.5 py-1 rounded-lg transition shrink-0"
+                className="text-xs font-bold text-rose-700 hover:text-rose-900 bg-rose-100/80 hover:bg-rose-200 px-2.5 py-1 rounded-lg transition shrink-0 cursor-pointer"
               >
                 Ho Capito ✓
               </button>
@@ -383,7 +418,7 @@ export const PortaleDocente: React.FC = () => {
             </div>
             <button 
               onClick={() => setMostraGuidaIos(false)}
-              className="p-1 text-slate-400 hover:text-white rounded-lg"
+              className="p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -433,15 +468,28 @@ export const PortaleDocente: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => setTabDocente('MIO_ORARIO')}
+          onClick={() => setTabDocente('ORARIO')}
           className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-            tabDocente === 'MIO_ORARIO'
+            tabDocente === 'ORARIO'
               ? 'bg-indigo-600 text-white shadow-md'
               : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
           }`}
         >
           <Table className="w-4 h-4" />
           <span>Orario</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setTabDocente('CONSIGLI_CLASSE')}
+          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+            tabDocente === 'CONSIGLI_CLASSE'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>Consigli di Classe</span>
         </button>
       </div>
 
@@ -518,57 +566,103 @@ export const PortaleDocente: React.FC = () => {
         <QuadroSostituzioniScuola isEmbedInVicepresidenza={true} />
       )}
 
-      {/* CONTENUTO SCHEDA 3: CONSULTAZIONE ORARIO PERSONALE & DEI COLLEGHI CON COMPRESENZE */}
-      {tabDocente === 'MIO_ORARIO' && (
+      {/* CONTENUTO SCHEDA 3: CONSULTAZIONE ORARIO PERSONALE, DEI COLLEGHI E PER CLASSE */}
+      {tabDocente === 'ORARIO' && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                 <Table className="w-5 h-5 text-indigo-600" />
-                <span>{isMioOrario ? 'Il Tuo Orario Settimanale' : `Orario di ${docenteAttualeOrario?.nome}`}</span>
+                <span>
+                  {tipoVistaOrario === 'DOCENTE'
+                    ? isMioOrario ? 'Il Tuo Orario Settimanale' : `Orario di ${docenteAttualeOrario?.nome}`
+                    : `Orario Settimanale Classe ${classeOrarioSelezionata}`}
+                </span>
               </h3>
               <p className="text-xs text-slate-500">
-                {isMioOrario 
-                  ? 'Visualizza tutte le tue cattedre unificate e le figure compresenti in aula (Sostegno / Educatori).' 
-                  : 'Consulta l\'orario settimanale e le compresenze del collega selezionato.'}
+                {tipoVistaOrario === 'DOCENTE'
+                  ? 'Visualizza orario docente con figure compresenti in aula (Sostegno / Educatori).'
+                  : 'Consulta la tabella oraria completa della classe con tutti i docenti assegnati ora per ora.'}
               </p>
             </div>
 
+            {/* SWITCHER TIPO VISTA: DOCENTE VS CLASSE */}
             <div className="flex items-center gap-2 flex-wrap">
-              {!isMioOrario && (
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
                 <button
                   type="button"
-                  onClick={() => {
-                    setDocenteOrarioSelezionatoId(selectedDocenteId);
-                    setRicercaCollega('');
-                  }}
-                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  onClick={() => setTipoVistaOrario('DOCENTE')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    tipoVistaOrario === 'DOCENTE'
+                      ? 'bg-white text-indigo-950 shadow-2xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
                 >
-                  <span>👤 Torna al Mio Orario</span>
+                  Vista Docente
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setTipoVistaOrario('CLASSE')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    tipoVistaOrario === 'CLASSE'
+                      ? 'bg-white text-indigo-950 shadow-2xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Vista per Classe
+                </button>
+              </div>
+
+              {/* SELETTORE VISTA DOCENTE */}
+              {tipoVistaOrario === 'DOCENTE' && (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {!isMioOrario && (
+                    <button
+                      type="button"
+                      onClick={() => setDocenteOrarioSelezionatoId(selectedDocenteId)}
+                      className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                    >
+                      <span>👤 Mio Orario</span>
+                    </button>
+                  )}
+
+                  <select
+                    value={docenteOrarioSelezionatoId}
+                    onChange={(e) => setDocenteOrarioSelezionatoId(e.target.value)}
+                    className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  >
+                    <option value={selectedDocenteId}>-- Mio Orario ({docente?.nome}) --</option>
+                    <optgroup label="Tutti i Colleghi">
+                      {docentiUnici.filter(d => d.id !== selectedDocenteId).map(d => (
+                        <option key={d.id} value={d.id}>
+                          {d.nome} ({d.materie.join(', ')})
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
               )}
 
-              <div className="relative">
-                <select
-                  value={docenteOrarioSelezionatoId}
-                  onChange={(e) => setDocenteOrarioSelezionatoId(e.target.value)}
-                  className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                >
-                  <option value={selectedDocenteId}>-- Mio Orario ({docente?.nome}) --</option>
-                  <optgroup label="Tutti i Colleghi">
-                    {docentiUnici.filter(d => d.id !== selectedDocenteId).map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.nome} ({d.materie.join(', ')})
-                      </option>
+              {/* SELETTORE VISTA PER CLASSE */}
+              {tipoVistaOrario === 'CLASSE' && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-500">Classe:</span>
+                  <select
+                    value={classeOrarioSelezionata}
+                    onChange={(e) => setClasseOrarioSelezionata(e.target.value)}
+                    className="bg-slate-50 border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-black text-indigo-900 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  >
+                    {classiDisponibili.map(c => (
+                      <option key={c} value={c}>Classe {c}</option>
                     ))}
-                  </optgroup>
-                </select>
-              </div>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* TABELLA ORARIO 9 ORE × 5 GIORNI CON INDICAZIONE COMPRESENZE */}
-          {(() => {
+          {/* VISTA 1: TABELLA ORARIO DOCENTE */}
+          {tipoVistaOrario === 'DOCENTE' && (() => {
             const orarioDoc = getOrarioUnificatoDocente(docenteAttualeOrario?.id || '', docenti, orariDocenti);
             const isDocenteSostegno = docenteAttualeOrario?.isSostegno || docenteAttualeOrario?.materia?.toUpperCase().includes('SOSTEGNO');
 
@@ -686,6 +780,182 @@ export const PortaleDocente: React.FC = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            );
+          })()}
+
+          {/* VISTA 2: TABELLA ORARIO PER CLASSE */}
+          {tipoVistaOrario === 'CLASSE' && (() => {
+            return (
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-center border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[11px] uppercase">
+                      <th className="py-2.5 px-2 w-16 border-r border-slate-200">Ora</th>
+                      {GIORNI_SETTIMANA.map(g => (
+                        <th key={g} className="py-2.5 px-2 border-r border-slate-200 last:border-r-0">
+                          {g}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map(oraNum => (
+                      <tr key={oraNum} className="hover:bg-slate-50/60 transition">
+                        <td className="py-2 px-2 font-black text-slate-700 bg-slate-50/80 border-r border-slate-200">
+                          {oraNum}ª
+                        </td>
+                        {GIORNI_SETTIMANA.map(giorno => {
+                          const compresenze = getDocentiCompresentiInClasseNellOra(
+                            classeOrarioSelezionata, 
+                            giorno, 
+                            oraNum, 
+                            docenti, 
+                            orariDocenti
+                          );
+
+                          const hasQualcosa = compresenze.curricolari.length > 0 || compresenze.sostegni.length > 0 || compresenze.educatori.length > 0;
+
+                          if (!hasQualcosa) {
+                            return (
+                              <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 text-slate-300">
+                                -
+                              </td>
+                            );
+                          }
+
+                          return (
+                            <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 align-top">
+                              <div className="space-y-1.5 text-left">
+                                {/* DOCENTI CURRICOLARI */}
+                                {compresenze.curricolari.map(c => (
+                                  <div key={c.id} className="p-1 bg-indigo-50/80 border border-indigo-200 rounded text-[11px] leading-tight">
+                                    <div className="font-black text-indigo-950 truncate">
+                                      {getBaseNomeDocente(c.nome)}
+                                    </div>
+                                    <div className="text-[9px] text-indigo-600 font-bold uppercase truncate">
+                                      {c.materia}
+                                    </div>
+                                  </div>
+                                ))}
+
+                                {/* DOCENTI DI SOSTEGNO */}
+                                {compresenze.sostegni.map(s => (
+                                  <div key={s.id} className="p-1 bg-purple-50 border border-purple-200 rounded text-[10px] leading-tight text-purple-900">
+                                    <div className="font-bold flex items-center gap-1 truncate">
+                                      <span>♿</span>
+                                      <span className="truncate">{getBaseNomeDocente(s.nome)}</span>
+                                    </div>
+                                    <span className="text-[9px] text-purple-600 font-medium">Sostegno</span>
+                                  </div>
+                                ))}
+
+                                {/* EDUCATORI */}
+                                {compresenze.educatori.map(ed => (
+                                  <div key={ed.id} className="p-1 bg-teal-50 border border-teal-200 rounded text-[10px] leading-tight text-teal-900">
+                                    <div className="font-bold flex items-center gap-1 truncate">
+                                      <span>🎓</span>
+                                      <span className="truncate">{getBaseNomeDocente(ed.nome)}</span>
+                                    </div>
+                                    <span className="text-[9px] text-teal-600 font-medium">Educatore</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* CONTENUTO SCHEDA 4: CONSIGLI DI CLASSE */}
+      {tabDocente === 'CONSIGLI_CLASSE' && (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                <Users className="w-5 h-5 text-indigo-600" />
+                <span>Consiglio di Classe: {classeConsiglioSelezionata || 'Seleziona Classe'}</span>
+              </h3>
+              <p className="text-xs text-slate-500">
+                Elenco completo di tutti i docenti curricolari, di sostegno ed educatori assegnati a questa classe.
+              </p>
+            </div>
+
+            {/* SELETTORE DELLA CLASSE */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-600">Seleziona Classe:</span>
+              <select
+                value={classeConsiglioSelezionata}
+                onChange={(e) => setClasseConsiglioSelezionata(e.target.value)}
+                className="bg-indigo-50 border border-indigo-300 rounded-xl px-3 py-1.5 text-xs font-black text-indigo-950 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-2xs"
+              >
+                {classiDisponibili.map(c => (
+                  <option key={c} value={c}>Classe {c}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* LISTA DEI DOCENTI DEL CONSIGLIO DI CLASSE */}
+          {(() => {
+            const membri = getDocentiConsiglioClasse(classeConsiglioSelezionata, docenti, orariDocenti);
+
+            if (membri.length === 0) {
+              return (
+                <div className="p-12 text-center text-slate-400">
+                  <Users className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                  <p className="font-semibold text-slate-600">Nessun docente trovato per la classe {classeConsiglioSelezionata}</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {membri.map((m, idx) => (
+                  <div 
+                    key={idx}
+                    className={`p-3.5 rounded-xl border flex items-center justify-between gap-3 shadow-2xs transition ${
+                      m.isEducatore 
+                        ? 'bg-teal-50/50 border-teal-200 hover:border-teal-300'
+                        : m.isSostegno
+                          ? 'bg-purple-50/50 border-purple-200 hover:border-purple-300'
+                          : 'bg-white border-slate-200 hover:border-indigo-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 ${
+                        m.isEducatore
+                          ? 'bg-teal-600 text-white'
+                          : m.isSostegno
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-indigo-600 text-white'
+                      }`}>
+                        {m.isEducatore ? '🎓' : m.isSostegno ? '♿' : '🧑‍🏫'}
+                      </div>
+                      <div>
+                        <h4 className="font-black text-slate-900 text-xs sm:text-sm">
+                          {getBaseNomeDocente(m.docente.nome)}
+                        </h4>
+                        <p className="text-[11px] text-slate-600 font-medium">
+                          {m.materie.join(' • ')}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="inline-block bg-slate-100 text-slate-700 font-black text-[11px] px-2 py-0.5 rounded-md border border-slate-200">
+                        {m.oreSettimanali} {m.oreSettimanali === 1 ? 'ora/sett' : 'ore/sett'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             );
           })()}

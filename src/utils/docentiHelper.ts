@@ -541,3 +541,98 @@ export function getDocentiCompresentiInClasseNellOra(
   return { curricolari, sostegni, educatori };
 }
 
+/**
+ * Estrae tutte le classi uniche presenti negli orari scolastici (ordinate alfanumericamente es. 1A, 1B, 2A, 2B, 3A...)
+ */
+export function getClassiUniche(docenti: Docente[], orariDocenti: OrarioDocente[]): string[] {
+  const classiSet = new Set<string>();
+
+  orariDocenti.forEach(o => {
+    o.ore.forEach(c => {
+      if (c.valore) {
+        const val = c.valore.trim().toUpperCase();
+        // Ignora disposizioni, potenziamenti, buchi
+        if (val && val !== 'D' && val !== 'P' && !val.startsWith('POT') && !val.includes('DISP')) {
+          // Se ci sono classi multiple separate da spazio o virgola
+          const matches = val.match(/\b([1-5][A-Z])\b/g);
+          if (matches) {
+            matches.forEach(m => classiSet.add(m));
+          } else if (/^[1-5][A-Z0-9]+$/i.test(val)) {
+            classiSet.add(val);
+          }
+        }
+      }
+    });
+  });
+
+  return Array.from(classiSet).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+}
+
+export interface DocenteConsiglioClasse {
+  docente: Docente;
+  materie: string[];
+  oreSettimanali: number;
+  isSostegno: boolean;
+  isEducatore: boolean;
+}
+
+/**
+ * Restituisce l'elenco dei docenti facenti parte del Consiglio di Classe per una determinata classe
+ */
+export function getDocentiConsiglioClasse(
+  classe: string,
+  docenti: Docente[],
+  orariDocenti: OrarioDocente[]
+): DocenteConsiglioClasse[] {
+  if (!classe) return [];
+  const classeNorm = classe.toUpperCase().trim();
+
+  const mappa = new Map<string, DocenteConsiglioClasse>();
+
+  docenti.forEach(d => {
+    const orario = orariDocenti.find(o => o.docenteId === d.id);
+    if (!orario) return;
+
+    let oreInClasse = 0;
+    orario.ore.forEach(c => {
+      if (c.valore) {
+        const v = c.valore.toUpperCase().trim();
+        if (v === classeNorm || v.startsWith(classeNorm + ' ') || v.endsWith(' ' + classeNorm)) {
+          oreInClasse++;
+        }
+      }
+    });
+
+    if (oreInClasse > 0) {
+      const baseNome = getBaseNomeDocente(d.nome);
+      const isEdu = !!(d.isEducatore || d.materia?.toUpperCase().includes('EDUCATORE') || d.nome?.toUpperCase().includes('EDUCATORE'));
+      const isSost = !isEdu && !!(d.isSostegno || d.materia?.toUpperCase().includes('SOSTEGNO') || d.nome?.toUpperCase().includes('SOSTEGNO'));
+
+      if (!mappa.has(baseNome)) {
+        mappa.set(baseNome, {
+          docente: d,
+          materie: [d.materia || 'Docente'],
+          oreSettimanali: oreInClasse,
+          isSostegno: isSost,
+          isEducatore: isEdu
+        });
+      } else {
+        const item = mappa.get(baseNome)!;
+        item.oreSettimanali += oreInClasse;
+        if (d.materia && !item.materie.includes(d.materia)) {
+          item.materie.push(d.materia);
+        }
+      }
+    }
+  });
+
+  return Array.from(mappa.values()).sort((a, b) => {
+    // Ordine: Curricolari prima, poi Sostegno, poi Educatori
+    if (!a.isSostegno && !a.isEducatore && (b.isSostegno || b.isEducatore)) return -1;
+    if ((a.isSostegno || a.isEducatore) && !b.isSostegno && !b.isEducatore) return 1;
+    if (a.isSostegno && b.isEducatore) return -1;
+    if (a.isEducatore && b.isSostegno) return 1;
+    return a.docente.nome.localeCompare(b.docente.nome);
+  });
+}
+
