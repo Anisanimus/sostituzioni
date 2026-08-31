@@ -24,78 +24,64 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
 
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
-  // Calcolo ID attivi
-  const idPlenari = sanitizeCalendarId(cfg?.impegniPlenariId);
-  const idSecondaria = sanitizeCalendarId(cfg?.impegniSecondariaId);
-  const idInformatica = sanitizeCalendarId(cfg?.risorseInformaticaId);
-  const idTeatro = sanitizeCalendarId(cfg?.risorseTeatroId);
+  // Ottieni la lista dinamica degli impegni o risorse
+  const listaCalendari = React.useMemo(() => {
+    if (modalita === 'IMPEGNI') {
+      if (cfg?.impegni && Array.isArray(cfg.impegni) && cfg.impegni.length > 0) {
+        return cfg.impegni.filter(c => c.googleId && c.googleId.trim());
+      }
+      // Fallback legacy
+      const leg: { id: string; nome: string; googleId: string; colore?: string }[] = [];
+      if (cfg?.impegniPlenariId) leg.push({ id: 'cal_plenari', nome: 'Plenari / Unitari', googleId: cfg.impegniPlenariId, colore: '#039BE5' });
+      if (cfg?.impegniSecondariaId) leg.push({ id: 'cal_secondaria', nome: 'Secondaria', googleId: cfg.impegniSecondariaId, colore: '#7986CB' });
+      return leg;
+    } else {
+      if (cfg?.risorse && Array.isArray(cfg.risorse) && cfg.risorse.length > 0) {
+        return cfg.risorse.filter(r => r.googleId && r.googleId.trim());
+      }
+      // Fallback legacy
+      const leg: { id: string; nome: string; googleId: string; colore?: string }[] = [];
+      if (cfg?.risorseInformaticaId) leg.push({ id: 'cal_informatica', nome: 'Lab. Informatica', googleId: cfg.risorseInformaticaId, colore: '#009688' });
+      if (cfg?.risorseTeatroId) leg.push({ id: 'cal_teatro', nome: 'Teatro / Aula Magna', googleId: cfg.risorseTeatroId, colore: '#E65100' });
+      return leg;
+    }
+  }, [cfg, modalita]);
 
-  const [filtroImpegni, setFiltroImpegni] = useState<'COMBINATO' | 'PLENARI' | 'SECONDARIA'>(() => {
-    if (idPlenari && !idSecondaria) return 'PLENARI';
-    if (idSecondaria && !idPlenari) return 'SECONDARIA';
-    return 'COMBINATO';
-  });
-
-  const [filtroRisorse, setFiltroRisorse] = useState<'INFORMATICA' | 'TEATRO' | 'COMBINATO'>(() => {
-    if (idInformatica && !idTeatro) return 'INFORMATICA';
-    if (idTeatro && !idInformatica) return 'TEATRO';
-    return 'COMBINATO';
-  });
+  // ID del filtro selezionato ('TUTTI' oppure l'ID del singolo calendario)
+  const [filtroSelezionato, setFiltroSelezionato] = useState<string>('TUTTI');
 
   const generaEmbedUrl = (): string => {
     const baseUrl = 'https://calendar.google.com/calendar/embed?ctz=Europe%2FRome&mode=MONTH&showTitle=0&showNav=1&showDate=1&showPrint=1&showTabs=1&showCalendars=1&showTz=0';
 
-    if (modalita === 'IMPEGNI') {
-      if (filtroImpegni === 'PLENARI' && idPlenari) {
-        return `${baseUrl}&src=${encodeURIComponent(idPlenari)}&color=%23039BE5`;
+    if (listaCalendari.length === 0) return baseUrl;
+
+    if (filtroSelezionato !== 'TUTTI') {
+      const target = listaCalendari.find(c => c.id === filtroSelezionato || c.googleId === filtroSelezionato);
+      if (target) {
+        const cleanId = sanitizeCalendarId(target.googleId);
+        const col = encodeURIComponent(target.colore || (modalita === 'IMPEGNI' ? '#039BE5' : '#009688'));
+        return `${baseUrl}&src=${encodeURIComponent(cleanId)}&color=${col}`;
       }
-      if (filtroImpegni === 'SECONDARIA' && idSecondaria) {
-        return `${baseUrl}&src=${encodeURIComponent(idSecondaria)}&color=%237986CB`;
-      }
-      let url = baseUrl;
-      let added = 0;
-      if (idPlenari) {
-        url += `&src=${encodeURIComponent(idPlenari)}&color=%23039BE5`;
-        added++;
-      }
-      if (idSecondaria) {
-        url += `&src=${encodeURIComponent(idSecondaria)}&color=%237986CB`;
-        added++;
-      }
-      if (added === 0) {
-        // Fallback su uno qualsiasi disponibile
-        const fallback = idPlenari || idSecondaria;
-        if (fallback) url += `&src=${encodeURIComponent(fallback)}`;
-      }
-      return url;
-    } else {
-      if (filtroRisorse === 'INFORMATICA' && idInformatica) {
-        return `${baseUrl}&src=${encodeURIComponent(idInformatica)}&color=%23009688`;
-      }
-      if (filtroRisorse === 'TEATRO' && idTeatro) {
-        return `${baseUrl}&src=${encodeURIComponent(idTeatro)}&color=%23E65100`;
-      }
-      let url = baseUrl;
-      let added = 0;
-      if (idInformatica) {
-        url += `&src=${encodeURIComponent(idInformatica)}&color=%23009688`;
-        added++;
-      }
-      if (idTeatro) {
-        url += `&src=${encodeURIComponent(idTeatro)}&color=%23E65100`;
-        added++;
-      }
-      if (added === 0) {
-        const fallback = idInformatica || idTeatro;
-        if (fallback) url += `&src=${encodeURIComponent(fallback)}`;
-      }
-      return url;
     }
+
+    // Modalità combinata "TUTTI": aggiungi tutti i calendari della categoria
+    let url = baseUrl;
+    const colors = modalita === 'IMPEGNI' 
+      ? ['%23039BE5', '%237986CB', '%233F51B5', '%2300ACC1', '%235E35B1']
+      : ['%23009688', '%23E65100', '%2343A047', '%23D81B60', '%238E24AA'];
+
+    listaCalendari.forEach((cal, idx) => {
+      const cleanId = sanitizeCalendarId(cal.googleId);
+      if (cleanId) {
+        const color = encodeURIComponent(cal.colore || '') || colors[idx % colors.length];
+        url += `&src=${encodeURIComponent(cleanId)}&color=${color}`;
+      }
+    });
+
+    return url;
   };
 
-  const hasConfigurazione = modalita === 'IMPEGNI' 
-    ? Boolean(idPlenari || idSecondaria) 
-    : Boolean(idInformatica || idTeatro);
+  const hasConfigurazione = listaCalendari.length > 0;
 
   return (
     <div className="space-y-4 max-w-6xl mx-auto animate-in fade-in duration-200">
@@ -111,69 +97,44 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
             <p className="text-xs text-slate-500">
               {modalita === 'IMPEGNI' 
                 ? "Consigli, riunioni collegiali, dipartimenti e scadenze dell'Istituto"
-                : 'Disponibilità e occupazione di Laboratorio Informatica, Teatro e aule speciali'}
+                : 'Disponibilità e occupazione di aule speciali, laboratori e spazi comuni'}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {modalita === 'IMPEGNI' ? (
-            <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setFiltroImpegni('COMBINATO')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${filtroImpegni === 'COMBINATO' ? 'bg-white text-indigo-900 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Tutti gli Impegni</span>
-              </button>
+          {listaCalendari.length > 0 && (
+            <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 flex-wrap">
+              {listaCalendari.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setFiltroSelezionato('TUTTI')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    filtroSelezionato === 'TUTTI'
+                      ? modalita === 'IMPEGNI' ? 'bg-indigo-600 text-white shadow-2xs font-black' : 'bg-teal-600 text-white shadow-2xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>{modalita === 'IMPEGNI' ? 'Tutti gli Impegni' : 'Tutte le Risorse'}</span>
+                </button>
+              )}
 
-              <button
-                type="button"
-                onClick={() => setFiltroImpegni('PLENARI')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${filtroImpegni === 'PLENARI' ? 'bg-blue-600 text-white shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                <span className="w-2 h-2 rounded-full bg-blue-400" />
-                <span>Plenari / Unitari</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFiltroImpegni('SECONDARIA')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${filtroImpegni === 'SECONDARIA' ? 'bg-indigo-600 text-white shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                <span className="w-2 h-2 rounded-full bg-indigo-300" />
-                <span>Secondaria</span>
-              </button>
-            </div>
-          ) : (
-            <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setFiltroRisorse('INFORMATICA')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${filtroRisorse === 'INFORMATICA' ? 'bg-teal-600 text-white shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                <Monitor className="w-3.5 h-3.5" />
-                <span>Lab. Informatica</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFiltroRisorse('TEATRO')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${filtroRisorse === 'TEATRO' ? 'bg-amber-600 text-white shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                <Theater className="w-3.5 h-3.5" />
-                <span>Teatro / Aula Magna</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFiltroRisorse('COMBINATO')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${filtroRisorse === 'COMBINATO' ? 'bg-white text-slate-900 shadow-2xs font-black' : 'text-slate-600 hover:text-slate-900'}`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Tutte le Risorse</span>
-              </button>
+              {listaCalendari.map((cal) => (
+                <button
+                  key={cal.id}
+                  type="button"
+                  onClick={() => setFiltroSelezionato(cal.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    filtroSelezionato === cal.id
+                      ? modalita === 'IMPEGNI' ? 'bg-indigo-600 text-white shadow-2xs font-black' : 'bg-teal-600 text-white shadow-2xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cal.colore || (modalita === 'IMPEGNI' ? '#039BE5' : '#009688') }} />
+                  <span>{cal.nome || 'Calendario'}</span>
+                </button>
+              ))}
             </div>
           )}
 
@@ -233,7 +194,7 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
 
           <div className="w-full h-[650px] sm:h-[750px] relative bg-slate-50">
             <iframe
-              key={refreshKey + filtroImpegni + filtroRisorse}
+              key={`${refreshKey}_${filtroSelezionato}_${modalita}`}
               src={generaEmbedUrl()}
               style={{ border: 0 }}
               width="100%"

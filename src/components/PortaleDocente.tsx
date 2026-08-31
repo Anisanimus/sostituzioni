@@ -524,31 +524,45 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
             <span>Consigli di Classe</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setTabDocente('IMPEGNI')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-              tabDocente === 'IMPEGNI'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            <Calendar className="w-4 h-4 text-indigo-500" />
-            <span>Impegni Scolastici</span>
-          </button>
+          {/* Mostra la scheda Impegni solo se è stato configurato almeno un calendario impegni */}
+          {Boolean(
+            (impostazioniScuola?.calendariGoogle?.impegni && impostazioniScuola.calendariGoogle.impegni.length > 0) ||
+            impostazioniScuola?.calendariGoogle?.impegniPlenariId ||
+            impostazioniScuola?.calendariGoogle?.impegniSecondariaId
+          ) && (
+            <button
+              type="button"
+              onClick={() => setTabDocente('IMPEGNI')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                tabDocente === 'IMPEGNI'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <Calendar className="w-4 h-4 text-indigo-500" />
+              <span>Impegni Scolastici</span>
+            </button>
+          )}
 
-          <button
-            type="button"
-            onClick={() => setTabDocente('RISORSE')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-              tabDocente === 'RISORSE'
-                ? 'bg-teal-600 text-white shadow-md'
-                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            <span className="text-sm">🏢</span>
-            <span>Risorse & Spazi</span>
-          </button>
+          {/* Mostra la scheda Risorse solo se è stata configurata almeno una stanza/risorsa */}
+          {Boolean(
+            (impostazioniScuola?.calendariGoogle?.risorse && impostazioniScuola.calendariGoogle.risorse.length > 0) ||
+            impostazioniScuola?.calendariGoogle?.risorseInformaticaId ||
+            impostazioniScuola?.calendariGoogle?.risorseTeatroId
+          ) && (
+            <button
+              type="button"
+              onClick={() => setTabDocente('RISORSE')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                tabDocente === 'RISORSE'
+                  ? 'bg-teal-600 text-white shadow-md'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <span className="text-sm">🏢</span>
+              <span>Risorse & Spazi</span>
+            </button>
+          )}
         </div>
       )}
 

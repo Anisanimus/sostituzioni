@@ -146,6 +146,13 @@ export interface ImpostazioniPriorita {
   prioritaGite: CategoriaSostituto[];
 }
 
+export interface CalendarioGoogleCustom {
+  id: string;          // ID unico del record (es. 'cal_1234')
+  nome: string;        // Nome personalizzato (es. "Impegni Plenari", "Aula Informatica", "Palestra")
+  googleId: string;    // ID del Google Calendar (es. "rosselli@icginostrada.it" o "c_xxxx@group.calendar.google.com")
+  colore?: string;     // Colore esadecimale opzionale
+}
+
 export interface ImpostazioniScuola {
   nomeScuola: string;
   tettoMaxPermessiBreviAnno: number;
@@ -166,10 +173,14 @@ export interface ImpostazioniScuola {
     ultimoInvioData?: string;     // YYYY-MM-DD
   };
   calendariGoogle?: {
-    impegniPlenariId?: string;      // ID o URL del Calendario Google Impegni Plenari
-    impegniSecondariaId?: string;   // ID o URL del Calendario Google Impegni Secondaria
-    risorseInformaticaId?: string;  // ID o URL del Calendario Google Laboratorio Informatica
-    risorseTeatroId?: string;       // ID o URL del Calendario Google Teatro / Aula Magna
+    // Liste dinamiche generiche
+    impegni?: CalendarioGoogleCustom[];
+    risorse?: CalendarioGoogleCustom[];
+    // Campi legacy per retrocompatibilità
+    impegniPlenariId?: string;
+    impegniSecondariaId?: string;
+    risorseInformaticaId?: string;
+    risorseTeatroId?: string;
   };
 }
 

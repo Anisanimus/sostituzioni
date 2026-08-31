@@ -644,53 +644,65 @@ const MainApp: React.FC = () => {
                     {tabVice === 'DOCENTI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTabVice('IMPEGNI');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
-                      tabVice === 'IMPEGNI'
-                        ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
-                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabVice === 'IMPEGNI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                        <Calendar className="w-4 h-4" />
+                  {Boolean(
+                    (impostazioniScuola?.calendariGoogle?.impegni && impostazioniScuola.calendariGoogle.impegni.length > 0) ||
+                    impostazioniScuola?.calendariGoogle?.impegniPlenariId ||
+                    impostazioniScuola?.calendariGoogle?.impegniSecondariaId
+                  ) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabVice('IMPEGNI');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabVice === 'IMPEGNI'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabVice === 'IMPEGNI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Calendar className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Impegni Scolastici</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Calendari e scadenze collegiali</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="block font-black text-sm">Impegni Scolastici</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Plenari, secondaria e scadenze collegiali</span>
-                      </div>
-                    </div>
-                    {tabVice === 'IMPEGNI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
-                  </button>
+                      {tabVice === 'IMPEGNI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+                  )}
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTabVice('RISORSE');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
-                      tabVice === 'RISORSE'
-                        ? 'bg-teal-50 text-teal-900 border border-teal-200 shadow-2xs font-black'
-                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabVice === 'RISORSE' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                        <Monitor className="w-4 h-4" />
+                  {Boolean(
+                    (impostazioniScuola?.calendariGoogle?.risorse && impostazioniScuola.calendariGoogle.risorse.length > 0) ||
+                    impostazioniScuola?.calendariGoogle?.risorseInformaticaId ||
+                    impostazioniScuola?.calendariGoogle?.risorseTeatroId
+                  ) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabVice('RISORSE');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabVice === 'RISORSE'
+                          ? 'bg-teal-50 text-teal-900 border border-teal-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabVice === 'RISORSE' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Monitor className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Risorse & Spazi</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Aule speciali, laboratori e spazi</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="block font-black text-sm">Risorse & Spazi</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Laboratorio Informatica e Teatro / Aula Magna</span>
-                      </div>
-                    </div>
-                    {tabVice === 'RISORSE' && <span className="w-2 h-2 rounded-full bg-teal-600" />}
-                  </button>
+                      {tabVice === 'RISORSE' && <span className="w-2 h-2 rounded-full bg-teal-600" />}
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -820,31 +832,43 @@ const MainApp: React.FC = () => {
                 <span>Consigli di Classe</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => setTabAta('IMPEGNI')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                  tabAta === 'IMPEGNI'
-                    ? 'bg-amber-600 text-white shadow-md'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <Calendar className="w-4 h-4 text-amber-500" />
-                <span>Impegni Scolastici</span>
-              </button>
+              {Boolean(
+                (impostazioniScuola?.calendariGoogle?.impegni && impostazioniScuola.calendariGoogle.impegni.length > 0) ||
+                impostazioniScuola?.calendariGoogle?.impegniPlenariId ||
+                impostazioniScuola?.calendariGoogle?.impegniSecondariaId
+              ) && (
+                <button
+                  type="button"
+                  onClick={() => setTabAta('IMPEGNI')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                    tabAta === 'IMPEGNI'
+                      ? 'bg-amber-600 text-white shadow-md'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4 text-amber-500" />
+                  <span>Impegni Scolastici</span>
+                </button>
+              )}
 
-              <button
-                type="button"
-                onClick={() => setTabAta('RISORSE')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                  tabAta === 'RISORSE'
-                    ? 'bg-teal-600 text-white shadow-md'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <span className="text-sm">🏢</span>
-                <span>Risorse & Spazi</span>
-              </button>
+              {Boolean(
+                (impostazioniScuola?.calendariGoogle?.risorse && impostazioniScuola.calendariGoogle.risorse.length > 0) ||
+                impostazioniScuola?.calendariGoogle?.risorseInformaticaId ||
+                impostazioniScuola?.calendariGoogle?.risorseTeatroId
+              ) && (
+                <button
+                  type="button"
+                  onClick={() => setTabAta('RISORSE')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                    tabAta === 'RISORSE'
+                      ? 'bg-teal-600 text-white shadow-md'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <span className="text-sm">🏢</span>
+                  <span>Risorse & Spazi</span>
+                </button>
+              )}
             </div>
 
             {tabAta === 'QUADRO_SCUOLA' ? (

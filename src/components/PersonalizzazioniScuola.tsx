@@ -35,12 +35,40 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [statoInvioTestMail, setStatoInvioTestMail] = useState<'IDLE' | 'INVIANDO' | 'SUCCESSO' | 'ERRORE'>('IDLE');
   const [messaggioInvioTestMail, setMessaggioInvioTestMail] = useState<string>('');
 
-  // Gestione Integrazione Calendari Google (Impegni & Risorse)
+  // Gestione Integrazione Calendari Google Dinamici (Impegni & Risorse)
   const cfgCal = impostazioniScuola.calendariGoogle;
-  const [calPlenariId, setCalPlenariId] = useState(cfgCal?.impegniPlenariId || '');
-  const [calSecondariaId, setCalSecondariaId] = useState(cfgCal?.impegniSecondariaId || '');
-  const [calInformaticaId, setCalInformaticaId] = useState(cfgCal?.risorseInformaticaId || '');
-  const [calTeatroId, setCalTeatroId] = useState(cfgCal?.risorseTeatroId || '');
+  
+  // Helper per inizializzare le liste dinamiche preservando i dati legacy se presenti
+  const initImpegni = (): { id: string; nome: string; googleId: string; colore?: string }[] => {
+    if (cfgCal?.impegni && Array.isArray(cfgCal.impegni) && cfgCal.impegni.length > 0) {
+      return cfgCal.impegni;
+    }
+    const legacy: { id: string; nome: string; googleId: string; colore?: string }[] = [];
+    if (cfgCal?.impegniPlenariId) {
+      legacy.push({ id: 'cal_plenari', nome: 'Impegni Plenari / Unitari', googleId: cfgCal.impegniPlenariId, colore: '#039BE5' });
+    }
+    if (cfgCal?.impegniSecondariaId) {
+      legacy.push({ id: 'cal_secondaria', nome: 'Secondaria', googleId: cfgCal.impegniSecondariaId, colore: '#7986CB' });
+    }
+    return legacy;
+  };
+
+  const initRisorse = (): { id: string; nome: string; googleId: string; colore?: string }[] => {
+    if (cfgCal?.risorse && Array.isArray(cfgCal.risorse) && cfgCal.risorse.length > 0) {
+      return cfgCal.risorse;
+    }
+    const legacy: { id: string; nome: string; googleId: string; colore?: string }[] = [];
+    if (cfgCal?.risorseInformaticaId) {
+      legacy.push({ id: 'cal_informatica', nome: 'Laboratorio Informatica', googleId: cfgCal.risorseInformaticaId, colore: '#009688' });
+    }
+    if (cfgCal?.risorseTeatroId) {
+      legacy.push({ id: 'cal_teatro', nome: 'Teatro / Aula Magna', googleId: cfgCal.risorseTeatroId, colore: '#E65100' });
+    }
+    return legacy;
+  };
+
+  const [calImpegniList, setCalImpegniList] = useState(initImpegni());
+  const [calRisorseList, setCalRisorseList] = useState(initRisorse());
 
   // Sincronizzazione automatica se le impostazioni cambiano
   React.useEffect(() => {
@@ -67,10 +95,23 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
       const calCfg = impostazioniScuola.calendariGoogle;
       if (calCfg) {
-        setCalPlenariId(calCfg.impegniPlenariId || '');
-        setCalSecondariaId(calCfg.impegniSecondariaId || '');
-        setCalInformaticaId(calCfg.risorseInformaticaId || '');
-        setCalTeatroId(calCfg.risorseTeatroId || '');
+        if (calCfg.impegni && Array.isArray(calCfg.impegni)) {
+          setCalImpegniList(calCfg.impegni);
+        } else {
+          const l: { id: string; nome: string; googleId: string; colore?: string }[] = [];
+          if (calCfg.impegniPlenariId) l.push({ id: 'cal_plenari', nome: 'Impegni Plenari / Unitari', googleId: calCfg.impegniPlenariId, colore: '#039BE5' });
+          if (calCfg.impegniSecondariaId) l.push({ id: 'cal_secondaria', nome: 'Secondaria', googleId: calCfg.impegniSecondariaId, colore: '#7986CB' });
+          setCalImpegniList(l);
+        }
+
+        if (calCfg.risorse && Array.isArray(calCfg.risorse)) {
+          setCalRisorseList(calCfg.risorse);
+        } else {
+          const r: { id: string; nome: string; googleId: string; colore?: string }[] = [];
+          if (calCfg.risorseInformaticaId) r.push({ id: 'cal_informatica', nome: 'Laboratorio Informatica', googleId: calCfg.risorseInformaticaId, colore: '#009688' });
+          if (calCfg.risorseTeatroId) r.push({ id: 'cal_teatro', nome: 'Teatro / Aula Magna', googleId: calCfg.risorseTeatroId, colore: '#E65100' });
+          setCalRisorseList(r);
+        }
       }
     }
   }, [impostazioniScuola]);
@@ -174,10 +215,13 @@ export const PersonalizzazioniScuola: React.FC = () => {
         ultimoInvioData: impostazioniScuola.notificheEmailGruppo?.ultimoInvioData || ''
       },
       calendariGoogle: {
-        impegniPlenariId: calPlenariId.trim(),
-        impegniSecondariaId: calSecondariaId.trim(),
-        risorseInformaticaId: calInformaticaId.trim(),
-        risorseTeatroId: calTeatroId.trim()
+        impegni: calImpegniList.filter(c => c.nome.trim() || c.googleId.trim()),
+        risorse: calRisorseList.filter(c => c.nome.trim() || c.googleId.trim()),
+        // Legacy fallback
+        impegniPlenariId: calImpegniList[0]?.googleId || '',
+        impegniSecondariaId: calImpegniList[1]?.googleId || '',
+        risorseInformaticaId: calRisorseList[0]?.googleId || '',
+        risorseTeatroId: calRisorseList[1]?.googleId || ''
       }
     });
 
@@ -1083,7 +1127,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
           </div>
         </div>
 
-        {/* SEZIONE 7: INTEGRAZIONE GOOGLE CALENDAR (IMPEGNI & RISORSE) */}
+        {/* SEZIONE 7: INTEGRAZIONE GOOGLE CALENDAR (IMPEGNI & RISORSE DINAMICI) */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
           <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
             <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
@@ -1091,93 +1135,181 @@ export const PersonalizzazioniScuola: React.FC = () => {
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-black text-slate-900">Integrazione Google Calendar (Impegni & Risorse)</h3>
-              <p className="text-xs text-slate-500">Collega i calendari Google dell'istituto per consultarli direttamente dall'app senza uscire.</p>
+              <p className="text-xs text-slate-500">Aggiungi quanti calendari o stanze desideri. Le relative schede appariranno automaticamente nel Portale Docenti e ATA solo se sono stati configurati.</p>
             </div>
           </div>
 
-          <div className="space-y-4 pt-1">
+          <div className="space-y-5 pt-1">
             {/* SOTTO-BLOCCO 1: CALENDARI IMPEGNI SCOLASTICI */}
-            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-base">📌</span>
-                <h4 className="font-black text-slate-900 text-xs sm:text-sm uppercase tracking-wider">
-                  1. Calendari Impegni Scolastici
-                </h4>
-              </div>
-              <p className="text-[11px] text-slate-500">
-                Inserisci l'ID del Google Calendar o l'indirizzo del calendario per Impegni Plenari e Secondaria.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-slate-800">
-                    🌐 ID Calendario Plenari / Unitari
-                  </label>
-                  <input
-                    type="text"
-                    value={calPlenariId}
-                    onChange={(e) => setCalPlenariId(e.target.value)}
-                    placeholder="es. c_xxxxxx@group.calendar.google.com"
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
-                  />
-                  <span className="text-[10px] text-slate-400 block">Collegio docenti, chiusure, ponti, open day.</span>
+            <div className="p-4 bg-indigo-50/40 rounded-2xl border border-indigo-200 space-y-3.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">📌</span>
+                  <div>
+                    <h4 className="font-black text-slate-900 text-xs sm:text-sm uppercase tracking-wider">
+                      1. Calendari Impegni Scolastici
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Consigli di classe, collegi docenti, scrutini, ponti e scadenze dell'istituto.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-slate-800">
-                    🏫 ID Calendario Secondaria
-                  </label>
-                  <input
-                    type="text"
-                    value={calSecondariaId}
-                    onChange={(e) => setCalSecondariaId(e.target.value)}
-                    placeholder="es. c_yyyyyy@group.calendar.google.com"
-                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
-                  />
-                  <span className="text-[10px] text-slate-400 block">Consigli di classe, dipartimenti, scrutini, colloqui.</span>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCalImpegniList(prev => [
+                      ...prev,
+                      { id: `impegno_${Date.now()}`, nome: '', googleId: '', colore: '#039BE5' }
+                    ]);
+                  }}
+                  className="text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Aggiungi Impegno</span>
+                </button>
               </div>
+
+              {calImpegniList.length === 0 ? (
+                <div className="p-4 bg-white rounded-xl border border-dashed border-indigo-200 text-center text-xs text-slate-500">
+                  Nessun calendario impegni aggiunto. Clicca su <strong>"+ Aggiungi Impegno"</strong> per collegarne uno (es. <em>Plenari</em> o <em>Secondaria</em>).
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {calImpegniList.map((cal, idx) => (
+                    <div key={cal.id || idx} className="p-3 bg-white rounded-xl border border-indigo-100 shadow-2xs flex items-center gap-2.5 flex-wrap sm:flex-nowrap animate-in fade-in">
+                      <div className="w-full sm:w-1/3 space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">
+                          Nome Calendario
+                        </label>
+                        <input
+                          type="text"
+                          value={cal.nome}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCalImpegniList(prev => prev.map((item, i) => i === idx ? { ...item, nome: val } : item));
+                          }}
+                          placeholder="es. Plenari / Unitari, Secondaria..."
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
+                        />
+                      </div>
+
+                      <div className="w-full sm:flex-1 space-y-1">
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase">
+                          ID Google Calendar o Indirizzo
+                        </label>
+                        <input
+                          type="text"
+                          value={cal.googleId}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCalImpegniList(prev => prev.map((item, i) => i === idx ? { ...item, googleId: val } : item));
+                          }}
+                          placeholder="es. c_xxxxxx@group.calendar.google.com o email@scuola.it"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCalImpegniList(prev => prev.filter((_, i) => i !== idx));
+                        }}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition self-end sm:self-center cursor-pointer"
+                        title="Rimuovi Calendario"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* SOTTO-BLOCCO 2: CALENDARI RISORSE E SPAZI */}
-            <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-200 space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-base">🏢</span>
-                <h4 className="font-black text-teal-950 text-xs sm:text-sm uppercase tracking-wider">
-                  2. Calendari Risorse & Spazi (Aule Speciali)
-                </h4>
-              </div>
-              <p className="text-[11px] text-teal-800">
-                Visualizza l'occupazione e le prenotazioni delle aule speciali direttamente su tabellone orario.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-teal-950">
-                    💻 ID Calendario Laboratorio Informatica
-                  </label>
-                  <input
-                    type="text"
-                    value={calInformaticaId}
-                    onChange={(e) => setCalInformaticaId(e.target.value)}
-                    placeholder="es. c_informatica@group.calendar.google.com"
-                    className="w-full bg-white border border-teal-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-teal-600 transition"
-                  />
+            {/* SOTTO-BLOCCO 2: CALENDARI RISORSE E SPAZI (AULE SPECIALI / STANZE) */}
+            <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-200 space-y-3.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🏢</span>
+                  <div>
+                    <h4 className="font-black text-teal-950 text-xs sm:text-sm uppercase tracking-wider">
+                      2. Calendari Risorse & Spazi (Aule Speciali / Stanze)
+                    </h4>
+                    <p className="text-[11px] text-teal-800">
+                      Visualizza e verifica la disponibilità delle aule speciali (es. Lab. Informatica, Teatro, Palestra).
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-teal-950">
-                    🎭 ID Calendario Teatro / Aula Magna
-                  </label>
-                  <input
-                    type="text"
-                    value={calTeatroId}
-                    onChange={(e) => setCalTeatroId(e.target.value)}
-                    placeholder="es. c_teatro@group.calendar.google.com"
-                    className="w-full bg-white border border-teal-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-teal-600 transition"
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCalRisorseList(prev => [
+                      ...prev,
+                      { id: `stanza_${Date.now()}`, nome: '', googleId: '', colore: '#009688' }
+                    ]);
+                  }}
+                  className="text-xs font-black bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Aggiungi Stanza / Risorsa</span>
+                </button>
               </div>
+
+              {calRisorseList.length === 0 ? (
+                <div className="p-4 bg-white rounded-xl border border-dashed border-teal-200 text-center text-xs text-slate-500">
+                  Nessuna stanza o risorsa aggiunta. Clicca su <strong>"+ Aggiungi Stanza / Risorsa"</strong> per collegarne una.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {calRisorseList.map((res, idx) => (
+                    <div key={res.id || idx} className="p-3 bg-white rounded-xl border border-teal-100 shadow-2xs flex items-center gap-2.5 flex-wrap sm:flex-nowrap animate-in fade-in">
+                      <div className="w-full sm:w-1/3 space-y-1">
+                        <label className="block text-[10px] font-bold text-teal-900 uppercase">
+                          Nome Stanza / Spazio
+                        </label>
+                        <input
+                          type="text"
+                          value={res.nome}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCalRisorseList(prev => prev.map((item, i) => i === idx ? { ...item, nome: val } : item));
+                          }}
+                          placeholder="es. Lab. Informatica, Teatro, Palestra..."
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-teal-500 transition"
+                        />
+                      </div>
+
+                      <div className="w-full sm:flex-1 space-y-1">
+                        <label className="block text-[10px] font-bold text-teal-900 uppercase">
+                          ID Google Calendar o Indirizzo
+                        </label>
+                        <input
+                          type="text"
+                          value={res.googleId}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCalRisorseList(prev => prev.map((item, i) => i === idx ? { ...item, googleId: val } : item));
+                          }}
+                          placeholder="es. c_informatica@group.calendar.google.com"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-teal-500 transition"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCalRisorseList(prev => prev.filter((_, i) => i !== idx));
+                        }}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition self-end sm:self-center cursor-pointer"
+                        title="Rimuovi Stanza"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
