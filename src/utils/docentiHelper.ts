@@ -1,5 +1,5 @@
 import { Docente, OrarioDocente, CellaOrario, GiornoSettimana } from '../types';
-
+ 
 /**
  * Genera l'URL diretto per aggiungere l'ora di supplenza su Google Calendar
  */
@@ -10,7 +10,6 @@ export function generaLinkGoogleCalendar(
   docenteAssenteNome: string,
   nomeScuola?: string
 ): string {
-  // Orario indicativo campana scolastica per le ore 1-9
   const orariInizioFine: Record<number, { start: string; end: string }> = {
     1: { start: '080000', end: '085500' },
     2: { start: '085500', end: '095000' },
@@ -32,6 +31,66 @@ export function generaLinkGoogleCalendar(
   const location = encodeURIComponent(`Aula ${classe} - ${nomeScuola || 'Istituto Scolastico'}`);
 
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${datesParam}&details=${details}&location=${location}`;
+}
+
+/**
+ * Genera e scarica un file .ics standard compatibile con Calendario Apple (iPhone/iPad/Mac) e Outlook
+ */
+export function scaricaFileIcsCalendar(
+  data: string, 
+  ora: number, 
+  classe: string, 
+  docenteAssenteNome: string,
+  nomeScuola?: string
+) {
+  const orariInizioFine: Record<number, { start: string; end: string }> = {
+    1: { start: '080000', end: '085500' },
+    2: { start: '085500', end: '095000' },
+    3: { start: '100000', end: '105500' },
+    4: { start: '105500', end: '115000' },
+    5: { start: '115000', end: '124500' },
+    6: { start: '124500', end: '134000' },
+    7: { start: '140000', end: '150000' },
+    8: { start: '150000', end: '160000' },
+    9: { start: '160000', end: '170000' }
+  };
+
+  const orario = orariInizioFine[ora] || { start: '080000', end: '090000' };
+  const dataPulita = data.replace(/-/g, ''); // YYYYMMDD
+  const dtStart = `${dataPulita}T${orario.start}`;
+  const dtEnd = `${dataPulita}T${orario.end}`;
+  const nowStr = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+  const summary = `Supplenza ${ora}ª ora in ${classe} (per Prof. ${docenteAssenteNome})`;
+  const description = `Sostituzione oraria assegnata presso ${nomeScuola || 'Scuola'}.\\nOra: ${ora}ª ora\\nClasse: ${classe}\\nDocente sostituito: ${docenteAssenteNome}`;
+  const location = `Aula ${classe} - ${nomeScuola || 'Istituto Scolastico'}`;
+
+  const icsContent = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Sostituzioni Smart//IT',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:supplenza_${dataPulita}_${ora}_${classe}_${Date.now()}@sostituzionismart`,
+    `DTSTAMP:${nowStr}`,
+    `DTSTART:${dtStart}`,
+    `DTEND:${dtEnd}`,
+    `SUMMARY:${summary}`,
+    `DESCRIPTION:${description}`,
+    `LOCATION:${location}`,
+    'STATUS:CONFIRMED',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = window.URL.createObjectURL(blob);
+  link.setAttribute('download', `supplenza_${classe}_ora${ora}_${data}.ics`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 /**
