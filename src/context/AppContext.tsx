@@ -599,10 +599,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { successo: true, modalita: 'MAILTO', messaggio: 'Apertura client di posta completata.' };
   };
 
-  // Timer di verifica automatica dell'orario per invio email a gruppo
+  // Timer di verifica automatica dell'orario per invio email a gruppo (con ref per evitare loop di re-render)
+  const isCheckingMailSchedule = React.useRef(false);
+
   useEffect(() => {
-    const checkMailSchedule = () => {
-      const cfg = impostazioniScuola.notificheEmailGruppo;
+    const checkMailSchedule = async () => {
+      if (isCheckingMailSchedule.current) return;
+      const currentImpostazioni = impostazioniScuolaRef.current;
+      const cfg = currentImpostazioni?.notificheEmailGruppo;
       if (!cfg || !cfg.abilitato || !cfg.emailGruppo || !cfg.orarioInvio) return;
 
       const now = new Date();
@@ -613,30 +617,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       // Verifica se l'orario corrisponde e se per oggi non è ancora stata inviata
       if (currentTime === cfg.orarioInvio && cfg.ultimoInvioData !== todayStr) {
-        // Verifica se oggi ci sono effettivamente sostituzioni attive o assenze
-        const hasSostituzioniOggi = sostituzioni.some(s => s.data === todayStr && s.pubblicata);
-        const hasAssenzeOggi = assenze.some(a => a.data === todayStr && !a.annullata);
+        const currentSost = sostituzioniRef.current || [];
+        const currentAss = assenzeRef.current || [];
+        const hasSostituzioniOggi = currentSost.some(s => s.data === todayStr && s.pubblicata);
+        const hasAssenzeOggi = currentAss.some(a => a.data === todayStr && !a.annullata);
 
         if (hasSostituzioniOggi || hasAssenzeOggi) {
-          // Aggiorna ultimoInvioData per non reinviare nello stesso minuto o giornata
-          const updatedImpostazioni: ImpostazioniScuola = {
-            ...impostazioniScuola,
-            notificheEmailGruppo: {
-              ...cfg,
-              ultimoInvioData: todayStr
-            }
-          };
-          updateImpostazioniScuola(updatedImpostazioni);
-
-          // Esegui l'apertura del client di posta
-          inviaMailPromemoriaGruppoManuale(cfg.emailGruppo, cfg.oggetto, cfg.corpoMessaggio);
+          isCheckingMailSchedule.current = true;
+          try {
+            const updatedImpostazioni: ImpostazioniScuola = {
+              ...currentImpostazioni,
+              notificheEmailGruppo: {
+                ...cfg,
+                ultimoInvioData: todayStr
+              }
+            };
+            await updateImpostazioniScuola(updatedImpostazioni);
+            await inviaMailPromemoriaGruppoManuale(cfg.emailGruppo, cfg.oggetto, cfg.corpoMessaggio, cfg.webhookAppScriptUrl);
+          } catch (e) {
+            console.error('Errore invio automatico programmato email gruppo:', e);
+          } finally {
+            isCheckingMailSchedule.current = false;
+          }
         }
       }
     };
 
     const interval = setInterval(checkMailSchedule, 30000); // Controlla ogni 30 secondi
     return () => clearInterval(interval);
-  }, [impostazioniScuola, sostituzioni, assenze]);
+  }, []);
 
   // REFS PER EVITARE CLOSURE STALE IN TRIGGERCLOUDSYNC
   const docentiRef = React.useRef(docenti);
