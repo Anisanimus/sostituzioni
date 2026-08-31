@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "sostituzioni-smart",
     "public": "dist",
     "ignore": [
       "firebase.json",
