@@ -4,7 +4,7 @@ import {
   Building2, Clock, Eye, Calendar, CheckCircle, RotateCcw, 
   Save, School, Sliders, ShieldAlert, Sparkles, LayoutGrid, List,
   Download, Upload, Plus, Trash2, ShieldCheck, Database,
-  Mail, Send, ExternalLink
+  Mail, Send, ExternalLink, Info
 } from 'lucide-react';
 import { DEFAULT_IMPOSTAZIONI_SCUOLA, DEFAULT_IMPOSTAZIONI_PRIORITA } from '../context/AppContext';
 import { formatDataItaliana } from '../utils/docentiHelper';
@@ -22,6 +22,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [tettoAssemblee, setTettoAssemblee] = useState(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
   const [vistaTabellone, setVistaTabellone] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>(impostazioniScuola.vistaTabellonePredefinita || 'GRUPPI_ORA');
   const [nascondiWeekend, setNascondiWeekend] = useState(impostazioniScuola.nascondiWeekendCalendario ?? true);
+  const [mostraInfoRegolaMail, setMostraInfoRegolaMail] = useState<boolean>(false);
 
   // Gestione Notifiche Email Gruppo Docenti
   const cfgEmail = impostazioniScuola.notificheEmailGruppo;
@@ -827,7 +828,33 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 <Mail className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-black text-slate-900">Email Promemoria Giornaliero a Gruppo Google</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Email Promemoria Giornaliero a Gruppo Google</h3>
+                  {/* ICONA 'i' CERCHIATA CON POPUP INFORMATIVO */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setMostraInfoRegolaMail(!mostraInfoRegolaMail)}
+                      onMouseEnter={() => setMostraInfoRegolaMail(true)}
+                      onMouseLeave={() => setMostraInfoRegolaMail(false)}
+                      className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition cursor-pointer"
+                      title="Informazioni sulla regola di invio automatico"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+
+                    {mostraInfoRegolaMail && (
+                      <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-xl z-20 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-400">
+                          <span>💡 Regola di invio automatico</span>
+                        </div>
+                        <p className="text-slate-200 text-[11px]">
+                          La mail viene generata all'orario indicato <strong>solo ed esclusivamente se ci sono assenze o sostituzioni attive</strong> per la giornata. Se non c'è nessun docente assente, l'invio viene automaticamente saltato per non disturbare i docenti.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <p className="text-xs text-slate-500">Invia automaticamente una mail al gruppo docenti solo nei giorni in cui sono presenti supplenze.</p>
               </div>
             </div>
@@ -862,14 +889,6 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 onChange={(e) => setMailGruppoAbilitato(e.target.checked)}
                 className="w-5 h-5 text-indigo-600 rounded-lg border-slate-300 focus:ring-indigo-500 cursor-pointer"
               />
-            </div>
-
-            {/* AVVISO DI FUNZIONAMENTO INTELLIGENTE */}
-            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-2.5 text-xs text-amber-900">
-              <span className="text-base">💡</span>
-              <p>
-                <strong>Regola di invio automatico:</strong> la mail viene generata all'orario indicato <strong>solo ed esclusivamente se ci sono assenze o sostituzioni attive</strong> per la giornata. Se non c'è nessun docente assente, l'invio viene automaticamente saltato per non disturbare i docenti.
-              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
