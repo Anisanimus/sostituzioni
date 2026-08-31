@@ -9,13 +9,6 @@ interface VistaCalendariGoogleProps {
 }
 
 export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ modalita }) => {
-  const { impostazioniScuola } = useApp();
-  const cfg = impostazioniScuola.calendariGoogle;
-
-  const [filtroImpegni, setFiltroImpegni] = useState<'COMBINATO' | 'PLENARI' | 'SECONDARIA'>('COMBINATO');
-  const [filtroRisorse, setFiltroRisorse] = useState<'INFORMATICA' | 'TEATRO' | 'COMBINATO'>('INFORMATICA');
-  const [refreshKey, setRefreshKey] = useState<number>(0);
-
   const sanitizeCalendarId = (input?: string): string => {
     if (!input) return '';
     const trimmed = input.trim();
@@ -26,10 +19,28 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
     return trimmed;
   };
 
+  const { impostazioniScuola } = useApp();
+  const cfg = impostazioniScuola?.calendariGoogle;
+
+  const [refreshKey, setRefreshKey] = useState<number>(0);
+
+  // Calcolo ID attivi
   const idPlenari = sanitizeCalendarId(cfg?.impegniPlenariId);
   const idSecondaria = sanitizeCalendarId(cfg?.impegniSecondariaId);
   const idInformatica = sanitizeCalendarId(cfg?.risorseInformaticaId);
   const idTeatro = sanitizeCalendarId(cfg?.risorseTeatroId);
+
+  const [filtroImpegni, setFiltroImpegni] = useState<'COMBINATO' | 'PLENARI' | 'SECONDARIA'>(() => {
+    if (idPlenari && !idSecondaria) return 'PLENARI';
+    if (idSecondaria && !idPlenari) return 'SECONDARIA';
+    return 'COMBINATO';
+  });
+
+  const [filtroRisorse, setFiltroRisorse] = useState<'INFORMATICA' | 'TEATRO' | 'COMBINATO'>(() => {
+    if (idInformatica && !idTeatro) return 'INFORMATICA';
+    if (idTeatro && !idInformatica) return 'TEATRO';
+    return 'COMBINATO';
+  });
 
   const generaEmbedUrl = (): string => {
     const baseUrl = 'https://calendar.google.com/calendar/embed?ctz=Europe%2FRome&mode=MONTH&showTitle=0&showNav=1&showDate=1&showPrint=1&showTabs=1&showCalendars=1&showTz=0';
@@ -42,8 +53,20 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
         return `${baseUrl}&src=${encodeURIComponent(idSecondaria)}&color=%237986CB`;
       }
       let url = baseUrl;
-      if (idPlenari) url += `&src=${encodeURIComponent(idPlenari)}&color=%23039BE5`;
-      if (idSecondaria) url += `&src=${encodeURIComponent(idSecondaria)}&color=%237986CB`;
+      let added = 0;
+      if (idPlenari) {
+        url += `&src=${encodeURIComponent(idPlenari)}&color=%23039BE5`;
+        added++;
+      }
+      if (idSecondaria) {
+        url += `&src=${encodeURIComponent(idSecondaria)}&color=%237986CB`;
+        added++;
+      }
+      if (added === 0) {
+        // Fallback su uno qualsiasi disponibile
+        const fallback = idPlenari || idSecondaria;
+        if (fallback) url += `&src=${encodeURIComponent(fallback)}`;
+      }
       return url;
     } else {
       if (filtroRisorse === 'INFORMATICA' && idInformatica) {
@@ -53,8 +76,19 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
         return `${baseUrl}&src=${encodeURIComponent(idTeatro)}&color=%23E65100`;
       }
       let url = baseUrl;
-      if (idInformatica) url += `&src=${encodeURIComponent(idInformatica)}&color=%23009688`;
-      if (idTeatro) url += `&src=${encodeURIComponent(idTeatro)}&color=%23E65100`;
+      let added = 0;
+      if (idInformatica) {
+        url += `&src=${encodeURIComponent(idInformatica)}&color=%23009688`;
+        added++;
+      }
+      if (idTeatro) {
+        url += `&src=${encodeURIComponent(idTeatro)}&color=%23E65100`;
+        added++;
+      }
+      if (added === 0) {
+        const fallback = idInformatica || idTeatro;
+        if (fallback) url += `&src=${encodeURIComponent(fallback)}`;
+      }
       return url;
     }
   };
