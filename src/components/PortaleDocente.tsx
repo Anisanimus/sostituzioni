@@ -14,11 +14,12 @@ import {
   generaLinkGoogleCalendar, scaricaFileIcsCalendar
 } from '../utils/docentiHelper';
 import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
+import { VistaCalendariGoogle } from './VistaCalendariGoogle';
 import { GiornoSettimana } from '../types';
 
 const GIORNI_SETTIMANA: GiornoSettimana[] = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 
-export type TabDocenteType = 'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE';
+export type TabDocenteType = 'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE';
 
 interface PortaleDocenteProps {
   currentTab?: TabDocenteType;
@@ -522,7 +523,43 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
             <Users className="w-4 h-4" />
             <span>Consigli di Classe</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setTabDocente('IMPEGNI')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              tabDocente === 'IMPEGNI'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <Calendar className="w-4 h-4 text-indigo-500" />
+            <span>Impegni Scolastici</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTabDocente('RISORSE')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              tabDocente === 'RISORSE'
+                ? 'bg-teal-600 text-white shadow-md'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <span className="text-sm">🏢</span>
+            <span>Risorse & Spazi</span>
+          </button>
         </div>
+      )}
+
+      {/* CONTENUTO SCHEDA IMPEGNI SCOLASTICI */}
+      {tabDocente === 'IMPEGNI' && (
+        <VistaCalendariGoogle modalita="IMPEGNI" />
+      )}
+
+      {/* CONTENUTO SCHEDA RISORSE E SPAZI */}
+      {tabDocente === 'RISORSE' && (
+        <VistaCalendariGoogle modalita="RISORSE" />
       )}
 
       {/* CONTENUTO SCHEDA 1: LE MIE SOSTITUZIONI */}

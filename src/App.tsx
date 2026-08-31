@@ -20,12 +20,14 @@ import { ReportStatistiche } from './components/ReportStatistiche';
 import { PersonalizzazioniScuola } from './components/PersonalizzazioniScuola';
 import { QuadroSostituzioniScuola } from './components/QuadroSostituzioniScuola';
 import { PanoramicaLavori } from './components/PanoramicaLavori';
+import { VistaCalendariGoogle } from './components/VistaCalendariGoogle';
 import { Coachmark } from './components/Coachmark';
 import { getPrimoGiornoScolasticoValido, spostaGiornoScolastico } from './utils/docentiHelper';
 import { 
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
-  Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound, TrendingUp
+  Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound, TrendingUp,
+  Monitor
 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -41,9 +43,9 @@ const MainApp: React.FC = () => {
     if (utenteInfo?.ruolo === 'PERSONALE_ATA') return 'QUADRO_SCUOLA';
     return 'PORTALE_DOCENTE';
   });
-  const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'QUADRO_SCUOLA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'PERSONALIZZAZIONI'>('GESTIONE_GIORNALIERA');
-  const [tabDocente, setTabDocente] = useState<'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE'>('MIE_SOSTITUZIONI');
-  const [tabAta, setTabAta] = useState<'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE'>('QUADRO_SCUOLA');
+  const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'QUADRO_SCUOLA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'PERSONALIZZAZIONI' | 'IMPEGNI' | 'RISORSE'>('GESTIONE_GIORNALIERA');
+  const [tabDocente, setTabDocente] = useState<'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE'>('MIE_SOSTITUZIONI');
+  const [tabAta, setTabAta] = useState<'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE'>('QUADRO_SCUOLA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [mostraRisorseLaterale, setMostraRisorseLaterale] = useState(false);
@@ -645,6 +647,54 @@ const MainApp: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
+                      setTabVice('IMPEGNI');
+                      setIsSidebarOpen(false);
+                    }}
+                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                      tabVice === 'IMPEGNI'
+                        ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${tabVice === 'IMPEGNI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="block font-black text-sm">Impegni Scolastici</span>
+                        <span className="text-[11px] text-slate-500 font-normal">Plenari, secondaria e scadenze collegiali</span>
+                      </div>
+                    </div>
+                    {tabVice === 'IMPEGNI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTabVice('RISORSE');
+                      setIsSidebarOpen(false);
+                    }}
+                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                      tabVice === 'RISORSE'
+                        ? 'bg-teal-50 text-teal-900 border border-teal-200 shadow-2xs font-black'
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${tabVice === 'RISORSE' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        <Monitor className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="block font-black text-sm">Risorse & Spazi</span>
+                        <span className="text-[11px] text-slate-500 font-normal">Laboratorio Informatica e Teatro / Aula Magna</span>
+                      </div>
+                    </div>
+                    {tabVice === 'RISORSE' && <span className="w-2 h-2 rounded-full bg-teal-600" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
                       setTabVice('PERSONALIZZAZIONI');
                       setIsSidebarOpen(false);
                     }}
@@ -769,10 +819,38 @@ const MainApp: React.FC = () => {
                 <Users className="w-4 h-4" />
                 <span>Consigli di Classe</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => setTabAta('IMPEGNI')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                  tabAta === 'IMPEGNI'
+                    ? 'bg-amber-600 text-white shadow-md'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <Calendar className="w-4 h-4 text-amber-500" />
+                <span>Impegni Scolastici</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTabAta('RISORSE')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                  tabAta === 'RISORSE'
+                    ? 'bg-teal-600 text-white shadow-md'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <span className="text-sm">🏢</span>
+                <span>Risorse & Spazi</span>
+              </button>
             </div>
 
             {tabAta === 'QUADRO_SCUOLA' ? (
               <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={true} />
+            ) : tabAta === 'IMPEGNI' || tabAta === 'RISORSE' ? (
+              <VistaCalendariGoogle modalita={tabAta} />
             ) : (
               <PortaleDocente currentTab={tabAta as any} onTabChange={(t) => setTabAta(t as any)} isAtaView={true} />
             )}
@@ -848,6 +926,14 @@ const MainApp: React.FC = () => {
 
             {tabVice === 'DOCENTI' && (
               <AnagraficaOrario />
+            )}
+
+            {tabVice === 'IMPEGNI' && (
+              <VistaCalendariGoogle modalita="IMPEGNI" />
+            )}
+
+            {tabVice === 'RISORSE' && (
+              <VistaCalendariGoogle modalita="RISORSE" />
             )}
 
             {tabVice === 'PERSONALIZZAZIONI' && (

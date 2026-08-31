@@ -35,6 +35,13 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [statoInvioTestMail, setStatoInvioTestMail] = useState<'IDLE' | 'INVIANDO' | 'SUCCESSO' | 'ERRORE'>('IDLE');
   const [messaggioInvioTestMail, setMessaggioInvioTestMail] = useState<string>('');
 
+  // Gestione Integrazione Calendari Google (Impegni & Risorse)
+  const cfgCal = impostazioniScuola.calendariGoogle;
+  const [calPlenariId, setCalPlenariId] = useState(cfgCal?.impegniPlenariId || '');
+  const [calSecondariaId, setCalSecondariaId] = useState(cfgCal?.impegniSecondariaId || '');
+  const [calInformaticaId, setCalInformaticaId] = useState(cfgCal?.risorseInformaticaId || '');
+  const [calTeatroId, setCalTeatroId] = useState(cfgCal?.risorseTeatroId || '');
+
   // Sincronizzazione automatica se le impostazioni cambiano
   React.useEffect(() => {
     if (impostazioniScuola) {
@@ -56,6 +63,14 @@ export const PersonalizzazioniScuola: React.FC = () => {
         setMailGruppoOggetto(emailCfg.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta');
         setMailGruppoCorpo(emailCfg.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`);
         setMailGruppoWebhookUrl(emailCfg.webhookAppScriptUrl || '');
+      }
+
+      const calCfg = impostazioniScuola.calendariGoogle;
+      if (calCfg) {
+        setCalPlenariId(calCfg.impegniPlenariId || '');
+        setCalSecondariaId(calCfg.impegniSecondariaId || '');
+        setCalInformaticaId(calCfg.risorseInformaticaId || '');
+        setCalTeatroId(calCfg.risorseTeatroId || '');
       }
     }
   }, [impostazioniScuola]);
@@ -157,6 +172,12 @@ export const PersonalizzazioniScuola: React.FC = () => {
         corpoMessaggio: mailGruppoCorpo.trim(),
         webhookAppScriptUrl: mailGruppoWebhookUrl.trim(),
         ultimoInvioData: impostazioniScuola.notificheEmailGruppo?.ultimoInvioData
+      },
+      calendariGoogle: {
+        impegniPlenariId: calPlenariId.trim(),
+        impegniSecondariaId: calSecondariaId.trim(),
+        risorseInformaticaId: calInformaticaId.trim(),
+        risorseTeatroId: calTeatroId.trim()
       }
     });
 
@@ -1058,6 +1079,105 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 placeholder="https://script.google.com/macros/s/.../exec"
                 className="w-full bg-white border border-indigo-200 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-600 transition"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* SEZIONE 7: INTEGRAZIONE GOOGLE CALENDAR (IMPEGNI & RISORSE) */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+            <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-black text-slate-900">Integrazione Google Calendar (Impegni & Risorse)</h3>
+              <p className="text-xs text-slate-500">Collega i calendari Google dell'istituto per consultarli direttamente dall'app senza uscire.</p>
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-1">
+            {/* SOTTO-BLOCCO 1: CALENDARI IMPEGNI SCOLASTICI */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-base">📌</span>
+                <h4 className="font-black text-slate-900 text-xs sm:text-sm uppercase tracking-wider">
+                  1. Calendari Impegni Scolastici
+                </h4>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Inserisci l'ID del Google Calendar o l'indirizzo del calendario per Impegni Plenari e Secondaria.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-800">
+                    🌐 ID Calendario Plenari / Unitari
+                  </label>
+                  <input
+                    type="text"
+                    value={calPlenariId}
+                    onChange={(e) => setCalPlenariId(e.target.value)}
+                    placeholder="es. c_xxxxxx@group.calendar.google.com"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
+                  />
+                  <span className="text-[10px] text-slate-400 block">Collegio docenti, chiusure, ponti, open day.</span>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-800">
+                    🏫 ID Calendario Secondaria
+                  </label>
+                  <input
+                    type="text"
+                    value={calSecondariaId}
+                    onChange={(e) => setCalSecondariaId(e.target.value)}
+                    placeholder="es. c_yyyyyy@group.calendar.google.com"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
+                  />
+                  <span className="text-[10px] text-slate-400 block">Consigli di classe, dipartimenti, scrutini, colloqui.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* SOTTO-BLOCCO 2: CALENDARI RISORSE E SPAZI */}
+            <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-200 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🏢</span>
+                <h4 className="font-black text-teal-950 text-xs sm:text-sm uppercase tracking-wider">
+                  2. Calendari Risorse & Spazi (Aule Speciali)
+                </h4>
+              </div>
+              <p className="text-[11px] text-teal-800">
+                Visualizza l'occupazione e le prenotazioni delle aule speciali direttamente su tabellone orario.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-teal-950">
+                    💻 ID Calendario Laboratorio Informatica
+                  </label>
+                  <input
+                    type="text"
+                    value={calInformaticaId}
+                    onChange={(e) => setCalInformaticaId(e.target.value)}
+                    placeholder="es. c_informatica@group.calendar.google.com"
+                    className="w-full bg-white border border-teal-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-teal-600 transition"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-teal-950">
+                    🎭 ID Calendario Teatro / Aula Magna
+                  </label>
+                  <input
+                    type="text"
+                    value={calTeatroId}
+                    onChange={(e) => setCalTeatroId(e.target.value)}
+                    placeholder="es. c_teatro@group.calendar.google.com"
+                    className="w-full bg-white border border-teal-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-teal-600 transition"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>

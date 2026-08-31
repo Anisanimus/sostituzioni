@@ -165,6 +165,12 @@ export interface ImpostazioniScuola {
     webhookAppScriptUrl?: string; // URL Webhook Google Apps Script (per invio 100% invisibile da server Google)
     ultimoInvioData?: string;     // YYYY-MM-DD
   };
+  calendariGoogle?: {
+    impegniPlenariId?: string;      // ID o URL del Calendario Google Impegni Plenari
+    impegniSecondariaId?: string;   // ID o URL del Calendario Google Impegni Secondaria
+    risorseInformaticaId?: string;  // ID o URL del Calendario Google Laboratorio Informatica
+    risorseTeatroId?: string;       // ID o URL del Calendario Google Teatro / Aula Magna
+  };
 }
 
 export interface CandidatoSostituto {
