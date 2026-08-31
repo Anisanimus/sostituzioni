@@ -399,11 +399,11 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                 setModalitaSelezioneClassiPdf('TUTTE');
                 setMostraModalePdf(true);
               }}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-1.5 cursor-pointer shrink-0"
               title="Scarica o stampa prospetto in formato PDF"
             >
-              <FileDown className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Scarica / Stampa PDF</span>
+              <FileDown className="w-4 h-4" />
+              <span>Scarica / Stampa PDF</span>
             </button>
           </div>
         </div>

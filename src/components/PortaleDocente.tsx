@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, LayoutDashboard, Clock, ShieldCheck, RefreshCw, Table, Search, BookOpen, GraduationCap, Accessibility, Users, School } from 'lucide-react';
+import { 
+  CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, 
+  LayoutDashboard, Clock, ShieldCheck, RefreshCw, Table, Search, 
+  BookOpen, GraduationCap, Accessibility, Users, School, FileDown, 
+  Printer, CheckSquare, Square, Check, Filter 
+} from 'lucide-react';
 import { 
   getDocentiCollegatiIds, getDocentiUnici, trovaCorrispondenzaDocente, 
   formatDataItaliana, getOrarioUnificatoDocente, getBaseNomeDocente, 
@@ -22,7 +27,7 @@ interface PortaleDocenteProps {
 export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTabChange }) => {
   const { 
     docenti, orariDocenti, sostituzioni, notifiche, firmaSostituzione, segnaNotificheLette, 
-    richiesteAccessoDocenti, associaEmailDocente, creaRichiestaAccessoDocente 
+    richiesteAccessoDocenti, associaEmailDocente, creaRichiestaAccessoDocente, impostazioniScuola
   } = useApp();
   const { utenteInfo, logout } = useAuth();
 
@@ -42,6 +47,13 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
   const [tipoVistaOrario, setTipoVistaOrario] = useState<'DOCENTE' | 'CLASSE'>('DOCENTE');
   const [docenteOrarioSelezionatoId, setDocenteOrarioSelezionatoId] = useState<string>('');
   const [classeOrarioSelezionata, setClasseOrarioSelezionata] = useState<string>('');
+
+  // MODALE STAMPA / PDF PER L'ORARIO
+  const [mostraModalePdfOrario, setMostraModalePdfOrario] = useState<boolean>(false);
+  const [opzionePdfDocente, setOpzionePdfDocente] = useState<'MIO' | 'TUTTI' | 'SELEZIONE'>('MIO');
+  const [docentiSelezionatiPdf, setDocentiSelezionatiPdf] = useState<string[]>([]);
+  const [opzionePdfClasse, setOpzionePdfClasse] = useState<'ATTUALE' | 'TUTTE' | 'SELEZIONE'>('ATTUALE');
+  const [classiSelezionatePdf, setClassiSelezionatePdf] = useState<string[]>([]);
 
   // Stato per Consigli di Classe
   const [classeConsiglioSelezionata, setClasseConsiglioSelezionata] = useState<string>('');
@@ -658,8 +670,301 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                   </select>
                 </div>
               )}
+
+              {/* PULSANTE SCARICA / STAMPA PDF ALL'INTERNO DEL TAB ORARIO */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (tipoVistaOrario === 'DOCENTE') {
+                    setOpzionePdfDocente('MIO');
+                    setDocentiSelezionatiPdf(selectedDocenteId ? [selectedDocenteId] : []);
+                  } else {
+                    setOpzionePdfClasse('ATTUALE');
+                    setClassiSelezionatePdf(classeOrarioSelezionata ? [classeOrarioSelezionata] : []);
+                  }
+                  setMostraModalePdfOrario(true);
+                }}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black text-xs rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-1.5 cursor-pointer shrink-0 ml-auto sm:ml-0"
+                title="Scarica o stampa orario in PDF"
+              >
+                <FileDown className="w-4 h-4" />
+                <span>Scarica / Stampa PDF</span>
+              </button>
             </div>
           </div>
+
+          {/* ========================================================= */}
+          {/* MODALE DI SCELTA STAMPA/PDF PER L'ORARIO                   */}
+          {/* ========================================================= */}
+          {mostraModalePdfOrario && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+              <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in zoom-in-95 duration-200">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100 shadow-2xs">
+                      <FileDown className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-black text-slate-900">
+                        {tipoVistaOrario === 'DOCENTE' ? 'Scarica / Stampa Orario Docenti' : 'Scarica / Stampa Orario Classi'}
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        {tipoVistaOrario === 'DOCENTE' 
+                          ? 'Scegli quali orari dei docenti includere nel documento PDF' 
+                          : 'Scegli quali orari delle classi includere nel documento PDF'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMostraModalePdfOrario(false)}
+                    className="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* OPZIONI PER VISTA DOCENTE */}
+                {tipoVistaOrario === 'DOCENTE' ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setOpzionePdfDocente('MIO')}
+                        className={`py-2 px-2 rounded-xl transition cursor-pointer text-center ${
+                          opzionePdfDocente === 'MIO'
+                            ? 'bg-white text-indigo-950 shadow-2xs font-black'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Il Mio Orario
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpzionePdfDocente('TUTTI');
+                          setDocentiSelezionatiPdf(docentiUnici.map(d => d.id));
+                        }}
+                        className={`py-2 px-2 rounded-xl transition cursor-pointer text-center ${
+                          opzionePdfDocente === 'TUTTI'
+                            ? 'bg-white text-indigo-950 shadow-2xs font-black'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Tutti ({docentiUnici.length})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpzionePdfDocente('SELEZIONE');
+                          if (docentiSelezionatiPdf.length === 0 && selectedDocenteId) {
+                            setDocentiSelezionatiPdf([selectedDocenteId]);
+                          }
+                        }}
+                        className={`py-2 px-2 rounded-xl transition cursor-pointer text-center ${
+                          opzionePdfDocente === 'SELEZIONE'
+                            ? 'bg-white text-indigo-950 shadow-2xs font-black'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Seleziona...
+                      </button>
+                    </div>
+
+                    {/* SELEZIONE CHECKBOX DOCENTI */}
+                    {opzionePdfDocente === 'SELEZIONE' && (
+                      <div className="space-y-2 p-3 bg-slate-50 rounded-2xl border border-slate-200 animate-in fade-in">
+                        <div className="flex items-center justify-between text-xs pb-1.5 border-b border-slate-200">
+                          <span className="font-bold text-slate-700">
+                            Selezionati: {docentiSelezionatiPdf.length} di {docentiUnici.length}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setDocentiSelezionatiPdf(docentiUnici.map(d => d.id))}
+                              className="text-[11px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                            >
+                              Tutti
+                            </button>
+                            <span className="text-slate-300">•</span>
+                            <button
+                              type="button"
+                              onClick={() => setDocentiSelezionatiPdf([])}
+                              className="text-[11px] font-bold text-slate-500 hover:underline cursor-pointer"
+                            >
+                              Nessuno
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                          {docentiUnici.map(d => {
+                            const isSel = docentiSelezionatiPdf.includes(d.id);
+                            return (
+                              <button
+                                key={d.id}
+                                type="button"
+                                onClick={() => {
+                                  setDocentiSelezionatiPdf(prev => 
+                                    prev.includes(d.id) ? prev.filter(x => x !== d.id) : [...prev, d.id]
+                                  );
+                                }}
+                                className={`p-2 rounded-xl text-left text-xs font-bold border transition flex items-center justify-between cursor-pointer ${
+                                  isSel 
+                                    ? 'bg-indigo-50 border-indigo-300 text-indigo-950 shadow-2xs' 
+                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                                }`}
+                              >
+                                <span className="truncate">{d.nome}</span>
+                                {isSel ? (
+                                  <CheckSquare className="w-3.5 h-3.5 text-indigo-600 shrink-0 ml-1" />
+                                ) : (
+                                  <Square className="w-3.5 h-3.5 text-slate-300 shrink-0 ml-1" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* OPZIONI PER VISTA CLASSE */
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setOpzionePdfClasse('ATTUALE')}
+                        className={`py-2 px-2 rounded-xl transition cursor-pointer text-center ${
+                          opzionePdfClasse === 'ATTUALE'
+                            ? 'bg-white text-indigo-950 shadow-2xs font-black'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Classe {classeOrarioSelezionata}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpzionePdfClasse('TUTTE');
+                          setClassiSelezionatePdf(classiDisponibili);
+                        }}
+                        className={`py-2 px-2 rounded-xl transition cursor-pointer text-center ${
+                          opzionePdfClasse === 'TUTTE'
+                            ? 'bg-white text-indigo-950 shadow-2xs font-black'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Tutte ({classiDisponibili.length})
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpzionePdfClasse('SELEZIONE');
+                          if (classiSelezionatePdf.length === 0 && classeOrarioSelezionata) {
+                            setClassiSelezionatePdf([classeOrarioSelezionata]);
+                          }
+                        }}
+                        className={`py-2 px-2 rounded-xl transition cursor-pointer text-center ${
+                          opzionePdfClasse === 'SELEZIONE'
+                            ? 'bg-white text-indigo-950 shadow-2xs font-black'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Seleziona...
+                      </button>
+                    </div>
+
+                    {/* SELEZIONE CHECKBOX CLASSI */}
+                    {opzionePdfClasse === 'SELEZIONE' && (
+                      <div className="space-y-2 p-3 bg-slate-50 rounded-2xl border border-slate-200 animate-in fade-in">
+                        <div className="flex items-center justify-between text-xs pb-1.5 border-b border-slate-200">
+                          <span className="font-bold text-slate-700">
+                            Selezionate: {classiSelezionatePdf.length} di {classiDisponibili.length}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setClassiSelezionatePdf(classiDisponibili)}
+                              className="text-[11px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                            >
+                              Tutte
+                            </button>
+                            <span className="text-slate-300">•</span>
+                            <button
+                              type="button"
+                              onClick={() => setClassiSelezionatePdf([])}
+                              className="text-[11px] font-bold text-slate-500 hover:underline cursor-pointer"
+                            >
+                              Nessuna
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                          {classiDisponibili.map(c => {
+                            const isSel = classiSelezionatePdf.includes(c);
+                            return (
+                              <button
+                                key={c}
+                                type="button"
+                                onClick={() => {
+                                  setClassiSelezionatePdf(prev => 
+                                    prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]
+                                  );
+                                }}
+                                className={`p-2 rounded-xl text-xs font-black border transition flex items-center justify-between cursor-pointer ${
+                                  isSel 
+                                    ? 'bg-indigo-50 border-indigo-300 text-indigo-950 shadow-2xs' 
+                                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                                }`}
+                              >
+                                <span>{c}</span>
+                                {isSel ? (
+                                  <CheckSquare className="w-3.5 h-3.5 text-indigo-600" />
+                                ) : (
+                                  <Square className="w-3.5 h-3.5 text-slate-300" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* PULSANTI DI AZIONE */}
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setMostraModalePdfOrario(false)}
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    Annulla
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMostraModalePdfOrario(false);
+                      setTimeout(() => {
+                        window.print();
+                      }, 150);
+                    }}
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>Genera e Salva in PDF</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* VISTA 1: TABELLA ORARIO DOCENTE */}
           {tipoVistaOrario === 'DOCENTE' && (() => {
