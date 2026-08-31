@@ -165,13 +165,13 @@ export const PersonalizzazioniScuola: React.FC = () => {
       dominiAutorizzatiGoogle: dominiParsed.length > 0 ? dominiParsed : ['gmail.com', 'scuola.edu.it'],
       emailVicepresidenzaGoogle: emailViceParsed.length > 0 ? emailViceParsed : ['vicepresidenza@scuola.edu.it'],
       notificheEmailGruppo: {
-        abilitato: mailGruppoAbilitato,
+        abilitato: Boolean(mailGruppoAbilitato),
         emailGruppo: mailGruppoIndirizzo.trim().toLowerCase(),
         orarioInvio: mailGruppoOrario.trim(),
         oggetto: mailGruppoOggetto.trim(),
         corpoMessaggio: mailGruppoCorpo.trim(),
         webhookAppScriptUrl: mailGruppoWebhookUrl.trim(),
-        ultimoInvioData: impostazioniScuola.notificheEmailGruppo?.ultimoInvioData
+        ultimoInvioData: impostazioniScuola.notificheEmailGruppo?.ultimoInvioData || ''
       },
       calendariGoogle: {
         impegniPlenariId: calPlenariId.trim(),

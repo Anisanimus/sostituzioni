@@ -259,11 +259,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return DEFAULT_IMPOSTAZIONI_SCUOLA;
   });
 
+  const cleanUndefined = (obj: any): any => {
+    return JSON.parse(JSON.stringify(obj, (_, v) => (v === undefined ? null : v)));
+  };
+
   const updateImpostazioniScuola = async (nuove: Partial<ImpostazioniScuola>) => {
     setImpostazioniScuola(prev => {
-      const updated = { ...prev, ...nuove };
+      const merged = { ...prev, ...nuove };
+      const updated = cleanUndefined(merged);
       localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(updated));
-      // Salva DIRETTAMENTE e IMMEDIATAMENTE su Cloud Firestore
+      // Salva DIRETTAMENTE e IMMEDIATAMENTE su Cloud Firestore (100% pulito da undefined)
       const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
       setDoc(scuolaDocRef, { impostazioniScuola: updated, ultimoAggiornamento: new Date().toISOString() }, { merge: true })
         .then(() => console.log('✅ Impostazioni scuola salvate su Cloud!'))
