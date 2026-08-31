@@ -484,3 +484,60 @@ export function getEducatoriInClasseNellOra(
   return presenti;
 }
 
+export interface CompresenzaInfo {
+  curricolari: Docente[];
+  sostegni: Docente[];
+  educatori: Docente[];
+}
+
+/**
+ * Restituisce tutte le figure presenti in una determinata classe, giorno e ora (Curricolari, Sostegno ed Educatori)
+ * Escludendo facoltativamente un determinato docente (ad esempio se stesso)
+ */
+export function getDocentiCompresentiInClasseNellOra(
+  classe: string,
+  giorno: GiornoSettimana,
+  ora: number,
+  docenti: Docente[],
+  orariDocenti: OrarioDocente[],
+  escludiDocenteIdOrNome?: string
+): CompresenzaInfo {
+  if (!classe) return { curricolari: [], sostegni: [], educatori: [] };
+  const classeNorm = classe.toUpperCase().trim();
+  const baseEscluso = escludiDocenteIdOrNome ? getBaseNomeDocente(escludiDocenteIdOrNome) : '';
+
+  const curricolari: Docente[] = [];
+  const sostegni: Docente[] = [];
+  const educatori: Docente[] = [];
+
+  const mapGiaAggiunti = new Set<string>();
+
+  docenti.forEach(d => {
+    const baseNome = getBaseNomeDocente(d.nome);
+    if (baseEscluso && baseNome === baseEscluso) return;
+
+    const orario = orariDocenti.find(o => o.docenteId === d.id);
+    if (!orario) return;
+
+    const cella = orario.ore.find(c => c.giorno === giorno && c.ora === ora);
+    if (cella && cella.valore) {
+      const v = cella.valore.toUpperCase().trim();
+      if (v === classeNorm || v.startsWith(classeNorm + ' ') || v.endsWith(' ' + classeNorm)) {
+        if (!mapGiaAggiunti.has(baseNome)) {
+          mapGiaAggiunti.add(baseNome);
+
+          if (d.isEducatore || d.materia?.toUpperCase().includes('EDUCATORE') || d.nome?.toUpperCase().includes('EDUCATORE')) {
+            educatori.push(d);
+          } else if (d.isSostegno || d.materia?.toUpperCase().includes('SOSTEGNO') || d.nome?.toUpperCase().includes('SOSTEGNO')) {
+            sostegni.push(d);
+          } else {
+            curricolari.push(d);
+          }
+        }
+      }
+    }
+  });
+
+  return { curricolari, sostegni, educatori };
+}
+

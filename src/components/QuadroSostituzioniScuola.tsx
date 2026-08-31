@@ -529,27 +529,29 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           /* ======================================================= */
           <table className="w-full text-left border-collapse table-fixed text-[11px] sm:text-xs">
             <thead>
-              <tr className="bg-slate-900 text-white font-bold text-[10px] sm:text-[11px]">
-                <th className="py-2 px-1.5 sm:px-3 w-[15%] sm:w-16 text-center">Classe</th>
-                <th className="py-2 px-1.5 sm:px-3 w-[35%] sm:w-auto">Docente Assente</th>
-                <th className="py-2 px-1.5 sm:px-3 w-[35%] sm:w-auto">Docente Sostituto</th>
-                <th className="py-2 px-1.5 sm:px-3 w-[15%] sm:w-28 text-center">Stato</th>
+              <tr className="bg-slate-100 text-slate-700 border-b border-slate-200 font-black text-[10px] sm:text-[11px] uppercase tracking-wider">
+                <th className="py-2.5 px-1.5 sm:px-3 w-[15%] sm:w-16 text-center">Classe</th>
+                <th className="py-2.5 px-1.5 sm:px-3 w-[35%] sm:w-auto">Docente Assente</th>
+                <th className="py-2.5 px-1.5 sm:px-3 w-[35%] sm:w-auto">Docente Sostituto</th>
+                <th className="py-2.5 px-1.5 sm:px-3 w-[15%] sm:w-28 text-center">Stato</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {gruppiPerOra.map(([oraNum, righeDellOra]) => (
                 <React.Fragment key={oraNum}>
-                  {/* INTESTAZIONE ORA UNIFICATA (SENZA COLONNE EXTRA) */}
-                  <tr className="bg-slate-800 text-white">
-                    <td colSpan={4} className="py-1.5 px-2.5">
+                  {/* INTESTAZIONE ORA UNIFICATA IN TONALITÀ CHIARA ELEGANTE */}
+                  <tr className="bg-indigo-50/70 border-y border-indigo-100/80 text-indigo-950">
+                    <td colSpan={4} className="py-2 px-2.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 font-black text-[11px] sm:text-xs tracking-wide">
-                          <span>⏰ {oraNum}ª ORA</span>
-                          <span className="text-[10px] font-normal text-slate-300">
+                          <span className="bg-indigo-600 text-white px-2 py-0.5 rounded-md text-[10px] font-black shadow-2xs">
+                            ⏰ {oraNum}ª ORA
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500">
                             ({righeDellOra.length} {righeDellOra.length === 1 ? 'classe' : 'classi'})
                           </span>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-300">
+                        <span className="text-[10px] font-bold bg-white text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-md shadow-2xs">
                           {righeDellOra.filter(r => r.sostituti.length > 0).length}/{righeDellOra.length} coperte
                         </span>
                       </div>
