@@ -1157,17 +1157,19 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                             return (
                               <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 align-top">
                                 <div className="space-y-1.5 text-left">
+                                  {/* MATERIA IN EVIDENZA PRIMA, POI DOCENTE CURRICOLARE */}
                                   {compresenze.curricolari.map(c => (
-                                    <div key={c.id} className="p-1 bg-indigo-50/80 border border-indigo-200 rounded text-[11px] leading-tight">
-                                      <div className="font-black text-indigo-950 truncate">
-                                        {getBaseNomeDocente(c.nome)}
+                                    <div key={c.id} className="p-1.5 bg-indigo-50/90 border border-indigo-200 rounded-lg leading-tight shadow-2xs">
+                                      <div className="text-[10px] text-indigo-700 font-black uppercase tracking-wide truncate">
+                                        📖 {c.materia}
                                       </div>
-                                      <div className="text-[9px] text-indigo-600 font-bold uppercase truncate">
-                                        {c.materia}
+                                      <div className="font-bold text-slate-900 text-[11px] truncate mt-0.5">
+                                        🧑‍🏫 {getBaseNomeDocente(c.nome)}
                                       </div>
                                     </div>
                                   ))}
 
+                                  {/* DOCENTI DI SOSTEGNO */}
                                   {compresenze.sostegni.map(s => (
                                     <div key={s.id} className="p-1 bg-purple-50 border border-purple-200 rounded text-[10px] leading-tight text-purple-900">
                                       <div className="font-bold flex items-center gap-1 truncate">
@@ -1178,6 +1180,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                                     </div>
                                   ))}
 
+                                  {/* EDUCATORI */}
                                   {compresenze.educatori.map(ed => (
                                     <div key={ed.id} className="p-1 bg-teal-50 border border-teal-200 rounded text-[10px] leading-tight text-teal-900">
                                       <div className="font-bold flex items-center gap-1 truncate">
@@ -1410,23 +1413,26 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                                   return (
                                     <td key={giorno} className="py-1 px-1.5 border-r border-slate-300 last:border-r-0 align-top text-left">
                                       <div className="space-y-0.5">
+                                        {/* MATERIA IN EVIDENZA PRIMA, POI CURRICOLARE */}
                                         {comp.curricolari.map(c => (
-                                          <div key={c.id} className="leading-tight">
-                                            <div className="font-black text-slate-900 text-[8.5pt]">
-                                              {getBaseNomeDocente(c.nome)}
-                                            </div>
-                                            <div className="text-[7.5pt] text-slate-600 uppercase font-semibold">
+                                          <div key={c.id} className="leading-tight pb-0.5 mb-0.5 border-b border-slate-100 last:border-b-0">
+                                            <div className="text-[8.5pt] text-indigo-950 font-black uppercase tracking-tight">
                                               {c.materia}
+                                            </div>
+                                            <div className="font-semibold text-slate-800 text-[8pt]">
+                                              {getBaseNomeDocente(c.nome)}
                                             </div>
                                           </div>
                                         ))}
 
+                                        {/* SOSTEGNI */}
                                         {comp.sostegni.map(s => (
                                           <div key={s.id} className="text-[7.5pt] font-bold text-purple-900 bg-purple-50 px-1 py-0.2 rounded border border-purple-200 leading-tight">
                                             ♿ {getBaseNomeDocente(s.nome)} <span className="font-normal text-purple-700">(Sost.)</span>
                                           </div>
                                         ))}
 
+                                        {/* EDUCATORI */}
                                         {comp.educatori.map(e => (
                                           <div key={e.id} className="text-[7.5pt] font-bold text-teal-900 bg-teal-50 px-1 py-0.2 rounded border border-teal-200 leading-tight">
                                             🎓 {getBaseNomeDocente(e.nome)} <span className="font-normal text-teal-700">(Educ.)</span>
