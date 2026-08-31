@@ -96,6 +96,7 @@ interface AppContextType {
   pubblicaSingolaSostituzione: (sostituzioneId: string) => void;
   firmaSostituzione: (sostituzioneId: string) => void;
   segnaNotificheLette: (docenteId: string) => void;
+  rimuoviNotifica: (notificaId: string) => void;
   updateDocente: (docente: Docente) => void;
   updateOrarioDocente: (docenteId: string, nuoveOre: any[]) => void;
   modificaDebitoManuale: (docenteId: string, deltaOre: number, descrizione: string) => void;
@@ -1263,12 +1264,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const segnaNotificheLette = (docenteId: string) => {
     const collegatiIds = getDocentiCollegatiIds(docenteId, docenti);
-    setNotifiche(prev => prev.map(n => {
-      if (collegatiIds.includes(n.docenteId)) {
-        return { ...n, letta: true };
-      }
-      return n;
-    }));
+    setNotifiche(prev => {
+      // Rimuove o segna come lette le notifiche per quel docente e sincronizza su Cloud
+      const updated = prev.filter(n => !collegatiIds.includes(n.docenteId));
+      triggerCloudSync({ notifiche: updated });
+      return updated;
+    });
+  };
+
+  const rimuoviNotifica = (notificaId: string) => {
+    setNotifiche(prev => {
+      const updated = prev.filter(n => n.id !== notificaId);
+      triggerCloudSync({ notifiche: updated });
+      return updated;
+    });
   };
 
   const associaEmailDocente = async (docenteId: string, email: string) => {
@@ -1673,6 +1682,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       pubblicaSingolaSostituzione,
       firmaSostituzione,
       segnaNotificheLette,
+      rimuoviNotifica,
       updateDocente,
       updateOrarioDocente,
       modificaDebitoManuale,

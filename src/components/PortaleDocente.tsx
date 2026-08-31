@@ -26,7 +26,7 @@ interface PortaleDocenteProps {
 
 export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTabChange }) => {
   const { 
-    docenti, orariDocenti, sostituzioni, notifiche, firmaSostituzione, segnaNotificheLette, 
+    docenti, orariDocenti, sostituzioni, notifiche, firmaSostituzione, segnaNotificheLette, rimuoviNotifica,
     richiesteAccessoDocenti, associaEmailDocente, creaRichiestaAccessoDocente, impostazioniScuola
   } = useApp();
   const { utenteInfo, logout } = useAuth();
@@ -363,8 +363,11 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
               </div>
 
               <button
-                onClick={() => segnaNotificheLette(selectedDocenteId)}
-                className="text-xs font-bold text-rose-700 hover:text-rose-900 bg-rose-100/80 hover:bg-rose-200 px-2.5 py-1 rounded-lg transition shrink-0 cursor-pointer"
+                onClick={() => {
+                  rimuoviNotifica(n.id);
+                  segnaNotificheLette(selectedDocenteId);
+                }}
+                className="text-xs font-bold text-rose-700 hover:text-rose-950 bg-rose-100/90 hover:bg-rose-200 border border-rose-300 px-3 py-1.5 rounded-xl transition shrink-0 cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
               >
                 Ho Capito ✓
               </button>
