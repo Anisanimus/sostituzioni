@@ -98,11 +98,39 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
+// GESTIONE AGGIORNAMENTO AUTOMATICO DELL'APP QUANDO VIENE PUBBLICATA UNA NUOVA VERSIONE
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
+      // Controlla aggiornamenti subito e poi ogni 60 secondi
+      setInterval(() => {
+        registration.update().catch(() => {});
+      }, 60000);
+
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('🚀 Nuova versione dell\'app rilevata! Ricaricamento pulito automatico...');
+              // Ricarica la pagina in modo pulito senza cache
+              window.location.reload();
+            }
+          });
+        }
+      });
+    }).catch((err) => {
       console.log('SW registration skipped or failed:', err);
     });
+  });
+
+  // Ascolta messaggi dal Service Worker per reload forzato
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
   });
 }
 
