@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente, NominaSupplente } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
-import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente } from '../utils/docentiHelper';
+import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente, formatDataItaliana } from '../utils/docentiHelper';
 import { db } from '../firebase';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 
@@ -401,22 +401,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     playNotificationAudio();
                     nuoveAppenaPubblicate.forEach((s: SostituzioneAssegnata) => {
                       const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
+                      const dataFmt = formatDataItaliana(s.data);
+                      const msgBody = `Prof. ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${dataFmt}.`;
+
                       try {
                         if ('serviceWorker' in navigator) {
                           navigator.serviceWorker.ready.then(reg => {
                             reg.showNotification('🔔 Nuova Sostituzione Assegnata!', {
-                              body: `Prof. ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
+                              body: msgBody,
                               icon: '/favicon.svg'
                             } as any);
                           }).catch(() => {
                             new Notification('🔔 Nuova Sostituzione Assegnata!', {
-                              body: `Prof. ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
+                              body: msgBody,
                               icon: '/favicon.svg'
                             });
                           });
                         } else {
                           new Notification('🔔 Nuova Sostituzione Assegnata!', {
-                            body: `Prof. ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${s.data}.`,
+                            body: msgBody,
                             icon: '/favicon.svg'
                           });
                         }
@@ -437,22 +440,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     playNotificationAudio();
                     annullate.forEach((s: SostituzioneAssegnata) => {
                       const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
+                      const dataFmt = formatDataItaliana(s.data);
+                      const msgBody = `Prof. ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${dataFmt} è stata annullata dalla Vicepresidenza.`;
+
                       try {
                         if ('serviceWorker' in navigator) {
                           navigator.serviceWorker.ready.then(reg => {
                             reg.showNotification('⚠️ Supplenza Annullata', {
-                              body: `Prof. ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
+                              body: msgBody,
                               icon: '/favicon.svg'
                             } as any);
                           }).catch(() => {
                             new Notification('⚠️ Supplenza Annullata', {
-                              body: `Prof. ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
+                              body: msgBody,
                               icon: '/favicon.svg'
                             });
                           });
                         } else {
                           new Notification('⚠️ Supplenza Annullata', {
-                            body: `Prof. ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${s.data} è stata annullata dalla Vicepresidenza.`,
+                            body: msgBody,
                             icon: '/favicon.svg'
                           });
                         }
@@ -1114,7 +1120,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         classe: sost.classe,
         tipo: 'SOSTITUZIONE_ANNULLATA',
         titolo: 'Supplenza Annullata',
-        messaggio: `L'ora di sostituzione del ${sost.data} (${sost.ora}ª ora in ${sost.classe} per ${docenteAssenteNome}) è stata annullata dalla Vicepresidenza.`,
+        messaggio: `L'ora di sostituzione del ${formatDataItaliana(sost.data)} (${sost.ora}ª ora in ${sost.classe} per ${docenteAssenteNome}) è stata annullata dalla Vicepresidenza.`,
         letta: false,
         createdAt: new Date().toISOString()
       };
