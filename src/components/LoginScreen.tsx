@@ -56,52 +56,34 @@ export const LoginScreen: React.FC = () => {
                 <h3 className="text-base font-black text-slate-900">Seleziona il tuo profilo di accesso</h3>
               </div>
 
-              <div className="space-y-2.5">
-                {/* 1. VICEPRESIDENZA */}
-                <button
-                  type="button"
-                  onClick={() => setProfiloScelto('VICEPRESIDENZA')}
-                  className="w-full p-4 bg-indigo-50/70 hover:bg-indigo-100/80 border-2 border-indigo-100 hover:border-indigo-400 rounded-2xl flex items-center justify-between transition cursor-pointer group text-left shadow-2xs"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-11 h-11 bg-indigo-600 text-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition">
-                      <ShieldCheck className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <span className="block font-black text-sm text-slate-900">Vicepresidenza / Dirigenza</span>
-                      <span className="text-[11px] text-slate-500 font-medium">Gestione assenze, gite e tabellone sostituzioni</span>
-                    </div>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-indigo-600 group-hover:translate-x-1 transition shrink-0" />
-                </button>
-
-                {/* 2. DOCENTI */}
+              <div className="space-y-3">
+                {/* 1. DOCENTI (PRIMO IN EVIDENZA) */}
                 <button
                   type="button"
                   onClick={() => setProfiloScelto('DOCENTE')}
-                  className="w-full p-4 bg-emerald-50/70 hover:bg-emerald-100/80 border-2 border-emerald-100 hover:border-emerald-400 rounded-2xl flex items-center justify-between transition cursor-pointer group text-left shadow-2xs"
+                  className="w-full p-4 bg-emerald-50/90 hover:bg-emerald-100/90 border-2 border-emerald-300 hover:border-emerald-500 rounded-2xl flex items-center justify-between transition cursor-pointer group text-left shadow-xs hover:shadow-md"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className="w-11 h-11 bg-emerald-600 text-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition">
+                    <div className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-md group-hover:scale-105 transition">
                       <Smartphone className="w-6 h-6" />
                     </div>
                     <div>
-                      <span className="block font-black text-sm text-slate-900">Portale Personale Docenti</span>
-                      <span className="text-[11px] text-slate-500 font-medium">Ricezione supplenze, notifiche push e firma</span>
+                      <span className="block font-black text-base text-slate-900">Portale Personale Docenti</span>
+                      <span className="text-xs text-slate-600 font-medium">Ricezione supplenze, notifiche push e firma</span>
                     </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-emerald-600 group-hover:translate-x-1 transition shrink-0" />
+                  <ArrowRight className="w-5 h-5 text-emerald-600 group-hover:translate-x-1 transition shrink-0" />
                 </button>
 
-                {/* 3. PERSONALE ATA / SEGRETERIA */}
+                {/* 2. PERSONALE ATA / SEGRETERIA */}
                 <button
                   type="button"
                   onClick={() => setProfiloScelto('ATA')}
-                  className="w-full p-4 bg-amber-50/70 hover:bg-amber-100/80 border-2 border-amber-100 hover:border-amber-400 rounded-2xl flex items-center justify-between transition cursor-pointer group text-left shadow-2xs"
+                  className="w-full p-3.5 bg-amber-50/70 hover:bg-amber-100/80 border-2 border-amber-200 hover:border-amber-400 rounded-2xl flex items-center justify-between transition cursor-pointer group text-left shadow-2xs"
                 >
                   <div className="flex items-center gap-3.5">
-                    <div className="w-11 h-11 bg-amber-600 text-white rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition">
-                      <LayoutDashboard className="w-6 h-6" />
+                    <div className="w-10 h-10 bg-amber-600 text-white rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition">
+                      <LayoutDashboard className="w-5 h-5" />
                     </div>
                     <div>
                       <span className="block font-black text-sm text-slate-900">Personale ATA & Segreteria</span>
@@ -113,6 +95,30 @@ export const LoginScreen: React.FC = () => {
                     <span>PIN Rapido</span>
                   </div>
                 </button>
+
+                {/* 3. VICEPRESIDENZA / DIRIGENZA (PIÙ DISCRETO IN FONDO) */}
+                <div className="pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setProfiloScelto('VICEPRESIDENZA')}
+                    className="w-full p-2.5 bg-slate-50 hover:bg-indigo-50/80 border border-slate-200 hover:border-indigo-300 rounded-2xl flex items-center justify-between transition cursor-pointer group text-left"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 bg-slate-200 group-hover:bg-indigo-600 text-slate-700 group-hover:text-white rounded-lg flex items-center justify-center transition">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="block font-bold text-xs text-slate-700 group-hover:text-indigo-950">
+                          Accesso Riservato Vicepresidenza / Dirigenza
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-normal">
+                          Gestione e configurazione istituto
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition shrink-0" />
+                  </button>
+                </div>
               </div>
             </div>
           )}
