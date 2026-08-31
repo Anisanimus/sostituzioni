@@ -1360,34 +1360,34 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                     const ore = Array.from({ length: maxOra }, (_, i) => i + 1);
 
                     return (
-                      <div key={cl} className="print-portrait-page p-2">
+                      <div key={cl} className="print-portrait-page">
                         {/* INTESTAZIONE ISTITUZIONALE PULITA */}
-                        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-2 mb-3">
+                        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-1 mb-2">
                           <div>
-                            <span className="text-[10pt] font-black uppercase text-slate-800 tracking-wide">
+                            <span className="text-[9pt] font-black uppercase text-slate-800 tracking-wide">
                               {impostazioniScuola?.nomeScuola || 'Istituto Scolastico'}
                             </span>
-                            <h2 className="text-[16pt] font-black text-slate-950 leading-tight">
+                            <h2 className="text-[14pt] font-black text-slate-950 leading-tight">
                               Orario Settimanale Classe {cl}
                             </h2>
                           </div>
                           <div className="text-right">
-                            <span className="text-[10pt] font-bold text-slate-700 block">
+                            <span className="text-[9pt] font-bold text-slate-700 block">
                               Quadro Orario Didattico
                             </span>
-                            <span className="text-[8pt] text-slate-500 font-mono">
+                            <span className="text-[7.5pt] text-slate-500 font-mono">
                               Anno Scolastico {new Date().getFullYear()}/{new Date().getFullYear() + 1}
                             </span>
                           </div>
                         </div>
 
-                        {/* TABELLA ORARIO VERTICALE CLASSE */}
-                        <table className="w-full border-collapse border border-slate-400 text-center text-[10pt]">
+                        {/* TABELLA ORARIO VERTICALE CLASSE AD ALTA DENSITA' PER PAGINA SINGOLA */}
+                        <table className="w-full border-collapse border border-slate-400 text-center text-[9pt]">
                           <thead>
-                            <tr className="bg-slate-200 text-slate-900 font-black border-b border-slate-400 text-[10pt] uppercase">
-                              <th className="py-2.5 px-2 w-14 border-r border-slate-400">Ora</th>
+                            <tr className="bg-slate-200 text-slate-900 font-black border-b border-slate-400 text-[9pt] uppercase">
+                              <th className="py-1.5 px-1.5 w-12 border-r border-slate-400">Ora</th>
                               {GIORNI_SETTIMANA.map(g => (
-                                <th key={g} className="py-2.5 px-2 border-r border-slate-400 last:border-r-0">
+                                <th key={g} className="py-1.5 px-1.5 border-r border-slate-400 last:border-r-0">
                                   {g}
                                 </th>
                               ))}
@@ -1396,7 +1396,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                           <tbody>
                             {ore.map(oraNum => (
                               <tr key={oraNum} className="border-b border-slate-300">
-                                <td className="py-3 px-2 font-black bg-slate-100 border-r border-slate-400 text-[11pt]">
+                                <td className="py-1.5 px-1 font-black bg-slate-100 border-r border-slate-400 text-[10pt]">
                                   {oraNum}ª
                                 </td>
                                 {GIORNI_SETTIMANA.map(giorno => {
@@ -1404,31 +1404,31 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                                   const hasQualcosa = comp.curricolari.length > 0 || comp.sostegni.length > 0 || comp.educatori.length > 0;
 
                                   if (!hasQualcosa) {
-                                    return <td key={giorno} className="py-2.5 px-2 border-r border-slate-300 last:border-r-0 text-slate-300">-</td>;
+                                    return <td key={giorno} className="py-1 px-1 border-r border-slate-300 last:border-r-0 text-slate-300 text-[8pt]">-</td>;
                                   }
 
                                   return (
-                                    <td key={giorno} className="py-2.5 px-2 border-r border-slate-300 last:border-r-0 align-top text-left">
-                                      <div className="space-y-1">
+                                    <td key={giorno} className="py-1 px-1.5 border-r border-slate-300 last:border-r-0 align-top text-left">
+                                      <div className="space-y-0.5">
                                         {comp.curricolari.map(c => (
                                           <div key={c.id} className="leading-tight">
-                                            <div className="font-black text-slate-900 text-[9.5pt]">
+                                            <div className="font-black text-slate-900 text-[8.5pt]">
                                               {getBaseNomeDocente(c.nome)}
                                             </div>
-                                            <div className="text-[8pt] text-slate-600 uppercase font-semibold">
+                                            <div className="text-[7.5pt] text-slate-600 uppercase font-semibold">
                                               {c.materia}
                                             </div>
                                           </div>
                                         ))}
 
                                         {comp.sostegni.map(s => (
-                                          <div key={s.id} className="text-[8pt] font-bold text-purple-900 bg-purple-50 px-1 py-0.5 rounded border border-purple-200">
+                                          <div key={s.id} className="text-[7.5pt] font-bold text-purple-900 bg-purple-50 px-1 py-0.2 rounded border border-purple-200 leading-tight">
                                             ♿ {getBaseNomeDocente(s.nome)} <span className="font-normal text-purple-700">(Sost.)</span>
                                           </div>
                                         ))}
 
                                         {comp.educatori.map(e => (
-                                          <div key={e.id} className="text-[8pt] font-bold text-teal-900 bg-teal-50 px-1 py-0.5 rounded border border-teal-200">
+                                          <div key={e.id} className="text-[7.5pt] font-bold text-teal-900 bg-teal-50 px-1 py-0.2 rounded border border-teal-200 leading-tight">
                                             🎓 {getBaseNomeDocente(e.nome)} <span className="font-normal text-teal-700">(Educ.)</span>
                                           </div>
                                         ))}

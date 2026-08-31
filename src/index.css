@@ -32,12 +32,12 @@
 
 @media print {
   @page {
-    margin: 8mm 10mm;
+    margin: 5mm 7mm;
   }
   body {
     background: white !important;
     color: black !important;
-    font-size: 11pt !important;
+    font-size: 10pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -59,13 +59,17 @@
     width: 100% !important;
     page-break-after: always !important;
     break-after: page !important;
-    margin-bottom: 20px !important;
+    margin-bottom: 0 !important;
+    padding: 2mm !important;
   }
   .print-portrait-page {
     width: 100% !important;
     page-break-after: always !important;
     break-after: page !important;
-    margin-bottom: 25px !important;
+    margin-bottom: 0 !important;
+    padding: 2mm !important;
+    zoom: 0.88 !important;
+    transform-origin: top center !important;
   }
   .print-landscape-page:last-child,
   .print-portrait-page:last-child {
