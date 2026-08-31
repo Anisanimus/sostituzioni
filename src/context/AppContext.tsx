@@ -112,7 +112,12 @@ interface AppContextType {
   importaNuovoOrarioCompleto: (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => void;
   aggiornaOrarioSenzaCancellareStorico: (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => void;
   ripristinaBackupCompleto: (datiBackup: any) => void;
-  inviaMailPromemoriaGruppoManuale: (destinatarioOverride?: string, oggettoOverride?: string, corpoOverride?: string) => void;
+  inviaMailPromemoriaGruppoManuale: (
+    destinatarioOverride?: string, 
+    oggettoOverride?: string, 
+    corpoOverride?: string,
+    webhookOverride?: string
+  ) => Promise<{ successo: boolean; modalita: 'APPS_SCRIPT' | 'MAILTO'; messaggio: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -549,19 +554,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return `mailto:${destinatario}?subject=${encodedSubject}&body=${encodedBody}`;
   };
 
-  const inviaMailPromemoriaGruppoManuale = (destinatarioOverride?: string, oggettoOverride?: string, corpoOverride?: string) => {
+  const inviaMailPromemoriaGruppoManuale = async (
+    destinatarioOverride?: string, 
+    oggettoOverride?: string, 
+    corpoOverride?: string,
+    webhookOverride?: string
+  ): Promise<{ successo: boolean; modalita: 'APPS_SCRIPT' | 'MAILTO'; messaggio: string }> => {
     const cfg = impostazioniScuola.notificheEmailGruppo;
     const dest = destinatarioOverride || cfg?.emailGruppo || '';
     const subj = oggettoOverride || cfg?.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta';
     const body = corpoOverride || cfg?.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`;
+    const webhookUrl = webhookOverride !== undefined ? webhookOverride : (cfg?.webhookAppScriptUrl || '');
 
     if (!dest) {
       alert("Nessun indirizzo email gruppo configurato. Inseriscilo nelle impostazioni.");
-      return;
+      return { successo: false, modalita: 'MAILTO', messaggio: 'Indirizzo email gruppo mancante' };
     }
 
+    // SE È PRESENTE L'URL DI GOOGLE APPS SCRIPT: INVIO 100% DIRETTO E INVISIBILE DA SERVER GOOGLE
+    if (webhookUrl && webhookUrl.trim().startsWith('http')) {
+      try {
+        await fetch(webhookUrl.trim(), {
+          method: 'POST',
+          mode: 'no-cors', // Apps Script web app standard CORS bypass
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            destinatario: dest,
+            oggetto: subj,
+            messaggio: body,
+            timestamp: new Date().toISOString()
+          })
+        });
+        return { successo: true, modalita: 'APPS_SCRIPT', messaggio: 'Email inviata direttamente in background tramite Google Apps Script!' };
+      } catch (err: any) {
+        console.warn('Errore invio via Google Apps Script, fallback su mailto:', err);
+      }
+    }
+
+    // FALLBACK STANDARD: Apertura client di posta (Gmail / Outlook)
     const mailtoUrl = componiMailtoGruppo(dest, subj, body);
     window.open(mailtoUrl, '_blank');
+    return { successo: true, modalita: 'MAILTO', messaggio: 'Apertura client di posta completata.' };
   };
 
   // Timer di verifica automatica dell'orario per invio email a gruppo

@@ -158,11 +158,12 @@ export interface ImpostazioniScuola {
   emailVicepresidenzaGoogle?: string[]; // Email con poteri di Vicepresidenza/Admin (es. ["vicepresidenza@..."])
   notificheEmailGruppo?: {
     abilitato: boolean;
-    emailGruppo: string;       // es. "docenti-tutti@icannafrank.edu.it"
-    orarioInvio: string;       // es. "07:30"
-    oggetto: string;           // Oggetto della mail
-    corpoMessaggio: string;    // Testo personalizzato con link al portale
-    ultimoInvioData?: string;  // YYYY-MM-DD
+    emailGruppo: string;          // es. "docenti-tutti@icannafrank.edu.it"
+    orarioInvio: string;          // es. "07:30"
+    oggetto: string;              // Oggetto della mail
+    corpoMessaggio: string;       // Testo personalizzato con link al portale
+    webhookAppScriptUrl?: string; // URL Webhook Google Apps Script (per invio 100% invisibile da server Google)
+    ultimoInvioData?: string;     // YYYY-MM-DD
   };
 }
 
