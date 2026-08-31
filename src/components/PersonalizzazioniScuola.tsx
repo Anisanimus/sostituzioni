@@ -32,6 +32,30 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [mailGruppoOggetto, setMailGruppoOggetto] = useState(cfgEmail?.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta');
   const [mailGruppoCorpo, setMailGruppoCorpo] = useState(cfgEmail?.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`);
 
+  // Sincronizzazione automatica se le impostazioni cambiano
+  React.useEffect(() => {
+    if (impostazioniScuola) {
+      setNomeScuola(impostazioniScuola.nomeScuola || 'I.C. Anna Frank');
+      setPinPersonaleAta(impostazioniScuola.pinPersonaleAta || '1234');
+      setTettoPermessi(impostazioniScuola.tettoMaxPermessiBreviAnno || 12);
+      setTettoAssemblee(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
+      setVistaTabellone(impostazioniScuola.vistaTabellonePredefinita || 'GRUPPI_ORA');
+      setNascondiWeekend(impostazioniScuola.nascondiWeekendCalendario ?? true);
+      setGiorniFestivi(impostazioniScuola.giorniFestivi || []);
+      setDominiGoogleStr((impostazioniScuola.dominiAutorizzatiGoogle || ['gmail.com', 'scuola.edu.it']).join(', '));
+      setEmailViceStr((impostazioniScuola.emailVicepresidenzaGoogle || ['vicepresidenza@scuola.edu.it']).join(', '));
+      
+      const emailCfg = impostazioniScuola.notificheEmailGruppo;
+      if (emailCfg) {
+        setMailGruppoAbilitato(emailCfg.abilitato ?? false);
+        setMailGruppoIndirizzo(emailCfg.emailGruppo || '');
+        setMailGruppoOrario(emailCfg.orarioInvio || '07:45');
+        setMailGruppoOggetto(emailCfg.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta');
+        setMailGruppoCorpo(emailCfg.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`);
+      }
+    }
+  }, [impostazioniScuola]);
+
   // Gestione Priorità Algoritmo Sostitutore Smart
   const [prioritaAssenze, setPrioritaAssenze] = useState(impostazioniPriorita.prioritaAssenze);
   const [prioritaGite, setPrioritaGite] = useState(impostazioniPriorita.prioritaGite);
