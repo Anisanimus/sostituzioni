@@ -666,6 +666,17 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
             const orarioDoc = getOrarioUnificatoDocente(docenteAttualeOrario?.id || '', docenti, orariDocenti);
             const isDocenteSostegno = docenteAttualeOrario?.isSostegno || docenteAttualeOrario?.materia?.toUpperCase().includes('SOSTEGNO');
 
+            // Calcola dinamicamente quante ore mostrare: se non ci sono ore dopo la 6ª in tutta la settimana, tronca a 6; altrimenti mostra fino alla max ora occupata (fino a 9)
+            let maxOraDocente = 6;
+            [7, 8, 9].forEach(o => {
+              const hasOra = orarioDoc.some(c => c.ora === o && c.valore && c.valore.trim() !== '');
+              if (hasOra) {
+                maxOraDocente = Math.max(maxOraDocente, o);
+              }
+            });
+
+            const oreDaMostrare = Array.from({ length: maxOraDocente }, (_, i) => i + 1);
+
             return (
               <div className="overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full text-center border-collapse text-xs">
@@ -680,7 +691,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(oraNum => (
+                    {oreDaMostrare.map(oraNum => (
                       <tr key={oraNum} className="hover:bg-slate-50/60 transition">
                         <td className="py-2 px-2 font-black text-slate-700 bg-slate-50/80 border-r border-slate-200">
                           {oraNum}ª
@@ -786,6 +797,26 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
 
           {/* VISTA 2: TABELLA ORARIO PER CLASSE */}
           {tipoVistaOrario === 'CLASSE' && (() => {
+            // Calcola dinamicamente quante ore mostrare per la classe: se dopo la 6ª ora in tutta la settimana non c'è nessuna lezione, ometti
+            let maxOraClasse = 6;
+            [7, 8, 9].forEach(o => {
+              const hasOra = GIORNI_SETTIMANA.some(giorno => {
+                const comp = getDocentiCompresentiInClasseNellOra(
+                  classeOrarioSelezionata,
+                  giorno,
+                  o,
+                  docenti,
+                  orariDocenti
+                );
+                return comp.curricolari.length > 0 || comp.sostegni.length > 0 || comp.educatori.length > 0;
+              });
+              if (hasOra) {
+                maxOraClasse = Math.max(maxOraClasse, o);
+              }
+            });
+
+            const oreDaMostrareClasse = Array.from({ length: maxOraClasse }, (_, i) => i + 1);
+
             return (
               <div className="overflow-x-auto rounded-xl border border-slate-200">
                 <table className="w-full text-center border-collapse text-xs">
@@ -800,7 +831,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(oraNum => (
+                    {oreDaMostrareClasse.map(oraNum => (
                       <tr key={oraNum} className="hover:bg-slate-50/60 transition">
                         <td className="py-2 px-2 font-black text-slate-700 bg-slate-50/80 border-r border-slate-200">
                           {oraNum}ª

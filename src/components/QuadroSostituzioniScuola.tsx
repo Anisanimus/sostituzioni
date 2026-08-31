@@ -3,7 +3,8 @@ import { useApp } from '../context/AppContext';
 import { 
   Lock, CheckCircle2, Clock, 
   Search, Filter, Printer, KeyRound, ShieldAlert,
-  ChevronLeft, ChevronRight, User, AlertCircle
+  ChevronLeft, ChevronRight, User, AlertCircle,
+  FileDown, X, CheckSquare, Square, Download, Check
 } from 'lucide-react';
 import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
 
@@ -33,6 +34,11 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
   const [filtroOra, setFiltroOra] = useState<string>('TUTTE');
   const [ricercaDocente, setRicercaDocente] = useState<string>('');
   const [mostraFiltroDocente, setMostraFiltroDocente] = useState<boolean>(false);
+
+  // MODALE DOWNLOAD / STAMPA PDF PROSPETTO
+  const [mostraModalePdf, setMostraModalePdf] = useState<boolean>(false);
+  const [modalitaSelezioneClassiPdf, setModalitaSelezioneClassiPdf] = useState<'TUTTE' | 'PERSONALIZZATA'>('TUTTE');
+  const [classiSelezionatePdf, setClassiSelezionatePdf] = useState<string[]>([]);
 
   const pinAtaValido = impostazioniScuola?.pinPersonaleAta || '1234';
 
@@ -388,12 +394,16 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={() => {
+                setClassiSelezionatePdf(classiUniche);
+                setModalitaSelezioneClassiPdf('TUTTE');
+                setMostraModalePdf(true);
+              }}
               className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5 cursor-pointer"
-              title="Stampa foglio per bacheca o reception"
+              title="Scarica o stampa prospetto in formato PDF"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Stampa</span>
+              <FileDown className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Scarica / Stampa PDF</span>
             </button>
           </div>
         </div>
@@ -434,6 +444,158 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           </div>
         )}
       </div>
+
+      {/* ========================================================= */}
+      {/* MODALE DI SCELTA CLASSI PER DOWNLOAD / STAMPA PDF         */}
+      {/* ========================================================= */}
+      {mostraModalePdf && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl border border-indigo-100 shadow-2xs">
+                  <FileDown className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">Scarica / Stampa PDF Prospetto</h3>
+                  <p className="text-xs text-slate-500">Seleziona le classi da includere nel documento</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMostraModalePdf(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* OPZIONI: TUTTE LE CLASSI VS SELEZIONA CLASSI */}
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setModalitaSelezioneClassiPdf('TUTTE')}
+                  className={`py-2 px-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 ${
+                    modalitaSelezioneClassiPdf === 'TUTTE'
+                      ? 'bg-white text-indigo-950 shadow-2xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Check className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Tutte le Classi ({classiUniche.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setModalitaSelezioneClassiPdf('PERSONALIZZATA')}
+                  className={`py-2 px-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 ${
+                    modalitaSelezioneClassiPdf === 'PERSONALIZZATA'
+                      ? 'bg-white text-indigo-950 shadow-2xs font-black'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Filter className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Solo Alcune Classi</span>
+                </button>
+              </div>
+
+              {/* CHECKBOX GRIGLIA CLASSI QUANDO MODALITA' È PERSONALIZZATA */}
+              {modalitaSelezioneClassiPdf === 'PERSONALIZZATA' && (
+                <div className="space-y-2.5 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 animate-in fade-in">
+                  <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-200">
+                    <span className="font-bold text-slate-700">
+                      Selezionate: {classiSelezionatePdf.length} di {classiUniche.length}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setClassiSelezionatePdf(classiUniche)}
+                        className="text-[11px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                      >
+                        Seleziona Tutte
+                      </button>
+                      <span className="text-slate-300">•</span>
+                      <button
+                        type="button"
+                        onClick={() => setClassiSelezionatePdf([])}
+                        className="text-[11px] font-bold text-slate-500 hover:underline cursor-pointer"
+                      >
+                        Deseleziona
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
+                    {classiUniche.map(c => {
+                      const isSel = classiSelezionatePdf.includes(c);
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => {
+                            setClassiSelezionatePdf(prev => 
+                              prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]
+                            );
+                          }}
+                          className={`p-2 rounded-xl text-xs font-black border transition flex items-center justify-between cursor-pointer ${
+                            isSel 
+                              ? 'bg-indigo-50 border-indigo-300 text-indigo-950 shadow-2xs' 
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
+                          }`}
+                        >
+                          <span>{c}</span>
+                          {isSel ? (
+                            <CheckSquare className="w-3.5 h-3.5 text-indigo-600" />
+                          ) : (
+                            <Square className="w-3.5 h-3.5 text-slate-300" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* PULSANTI DI AZIONE */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setMostraModalePdf(false)}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              >
+                Annulla
+              </button>
+
+              <button
+                type="button"
+                disabled={modalitaSelezioneClassiPdf === 'PERSONALIZZATA' && classiSelezionatePdf.length === 0}
+                onClick={() => {
+                  setMostraModalePdf(false);
+                  
+                  // Se è personalizzata, imposta temporaneamente il filtro prima della stampa o esegui
+                  if (modalitaSelezioneClassiPdf === 'PERSONALIZZATA') {
+                    if (classiSelezionatePdf.length === 1) {
+                      setFiltroClasse(classiSelezionatePdf[0]);
+                    }
+                  } else {
+                    setFiltroClasse('');
+                  }
+
+                  setTimeout(() => {
+                    window.print();
+                  }, 150);
+                }}
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Genera e Salva in PDF</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* BANNER NOMINE SUPPLENTI ATTIVE OGGI (PER PERSONALE ATA & SEGRETERIA / ACCOGLIENZA) */}
       {(() => {
