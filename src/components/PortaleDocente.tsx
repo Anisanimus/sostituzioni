@@ -60,6 +60,9 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
   // Stato per Consigli di Classe
   const [classeConsiglioSelezionata, setClasseConsiglioSelezionata] = useState<string>('');
 
+  // Stato per la finestra di scelta del Calendario (Google Calendar vs Apple/Outlook)
+  const [sostituzionePerCalendario, setSostituzionePerCalendario] = useState<any | null>(null);
+
   // Calcola corrispondenza del docente autenticato
   const userEmail = utenteInfo?.email || '';
   const userDisplayName = utenteInfo?.displayName || '';
@@ -569,40 +572,16 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    {/* BOTTONE AGGIUNGI SU GOOGLE CALENDAR */}
-                    <a
-                      href={generaLinkGoogleCalendar(
-                        s.data, 
-                        s.ora, 
-                        s.classe, 
-                        getDocenteNome(s.docenteAssenteId),
-                        impostazioniScuola?.nomeScuola
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs group"
-                      title="Aggiungi promemoria su Google Calendar"
-                    >
-                      <CalendarPlus className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition" />
-                      <span>Google Calendar</span>
-                      <ExternalLink className="w-3 h-3 text-blue-400" />
-                    </a>
-
-                    {/* BOTTONE AGGIUNGI SU CALENDARIO TELEFONO (IPHONE/APPLE/OUTLOOK) */}
+                    {/* PULSANTE SINGOLO INTELLIGENTE CALENDARIO (COMPATTO SU MOBILE) */}
                     <button
                       type="button"
-                      onClick={() => scaricaFileIcsCalendar(
-                        s.data,
-                        s.ora,
-                        s.classe,
-                        getDocenteNome(s.docenteAssenteId),
-                        impostazioniScuola?.nomeScuola
-                      )}
-                      className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs group"
-                      title="Aggiungi su Calendario iPhone / Apple / Outlook"
+                      onClick={() => setSostituzionePerCalendario(s)}
+                      className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs group hover:scale-105 active:scale-95"
+                      title="Aggiungi al tuo calendario (Google, Apple o Outlook)"
                     >
-                      <Calendar className="w-3.5 h-3.5 text-slate-700 group-hover:scale-110 transition" />
-                      <span>Calendario iPhone / PC</span>
+                      <CalendarPlus className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition" />
+                      <span className="sm:hidden">Aggiungi</span>
+                      <span className="hidden sm:inline">Aggiungi a Calendario</span>
                     </button>
 
                     {s.firmata ? (
@@ -1594,6 +1573,99 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
               </div>
             );
           })()}
+        </div>
+      )}
+
+      {/* MODALE DI SCELTA CALENDARIO (GOOGLE CALENDAR vs APPLE / OUTLOOK) */}
+      {sostituzionePerCalendario && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md">
+                  <CalendarPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">Aggiungi a Calendario</h3>
+                  <p className="text-xs text-slate-500">Scegli dove salvare il promemoria</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSostituzionePerCalendario(null)}
+                className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* RIEPILOGO RAPIDO SUPPLENZA */}
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1">
+              <div className="flex items-center justify-between font-bold text-slate-900">
+                <span>{sostituzionePerCalendario.giorno} {formatDataItaliana(sostituzionePerCalendario.data)}</span>
+                <span className="bg-slate-800 text-white px-2 py-0.5 rounded text-[10px]">{sostituzionePerCalendario.ora}ª Ora</span>
+              </div>
+              <p className="text-slate-600">
+                Classe: <strong>{sostituzionePerCalendario.classe}</strong> • Per: <strong>{getDocenteNome(sostituzionePerCalendario.docenteAssenteId)}</strong>
+              </p>
+            </div>
+
+            {/* OPZIONI DI AGGIUNTA */}
+            <div className="space-y-2.5 pt-1">
+              {/* OPZIONE 1: GOOGLE CALENDAR */}
+              <a
+                href={generaLinkGoogleCalendar(
+                  sostituzionePerCalendario.data,
+                  sostituzionePerCalendario.ora,
+                  sostituzionePerCalendario.classe,
+                  getDocenteNome(sostituzionePerCalendario.docenteAssenteId),
+                  impostazioniScuola?.nomeScuola
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setSostituzionePerCalendario(null)}
+                className="w-full p-3.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-400 rounded-2xl flex items-center justify-between transition cursor-pointer text-left group shadow-2xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                    G
+                  </div>
+                  <div>
+                    <span className="block font-black text-xs text-blue-950">Google Calendar</span>
+                    <span className="text-[10px] text-blue-700">Account Google Workspace o Gmail</span>
+                  </div>
+                </div>
+                <ExternalLink className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition shrink-0" />
+              </a>
+
+              {/* OPZIONE 2: CALENDARIO TELEFONO / APPLE / OUTLOOK */}
+              <button
+                type="button"
+                onClick={() => {
+                  scaricaFileIcsCalendar(
+                    sostituzionePerCalendario.data,
+                    sostituzionePerCalendario.ora,
+                    sostituzionePerCalendario.classe,
+                    getDocenteNome(sostituzionePerCalendario.docenteAssenteId),
+                    impostazioniScuola?.nomeScuola
+                  );
+                  setSostituzionePerCalendario(null);
+                }}
+                className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-400 rounded-2xl flex items-center justify-between transition cursor-pointer text-left group shadow-2xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-slate-800 text-white flex items-center justify-center text-xs font-bold">
+                    🍎
+                  </div>
+                  <div>
+                    <span className="block font-black text-xs text-slate-900">Calendario iPhone / Mac / PC</span>
+                    <span className="text-[10px] text-slate-500">Apple Calendar, Outlook o Agenda</span>
+                  </div>
+                </div>
+                <Calendar className="w-4 h-4 text-slate-600 group-hover:scale-110 transition shrink-0" />
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
