@@ -373,8 +373,8 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
         </div>
       )}
 
-      {/* HEADER PROFILO DOCENTE */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+      {/* HEADER PROFILO DOCENTE (NON STAMPABILE NEL PDF) */}
+      <div className="no-print bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold text-indigo-600 uppercase">Docente Collegato</span>
           <h2 className="text-2xl font-black text-slate-900">{docente?.nome}</h2>
@@ -417,7 +417,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
 
       {/* GUIDA ATTIVAZIONE NOTIFICHE IPHONE / IPAD */}
       {mostraGuidaIos && (
-        <div className="bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-xl border border-indigo-700 animate-in fade-in space-y-3">
+        <div className="no-print bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-xl border border-indigo-700 animate-in fade-in space-y-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2.5">
               <div className="p-2 bg-indigo-500/30 text-indigo-300 rounded-xl text-lg">
@@ -448,7 +448,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
       )}
 
       {/* PULSANTI DI NAVIGAZIONE SCHEDE IN LINEA */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-3 flex-wrap">
+      <div className="no-print flex items-center gap-2 border-b border-slate-200 pb-3 flex-wrap">
         <button
           type="button"
           onClick={() => setTabDocente('MIE_SOSTITUZIONI')}
@@ -581,7 +581,8 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
       {/* CONTENUTO SCHEDA 3: CONSULTAZIONE ORARIO PERSONALE, DEI COLLEGHI E PER CLASSE */}
       {tabDocente === 'ORARIO' && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          {/* INTESTAZIONE SCHEDA ORARIO (SOLO A SCHERMO, NASCOSTA NELLA STAMPA PDF) */}
+          <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
                 <Table className="w-5 h-5 text-indigo-600" />
@@ -697,7 +698,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
           {/* MODALE DI SCELTA STAMPA/PDF PER L'ORARIO                   */}
           {/* ========================================================= */}
           {mostraModalePdfOrario && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
               <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in zoom-in-95 duration-200">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -709,9 +710,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                         {tipoVistaOrario === 'DOCENTE' ? 'Scarica / Stampa Orario Docenti' : 'Scarica / Stampa Orario Classi'}
                       </h3>
                       <p className="text-xs text-slate-500">
-                        {tipoVistaOrario === 'DOCENTE' 
-                          ? 'Scegli quali orari dei docenti includere nel documento PDF' 
-                          : 'Scegli quali orari delle classi includere nel documento PDF'}
+                        Ogni orario verrà formattato su una singola pagina orizzontale
                       </p>
                     </div>
                   </div>
@@ -730,7 +729,10 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                     <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-bold">
                       <button
                         type="button"
-                        onClick={() => setOpzionePdfDocente('MIO')}
+                        onClick={() => {
+                          setOpzionePdfDocente('MIO');
+                          if (selectedDocenteId) setDocentiSelezionatiPdf([selectedDocenteId]);
+                        }}
                         className={`py-2 px-2 rounded-xl transition cursor-pointer text-center ${
                           opzionePdfDocente === 'MIO'
                             ? 'bg-white text-indigo-950 shadow-2xs font-black'
@@ -836,7 +838,10 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                     <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200 text-xs font-bold">
                       <button
                         type="button"
-                        onClick={() => setOpzionePdfClasse('ATTUALE')}
+                        onClick={() => {
+                          setOpzionePdfClasse('ATTUALE');
+                          if (classeOrarioSelezionata) setClassiSelezionatePdf([classeOrarioSelezionata]);
+                        }}
                         className={`py-2 px-2 rounded-xl transition cursor-pointer text-center ${
                           opzionePdfClasse === 'ATTUALE'
                             ? 'bg-white text-indigo-950 shadow-2xs font-black'
@@ -950,13 +955,17 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
 
                   <button
                     type="button"
+                    disabled={
+                      (tipoVistaOrario === 'DOCENTE' && opzionePdfDocente === 'SELEZIONE' && docentiSelezionatiPdf.length === 0) ||
+                      (tipoVistaOrario === 'CLASSE' && opzionePdfClasse === 'SELEZIONE' && classiSelezionatePdf.length === 0)
+                    }
                     onClick={() => {
                       setMostraModalePdfOrario(false);
                       setTimeout(() => {
                         window.print();
                       }, 150);
                     }}
-                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
                   >
                     <Printer className="w-4 h-4" />
                     <span>Genera e Salva in PDF</span>
@@ -966,247 +975,478 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
             </div>
           )}
 
-          {/* VISTA 1: TABELLA ORARIO DOCENTE */}
-          {tipoVistaOrario === 'DOCENTE' && (() => {
-            const orarioDoc = getOrarioUnificatoDocente(docenteAttualeOrario?.id || '', docenti, orariDocenti);
-            const isDocenteSostegno = docenteAttualeOrario?.isSostegno || docenteAttualeOrario?.materia?.toUpperCase().includes('SOSTEGNO');
+          {/* ========================================================= */}
+          {/* VISTA A SCHERMO (INTERATTIVA)                             */}
+          {/* ========================================================= */}
+          <div className="no-print">
+            {/* VISTA 1: TABELLA ORARIO DOCENTE */}
+            {tipoVistaOrario === 'DOCENTE' && (() => {
+              const orarioDoc = getOrarioUnificatoDocente(docenteAttualeOrario?.id || '', docenti, orariDocenti);
+              const isDocenteSostegno = docenteAttualeOrario?.isSostegno || docenteAttualeOrario?.materia?.toUpperCase().includes('SOSTEGNO');
 
-            // Calcola dinamicamente quante ore mostrare: se non ci sono ore dopo la 6ª in tutta la settimana, tronca a 6; altrimenti mostra fino alla max ora occupata (fino a 9)
-            let maxOraDocente = 6;
-            [7, 8, 9].forEach(o => {
-              const hasOra = orarioDoc.some(c => c.ora === o && c.valore && c.valore.trim() !== '');
-              if (hasOra) {
-                maxOraDocente = Math.max(maxOraDocente, o);
-              }
-            });
+              let maxOraDocente = 6;
+              [7, 8, 9].forEach(o => {
+                const hasOra = orarioDoc.some(c => c.ora === o && c.valore && c.valore.trim() !== '');
+                if (hasOra) maxOraDocente = Math.max(maxOraDocente, o);
+              });
 
-            const oreDaMostrare = Array.from({ length: maxOraDocente }, (_, i) => i + 1);
+              const oreDaMostrare = Array.from({ length: maxOraDocente }, (_, i) => i + 1);
 
-            return (
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full text-center border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[11px] uppercase">
-                      <th className="py-2.5 px-2 w-16 border-r border-slate-200">Ora</th>
-                      {GIORNI_SETTIMANA.map(g => (
-                        <th key={g} className="py-2.5 px-2 border-r border-slate-200 last:border-r-0">
-                          {g}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {oreDaMostrare.map(oraNum => (
-                      <tr key={oraNum} className="hover:bg-slate-50/60 transition">
-                        <td className="py-2 px-2 font-black text-slate-700 bg-slate-50/80 border-r border-slate-200">
-                          {oraNum}ª
-                        </td>
-                        {GIORNI_SETTIMANA.map(giorno => {
-                          const cella = orarioDoc.find(c => c.giorno === giorno && c.ora === oraNum);
-                          const val = cella?.valore?.trim() || '';
+              return (
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-center border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[11px] uppercase">
+                        <th className="py-2.5 px-2 w-16 border-r border-slate-200">Ora</th>
+                        {GIORNI_SETTIMANA.map(g => (
+                          <th key={g} className="py-2.5 px-2 border-r border-slate-200 last:border-r-0">
+                            {g}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {oreDaMostrare.map(oraNum => (
+                        <tr key={oraNum} className="hover:bg-slate-50/60 transition">
+                          <td className="py-2 px-2 font-black text-slate-700 bg-slate-50/80 border-r border-slate-200">
+                            {oraNum}ª
+                          </td>
+                          {GIORNI_SETTIMANA.map(giorno => {
+                            const cella = orarioDoc.find(c => c.giorno === giorno && c.ora === oraNum);
+                            const val = cella?.valore?.trim() || '';
 
-                          if (!val) {
-                            return (
-                              <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 text-slate-300">
-                                -
-                              </td>
-                            );
-                          }
+                            if (!val) {
+                              return (
+                                <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 text-slate-300">
+                                  -
+                                </td>
+                              );
+                            }
 
-                          if (val.toUpperCase() === 'D') {
-                            return (
-                              <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 bg-amber-50/80">
-                                <span className="inline-block bg-amber-100 text-amber-900 border border-amber-300 font-black px-2 py-0.5 rounded text-xs shadow-2xs">
-                                  D (Disposizione)
-                                </span>
-                              </td>
-                            );
-                          }
-
-                          if (val.toUpperCase() === 'P' || val.toUpperCase().startsWith('POT')) {
-                            return (
-                              <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 bg-purple-50/80">
-                                <span className="inline-block bg-purple-100 text-purple-900 border border-purple-300 font-black px-2 py-0.5 rounded text-xs shadow-2xs">
-                                  P (Potenziamento)
-                                </span>
-                              </td>
-                            );
-                          }
-
-                          const compresenze = getDocentiCompresentiInClasseNellOra(
-                            val, 
-                            giorno, 
-                            oraNum, 
-                            docenti, 
-                            orariDocenti, 
-                            docenteAttualeOrario?.nome
-                          );
-
-                          return (
-                            <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 align-top">
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-center gap-1">
-                                  <span className="inline-block bg-indigo-50 text-indigo-900 border border-indigo-200 font-black px-2 py-0.5 rounded text-xs shadow-2xs">
-                                    {val}
+                            if (val.toUpperCase() === 'D') {
+                              return (
+                                <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 bg-amber-50/80">
+                                  <span className="inline-block bg-amber-100 text-amber-900 border border-amber-300 font-black px-2 py-0.5 rounded text-xs shadow-2xs">
+                                    D (Disposizione)
                                   </span>
-                                  {cella?.isCasoGrave && (
-                                    <span className="bg-rose-600 text-white font-black text-[9px] px-1 py-0.2 rounded" title="Caso Grave">
-                                      ♿
+                                </td>
+                              );
+                            }
+
+                            if (val.toUpperCase() === 'P' || val.toUpperCase().startsWith('POT')) {
+                              return (
+                                <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 bg-purple-50/80">
+                                  <span className="inline-block bg-purple-100 text-purple-900 border border-purple-300 font-black px-2 py-0.5 rounded text-xs shadow-2xs">
+                                    P (Potenziamento)
+                                  </span>
+                                </td>
+                              );
+                            }
+
+                            const compresenze = getDocentiCompresentiInClasseNellOra(
+                              val, giorno, oraNum, docenti, orariDocenti, docenteAttualeOrario?.nome
+                            );
+
+                            return (
+                              <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 align-top">
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <span className="inline-block bg-indigo-50 text-indigo-900 border border-indigo-200 font-black px-2 py-0.5 rounded text-xs shadow-2xs">
+                                      {val}
                                     </span>
+                                    {cella?.isCasoGrave && (
+                                      <span className="bg-rose-600 text-white font-black text-[9px] px-1 py-0.2 rounded" title="Caso Grave">
+                                        ♿
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {isDocenteSostegno && compresenze.curricolari.length > 0 && (
+                                    <div className="text-[10px] bg-slate-50 border border-slate-200 rounded p-1 text-slate-700 text-left font-medium">
+                                      <span className="text-[9px] font-bold text-slate-400 block uppercase">Curricolare:</span>
+                                      {compresenze.curricolari.map(c => (
+                                        <div key={c.id} className="truncate">
+                                          🧑‍🏫 {getBaseNomeDocente(c.nome)} <span className="text-slate-400">({c.materia})</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {!isDocenteSostegno && compresenze.sostegni.length > 0 && (
+                                    <div className="text-[10px] bg-purple-50 border border-purple-200 rounded p-1 text-purple-900 text-left font-medium">
+                                      <span className="text-[9px] font-bold text-purple-700 block uppercase">Sostegno in aula:</span>
+                                      {compresenze.sostegni.map(s => (
+                                        <div key={s.id} className="truncate">
+                                          ♿ {getBaseNomeDocente(s.nome)}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {compresenze.educatori.length > 0 && (
+                                    <div className="text-[10px] bg-teal-50 border border-teal-200 rounded p-1 text-teal-900 text-left font-medium">
+                                      <span className="text-[9px] font-bold text-teal-700 block uppercase">Educatore:</span>
+                                      {compresenze.educatori.map(ed => (
+                                        <div key={ed.id} className="truncate">
+                                          🎓 {getBaseNomeDocente(ed.nome)}
+                                        </div>
+                                      ))}
+                                    </div>
                                   )}
                                 </div>
-
-                                {isDocenteSostegno && compresenze.curricolari.length > 0 && (
-                                  <div className="text-[10px] bg-slate-50 border border-slate-200 rounded p-1 text-slate-700 text-left font-medium">
-                                    <span className="text-[9px] font-bold text-slate-400 block uppercase">Curricolare:</span>
-                                    {compresenze.curricolari.map(c => (
-                                      <div key={c.id} className="truncate">
-                                        🧑‍🏫 {getBaseNomeDocente(c.nome)} <span className="text-slate-400">({c.materia})</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {!isDocenteSostegno && compresenze.sostegni.length > 0 && (
-                                  <div className="text-[10px] bg-purple-50 border border-purple-200 rounded p-1 text-purple-900 text-left font-medium">
-                                    <span className="text-[9px] font-bold text-purple-700 block uppercase">Sostegno in aula:</span>
-                                    {compresenze.sostegni.map(s => (
-                                      <div key={s.id} className="truncate">
-                                        ♿ {getBaseNomeDocente(s.nome)}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-
-                                {compresenze.educatori.length > 0 && (
-                                  <div className="text-[10px] bg-teal-50 border border-teal-200 rounded p-1 text-teal-900 text-left font-medium">
-                                    <span className="text-[9px] font-bold text-teal-700 block uppercase">Educatore:</span>
-                                    {compresenze.educatori.map(ed => (
-                                      <div key={ed.id} className="truncate">
-                                        🎓 {getBaseNomeDocente(ed.nome)}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            );
-          })()}
-
-          {/* VISTA 2: TABELLA ORARIO PER CLASSE */}
-          {tipoVistaOrario === 'CLASSE' && (() => {
-            // Calcola dinamicamente quante ore mostrare per la classe: se dopo la 6ª ora in tutta la settimana non c'è nessuna lezione, ometti
-            let maxOraClasse = 6;
-            [7, 8, 9].forEach(o => {
-              const hasOra = GIORNI_SETTIMANA.some(giorno => {
-                const comp = getDocentiCompresentiInClasseNellOra(
-                  classeOrarioSelezionata,
-                  giorno,
-                  o,
-                  docenti,
-                  orariDocenti
-                );
-                return comp.curricolari.length > 0 || comp.sostegni.length > 0 || comp.educatori.length > 0;
-              });
-              if (hasOra) {
-                maxOraClasse = Math.max(maxOraClasse, o);
-              }
-            });
-
-            const oreDaMostrareClasse = Array.from({ length: maxOraClasse }, (_, i) => i + 1);
-
-            return (
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
-                <table className="w-full text-center border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[11px] uppercase">
-                      <th className="py-2.5 px-2 w-16 border-r border-slate-200">Ora</th>
-                      {GIORNI_SETTIMANA.map(g => (
-                        <th key={g} className="py-2.5 px-2 border-r border-slate-200 last:border-r-0">
-                          {g}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {oreDaMostrareClasse.map(oraNum => (
-                      <tr key={oraNum} className="hover:bg-slate-50/60 transition">
-                        <td className="py-2 px-2 font-black text-slate-700 bg-slate-50/80 border-r border-slate-200">
-                          {oraNum}ª
-                        </td>
-                        {GIORNI_SETTIMANA.map(giorno => {
-                          const compresenze = getDocentiCompresentiInClasseNellOra(
-                            classeOrarioSelezionata, 
-                            giorno, 
-                            oraNum, 
-                            docenti, 
-                            orariDocenti
-                          );
-
-                          const hasQualcosa = compresenze.curricolari.length > 0 || compresenze.sostegni.length > 0 || compresenze.educatori.length > 0;
-
-                          if (!hasQualcosa) {
-                            return (
-                              <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 text-slate-300">
-                                -
                               </td>
                             );
-                          }
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
 
-                          return (
-                            <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 align-top">
-                              <div className="space-y-1.5 text-left">
-                                {/* DOCENTI CURRICOLARI */}
-                                {compresenze.curricolari.map(c => (
-                                  <div key={c.id} className="p-1 bg-indigo-50/80 border border-indigo-200 rounded text-[11px] leading-tight">
-                                    <div className="font-black text-indigo-950 truncate">
-                                      {getBaseNomeDocente(c.nome)}
-                                    </div>
-                                    <div className="text-[9px] text-indigo-600 font-bold uppercase truncate">
-                                      {c.materia}
-                                    </div>
-                                  </div>
-                                ))}
+            {/* VISTA 2: TABELLA ORARIO PER CLASSE */}
+            {tipoVistaOrario === 'CLASSE' && (() => {
+              let maxOraClasse = 6;
+              [7, 8, 9].forEach(o => {
+                const hasOra = GIORNI_SETTIMANA.some(giorno => {
+                  const comp = getDocentiCompresentiInClasseNellOra(
+                    classeOrarioSelezionata, giorno, o, docenti, orariDocenti
+                  );
+                  return comp.curricolari.length > 0 || comp.sostegni.length > 0 || comp.educatori.length > 0;
+                });
+                if (hasOra) maxOraClasse = Math.max(maxOraClasse, o);
+              });
 
-                                {/* DOCENTI DI SOSTEGNO */}
-                                {compresenze.sostegni.map(s => (
-                                  <div key={s.id} className="p-1 bg-purple-50 border border-purple-200 rounded text-[10px] leading-tight text-purple-900">
-                                    <div className="font-bold flex items-center gap-1 truncate">
-                                      <span>♿</span>
-                                      <span className="truncate">{getBaseNomeDocente(s.nome)}</span>
-                                    </div>
-                                    <span className="text-[9px] text-purple-600 font-medium">Sostegno</span>
-                                  </div>
-                                ))}
+              const oreDaMostrareClasse = Array.from({ length: maxOraClasse }, (_, i) => i + 1);
 
-                                {/* EDUCATORI */}
-                                {compresenze.educatori.map(ed => (
-                                  <div key={ed.id} className="p-1 bg-teal-50 border border-teal-200 rounded text-[10px] leading-tight text-teal-900">
-                                    <div className="font-bold flex items-center gap-1 truncate">
-                                      <span>🎓</span>
-                                      <span className="truncate">{getBaseNomeDocente(ed.nome)}</span>
-                                    </div>
-                                    <span className="text-[9px] text-teal-600 font-medium">Educatore</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </td>
-                          );
-                        })}
+              return (
+                <div className="overflow-x-auto rounded-xl border border-slate-200">
+                  <table className="w-full text-center border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 text-[11px] uppercase">
+                        <th className="py-2.5 px-2 w-16 border-r border-slate-200">Ora</th>
+                        {GIORNI_SETTIMANA.map(g => (
+                          <th key={g} className="py-2.5 px-2 border-r border-slate-200 last:border-r-0">
+                            {g}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            );
-          })()}
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {oreDaMostrareClasse.map(oraNum => (
+                        <tr key={oraNum} className="hover:bg-slate-50/60 transition">
+                          <td className="py-2 px-2 font-black text-slate-700 bg-slate-50/80 border-r border-slate-200">
+                            {oraNum}ª
+                          </td>
+                          {GIORNI_SETTIMANA.map(giorno => {
+                            const compresenze = getDocentiCompresentiInClasseNellOra(
+                              classeOrarioSelezionata, giorno, oraNum, docenti, orariDocenti
+                            );
+
+                            const hasQualcosa = compresenze.curricolari.length > 0 || compresenze.sostegni.length > 0 || compresenze.educatori.length > 0;
+
+                            if (!hasQualcosa) {
+                              return (
+                                <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 text-slate-300">
+                                  -
+                                </td>
+                              );
+                            }
+
+                            return (
+                              <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 align-top">
+                                <div className="space-y-1.5 text-left">
+                                  {compresenze.curricolari.map(c => (
+                                    <div key={c.id} className="p-1 bg-indigo-50/80 border border-indigo-200 rounded text-[11px] leading-tight">
+                                      <div className="font-black text-indigo-950 truncate">
+                                        {getBaseNomeDocente(c.nome)}
+                                      </div>
+                                      <div className="text-[9px] text-indigo-600 font-bold uppercase truncate">
+                                        {c.materia}
+                                      </div>
+                                    </div>
+                                  ))}
+
+                                  {compresenze.sostegni.map(s => (
+                                    <div key={s.id} className="p-1 bg-purple-50 border border-purple-200 rounded text-[10px] leading-tight text-purple-900">
+                                      <div className="font-bold flex items-center gap-1 truncate">
+                                        <span>♿</span>
+                                        <span className="truncate">{getBaseNomeDocente(s.nome)}</span>
+                                      </div>
+                                      <span className="text-[9px] text-purple-600 font-medium">Sostegno</span>
+                                    </div>
+                                  ))}
+
+                                  {compresenze.educatori.map(ed => (
+                                    <div key={ed.id} className="p-1 bg-teal-50 border border-teal-200 rounded text-[10px] leading-tight text-teal-900">
+                                      <div className="font-bold flex items-center gap-1 truncate">
+                                        <span>🎓</span>
+                                        <span className="truncate">{getBaseNomeDocente(ed.nome)}</span>
+                                      </div>
+                                      <span className="text-[9px] text-teal-600 font-medium">Educatore</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* ========================================================= */}
+          {/* LAYOUT DI STAMPA PDF (PAGINA ORIZZONTALE PER OGNI ELEMENTO)*/}
+          {/* ========================================================= */}
+          <div className="hidden print:block w-full">
+            {tipoVistaOrario === 'DOCENTE' && (() => {
+              // Determina quali docenti stampare in base alla scelta nella modale
+              let docentiDaStampareIds: string[] = [];
+              if (opzionePdfDocente === 'MIO') {
+                docentiDaStampareIds = selectedDocenteId ? [selectedDocenteId] : (docenteAttualeOrario ? [docenteAttualeOrario.id] : []);
+              } else if (opzionePdfDocente === 'TUTTI') {
+                docentiDaStampareIds = docentiUnici.map(d => d.id);
+              } else {
+                docentiDaStampareIds = docentiSelezionatiPdf;
+              }
+
+              const docentiDaStampare = docentiUnici.filter(d => docentiDaStampareIds.includes(d.id));
+
+              return (
+                <div>
+                  {docentiDaStampare.map(doc => {
+                    const orarioDoc = getOrarioUnificatoDocente(doc.id, docenti, orariDocenti);
+                    const isDocenteSostegno = doc.isSostegno || doc.materie.some(m => m.toUpperCase().includes('SOSTEGNO'));
+
+                    let maxOra = 6;
+                    [7, 8, 9].forEach(o => {
+                      const hasOra = orarioDoc.some(c => c.ora === o && c.valore && c.valore.trim() !== '');
+                      if (hasOra) maxOra = Math.max(maxOra, o);
+                    });
+                    const ore = Array.from({ length: maxOra }, (_, i) => i + 1);
+
+                    return (
+                      <div key={doc.id} className="print-landscape-page p-2">
+                        {/* INTESTAZIONE ISTITUZIONALE PULITA */}
+                        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-2 mb-3">
+                          <div>
+                            <span className="text-[10pt] font-black uppercase text-slate-800 tracking-wide">
+                              {impostazioniScuola?.nomeScuola || 'Istituto Scolastico'}
+                            </span>
+                            <h2 className="text-[16pt] font-black text-slate-950 leading-tight">
+                              Orario Settimanale: {doc.nome}
+                            </h2>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10pt] font-bold text-slate-700 block">
+                              Materia: {doc.materie.join(', ')}
+                            </span>
+                            <span className="text-[8pt] text-slate-500 font-mono">
+                              Anno Scolastico {new Date().getFullYear()}/{new Date().getFullYear() + 1}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* TABELLA ORARIO ORIZZONTALE AD ALTA LEGGIBILITA' */}
+                        <table className="w-full border-collapse border border-slate-400 text-center text-[10pt]">
+                          <thead>
+                            <tr className="bg-slate-200 text-slate-900 font-black border-b border-slate-400 text-[10pt] uppercase">
+                              <th className="py-2 px-2 w-16 border-r border-slate-400">Ora</th>
+                              {GIORNI_SETTIMANA.map(g => (
+                                <th key={g} className="py-2 px-2 border-r border-slate-400 last:border-r-0">
+                                  {g}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ore.map(oraNum => (
+                              <tr key={oraNum} className="border-b border-slate-300">
+                                <td className="py-2.5 px-2 font-black bg-slate-100 border-r border-slate-400 text-[11pt]">
+                                  {oraNum}ª
+                                </td>
+                                {GIORNI_SETTIMANA.map(giorno => {
+                                  const cella = orarioDoc.find(c => c.giorno === giorno && c.ora === oraNum);
+                                  const val = cella?.valore?.trim() || '';
+
+                                  if (!val) {
+                                    return <td key={giorno} className="py-2 px-2 border-r border-slate-300 last:border-r-0 text-slate-300">-</td>;
+                                  }
+
+                                  if (val.toUpperCase() === 'D') {
+                                    return (
+                                      <td key={giorno} className="py-2 px-2 border-r border-slate-300 last:border-r-0 bg-amber-50">
+                                        <span className="font-black text-amber-950">D (Disposizione)</span>
+                                      </td>
+                                    );
+                                  }
+
+                                  if (val.toUpperCase() === 'P' || val.toUpperCase().startsWith('POT')) {
+                                    return (
+                                      <td key={giorno} className="py-2 px-2 border-r border-slate-300 last:border-r-0 bg-purple-50">
+                                        <span className="font-black text-purple-950">P (Potenziamento)</span>
+                                      </td>
+                                    );
+                                  }
+
+                                  const compresenze = getDocentiCompresentiInClasseNellOra(
+                                    val, giorno, oraNum, docenti, orariDocenti, doc.nome
+                                  );
+
+                                  return (
+                                    <td key={giorno} className="py-2 px-2 border-r border-slate-300 last:border-r-0 align-top">
+                                      <div className="font-black text-[12pt] text-indigo-950 mb-0.5">
+                                        {val}
+                                      </div>
+                                      {isDocenteSostegno && compresenze.curricolari.length > 0 && (
+                                        <div className="text-[8pt] text-slate-700 text-left border-t border-slate-200 pt-0.5 mt-0.5">
+                                          <span className="font-bold">Curr: </span>
+                                          {compresenze.curricolari.map(c => getBaseNomeDocente(c.nome)).join(', ')}
+                                        </div>
+                                      )}
+                                      {!isDocenteSostegno && compresenze.sostegni.length > 0 && (
+                                        <div className="text-[8pt] text-purple-900 text-left border-t border-slate-200 pt-0.5 mt-0.5">
+                                          <span className="font-bold">♿ Sost: </span>
+                                          {compresenze.sostegni.map(s => getBaseNomeDocente(s.nome)).join(', ')}
+                                        </div>
+                                      )}
+                                      {compresenze.educatori.length > 0 && (
+                                        <div className="text-[8pt] text-teal-900 text-left border-t border-slate-200 pt-0.5 mt-0.5">
+                                          <span className="font-bold">🎓 Educ: </span>
+                                          {compresenze.educatori.map(e => getBaseNomeDocente(e.nome)).join(', ')}
+                                        </div>
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {tipoVistaOrario === 'CLASSE' && (() => {
+              // Determina quali classi stampare in base alla scelta nella modale
+              let classiDaStampare: string[] = [];
+              if (opzionePdfClasse === 'ATTUALE') {
+                classiDaStampare = [classeOrarioSelezionata];
+              } else if (opzionePdfClasse === 'TUTTE') {
+                classiDaStampare = classiDisponibili;
+              } else {
+                classiDaStampare = classiSelezionatePdf;
+              }
+
+              return (
+                <div>
+                  {classiDaStampare.map(cl => {
+                    let maxOra = 6;
+                    [7, 8, 9].forEach(o => {
+                      const hasOra = GIORNI_SETTIMANA.some(giorno => {
+                        const comp = getDocentiCompresentiInClasseNellOra(cl, giorno, o, docenti, orariDocenti);
+                        return comp.curricolari.length > 0 || comp.sostegni.length > 0 || comp.educatori.length > 0;
+                      });
+                      if (hasOra) maxOra = Math.max(maxOra, o);
+                    });
+                    const ore = Array.from({ length: maxOra }, (_, i) => i + 1);
+
+                    return (
+                      <div key={cl} className="print-landscape-page p-2">
+                        {/* INTESTAZIONE ISTITUZIONALE PULITA */}
+                        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-2 mb-3">
+                          <div>
+                            <span className="text-[10pt] font-black uppercase text-slate-800 tracking-wide">
+                              {impostazioniScuola?.nomeScuola || 'Istituto Scolastico'}
+                            </span>
+                            <h2 className="text-[16pt] font-black text-slate-950 leading-tight">
+                              Orario Settimanale Classe {cl}
+                            </h2>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10pt] font-bold text-slate-700 block">
+                              Quadro Orario Didattico
+                            </span>
+                            <span className="text-[8pt] text-slate-500 font-mono">
+                              Anno Scolastico {new Date().getFullYear()}/{new Date().getFullYear() + 1}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* TABELLA ORARIO ORIZZONTALE CLASSE */}
+                        <table className="w-full border-collapse border border-slate-400 text-center text-[10pt]">
+                          <thead>
+                            <tr className="bg-slate-200 text-slate-900 font-black border-b border-slate-400 text-[10pt] uppercase">
+                              <th className="py-2 px-2 w-16 border-r border-slate-400">Ora</th>
+                              {GIORNI_SETTIMANA.map(g => (
+                                <th key={g} className="py-2 px-2 border-r border-slate-400 last:border-r-0">
+                                  {g}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ore.map(oraNum => (
+                              <tr key={oraNum} className="border-b border-slate-300">
+                                <td className="py-2.5 px-2 font-black bg-slate-100 border-r border-slate-400 text-[11pt]">
+                                  {oraNum}ª
+                                </td>
+                                {GIORNI_SETTIMANA.map(giorno => {
+                                  const comp = getDocentiCompresentiInClasseNellOra(cl, giorno, oraNum, docenti, orariDocenti);
+                                  const hasQualcosa = comp.curricolari.length > 0 || comp.sostegni.length > 0 || comp.educatori.length > 0;
+
+                                  if (!hasQualcosa) {
+                                    return <td key={giorno} className="py-2 px-2 border-r border-slate-300 last:border-r-0 text-slate-300">-</td>;
+                                  }
+
+                                  return (
+                                    <td key={giorno} className="py-2 px-2 border-r border-slate-300 last:border-r-0 align-top text-left">
+                                      <div className="space-y-1">
+                                        {comp.curricolari.map(c => (
+                                          <div key={c.id} className="leading-tight">
+                                            <div className="font-black text-slate-900 text-[9.5pt]">
+                                              {getBaseNomeDocente(c.nome)}
+                                            </div>
+                                            <div className="text-[8pt] text-slate-600 uppercase font-semibold">
+                                              {c.materia}
+                                            </div>
+                                          </div>
+                                        ))}
+
+                                        {comp.sostegni.map(s => (
+                                          <div key={s.id} className="text-[8pt] font-bold text-purple-900 bg-purple-50 px-1 py-0.5 rounded border border-purple-200">
+                                            ♿ {getBaseNomeDocente(s.nome)} <span className="font-normal text-purple-700">(Sost.)</span>
+                                          </div>
+                                        ))}
+
+                                        {comp.educatori.map(e => (
+                                          <div key={e.id} className="text-[8pt] font-bold text-teal-900 bg-teal-50 px-1 py-0.5 rounded border border-teal-200">
+                                            🎓 {getBaseNomeDocente(e.nome)} <span className="font-normal text-teal-700">(Educ.)</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
         </div>
       )}
 
