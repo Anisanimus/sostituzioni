@@ -17,7 +17,14 @@ export const DEFAULT_IMPOSTAZIONI_SCUOLA: ImpostazioniScuola = {
   giorniFestivi: [],
   pinPersonaleAta: '1234',
   dominiAutorizzatiGoogle: ['gmail.com', 'scuola.edu.it', 'icannafrank.edu.it', 'icginostrada.it'],
-  emailVicepresidenzaGoogle: ['cravero.anita@gmail.com', 'vicepresidenza@scuola.edu.it', 'admin@scuola.edu.it']
+  emailVicepresidenzaGoogle: ['cravero.anita@gmail.com', 'vicepresidenza@scuola.edu.it', 'admin@scuola.edu.it'],
+  notificheEmailGruppo: {
+    abilitato: false,
+    emailGruppo: '',
+    orarioInvio: '07:45',
+    oggetto: '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta',
+    corpoMessaggio: `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`
+  }
 };
 
 export const DEFAULT_PRIORITA_ASSENZE: CategoriaSostituto[] = [
@@ -105,6 +112,7 @@ interface AppContextType {
   importaNuovoOrarioCompleto: (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => void;
   aggiornaOrarioSenzaCancellareStorico: (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => void;
   ripristinaBackupCompleto: (datiBackup: any) => void;
+  inviaMailPromemoriaGruppoManuale: (destinatarioOverride?: string, oggettoOverride?: string, corpoOverride?: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -531,6 +539,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (unsubscribe) unsubscribe();
     };
   }, []);
+
+  // =========================================================================
+  // GESTORE INVIO AUTOMATICO / MANUALE EMAIL GRUPPO DOCENTI ALL'ORARIO IMPOSTATO
+  // =========================================================================
+  const componiMailtoGruppo = (destinatario: string, oggetto: string, corpo: string) => {
+    const encodedSubject = encodeURIComponent(oggetto);
+    const encodedBody = encodeURIComponent(corpo);
+    return `mailto:${destinatario}?subject=${encodedSubject}&body=${encodedBody}`;
+  };
+
+  const inviaMailPromemoriaGruppoManuale = (destinatarioOverride?: string, oggettoOverride?: string, corpoOverride?: string) => {
+    const cfg = impostazioniScuola.notificheEmailGruppo;
+    const dest = destinatarioOverride || cfg?.emailGruppo || '';
+    const subj = oggettoOverride || cfg?.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta';
+    const body = corpoOverride || cfg?.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`;
+
+    if (!dest) {
+      alert("Nessun indirizzo email gruppo configurato. Inseriscilo nelle impostazioni.");
+      return;
+    }
+
+    const mailtoUrl = componiMailtoGruppo(dest, subj, body);
+    window.open(mailtoUrl, '_blank');
+  };
+
+  // Timer di verifica automatica dell'orario per invio email a gruppo
+  useEffect(() => {
+    const checkMailSchedule = () => {
+      const cfg = impostazioniScuola.notificheEmailGruppo;
+      if (!cfg || !cfg.abilitato || !cfg.emailGruppo || !cfg.orarioInvio) return;
+
+      const now = new Date();
+      const todayStr = now.toISOString().split('T')[0];
+      const ore = String(now.getHours()).padStart(2, '0');
+      const minuti = String(now.getMinutes()).padStart(2, '0');
+      const currentTime = `${ore}:${minuti}`;
+
+      // Verifica se l'orario corrisponde e se per oggi non è ancora stata inviata
+      if (currentTime === cfg.orarioInvio && cfg.ultimoInvioData !== todayStr) {
+        // Verifica se oggi ci sono effettivamente sostituzioni attive o assenze
+        const hasSostituzioniOggi = sostituzioni.some(s => s.data === todayStr && s.pubblicata);
+        const hasAssenzeOggi = assenze.some(a => a.data === todayStr && !a.annullata);
+
+        if (hasSostituzioniOggi || hasAssenzeOggi) {
+          // Aggiorna ultimoInvioData per non reinviare nello stesso minuto o giornata
+          const updatedImpostazioni: ImpostazioniScuola = {
+            ...impostazioniScuola,
+            notificheEmailGruppo: {
+              ...cfg,
+              ultimoInvioData: todayStr
+            }
+          };
+          updateImpostazioniScuola(updatedImpostazioni);
+
+          // Esegui l'apertura del client di posta
+          inviaMailPromemoriaGruppoManuale(cfg.emailGruppo, cfg.oggetto, cfg.corpoMessaggio);
+        }
+      }
+    };
+
+    const interval = setInterval(checkMailSchedule, 30000); // Controlla ogni 30 secondi
+    return () => clearInterval(interval);
+  }, [impostazioniScuola, sostituzioni, assenze]);
 
   // REFS PER EVITARE CLOSURE STALE IN TRIGGERCLOUDSYNC
   const docentiRef = React.useRef(docenti);
@@ -1690,7 +1761,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       azzeraDocentiEOrario,
       importaNuovoOrarioCompleto,
       aggiornaOrarioSenzaCancellareStorico,
-      ripristinaBackupCompleto
+      ripristinaBackupCompleto,
+      inviaMailPromemoriaGruppoManuale
     }}>
       {children}
     </AppContext.Provider>

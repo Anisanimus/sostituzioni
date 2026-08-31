@@ -3,7 +3,8 @@ import { useApp } from '../context/AppContext';
 import { 
   Building2, Clock, Eye, Calendar, CheckCircle, RotateCcw, 
   Save, School, Sliders, ShieldAlert, Sparkles, LayoutGrid, List,
-  Download, Upload, Plus, Trash2, ShieldCheck, Database
+  Download, Upload, Plus, Trash2, ShieldCheck, Database,
+  Mail, Send, ExternalLink
 } from 'lucide-react';
 import { DEFAULT_IMPOSTAZIONI_SCUOLA, DEFAULT_IMPOSTAZIONI_PRIORITA } from '../context/AppContext';
 import { formatDataItaliana } from '../utils/docentiHelper';
@@ -11,7 +12,8 @@ import { formatDataItaliana } from '../utils/docentiHelper';
 export const PersonalizzazioniScuola: React.FC = () => {
   const { 
     docenti, orariDocenti, assenze, uscite, sostituzioni, movimentiDebito, impostazioniPriorita,
-    impostazioniScuola, updateImpostazioniScuola, setImpostazioniScuola, updateImpostazioniPriorita, ripristinaBackupCompleto 
+    impostazioniScuola, updateImpostazioniScuola, setImpostazioniScuola, updateImpostazioniPriorita, ripristinaBackupCompleto,
+    inviaMailPromemoriaGruppoManuale
   } = useApp();
   
   const [nomeScuola, setNomeScuola] = useState(impostazioniScuola.nomeScuola || 'I.C. Anna Frank');
@@ -20,6 +22,14 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [tettoAssemblee, setTettoAssemblee] = useState(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
   const [vistaTabellone, setVistaTabellone] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>(impostazioniScuola.vistaTabellonePredefinita || 'GRUPPI_ORA');
   const [nascondiWeekend, setNascondiWeekend] = useState(impostazioniScuola.nascondiWeekendCalendario ?? true);
+
+  // Gestione Notifiche Email Gruppo Docenti
+  const cfgEmail = impostazioniScuola.notificheEmailGruppo;
+  const [mailGruppoAbilitato, setMailGruppoAbilitato] = useState(cfgEmail?.abilitato ?? false);
+  const [mailGruppoIndirizzo, setMailGruppoIndirizzo] = useState(cfgEmail?.emailGruppo || '');
+  const [mailGruppoOrario, setMailGruppoOrario] = useState(cfgEmail?.orarioInvio || '07:45');
+  const [mailGruppoOggetto, setMailGruppoOggetto] = useState(cfgEmail?.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta');
+  const [mailGruppoCorpo, setMailGruppoCorpo] = useState(cfgEmail?.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`);
 
   // Gestione Priorità Algoritmo Sostitutore Smart
   const [prioritaAssenze, setPrioritaAssenze] = useState(impostazioniPriorita.prioritaAssenze);
@@ -109,7 +119,15 @@ export const PersonalizzazioniScuola: React.FC = () => {
       nascondiWeekendCalendario: nascondiWeekend,
       giorniFestivi,
       dominiAutorizzatiGoogle: dominiParsed.length > 0 ? dominiParsed : ['gmail.com', 'scuola.edu.it'],
-      emailVicepresidenzaGoogle: emailViceParsed.length > 0 ? emailViceParsed : ['vicepresidenza@scuola.edu.it']
+      emailVicepresidenzaGoogle: emailViceParsed.length > 0 ? emailViceParsed : ['vicepresidenza@scuola.edu.it'],
+      notificheEmailGruppo: {
+        abilitato: mailGruppoAbilitato,
+        emailGruppo: mailGruppoIndirizzo.trim().toLowerCase(),
+        orarioInvio: mailGruppoOrario.trim(),
+        oggetto: mailGruppoOggetto.trim(),
+        corpoMessaggio: mailGruppoCorpo.trim(),
+        ultimoInvioData: impostazioniScuola.notificheEmailGruppo?.ultimoInvioData
+      }
     });
 
     // Salva le priorità dell'algoritmo Sostitutore Smart
@@ -797,6 +815,127 @@ export const PersonalizzazioniScuola: React.FC = () => {
                   <p className="text-xs text-slate-400 italic">Nessun giorno festivo o ponte scolastico registrato.</p>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* SEZIONE 6: NOTIFICHE EMAIL AUTOMATICHE A GRUPPO DOCENTI */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
+                <Mail className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Email Promemoria Giornaliero a Gruppo Google</h3>
+                <p className="text-xs text-slate-500">Invia automaticamente una mail al gruppo docenti solo nei giorni in cui sono presenti supplenze.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => inviaMailPromemoriaGruppoManuale(mailGruppoIndirizzo, mailGruppoOggetto, mailGruppoCorpo)}
+                className="text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Apri il client di posta con il testo configurato per fare una prova"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Prova Invio Subito</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-1">
+            {/* TOGGLE ABILITAZIONE */}
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between">
+              <div>
+                <span className="block text-xs font-black text-slate-900">
+                  Abilita Invio Automatico Promemoria Giornaliero
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  Invia una notifica email all'orario stabilito con il promemoria e il link per firmare sul portale.
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={mailGruppoAbilitato}
+                onChange={(e) => setMailGruppoAbilitato(e.target.checked)}
+                className="w-5 h-5 text-indigo-600 rounded-lg border-slate-300 focus:ring-indigo-500 cursor-pointer"
+              />
+            </div>
+
+            {/* AVVISO DI FUNZIONAMENTO INTELLIGENTE */}
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 flex items-start gap-2.5 text-xs text-amber-900">
+              <span className="text-base">💡</span>
+              <p>
+                <strong>Regola di invio automatico:</strong> la mail viene generata all'orario indicato <strong>solo ed esclusivamente se ci sono assenze o sostituzioni attive</strong> per la giornata. Se non c'è nessun docente assente, l'invio viene automaticamente saltato per non disturbare i docenti.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* INDIRIZZO EMAIL GRUPPO GOOGLE */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-black text-slate-800">
+                  📧 Indirizzo Email Gruppo Docenti / Mailing List
+                </label>
+                <input
+                  type="email"
+                  value={mailGruppoIndirizzo}
+                  onChange={(e) => setMailGruppoIndirizzo(e.target.value)}
+                  placeholder="es. docenti-tutti@icannafrank.edu.it"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Indirizzo del gruppo Google Workspace o lista di distribuzione di tutto il corpo docente.
+                </span>
+              </div>
+
+              {/* ORARIO DI INVIO */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-black text-slate-800">
+                  ⏰ Orario di Invio Automatico Mattutino
+                </label>
+                <input
+                  type="time"
+                  value={mailGruppoOrario}
+                  onChange={(e) => setMailGruppoOrario(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-black text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Orario consigliato prima dell'inizio delle lezioni (es. 07:30 o 07:45).
+                </span>
+              </div>
+            </div>
+
+            {/* OGGETTO EMAIL */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black text-slate-800">
+                📝 Oggetto dell'Email
+              </label>
+              <input
+                type="text"
+                value={mailGruppoOggetto}
+                onChange={(e) => setMailGruppoOggetto(e.target.value)}
+                placeholder="es. 🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
+              />
+            </div>
+
+            {/* CORPO DEL MESSAGGIO EDITABILE */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black text-slate-800">
+                📄 Testo del Messaggio (Completamente Editabile)
+              </label>
+              <textarea
+                rows={6}
+                value={mailGruppoCorpo}
+                onChange={(e) => setMailGruppoCorpo(e.target.value)}
+                placeholder="Scrivi qui il testo della mail..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition leading-relaxed"
+              />
+              <span className="text-[10px] text-slate-500 block">
+                Puoi modificare il testo a tuo piacimento. Ricorda di lasciare il link al portale <code>https://sostituzioni-smart.web.app</code> affinché i docenti possano accedere con un click.
+              </span>
             </div>
           </div>
         </div>

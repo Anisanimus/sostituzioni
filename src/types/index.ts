@@ -156,6 +156,14 @@ export interface ImpostazioniScuola {
   pinPersonaleAta?: string; // PIN di accesso riservato per Personale ATA / Segreteria
   dominiAutorizzatiGoogle?: string[]; // Domini email ammessi (es. ["icannafrank.edu.it", "scuola.edu.it"])
   emailVicepresidenzaGoogle?: string[]; // Email con poteri di Vicepresidenza/Admin (es. ["vicepresidenza@..."])
+  notificheEmailGruppo?: {
+    abilitato: boolean;
+    emailGruppo: string;       // es. "docenti-tutti@icannafrank.edu.it"
+    orarioInvio: string;       // es. "07:30"
+    oggetto: string;           // Oggetto della mail
+    corpoMessaggio: string;    // Testo personalizzato con link al portale
+    ultimoInvioData?: string;  // YYYY-MM-DD
+  };
 }
 
 export interface CandidatoSostituto {
