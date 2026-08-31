@@ -23,9 +23,10 @@ export type TabDocenteType = 'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA' | 'ORARIO' | '
 interface PortaleDocenteProps {
   currentTab?: TabDocenteType;
   onTabChange?: (tab: TabDocenteType) => void;
+  isAtaView?: boolean;
 }
 
-export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTabChange }) => {
+export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTabChange, isAtaView = false }) => {
   const { 
     docenti, orariDocenti, sostituzioni, notifiche, firmaSostituzione, segnaNotificheLette, rimuoviNotifica,
     richiesteAccessoDocenti, associaEmailDocente, creaRichiestaAccessoDocente, impostazioniScuola
@@ -264,13 +265,13 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
 
   const docentiUnici = getDocentiUnici(docenti);
 
-  const docenteAttualeOrario = docenti.find(d => d.id === docenteOrarioSelezionatoId) || docente;
+  const docenteAttualeOrario = docenti.find(d => d.id === docenteOrarioSelezionatoId) || docente || docenti[0];
   const isMioOrario = docenteAttualeOrario && selectedDocenteId && getBaseNomeDocente(docenteAttualeOrario.nome) === getBaseNomeDocente(docente?.nome || '');
 
   // =========================================================================
-  // SCHERMATA DI ATTESA / MATCHING IN CORSO
+  // SCHERMATA DI ATTESA / MATCHING IN CORSO (SOLO SE NON È VISTA ATA)
   // =========================================================================
-  if (!docente) {
+  if (!docente && !isAtaView) {
     return (
       <div className="max-w-md mx-auto py-10 px-4 animate-in fade-in duration-200">
         <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200 text-center space-y-5">
@@ -351,8 +352,8 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
-      {/* BANNER NOTIFICHE ANNULLAMENTI/AVVISI */}
-      {mieNotificheNonLette.length > 0 && (
+      {/* BANNER NOTIFICHE ANNULLAMENTI/AVVISI (NON VISIBILE IN VISTA ATA) */}
+      {!isAtaView && mieNotificheNonLette.length > 0 && (
         <div className="space-y-2">
           {mieNotificheNonLette.map(n => (
             <div key={n.id} className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-4 shadow-sm flex items-start justify-between gap-3 animate-in fade-in">
@@ -385,50 +386,52 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
         </div>
       )}
 
-      {/* HEADER PROFILO DOCENTE (NON STAMPABILE NEL PDF) */}
-      <div className="no-print bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold text-indigo-600 uppercase">Docente Collegato</span>
-          <h2 className="text-2xl font-black text-slate-900">{docente?.nome}</h2>
-          <p className="text-xs text-slate-500">
-            Materia: <strong>{docente?.materia}</strong> • Debito Permessi: <strong>{docente?.oreDebitoPermesso} ore</strong>
-          </p>
-        </div>
+      {/* HEADER PROFILO DOCENTE (NON VISIBILE IN VISTA ATA) */}
+      {!isAtaView && (
+        <div className="no-print bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span className="text-xs font-bold text-indigo-600 uppercase">Docente Collegato</span>
+            <h2 className="text-2xl font-black text-slate-900">{docente?.nome}</h2>
+            <p className="text-xs text-slate-500">
+              Materia: <strong>{docente?.materia}</strong> • Debito Permessi: <strong>{docente?.oreDebitoPermesso} ore</strong>
+            </p>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleRichiediNotifiche}
-            className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition cursor-pointer ${
-              notificaAttiva
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-200'
-            }`}
-          >
-            <Bell className="w-4 h-4 text-indigo-600" />
-            <span>{notificaAttiva ? 'Notifiche Push Attive ✓' : 'Attiva Notifiche Push'}</span>
-          </button>
-
-          {notificaAttiva && (
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={handleInviaNotificaTest}
-              className="px-2.5 py-2 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer flex items-center gap-1"
-              title="Invia notifica sonora di test"
+              onClick={handleRichiediNotifiche}
+              className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition cursor-pointer ${
+                notificaAttiva
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-200'
+              }`}
             >
-              <span>🔔 Prova Notifica</span>
+              <Bell className="w-4 h-4 text-indigo-600" />
+              <span>{notificaAttiva ? 'Notifiche Push Attive ✓' : 'Attiva Notifiche Push'}</span>
             </button>
-          )}
 
-          <button
-            onClick={logout}
-            className="text-xs text-slate-500 hover:text-slate-800 underline p-2 cursor-pointer"
-          >
-            Esci
-          </button>
+            {notificaAttiva && (
+              <button
+                onClick={handleInviaNotificaTest}
+                className="px-2.5 py-2 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer flex items-center gap-1"
+                title="Invia notifica sonora di test"
+              >
+                <span>🔔 Prova Notifica</span>
+              </button>
+            )}
+
+            <button
+              onClick={logout}
+              className="text-xs text-slate-500 hover:text-slate-800 underline p-2 cursor-pointer"
+            >
+              Esci
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* GUIDA ATTIVAZIONE NOTIFICHE IPHONE / IPAD */}
-      {mostraGuidaIos && (
+      {!isAtaView && mostraGuidaIos && (
         <div className="no-print bg-gradient-to-br from-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-xl border border-indigo-700 animate-in fade-in space-y-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2.5">
@@ -459,63 +462,65 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
         </div>
       )}
 
-      {/* PULSANTI DI NAVIGAZIONE SCHEDE IN LINEA */}
-      <div className="no-print flex items-center gap-2 border-b border-slate-200 pb-3 flex-wrap">
-        <button
-          type="button"
-          onClick={() => setTabDocente('MIE_SOSTITUZIONI')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-            tabDocente === 'MIE_SOSTITUZIONI'
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <Calendar className="w-4 h-4" />
-          <span>Sostituzioni</span>
-          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${tabDocente === 'MIE_SOSTITUZIONI' ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
-            {mieSostituzioni.length}
-          </span>
-        </button>
+      {/* PULSANTI DI NAVIGAZIONE SCHEDE IN LINEA (NON VISIBILE IN VISTA ATA PERCHE HA IL SUO NAV INTEGRATO) */}
+      {!isAtaView && (
+        <div className="no-print flex items-center gap-2 border-b border-slate-200 pb-3 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setTabDocente('MIE_SOSTITUZIONI')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              tabDocente === 'MIE_SOSTITUZIONI'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <Calendar className="w-4 h-4" />
+            <span>Sostituzioni</span>
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${tabDocente === 'MIE_SOSTITUZIONI' ? 'bg-indigo-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
+              {mieSostituzioni.length}
+            </span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setTabDocente('QUADRO_SCUOLA')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-            tabDocente === 'QUADRO_SCUOLA'
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <LayoutDashboard className="w-4 h-4" />
-          <span>Quadro Generale</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setTabDocente('QUADRO_SCUOLA')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              tabDocente === 'QUADRO_SCUOLA'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            <span>Quadro Generale</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setTabDocente('ORARIO')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-            tabDocente === 'ORARIO'
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <Table className="w-4 h-4" />
-          <span>Orario</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setTabDocente('ORARIO')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              tabDocente === 'ORARIO'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <Table className="w-4 h-4" />
+            <span>Orario</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setTabDocente('CONSIGLI_CLASSE')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-            tabDocente === 'CONSIGLI_CLASSE'
-              ? 'bg-indigo-600 text-white shadow-md'
-              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>Consigli di Classe</span>
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={() => setTabDocente('CONSIGLI_CLASSE')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              tabDocente === 'CONSIGLI_CLASSE'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>Consigli di Classe</span>
+          </button>
+        </div>
+      )}
 
       {/* CONTENUTO SCHEDA 1: LE MIE SOSTITUZIONI */}
       {tabDocente === 'MIE_SOSTITUZIONI' && (

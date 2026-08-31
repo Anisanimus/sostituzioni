@@ -728,11 +728,55 @@ const MainApp: React.FC = () => {
         {ruoloAttivo === 'PORTALE_DOCENTE' || (ruoloAttivo === 'VICEPRESIDENZA' && utenteInfo.ruolo !== 'VICEPRESIDENZA') ? (
           <PortaleDocente currentTab={tabDocente} onTabChange={setTabDocente} />
         ) : ruoloAttivo === 'QUADRO_SCUOLA' ? (
-          tabAta === 'QUADRO_SCUOLA' ? (
-            <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={false} />
-          ) : (
-            <PortaleDocente currentTab={tabAta as any} onTabChange={(t) => setTabAta(t as any)} />
-          )
+          <div className="space-y-4">
+            {/* NAVIGAZIONE SCHEDE DEDICATA PER IL PERSONALE ATA */}
+            <div className="no-print bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setTabAta('QUADRO_SCUOLA')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                  tabAta === 'QUADRO_SCUOLA'
+                    ? 'bg-amber-600 text-white shadow-md'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Quadro Generale Sostituzioni</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTabAta('ORARIO')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                  tabAta === 'ORARIO'
+                    ? 'bg-amber-600 text-white shadow-md'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span>Orario (Docenti & Classi)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTabAta('CONSIGLI_CLASSE')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                  tabAta === 'CONSIGLI_CLASSE'
+                    ? 'bg-amber-600 text-white shadow-md'
+                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                <span>Consigli di Classe</span>
+              </button>
+            </div>
+
+            {tabAta === 'QUADRO_SCUOLA' ? (
+              <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={false} />
+            ) : (
+              <PortaleDocente currentTab={tabAta as any} onTabChange={(t) => setTabAta(t as any)} isAtaView={true} />
+            )}
+          </div>
         ) : (
           <>
             {/* AVVISO GLOBALE RICHIESTE DOCENTI IN SOSPESO PER LA VICEPRESIDENZA */}
