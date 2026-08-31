@@ -772,7 +772,7 @@ const MainApp: React.FC = () => {
             </div>
 
             {tabAta === 'QUADRO_SCUOLA' ? (
-              <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={false} />
+              <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={true} />
             ) : (
               <PortaleDocente currentTab={tabAta as any} onTabChange={(t) => setTabAta(t as any)} isAtaView={true} />
             )}
