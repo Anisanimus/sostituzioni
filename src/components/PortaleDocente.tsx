@@ -5,12 +5,13 @@ import {
   CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, 
   LayoutDashboard, Clock, ShieldCheck, RefreshCw, Table, Search, 
   BookOpen, GraduationCap, Accessibility, Users, School, FileDown, 
-  Printer, CheckSquare, Square, Check, Filter 
+  Printer, CheckSquare, Square, Check, Filter, ExternalLink, CalendarPlus
 } from 'lucide-react';
 import { 
   getDocentiCollegatiIds, getDocentiUnici, trovaCorrispondenzaDocente, 
   formatDataItaliana, getOrarioUnificatoDocente, getBaseNomeDocente, 
-  getDocentiCompresentiInClasseNellOra, getClassiUniche, getDocentiConsiglioClasse 
+  getDocentiCompresentiInClasseNellOra, getClassiUniche, getDocentiConsiglioClasse,
+  generaLinkGoogleCalendar
 } from '../utils/docentiHelper';
 import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
 import { GiornoSettimana } from '../types';
@@ -554,7 +555,26 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                     </div>
                   </div>
 
-                  <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* BOTTONE AGGIUNGI SU GOOGLE CALENDAR */}
+                    <a
+                      href={generaLinkGoogleCalendar(
+                        s.data, 
+                        s.ora, 
+                        s.classe, 
+                        getDocenteNome(s.docenteAssenteId),
+                        impostazioniScuola?.nomeScuola
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs group"
+                      title="Aggiungi promemoria su Google Calendar"
+                    >
+                      <CalendarPlus className="w-3.5 h-3.5 text-blue-600 group-hover:scale-110 transition" />
+                      <span>Google Calendar</span>
+                      <ExternalLink className="w-3 h-3 text-blue-400" />
+                    </a>
+
                     {s.firmata ? (
                       <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold shadow-2xs">
                         <CheckCircle2 className="w-4 h-4" />

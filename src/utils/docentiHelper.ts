@@ -1,6 +1,40 @@
 import { Docente, OrarioDocente, CellaOrario, GiornoSettimana } from '../types';
 
 /**
+ * Genera l'URL diretto per aggiungere l'ora di supplenza su Google Calendar
+ */
+export function generaLinkGoogleCalendar(
+  data: string, 
+  ora: number, 
+  classe: string, 
+  docenteAssenteNome: string,
+  nomeScuola?: string
+): string {
+  // Orario indicativo campana scolastica per le ore 1-9
+  const orariInizioFine: Record<number, { start: string; end: string }> = {
+    1: { start: '080000', end: '085500' },
+    2: { start: '085500', end: '095000' },
+    3: { start: '100000', end: '105500' },
+    4: { start: '105500', end: '115000' },
+    5: { start: '115000', end: '124500' },
+    6: { start: '124500', end: '134000' },
+    7: { start: '140000', end: '150000' },
+    8: { start: '150000', end: '160000' },
+    9: { start: '160000', end: '170000' }
+  };
+
+  const orario = orariInizioFine[ora] || { start: '080000', end: '090000' };
+  const dataPulita = data.replace(/-/g, ''); // YYYYMMDD
+  const datesParam = `${dataPulita}T${orario.start}/${dataPulita}T${orario.end}`;
+
+  const title = encodeURIComponent(`Supplenza ${ora}ª ora in ${classe} (per Prof. ${docenteAssenteNome})`);
+  const details = encodeURIComponent(`Sostituzione oraria assegnata presso ${nomeScuola || 'Scuola'}.\nOra: ${ora}ª ora\nClasse: ${classe}\nDocente sostituito: ${docenteAssenteNome}`);
+  const location = encodeURIComponent(`Aula ${classe} - ${nomeScuola || 'Istituto Scolastico'}`);
+
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${datesParam}&details=${details}&location=${location}`;
+}
+
+/**
  * Normalizza il nome del docente rimuovendo suffissi tra parentesi
  * Es: "COLETTA SERGIO (ALTERNATIVA)" -> "COLETTA SERGIO"
  *     "AIME GIANLUCA (POTENZIAMENTO)" -> "AIME GIANLUCA"
