@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente, NominaSupplente } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente, formatDataItaliana } from '../utils/docentiHelper';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 
 const CURRENT_TIMETABLE_VERSION = 'v17_pdf_marchi_pellegrino_compresenza_fix';
@@ -365,11 +365,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               const currentCloudIds = new Set(currentCloudSosts.map(s => s.id));
 
               if (!isFirstSyncSnapshot && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-                const loggedDocenteId = localStorage.getItem('portale_docente_loggato_id') || '';
+                const docentiAttuali = cloudData.docenti || docenti;
+                let loggedDocenteId = localStorage.getItem('portale_docente_loggato_id') || '';
+
+                // Se non c'è in localStorage, cercalo per email dell'utente attualmente autenticato
+                if (!loggedDocenteId) {
+                  try {
+                    const authUserEmail = auth?.currentUser?.email?.toLowerCase().trim();
+                    if (authUserEmail) {
+                      const matched = docentiAttuali.find((d: any) => d.email && d.email.toLowerCase().trim() === authUserEmail);
+                      if (matched) {
+                        loggedDocenteId = matched.id;
+                        localStorage.setItem('portale_docente_loggato_id', matched.id);
+                      }
+                    }
+                  } catch (e) {}
+                }
                 
                 // NOTIFICA SOLO SE C'È UN DOCENTE EFFETTIVAMENTE LOGGATO
                 if (loggedDocenteId) {
-                  const docentiAttuali = cloudData.docenti || docenti;
                   const loggedCollegatiIds = getDocentiCollegatiIds(loggedDocenteId, docentiAttuali);
 
                   const playNotificationAudio = () => {
