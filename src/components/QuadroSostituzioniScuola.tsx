@@ -707,7 +707,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                         >
                           {/* Ora, Classe e Dettaglio Materia */}
                           <div className="flex items-center gap-3">
-                            <span className="bg-slate-900 text-white font-black text-xs px-2.5 py-1.5 rounded-lg shrink-0 shadow-2xs">
+                            <span className="bg-indigo-100 text-indigo-950 border border-indigo-200 font-black text-xs px-2.5 py-1.5 rounded-lg shrink-0 shadow-2xs">
                               {r.ora}ª ORA
                             </span>
                             

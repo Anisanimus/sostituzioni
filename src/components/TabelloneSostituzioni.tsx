@@ -543,7 +543,7 @@ export const TabelloneSostituzioni: React.FC<{
                   className="w-full bg-slate-50/80 hover:bg-slate-100/90 px-3.5 py-2 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="bg-slate-900 text-white font-black text-xs px-2 py-0.5 rounded shadow-2xs">
+                    <span className="bg-indigo-600 text-white font-black text-xs px-2 py-0.5 rounded shadow-2xs">
                       {gruppo.ora}ª ORA
                     </span>
                     <span className="text-xs font-bold text-slate-700">
@@ -911,7 +911,7 @@ export const TabelloneSostituzioni: React.FC<{
                     >
                       {/* Ora e Classe */}
                       <div className="flex items-center gap-3">
-                        <span className="bg-slate-900 text-white font-black text-xs px-2.5 py-1.5 rounded-lg shrink-0 shadow-2xs">
+                        <span className="bg-indigo-100 text-indigo-950 border border-indigo-200 font-black text-xs px-2.5 py-1.5 rounded-lg shrink-0 shadow-2xs">
                           {os.ora}ª ORA
                         </span>
                         
