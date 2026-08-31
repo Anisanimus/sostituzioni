@@ -403,24 +403,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                       const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
                       const dataFmt = formatDataItaliana(s.data);
                       const msgBody = `Prof. ${docSostituto?.nome || ''}: Ti è stata assegnata una supplenza in ${s.classe} (${s.ora}ª ora) il ${dataFmt}.`;
+                      const notifTag = `sost_${s.id}`;
 
                       try {
                         if ('serviceWorker' in navigator) {
                           navigator.serviceWorker.ready.then(reg => {
                             reg.showNotification('🔔 Nuova Sostituzione Assegnata!', {
                               body: msgBody,
-                              icon: '/favicon.svg'
+                              icon: '/favicon.svg',
+                              tag: notifTag,
+                              renotify: true
                             } as any);
                           }).catch(() => {
                             new Notification('🔔 Nuova Sostituzione Assegnata!', {
                               body: msgBody,
-                              icon: '/favicon.svg'
+                              icon: '/favicon.svg',
+                              tag: notifTag
                             });
                           });
                         } else {
                           new Notification('🔔 Nuova Sostituzione Assegnata!', {
                             body: msgBody,
-                            icon: '/favicon.svg'
+                            icon: '/favicon.svg',
+                            tag: notifTag
                           });
                         }
                       } catch (err) {
@@ -442,24 +447,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                       const docSostituto = docentiAttuali.find((d: any) => d.id === s.docenteSostitutoId);
                       const dataFmt = formatDataItaliana(s.data);
                       const msgBody = `Prof. ${docSostituto?.nome || ''}: La supplenza in ${s.classe} (${s.ora}ª ora) del ${dataFmt} è stata annullata dalla Vicepresidenza.`;
+                      const notifTag = `canc_${s.id}`;
 
                       try {
                         if ('serviceWorker' in navigator) {
                           navigator.serviceWorker.ready.then(reg => {
                             reg.showNotification('⚠️ Supplenza Annullata', {
                               body: msgBody,
-                              icon: '/favicon.svg'
+                              icon: '/favicon.svg',
+                              tag: notifTag,
+                              renotify: true
                             } as any);
                           }).catch(() => {
                             new Notification('⚠️ Supplenza Annullata', {
                               body: msgBody,
-                              icon: '/favicon.svg'
+                              icon: '/favicon.svg',
+                              tag: notifTag
                             });
                           });
                         } else {
                           new Notification('⚠️ Supplenza Annullata', {
                             body: msgBody,
-                            icon: '/favicon.svg'
+                            icon: '/favicon.svg',
+                            tag: notifTag
                           });
                         }
                       } catch (err) {
