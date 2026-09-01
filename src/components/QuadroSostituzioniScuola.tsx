@@ -4,7 +4,8 @@ import {
   Lock, CheckCircle2, Clock, 
   Search, Filter, Printer, KeyRound, ShieldAlert,
   ChevronLeft, ChevronRight, User, AlertCircle,
-  FileDown, X, CheckSquare, Square, Download, Check
+  FileDown, X, CheckSquare, Square, Download, Check,
+  ChevronsUpDown, ChevronDown
 } from 'lucide-react';
 import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
 
@@ -208,6 +209,10 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
     impostazioniScuola?.vistaTabellonePredefinita === 'PER_DOCENTE' ? 'PER_DOCENTE' : 'PER_ORA'
   );
 
+  // Set per gestire gli accordion aperti. Di default vuoti = TUTTO CHIUSO
+  const [oreAperte, setOreAperte] = useState<number[]>([]);
+  const [docentiAperti, setDocentiAperti] = useState<string[]>([]);
+
   // Raggruppamento 1: per ORA (senza colonne inutili)
   const gruppiPerOra = useMemo(() => {
     const map = new Map<number, typeof righeFiltrate>();
@@ -312,33 +317,72 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
         {/* CONTROLLI DATA & PULSANTE STAMPA */}
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
-          {/* SELETTORE VISTA: PER ORA VS PER DOCENTE */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-            <button
-              type="button"
-              onClick={() => setVisualizzazione('PER_ORA')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                visualizzazione === 'PER_ORA'
-                  ? 'bg-white text-indigo-900 shadow-2xs font-black'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Clock className="w-3.5 h-3.5" />
-              <span>Per Ora</span>
-            </button>
+          {/* SELETTORE VISTA: PER ORA VS PER DOCENTE + TASTO ESPANDI/COMPRIMI */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setVisualizzazione('PER_ORA')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                  visualizzazione === 'PER_ORA'
+                    ? 'bg-white text-indigo-900 shadow-2xs font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                <span>Per Ora</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setVisualizzazione('PER_DOCENTE')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                visualizzazione === 'PER_DOCENTE'
-                  ? 'bg-white text-indigo-900 shadow-2xs font-black'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Per Docente</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setVisualizzazione('PER_DOCENTE')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                  visualizzazione === 'PER_DOCENTE'
+                    ? 'bg-white text-indigo-900 shadow-2xs font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>Per Docente</span>
+              </button>
+            </div>
+
+            {/* PULSANTE DISCRETO ESPANDI / COMPRIMI TUTTO IN LINEA */}
+            {righeFiltrate.length > 0 && (
+              (() => {
+                const isTuttoAperto = visualizzazione === 'PER_ORA'
+                  ? oreAperte.length === gruppiPerOra.length && gruppiPerOra.length > 0
+                  : docentiAperti.length === gruppiPerDocente.length && gruppiPerDocente.length > 0;
+
+                const handleToggleTutto = () => {
+                  if (visualizzazione === 'PER_ORA') {
+                    if (isTuttoAperto) {
+                      setOreAperte([]);
+                    } else {
+                      setOreAperte(gruppiPerOra.map(([oraNum]) => oraNum));
+                    }
+                  } else {
+                    if (isTuttoAperto) {
+                      setDocentiAperti([]);
+                    } else {
+                      setDocentiAperti(gruppiPerDocente.map(([nomeDoc]) => nomeDoc));
+                    }
+                  }
+                };
+
+                return (
+                  <button
+                    type="button"
+                    onClick={handleToggleTutto}
+                    className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-xl border border-slate-200 transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                    title={isTuttoAperto ? "Comprimi tutte le schede" : "Espandi tutte le schede"}
+                  >
+                    <ChevronsUpDown className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="hidden sm:inline">{isTuttoAperto ? 'Comprimi tutto' : 'Espandi tutto'}</span>
+                  </button>
+                );
+              })()
+            )}
           </div>
 
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
@@ -689,131 +733,149 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           /* ======================================================= */
           /* VISTA 1: TABELLA RAGGRUPPATA PER ORA (100% FIT SCREEN) */
           /* ======================================================= */
-          <table className="w-full text-left border-collapse table-fixed text-[11px] sm:text-xs">
-            <thead>
-              <tr className="bg-slate-100 text-slate-700 border-b border-slate-200 font-black text-[10px] sm:text-[11px] uppercase tracking-wider">
-                <th className="py-2.5 px-1.5 sm:px-3 w-[15%] sm:w-16 text-center">Classe</th>
-                <th className="py-2.5 px-1.5 sm:px-3 w-[35%] sm:w-auto">Docente Assente</th>
-                <th className="py-2.5 px-1.5 sm:px-3 w-[35%] sm:w-auto">Docente Sostituto</th>
-                <th className="py-2.5 px-1.5 sm:px-3 w-[15%] sm:w-28 text-center">Stato</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {gruppiPerOra.map(([oraNum, righeDellOra]) => (
-                <React.Fragment key={oraNum}>
-                  {/* INTESTAZIONE ORA UNIFICATA IN TONALITÀ CHIARA ELEGANTE */}
-                  <tr className="bg-indigo-50/70 border-y border-indigo-100/80 text-indigo-950">
-                    <td colSpan={4} className="py-2 px-2.5">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 font-black text-[11px] sm:text-xs tracking-wide">
-                          <span className="bg-indigo-600 text-white px-2 py-0.5 rounded-md text-[10px] font-black shadow-2xs">
-                            ⏰ {oraNum}ª ORA
-                          </span>
-                          <span className="text-[10px] font-bold text-slate-500">
-                            ({righeDellOra.length} {righeDellOra.length === 1 ? 'classe' : 'classi'})
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-bold bg-white text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-md shadow-2xs">
-                          {righeDellOra.filter(r => r.sostituti.length > 0).length}/{righeDellOra.length} coperte
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
+          <div className="divide-y divide-slate-200">
+            {gruppiPerOra.map(([oraNum, righeDellOra]) => {
+              const isAperto = oreAperte.includes(oraNum);
+              return (
+                <div key={oraNum} className="bg-white">
+                  {/* INTESTAZIONE ORA ACCORDION */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOreAperte(prev => 
+                        prev.includes(oraNum) ? prev.filter(o => o !== oraNum) : [...prev, oraNum]
+                      );
+                    }}
+                    className="w-full bg-indigo-50/70 hover:bg-indigo-100/70 border-y border-indigo-100/80 text-indigo-950 py-2.5 px-3 flex items-center justify-between transition cursor-pointer text-left"
+                  >
+                    <div className="flex items-center gap-2 font-black text-xs sm:text-sm tracking-wide">
+                      <span className="bg-indigo-600 text-white px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-black shadow-2xs">
+                        ⏰ {oraNum}ª ORA
+                      </span>
+                      <span className="text-xs font-bold text-slate-600">
+                        ({righeDellOra.length} {righeDellOra.length === 1 ? 'classe' : 'classi'})
+                      </span>
+                    </div>
 
-                  {/* RIGHE CLASSI DI QUELL'ORA */}
-                  {righeDellOra.map((r, idx) => (
-                    <tr key={idx} className="hover:bg-indigo-50/30 transition-colors">
-                      {/* CLASSE */}
-                      <td className="py-2 px-1 sm:px-3 text-center align-middle">
-                        <span className="inline-block bg-indigo-50 border border-indigo-200 text-indigo-900 font-black px-1.5 sm:px-2 py-0.5 rounded text-[11px] sm:text-xs shadow-2xs">
-                          {r.classe}
-                        </span>
-                      </td>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold bg-white text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-md shadow-2xs">
+                        {righeDellOra.filter(r => r.sostituti.length > 0).length}/{righeDellOra.length} coperte
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-indigo-600 transition-transform duration-200 ${isAperto ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
 
-                      {/* DOCENTE ASSENTE */}
-                      <td className="py-2 px-1.5 sm:px-3 align-middle">
-                        <div className="font-black text-slate-900 leading-tight truncate">
-                          {r.docenteAssente}
-                        </div>
-                        <div className="text-[9px] sm:text-[10px] text-slate-500 leading-tight truncate mt-0.5 flex flex-wrap items-center gap-1">
-                          <span>{r.materia}</span>
-                          {r.isUscita ? (
-                            <span className="text-amber-700 font-bold">• Uscita</span>
-                          ) : (
-                            <span className="text-slate-400">• {r.motivo}</span>
-                          )}
-                          {/* REMIND EDUCATORE IN COMPRESENZA */}
-                          {(() => {
-                            const eds = getEducatoriInClasseNellOra(r.classe, giornoSettimana as any, r.ora, docenti, orariDocenti);
-                            if (eds.length === 0) return null;
-                            return eds.map(ed => (
-                              <span key={ed.id} className="bg-teal-50 text-teal-800 border border-teal-300 font-bold px-1.5 py-0.2 rounded text-[9px] flex items-center gap-0.5">
-                                <span>🎓</span>
-                                <span>Educatore: {getBaseNomeDocente(ed.nome)}</span>
-                              </span>
-                            ));
-                          })()}
-                        </div>
-                      </td>
-
-                      {/* DOCENTE SOSTITUTO */}
-                      <td className="py-2 px-1.5 sm:px-3 align-middle">
-                        {r.sostituti.length > 0 ? (
-                          <div className="space-y-0.5">
-                            {r.sostituti.map(s => (
-                              <div key={s.id} className="leading-tight">
-                                <span className="font-black text-indigo-950 text-[11px] sm:text-xs block sm:inline truncate">
-                                  👤 {s.nomeSostituto}
+                  {/* TABELLA CLASSI DI QUELL'ORA */}
+                  {isAperto && (
+                    <div className="overflow-x-auto animate-in fade-in duration-150">
+                      <table className="w-full text-left border-collapse table-fixed text-[11px] sm:text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 text-slate-600 border-b border-slate-200 font-bold text-[10px] uppercase tracking-wider">
+                            <th className="py-2 px-1.5 sm:px-3 w-[15%] sm:w-16 text-center">Classe</th>
+                            <th className="py-2 px-1.5 sm:px-3 w-[35%] sm:w-auto">Docente Assente</th>
+                            <th className="py-2 px-1.5 sm:px-3 w-[35%] sm:w-auto">Docente Sostituto</th>
+                            <th className="py-2 px-1.5 sm:px-3 w-[15%] sm:w-28 text-center">Stato</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {righeDellOra.map((r, idx) => (
+                            <tr key={idx} className="hover:bg-indigo-50/30 transition-colors">
+                              {/* CLASSE */}
+                              <td className="py-2 px-1 sm:px-3 text-center align-middle">
+                                <span className="inline-block bg-indigo-50 border border-indigo-200 text-indigo-900 font-black px-1.5 sm:px-2 py-0.5 rounded text-[11px] sm:text-xs shadow-2xs">
+                                  {r.classe}
                                 </span>
-                                <span className="text-[9px] text-slate-500 font-normal hidden md:inline ml-1">
-                                  ({s.categoria})
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : r.nonSostituita ? (
-                          <span className="inline-block bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 rounded border border-slate-200 text-[9px] sm:text-[10px]">
-                            Non Sost.
-                          </span>
-                        ) : (
-                          <span className="inline-block bg-amber-100 text-amber-900 font-black px-1.5 py-0.2 rounded border border-amber-300 text-[9px] sm:text-[10px] animate-pulse">
-                            In attesa
-                          </span>
-                        )}
-                      </td>
+                              </td>
 
-                      {/* STATO FIRMA */}
-                      <td className="py-2 px-1 sm:px-3 text-center align-middle">
-                        {r.sostituti.length > 0 ? (
-                          r.sostituti.every(s => s.firmata) ? (
-                            <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[9px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded shadow-2xs">
-                              <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-600 shrink-0" />
-                              <span className="hidden sm:inline">Firmata</span>
-                              <span className="sm:hidden">OK</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[9px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded">
-                              <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-600 shrink-0" />
-                              <span className="hidden sm:inline">Assegnata</span>
-                              <span className="sm:hidden">Ass.</span>
-                            </span>
-                          )
-                        ) : (
-                          <span className="text-slate-400 text-[10px]">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
+                              {/* DOCENTE ASSENTE */}
+                              <td className="py-2 px-1.5 sm:px-3 align-middle">
+                                <div className="font-black text-slate-900 leading-tight truncate">
+                                  {r.docenteAssente}
+                                </div>
+                                <div className="text-[9px] sm:text-[10px] text-slate-500 leading-tight truncate mt-0.5 flex flex-wrap items-center gap-1">
+                                  <span>{r.materia}</span>
+                                  {r.isUscita ? (
+                                    <span className="text-amber-700 font-bold">• Uscita</span>
+                                  ) : (
+                                    <span className="text-slate-400">• {r.motivo}</span>
+                                  )}
+                                  {/* REMIND EDUCATORE IN COMPRESENZA */}
+                                  {(() => {
+                                    const eds = getEducatoriInClasseNellOra(r.classe, giornoSettimana as any, r.ora, docenti, orariDocenti);
+                                    if (eds.length === 0) return null;
+                                    return eds.map(ed => (
+                                      <span key={ed.id} className="bg-teal-50 text-teal-800 border border-teal-300 font-bold px-1.5 py-0.2 rounded text-[9px] flex items-center gap-0.5">
+                                        <span>🎓</span>
+                                        <span>Educatore: {getBaseNomeDocente(ed.nome)}</span>
+                                      </span>
+                                    ));
+                                  })()}
+                                </div>
+                              </td>
+
+                              {/* DOCENTE SOSTITUTO */}
+                              <td className="py-2 px-1.5 sm:px-3 align-middle">
+                                {r.sostituti.length > 0 ? (
+                                  <div className="space-y-0.5">
+                                    {r.sostituti.map(s => (
+                                      <div key={s.id} className="leading-tight">
+                                        <span className="font-black text-indigo-950 text-[11px] sm:text-xs block sm:inline truncate">
+                                          👤 {s.nomeSostituto}
+                                        </span>
+                                        <span className="text-[9px] text-slate-500 font-normal hidden md:inline ml-1">
+                                          ({s.categoria})
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : r.nonSostituita ? (
+                                  <span className="inline-block bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 rounded border border-slate-200 text-[9px] sm:text-[10px]">
+                                    Non Sost.
+                                  </span>
+                                ) : (
+                                  <span className="inline-block bg-amber-100 text-amber-900 font-black px-1.5 py-0.2 rounded border border-amber-300 text-[9px] sm:text-[10px] animate-pulse">
+                                    In attesa
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* STATO FIRMA */}
+                              <td className="py-2 px-1 sm:px-3 text-center align-middle">
+                                {r.sostituti.length > 0 ? (
+                                  r.sostituti.every(s => s.firmata) ? (
+                                    <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[9px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded shadow-2xs">
+                                      <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-600 shrink-0" />
+                                      <span className="hidden sm:inline">Firmata</span>
+                                      <span className="sm:hidden">OK</span>
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[9px] sm:text-[10px] px-1 sm:px-2 py-0.5 rounded">
+                                      <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-600 shrink-0" />
+                                      <span className="hidden sm:inline">Assegnata</span>
+                                      <span className="sm:hidden">Ass.</span>
+                                    </span>
+                                  )
+                                ) : (
+                                  <span className="text-slate-400 text-[10px]">-</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         ) : (
           /* ======================================================= */
           /* VISTA 2: CARD MODERNE RAGGRUPPATE PER DOCENTE (UGUALE A VICEPRESIDENZA) */
           /* ======================================================= */
           <div className="space-y-4 p-3 sm:p-4 bg-slate-100/50">
             {gruppiPerDocente.map(([docenteNome, righeDocente], gIdx) => {
+              const isAperto = docentiAperti.includes(docenteNome);
               const totOreDoc = righeDocente.length;
               const totCoperteDoc = righeDocente.filter(r => r.sostituti.length > 0 || r.nonSostituita).length;
               const isTuttoCoperto = totCoperteDoc === totOreDoc;
@@ -825,8 +887,16 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
               return (
                 <div key={gIdx} className={`bg-white rounded-2xl border overflow-hidden transition-all ${stileCard.cardBorder}`}>
-                  {/* Intestazione del Docente Assente con Avatar e Statistiche Dinamiche */}
-                  <div className={`w-full ${stileCard.bgHeader} ${stileCard.textColor} px-4 py-3 flex flex-wrap items-center justify-between gap-2`}>
+                  {/* Intestazione del Docente Assente Accordion con Avatar e Statistiche Dinamiche */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDocentiAperti(prev => 
+                        prev.includes(docenteNome) ? prev.filter(d => d !== docenteNome) : [...prev, docenteNome]
+                      );
+                    }}
+                    className={`w-full ${stileCard.bgHeader} ${stileCard.textColor} px-4 py-3 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left`}
+                  >
                     <div className="flex items-center gap-2.5">
                       <div className={`w-9 h-9 rounded-xl ${stileCard.bgAvatar} flex items-center justify-center font-black text-xs shadow-2xs`}>
                         {docenteNome.split(' ').map(n => n[0]).slice(0, 2).join('')}
@@ -853,11 +923,14 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                         <span>🕒 {totCoperteDoc}/{totOreDoc}</span>
                         {isTuttoCoperto && <span>✓</span>}
                       </span>
-                    </div>
-                  </div>
 
-                  {/* Elenco delle ore del docente come Card Moderne */}
-                  <div className={`p-3 ${stileCard.bodyBg} space-y-2`}>
+                      <ChevronDown className={`w-4 h-4 ${stileCard.textColor} transition-transform duration-200 ${isAperto ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
+
+                  {/* Elenco delle ore del docente come Card Moderne Accordion */}
+                  {isAperto && (
+                    <div className={`p-3 ${stileCard.bodyBg} space-y-2 animate-in fade-in duration-150`}>
                     {righeDocente.map((r, idx) => {
                       const isAssegnata = r.sostituti.length > 0;
                       const isNonSost = r.nonSostituita;
@@ -938,6 +1011,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                       );
                     })}
                   </div>
+                  )}
                 </div>
               );
             })}

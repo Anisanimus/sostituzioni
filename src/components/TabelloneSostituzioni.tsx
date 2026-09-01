@@ -6,7 +6,7 @@ import {
   Users, AlertCircle, CheckCircle, Clock, ArrowRight, UserPlus, 
   HelpCircle, Trash2, Bus, ShieldAlert, Sparkles, Filter, ChevronRight, ChevronLeft, ChevronDown,
   Printer, LayoutGrid, List, MessageSquare, AlertTriangle, Accessibility, Lock,
-  UserCheck, UserX, UserMinus, GraduationCap
+  UserCheck, UserX, UserMinus, GraduationCap, ChevronsUpDown, ChevronUp
 } from 'lucide-react';
 import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
 
@@ -417,29 +417,68 @@ export const TabelloneSostituzioni: React.FC<{
           {/* HEADER UNIFICATO TABELLONE: TUTTO SU UNA SOLA RIGA SIA SU MOBILE CHE SU DESKTOP */}
           <div className="flex items-center justify-between gap-1.5 sm:gap-2 border-b border-slate-100 pb-3 flex-wrap sm:flex-nowrap">
             
-            {/* SELETTORE VISTE (A BLOCCHI / PER DOCENTE) */}
-            <div id="targetSelettoreViste" className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs shrink-0">
-              <button
-                onClick={() => setVisualizzazione('GRUPPI_ORA')}
-                className={`px-2 py-1 sm:px-2.5 rounded-lg font-bold flex items-center gap-1 transition ${
-                  visualizzazione === 'GRUPPI_ORA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200' : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="A blocchi orari"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" /> 
-                <span className="hidden md:inline">A blocchi</span>
-              </button>
+            {/* SELETTORE VISTE (A BLOCCHI / PER DOCENTE) E TASTO ESPANDI/COMPRIMI TUTTO */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <div id="targetSelettoreViste" className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs shrink-0">
+                <button
+                  onClick={() => setVisualizzazione('GRUPPI_ORA')}
+                  className={`px-2 py-1 sm:px-2.5 rounded-lg font-bold flex items-center gap-1 transition cursor-pointer ${
+                    visualizzazione === 'GRUPPI_ORA' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="A blocchi orari"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" /> 
+                  <span className="hidden md:inline">A blocchi</span>
+                </button>
 
-              <button
-                onClick={() => setVisualizzazione('PER_DOCENTE')}
-                className={`px-2 py-1 sm:px-2.5 rounded-lg font-bold flex items-center gap-1 transition ${
-                  visualizzazione === 'PER_DOCENTE' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200' : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="Per Docente Assente"
-              >
-                <UserMinus className="w-3.5 h-3.5 text-indigo-600" /> 
-                <span className="hidden md:inline">Per Docente</span>
-              </button>
+                <button
+                  onClick={() => setVisualizzazione('PER_DOCENTE')}
+                  className={`px-2 py-1 sm:px-2.5 rounded-lg font-bold flex items-center gap-1 transition cursor-pointer ${
+                    visualizzazione === 'PER_DOCENTE' ? 'bg-white text-indigo-700 shadow-xs border border-slate-200' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                  title="Per Docente Assente"
+                >
+                  <UserMinus className="w-3.5 h-3.5 text-indigo-600" /> 
+                  <span className="hidden md:inline">Per Docente</span>
+                </button>
+              </div>
+
+              {/* PULSANTE DISCRETO ESPANDI / COMPRIMI TUTTO IN LINEA */}
+              {oreScoperte.length > 0 && (
+                (() => {
+                  const isTuttoAperto = visualizzazione === 'GRUPPI_ORA'
+                    ? oreAperte.length === oreRaggruppate.length && oreRaggruppate.length > 0
+                    : docentiAperti.length === docentiAssentiRaggruppati.length && docentiAssentiRaggruppati.length > 0;
+
+                  const handleToggleTutto = () => {
+                    if (visualizzazione === 'GRUPPI_ORA') {
+                      if (isTuttoAperto) {
+                        setOreAperte([]);
+                      } else {
+                        setOreAperte(oreRaggruppate.map(g => g.ora));
+                      }
+                    } else {
+                      if (isTuttoAperto) {
+                        setDocentiAperti([]);
+                      } else {
+                        setDocentiAperti(docentiAssentiRaggruppati.map(d => d.nomeDocente));
+                      }
+                    }
+                  };
+
+                  return (
+                    <button
+                      type="button"
+                      onClick={handleToggleTutto}
+                      className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-xl border border-slate-200 transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                      title={isTuttoAperto ? "Comprimi tutte le schede" : "Espandi tutte le schede"}
+                    >
+                      <ChevronsUpDown className="w-3.5 h-3.5 text-slate-500" />
+                      <span className="hidden sm:inline">{isTuttoAperto ? 'Comprimi tutto' : 'Espandi tutto'}</span>
+                    </button>
+                  );
+                })()
+              )}
             </div>
 
             {/* PULSANTI DI AZIONE: SULLA STESSA RIGA */}
