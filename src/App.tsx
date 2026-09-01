@@ -386,28 +386,6 @@ const MainApp: React.FC = () => {
                     </div>
                     {tabDocente === 'CONSIGLI_CLASSE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                   </button>
-
-                  {/* SE È UN ACCOUNT VICEPRESIDENZA CHE STA CONSULTANDO IL PORTALE DOCENTE */}
-                  {utenteInfo?.ruolo === 'VICEPRESIDENZA' && (
-                    <div className="pt-3 mt-2 border-t border-slate-200">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRuoloAttivo('VICEPRESIDENZA');
-                          setIsSidebarOpen(false);
-                        }}
-                        className="w-full p-2.5 rounded-xl text-xs font-bold text-indigo-950 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition flex items-center justify-between cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-1.5 bg-indigo-600 text-white rounded-lg">
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                          </div>
-                          <span>Torna a Vicepresidenza</span>
-                        </div>
-                        <span className="text-[10px] text-indigo-700 font-black">Istantaneo ➔</span>
-                      </button>
-                    </div>
-                  )}
                 </>
               )}
 
@@ -487,28 +465,6 @@ const MainApp: React.FC = () => {
                     </div>
                     {tabAta === 'CONSIGLI_CLASSE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                   </button>
-
-                  {/* SE È UN ACCOUNT VICEPRESIDENZA CHE STA CONSULTANDO IL QUADRO ATA */}
-                  {utenteInfo?.ruolo === 'VICEPRESIDENZA' && (
-                    <div className="pt-3 mt-2 border-t border-slate-200">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRuoloAttivo('VICEPRESIDENZA');
-                          setIsSidebarOpen(false);
-                        }}
-                        className="w-full p-2.5 rounded-xl text-xs font-bold text-indigo-950 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition flex items-center justify-between cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-1.5 bg-indigo-600 text-white rounded-lg">
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                          </div>
-                          <span>Torna a Vicepresidenza</span>
-                        </div>
-                        <span className="text-[10px] text-indigo-700 font-black">Istantaneo ➔</span>
-                      </button>
-                    </div>
-                  )}
                 </>
               )}
 
@@ -727,46 +683,6 @@ const MainApp: React.FC = () => {
                     </div>
                     {tabVice === 'PERSONALIZZAZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                   </button>
-
-                  {/* SEZIONE SWITCH RAPIDO PROFILI PER LA VICEPRESIDENZA SENZA RE-AUTENTICAZIONE */}
-                  <div className="pt-3 mt-2 border-t border-slate-200 space-y-1.5">
-                    <span className="text-[10px] font-black uppercase text-slate-400 px-3 tracking-wider block">
-                      Switch Rapido Profilo
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRuoloAttivo('PORTALE_DOCENTE');
-                        setIsSidebarOpen(false);
-                      }}
-                      className="w-full p-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 border border-slate-200 transition flex items-center justify-between cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="p-1.5 bg-emerald-100 text-emerald-800 rounded-lg">
-                          <Smartphone className="w-3.5 h-3.5" />
-                        </div>
-                        <span>Passa al Portale Docente</span>
-                      </div>
-                      <span className="text-[10px] text-emerald-700 font-bold">Istantaneo ➔</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRuoloAttivo('QUADRO_SCUOLA');
-                        setIsSidebarOpen(false);
-                      }}
-                      className="w-full p-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-900 border border-slate-200 transition flex items-center justify-between cursor-pointer"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="p-1.5 bg-amber-100 text-amber-800 rounded-lg">
-                          <LayoutDashboard className="w-3.5 h-3.5" />
-                        </div>
-                        <span>Passa al Quadro ATA</span>
-                      </div>
-                      <span className="text-[10px] text-amber-700 font-bold">Istantaneo ➔</span>
-                    </button>
-                  </div>
                 </>
               )}
             </div>
