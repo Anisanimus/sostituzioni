@@ -350,62 +350,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (cloudData.nomineSupplenti && Array.isArray(cloudData.nomineSupplenti)) {
             setNomineSupplenti(cloudData.nomineSupplenti);
             localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(cloudData.nomineSupplenti));
-
-            // AUTO-ALLINEAMENTO SUPPLENTI ESISTENTI (Retrocompatibilità)
-            const currentDocentiList: Docente[] = cloudData.docenti && Array.isArray(cloudData.docenti) ? cloudData.docenti : docenti;
-            const currentOrariList: OrarioDocente[] = cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti) ? cloudData.orariDocenti : orariDocenti;
-            let needsDocentiSync = false;
-            let reconciledDocenti = [...currentDocentiList];
-            let reconciledOrari = [...currentOrariList];
-
-            cloudData.nomineSupplenti.forEach((nomina: NominaSupplente) => {
-              const baseNomeSuppl = getBaseNomeDocente(nomina.supplenteNome);
-              const existsDoc = reconciledDocenti.some(d => getBaseNomeDocente(d.nome) === baseNomeSuppl);
-              const titolare = reconciledDocenti.find(d => d.id === nomina.docenteTitolareId) ||
-                              reconciledDocenti.find(d => getBaseNomeDocente(d.nome) === getBaseNomeDocente(nomina.docenteTitolareNome));
-              const idDaCuiEreditare = nomina.docenteSostituitoDaNominaId || nomina.docenteTitolareId;
-              const orarioTitolare = reconciledOrari.find(o => o.docenteId === idDaCuiEreditare) ||
-                                    (titolare ? reconciledOrari.find(o => o.docenteId === titolare.id) : undefined);
-
-              if (!existsDoc) {
-                needsDocentiSync = true;
-                const newSupplId = `doc_suppl_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-                const newDoc: Docente = {
-                  id: newSupplId,
-                  nome: nomina.supplenteNome.trim().toUpperCase(),
-                  email: nomina.supplenteEmail ? nomina.supplenteEmail.trim().toLowerCase() : undefined,
-                  materia: titolare?.materia || 'LETTERE',
-                  dettaglioMateria: titolare?.dettaglioMateria,
-                  classeRiferimento: titolare?.classeRiferimento,
-                  isSostegno: titolare?.isSostegno || false,
-                  isCasoGraveSostegno: titolare?.isCasoGraveSostegno || false,
-                  isEducatore: false,
-                  isPotenziamento: titolare?.isPotenziamento || false,
-                  isAlternativa: titolare?.isAlternativa || false,
-                  oreDebitoPermesso: 0
-                };
-                reconciledDocenti.push(newDoc);
-
-                if (orarioTitolare && orarioTitolare.ore) {
-                  reconciledOrari.push({
-                    docenteId: newSupplId,
-                    ore: JSON.parse(JSON.stringify(orarioTitolare.ore))
-                  });
-                }
-              }
-            });
-
-            if (needsDocentiSync) {
-              setDocenti(reconciledDocenti);
-              setOrariDocenti(reconciledOrari);
-              localStorage.setItem('scuola_docenti', JSON.stringify(reconciledDocenti));
-              localStorage.setItem('scuola_orari', JSON.stringify(reconciledOrari));
-              setDoc(scuolaDocRef, {
-                docenti: JSON.parse(JSON.stringify(reconciledDocenti)),
-                orariDocenti: JSON.parse(JSON.stringify(reconciledOrari)),
-                ultimoAggiornamento: new Date().toISOString()
-              }, { merge: true });
-            }
           }
           if (cloudData.impostazioniScuola) {
             setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
