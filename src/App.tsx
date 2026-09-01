@@ -27,7 +27,7 @@ import {
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
   Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound, TrendingUp,
-  Monitor
+  Monitor, Pin, PinOff, PanelLeftClose, PanelLeftOpen, PanelLeft
 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -47,8 +47,25 @@ const MainApp: React.FC = () => {
   const [tabDocente, setTabDocente] = useState<'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE'>('MIE_SOSTITUZIONI');
   const [tabAta, setTabAta] = useState<'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE'>('QUADRO_SCUOLA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarPinnedDesktop, setIsSidebarPinnedDesktop] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('sostituzioni_sidebar_pinned') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [mostraRisorseLaterale, setMostraRisorseLaterale] = useState(false);
+
+  const togglePinDesktop = () => {
+    setIsSidebarPinnedDesktop(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('sostituzioni_sidebar_pinned', String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   // Sincronizza ruolo utente autenticato all'accesso
   React.useEffect(() => {
@@ -154,14 +171,25 @@ const MainApp: React.FC = () => {
       <header className="bg-slate-900 text-white shadow-md sticky top-0 z-40 safe-top">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            {/* PULSANTE BURGER IN ALTO A SINISTRA (PER TUTTI I RUOLI) */}
+            {/* PULSANTE BURGER / SIDEBAR IN ALTO A SINISTRA */}
             <button
               type="button"
-              onClick={() => setIsSidebarOpen(true)}
-              className="p-1.5 hover:bg-slate-800 rounded-xl text-slate-300 hover:text-white transition border border-slate-700 flex items-center justify-center mr-1"
-              title="Apri Menu Principale"
+              onClick={() => {
+                // Su schermi ampi, il click sul burger commuta la modalità fissa/aperta
+                if (window.innerWidth >= 1024) {
+                  togglePinDesktop();
+                } else {
+                  setIsSidebarOpen(true);
+                }
+              }}
+              className={`p-1.5 rounded-xl transition border flex items-center justify-center mr-1 cursor-pointer ${
+                isSidebarPinnedDesktop
+                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-xs'
+                  : 'hover:bg-slate-800 text-slate-300 hover:text-white border-slate-700'
+              }`}
+              title={isSidebarPinnedDesktop ? "Menu Fisso attivo (Clicca per comprimere)" : "Apri Menu Principale"}
             >
-              <Menu className="w-5 h-5" />
+              {isSidebarPinnedDesktop ? <PanelLeftClose className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
             <div className="p-1.5 bg-indigo-600 rounded-lg shadow-sm">
@@ -249,67 +277,58 @@ const MainApp: React.FC = () => {
       </header>
 
       {/* ========================================================= */}
-      {/* SIDEBAR DRAWER LATERALE A SCOMPARSA (BURGER MENU)         */}
+      {/* CORPO PRINCIPALE DELL'APP: SIDEBAR FISSA SU PC + CONTENUTO */}
       {/* ========================================================= */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 z-50 flex animate-in fade-in duration-200">
-          {/* BACKDROP SFOCATO SCURO */}
-          <div 
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
-            onClick={() => setIsSidebarOpen(false)}
-          />
-
-          {/* PANNELLO LATERALE SLIDE-IN */}
-          <div className="relative w-80 max-w-[85vw] bg-white h-full max-h-[100dvh] shadow-2xl z-10 flex flex-col justify-between animate-in slide-in-from-left duration-200 border-r border-slate-200 overflow-hidden">
-            {/* HEADER SIDEBAR (FISSO IN ALTO) */}
-            <div className="shrink-0 bg-slate-900 text-white p-4 safe-top flex items-center justify-between border-b border-slate-800">
+      <div className="flex-1 flex w-full">
+        {/* SIDEBAR FISSA DESKTOP (SOLO PC E QUANDO PINNATA DALL'UTENTE) */}
+        {isSidebarPinnedDesktop && (
+          <aside className="hidden lg:flex flex-col w-72 shrink-0 bg-white border-r border-slate-200 shadow-sm sticky top-[49px] h-[calc(100vh-49px)] z-30 overflow-hidden">
+            {/* HEADER SIDEBAR FISSA PC */}
+            <div className="shrink-0 bg-slate-900 text-white p-3.5 flex items-center justify-between border-b border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-indigo-600 rounded-xl shadow-2xs">
-                  <School className="w-5 h-5 text-white" />
+                <div className="p-1.5 bg-indigo-600 rounded-lg shadow-2xs">
+                  <School className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-black text-white">Menu Principale</h2>
-                  <p className="text-[11px] text-slate-400">
+                  <h2 className="text-xs font-black text-white">Menu Navigazione</h2>
+                  <p className="text-[10px] text-slate-400">
                     {ruoloAttivo === 'VICEPRESIDENZA' ? 'Pannello Vicepresidenza' : ruoloAttivo === 'PORTALE_DOCENTE' ? 'Portale Docenti' : 'Personale ATA & Segreteria'}
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setIsSidebarOpen(false)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-                title="Chiudi Menu"
+                onClick={togglePinDesktop}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                title="Nascondi Barra Laterale (Passa a Menu a Scomparsa)"
               >
-                <X className="w-5 h-5" />
+                <PanelLeftClose className="w-4 h-4" />
               </button>
             </div>
 
-            {/* LISTA VOCI DI NAVIGAZIONE (SCROLLABILE SU TUTTI GLI SCHERMI) */}
+            {/* LISTA VOCI (NAVIGAZIONE SENZA APRI/CHIUDI) */}
             <div className="flex-1 overflow-y-auto p-3 space-y-1.5 min-h-0">
               {/* ======================================================= */}
-              {/* MENU SPECIFICO PORTALE DOCENTI                          */}
+              {/* MENU PORTALE DOCENTI                                    */}
               {/* ======================================================= */}
               {ruoloAttivo === 'PORTALE_DOCENTE' && (
                 <>
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabDocente('MIE_SOSTITUZIONI');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabDocente('MIE_SOSTITUZIONI')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabDocente === 'MIE_SOSTITUZIONI'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabDocente === 'MIE_SOSTITUZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabDocente === 'MIE_SOSTITUZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <Calendar className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Sostituzioni</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Le mie supplenze assegnate</span>
+                        <span className="block font-black text-xs">Sostituzioni</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Le mie supplenze</span>
                       </div>
                     </div>
                     {tabDocente === 'MIE_SOSTITUZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -317,23 +336,20 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabDocente('QUADRO_SCUOLA');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabDocente('QUADRO_SCUOLA')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabDocente === 'QUADRO_SCUOLA'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabDocente === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabDocente === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <LayoutDashboard className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Quadro Generale</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Prospetto generale delle assenze</span>
+                        <span className="block font-black text-xs">Quadro Generale</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Tutte le assenze</span>
                       </div>
                     </div>
                     {tabDocente === 'QUADRO_SCUOLA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -341,23 +357,20 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabDocente('ORARIO');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabDocente('ORARIO')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabDocente === 'ORARIO'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabDocente === 'ORARIO' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabDocente === 'ORARIO' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <TrendingUp className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Orario</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Mio orario, colleghi e per classe</span>
+                        <span className="block font-black text-xs">Orario</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Mio orario e classi</span>
                       </div>
                     </div>
                     {tabDocente === 'ORARIO' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -365,23 +378,20 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabDocente('CONSIGLI_CLASSE');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabDocente('CONSIGLI_CLASSE')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabDocente === 'CONSIGLI_CLASSE'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabDocente === 'CONSIGLI_CLASSE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabDocente === 'CONSIGLI_CLASSE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <Users className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Consigli di Classe</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Docenti e materie per classe</span>
+                        <span className="block font-black text-xs">Consigli di Classe</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Docenti per classe</span>
                       </div>
                     </div>
                     {tabDocente === 'CONSIGLI_CLASSE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -390,29 +400,26 @@ const MainApp: React.FC = () => {
               )}
 
               {/* ======================================================= */}
-              {/* MENU SPECIFICO PERSONALE ATA                            */}
+              {/* MENU PERSONALE ATA                                      */}
               {/* ======================================================= */}
               {ruoloAttivo === 'QUADRO_SCUOLA' && (
                 <>
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabAta('QUADRO_SCUOLA');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabAta('QUADRO_SCUOLA')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabAta === 'QUADRO_SCUOLA'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabAta === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabAta === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <LayoutDashboard className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Quadro Generale Sostituzioni</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Prospetto generale delle assenze</span>
+                        <span className="block font-black text-xs">Quadro Generale Sostituzioni</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Prospetto generale</span>
                       </div>
                     </div>
                     {tabAta === 'QUADRO_SCUOLA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -420,23 +427,20 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabAta('ORARIO');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabAta('ORARIO')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabAta === 'ORARIO'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabAta === 'ORARIO' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabAta === 'ORARIO' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <TrendingUp className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Orario</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Orario docenti e per classe</span>
+                        <span className="block font-black text-xs">Orario</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Orario docenti e classi</span>
                       </div>
                     </div>
                     {tabAta === 'ORARIO' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -444,23 +448,20 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabAta('CONSIGLI_CLASSE');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabAta('CONSIGLI_CLASSE')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabAta === 'CONSIGLI_CLASSE'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabAta === 'CONSIGLI_CLASSE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabAta === 'CONSIGLI_CLASSE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <Users className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Consigli di Classe</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Docenti e materie per classe</span>
+                        <span className="block font-black text-xs">Consigli di Classe</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Docenti e materie</span>
                       </div>
                     </div>
                     {tabAta === 'CONSIGLI_CLASSE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -469,29 +470,26 @@ const MainApp: React.FC = () => {
               )}
 
               {/* ======================================================= */}
-              {/* MENU SPECIFICO VICEPRESIDENZA                           */}
+              {/* MENU VICEPRESIDENZA                                     */}
               {/* ======================================================= */}
               {ruoloAttivo === 'VICEPRESIDENZA' && (
                 <>
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabVice('GESTIONE_GIORNALIERA');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabVice('GESTIONE_GIORNALIERA')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabVice === 'GESTIONE_GIORNALIERA'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabVice === 'GESTIONE_GIORNALIERA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabVice === 'GESTIONE_GIORNALIERA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <TrendingUp className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Sostituzioni</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Tabellone giornaliero e coperture</span>
+                        <span className="block font-black text-xs">Sostituzioni</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Tabellone giornaliero</span>
                       </div>
                     </div>
                     {tabVice === 'GESTIONE_GIORNALIERA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -499,23 +497,20 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabVice('QUADRO_SCUOLA');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabVice('QUADRO_SCUOLA')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabVice === 'QUADRO_SCUOLA'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabVice === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabVice === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <Activity className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Quadro Generale Sostituzioni</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Prospetto pulito per ATA / Docenti</span>
+                        <span className="block font-black text-xs">Quadro Generale</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Prospetto ATA / Docenti</span>
                       </div>
                     </div>
                     {tabVice === 'QUADRO_SCUOLA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -523,23 +518,20 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabVice('STORICO');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabVice('STORICO')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabVice === 'STORICO'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabVice === 'STORICO' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabVice === 'STORICO' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <History className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Registro Storico</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Storico assenze, uscite e debiti</span>
+                        <span className="block font-black text-xs">Registro Storico</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Storico assenze & uscite</span>
                       </div>
                     </div>
                     {tabVice === 'STORICO' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -547,23 +539,20 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabVice('REPORT');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabVice('REPORT')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabVice === 'REPORT'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabVice === 'REPORT' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabVice === 'REPORT' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <BarChart3 className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Report & Statistiche</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Equità sostegni, permessi e uscite</span>
+                        <span className="block font-black text-xs">Report & Statistiche</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Equità e monte ore</span>
                       </div>
                     </div>
                     {tabVice === 'REPORT' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -571,30 +560,27 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabVice('DOCENTI');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabVice('DOCENTI')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabVice === 'DOCENTI'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabVice === 'DOCENTI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabVice === 'DOCENTI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <Users className="w-4 h-4" />
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <span className="block font-black text-sm">Anagrafica & Orario</span>
+                          <span className="block font-black text-xs">Anagrafica & Orario</span>
                           {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length > 0 && (
-                            <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+                            <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-bold">
                               {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length}
                             </span>
                           )}
                         </div>
-                        <span className="text-[11px] text-slate-500 font-normal">Gestione docenti, account ed orari</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Docenti e orari</span>
                       </div>
                     </div>
                     {tabVice === 'DOCENTI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -607,23 +593,20 @@ const MainApp: React.FC = () => {
                   ) && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setTabVice('IMPEGNI');
-                        setIsSidebarOpen(false);
-                      }}
-                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                      onClick={() => setTabVice('IMPEGNI')}
+                      className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                         tabVice === 'IMPEGNI'
                           ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                           : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${tabVice === 'IMPEGNI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-1.5 rounded-lg ${tabVice === 'IMPEGNI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                           <Calendar className="w-4 h-4" />
                         </div>
                         <div>
-                          <span className="block font-black text-sm">Impegni Scolastici</span>
-                          <span className="text-[11px] text-slate-500 font-normal">Calendari e scadenze collegiali</span>
+                          <span className="block font-black text-xs">Impegni Scolastici</span>
+                          <span className="text-[10px] text-slate-500 font-normal">Calendari e scadenze</span>
                         </div>
                       </div>
                       {tabVice === 'IMPEGNI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -637,23 +620,20 @@ const MainApp: React.FC = () => {
                   ) && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setTabVice('RISORSE');
-                        setIsSidebarOpen(false);
-                      }}
-                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                      onClick={() => setTabVice('RISORSE')}
+                      className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                         tabVice === 'RISORSE'
                           ? 'bg-teal-50 text-teal-900 border border-teal-200 shadow-2xs font-black'
                           : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${tabVice === 'RISORSE' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className={`p-1.5 rounded-lg ${tabVice === 'RISORSE' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                           <Monitor className="w-4 h-4" />
                         </div>
                         <div>
-                          <span className="block font-black text-sm">Risorse & Spazi</span>
-                          <span className="text-[11px] text-slate-500 font-normal">Aule speciali, laboratori e spazi</span>
+                          <span className="block font-black text-xs">Risorse & Spazi</span>
+                          <span className="text-[10px] text-slate-500 font-normal">Aule speciali</span>
                         </div>
                       </div>
                       {tabVice === 'RISORSE' && <span className="w-2 h-2 rounded-full bg-teal-600" />}
@@ -662,23 +642,20 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setTabVice('PERSONALIZZAZIONI');
-                      setIsSidebarOpen(false);
-                    }}
-                    className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                    onClick={() => setTabVice('PERSONALIZZAZIONI')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabVice === 'PERSONALIZZAZIONI'
                         ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
                         : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tabVice === 'PERSONALIZZAZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabVice === 'PERSONALIZZAZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
                         <Sliders className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-sm">Personalizzazioni</span>
-                        <span className="text-[11px] text-slate-500 font-normal">Nome scuola, regole Sostitutore Smart e vista</span>
+                        <span className="block font-black text-xs">Personalizzazioni</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Regole scuola e vista</span>
                       </div>
                     </div>
                     {tabVice === 'PERSONALIZZAZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
@@ -687,201 +664,670 @@ const MainApp: React.FC = () => {
               )}
             </div>
 
-            {/* FOOTER SIDEBAR FISSO IN FONDO */}
-            <div className="shrink-0 p-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+            {/* FOOTER SIDEBAR FISSA */}
+            <div className="shrink-0 p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
               <div className="leading-tight">
-                <span className="font-black text-xs text-slate-800 block">Sostituzioni Smart</span>
-                <span className="font-mono text-[10px] text-slate-500 font-bold">v0.0.5 (RC5)</span>
+                <span className="font-black text-[11px] text-slate-800 block">Sostituzioni Smart</span>
+                <span className="font-mono text-[9px] text-slate-500 font-bold">v0.0.5</span>
               </div>
-              <span className="font-bold text-emerald-600 text-xs flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Operativo
+              <span className="font-bold text-emerald-600 text-[10px] flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
               </span>
             </div>
-          </div>
-        </div>
-      )}
+          </aside>
+        )}
 
-      {/* CONTENUTO PRINCIPALE */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 py-4 w-full flex-1 space-y-4">
-        {ruoloAttivo === 'PORTALE_DOCENTE' || (ruoloAttivo === 'VICEPRESIDENZA' && utenteInfo.ruolo !== 'VICEPRESIDENZA') ? (
-          <PortaleDocente currentTab={tabDocente} onTabChange={setTabDocente} />
-        ) : ruoloAttivo === 'QUADRO_SCUOLA' ? (
-          <div className="space-y-4">
-            {/* NAVIGAZIONE SCHEDE DEDICATA PER IL PERSONALE ATA */}
-            <div className="no-print bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-2 flex-wrap">
-              <button
-                type="button"
-                onClick={() => setTabAta('QUADRO_SCUOLA')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                  tabAta === 'QUADRO_SCUOLA'
-                    ? 'bg-amber-600 text-white shadow-md'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Quadro Generale Sostituzioni</span>
-              </button>
+        {/* ========================================================= */}
+        {/* SIDEBAR DRAWER LATERALE A SCOMPARSA (MOBILE O PC UNPINNED) */}
+        {/* ========================================================= */}
+        {isSidebarOpen && (
+          <div className="fixed inset-0 z-50 flex animate-in fade-in duration-200">
+            {/* BACKDROP SFOCATO SCURO */}
+            <div 
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
+              onClick={() => setIsSidebarOpen(false)}
+            />
 
-              <button
-                type="button"
-                onClick={() => setTabAta('ORARIO')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                  tabAta === 'ORARIO'
-                    ? 'bg-amber-600 text-white shadow-md'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <TrendingUp className="w-4 h-4" />
-                <span>Orario (Docenti & Classi)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTabAta('CONSIGLI_CLASSE')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                  tabAta === 'CONSIGLI_CLASSE'
-                    ? 'bg-amber-600 text-white shadow-md'
-                    : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <Users className="w-4 h-4" />
-                <span>Consigli di Classe</span>
-              </button>
-
-              {Boolean(
-                (impostazioniScuola?.calendariGoogle?.impegni && impostazioniScuola.calendariGoogle.impegni.length > 0) ||
-                impostazioniScuola?.calendariGoogle?.impegniPlenariId ||
-                impostazioniScuola?.calendariGoogle?.impegniSecondariaId
-              ) && (
-                <button
-                  type="button"
-                  onClick={() => setTabAta('IMPEGNI')}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                    tabAta === 'IMPEGNI'
-                      ? 'bg-amber-600 text-white shadow-md'
-                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <Calendar className="w-4 h-4 text-amber-500" />
-                  <span>Impegni Scolastici</span>
-                </button>
-              )}
-
-              {Boolean(
-                (impostazioniScuola?.calendariGoogle?.risorse && impostazioniScuola.calendariGoogle.risorse.length > 0) ||
-                impostazioniScuola?.calendariGoogle?.risorseInformaticaId ||
-                impostazioniScuola?.calendariGoogle?.risorseTeatroId
-              ) && (
-                <button
-                  type="button"
-                  onClick={() => setTabAta('RISORSE')}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
-                    tabAta === 'RISORSE'
-                      ? 'bg-teal-600 text-white shadow-md'
-                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <span className="text-sm">🏢</span>
-                  <span>Risorse & Spazi</span>
-                </button>
-              )}
-            </div>
-
-            {tabAta === 'QUADRO_SCUOLA' ? (
-              <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={true} />
-            ) : tabAta === 'IMPEGNI' || tabAta === 'RISORSE' ? (
-              <VistaCalendariGoogle modalita={tabAta} />
-            ) : (
-              <PortaleDocente currentTab={tabAta as any} onTabChange={(t) => setTabAta(t as any)} isAtaView={true} />
-            )}
-          </div>
-        ) : (
-          <>
-            {/* AVVISO GLOBALE RICHIESTE DOCENTI IN SOSPESO PER LA VICEPRESIDENZA */}
-            {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length > 0 && tabVice !== 'DOCENTI' && (
-              <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 sm:p-4 shadow-sm flex items-center justify-between gap-3 animate-in fade-in">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                    <Users className="w-4 h-4" />
+            {/* PANNELLO LATERALE SLIDE-IN */}
+            <div className="relative w-80 max-w-[85vw] bg-white h-full max-h-[100dvh] shadow-2xl z-10 flex flex-col justify-between animate-in slide-in-from-left duration-200 border-r border-slate-200 overflow-hidden">
+              {/* HEADER SIDEBAR (FISSO IN ALTO) */}
+              <div className="shrink-0 bg-slate-900 text-white p-4 safe-top flex items-center justify-between border-b border-slate-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-indigo-600 rounded-xl shadow-2xs">
+                    <School className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="text-xs sm:text-sm font-black text-amber-950">
-                      Ci sono {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length} richieste di associazione account docente in sospeso!
-                    </h4>
-                    <p className="text-[11px] text-amber-800">
-                      Un docente ha eseguito l'accesso e attende la tua conferma per entrare nel Portale Docenti.
+                    <h2 className="text-sm font-black text-white">Menu Principale</h2>
+                    <p className="text-[11px] text-slate-400">
+                      {ruoloAttivo === 'VICEPRESIDENZA' ? 'Pannello Vicepresidenza' : ruoloAttivo === 'PORTALE_DOCENTE' ? 'Portale Docenti' : 'Personale ATA & Segreteria'}
                     </p>
                   </div>
                 </div>
 
+                <div className="flex items-center gap-1">
+                  {/* PULSANTE FISSA BARRA PER PC */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSidebarOpen(false);
+                      togglePinDesktop();
+                    }}
+                    className="hidden lg:flex p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                    title="Fissa barra laterale aperta su PC"
+                  >
+                    <Pin className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+                    title="Chiudi Menu"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* LISTA VOCI DI NAVIGAZIONE (SCROLLABILE SU TUTTI GLI SCHERMI) */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-1.5 min-h-0">
+                {/* ======================================================= */}
+                {/* MENU SPECIFICO PORTALE DOCENTI                          */}
+                {/* ======================================================= */}
+                {ruoloAttivo === 'PORTALE_DOCENTE' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabDocente('MIE_SOSTITUZIONI');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabDocente === 'MIE_SOSTITUZIONI'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabDocente === 'MIE_SOSTITUZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Calendar className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Sostituzioni</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Le mie supplenze assegnate</span>
+                        </div>
+                      </div>
+                      {tabDocente === 'MIE_SOSTITUZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabDocente('QUADRO_SCUOLA');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabDocente === 'QUADRO_SCUOLA'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabDocente === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <LayoutDashboard className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Quadro Generale</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Prospetto generale delle assenze</span>
+                        </div>
+                      </div>
+                      {tabDocente === 'QUADRO_SCUOLA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabDocente('ORARIO');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabDocente === 'ORARIO'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabDocente === 'ORARIO' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <TrendingUp className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Orario</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Mio orario, colleghi e per classe</span>
+                        </div>
+                      </div>
+                      {tabDocente === 'ORARIO' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabDocente('CONSIGLI_CLASSE');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabDocente === 'CONSIGLI_CLASSE'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabDocente === 'CONSIGLI_CLASSE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Consigli di Classe</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Docenti e materie per classe</span>
+                        </div>
+                      </div>
+                      {tabDocente === 'CONSIGLI_CLASSE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+                  </>
+                )}
+
+                {/* ======================================================= */}
+                {/* MENU SPECIFICO PERSONALE ATA                            */}
+                {/* ======================================================= */}
+                {ruoloAttivo === 'QUADRO_SCUOLA' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabAta('QUADRO_SCUOLA');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabAta === 'QUADRO_SCUOLA'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabAta === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <LayoutDashboard className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Quadro Generale Sostituzioni</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Prospetto generale delle assenze</span>
+                        </div>
+                      </div>
+                      {tabAta === 'QUADRO_SCUOLA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabAta('ORARIO');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabAta === 'ORARIO'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabAta === 'ORARIO' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <TrendingUp className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Orario</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Orario docenti e per classe</span>
+                        </div>
+                      </div>
+                      {tabAta === 'ORARIO' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabAta('CONSIGLI_CLASSE');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabAta === 'CONSIGLI_CLASSE'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabAta === 'CONSIGLI_CLASSE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Consigli di Classe</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Docenti e materie per classe</span>
+                        </div>
+                      </div>
+                      {tabAta === 'CONSIGLI_CLASSE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+                  </>
+                )}
+
+                {/* ======================================================= */}
+                {/* MENU SPECIFICO VICEPRESIDENZA                           */}
+                {/* ======================================================= */}
+                {ruoloAttivo === 'VICEPRESIDENZA' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabVice('GESTIONE_GIORNALIERA');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabVice === 'GESTIONE_GIORNALIERA'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabVice === 'GESTIONE_GIORNALIERA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <TrendingUp className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Sostituzioni</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Tabellone giornaliero e coperture</span>
+                        </div>
+                      </div>
+                      {tabVice === 'GESTIONE_GIORNALIERA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabVice('QUADRO_SCUOLA');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabVice === 'QUADRO_SCUOLA'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabVice === 'QUADRO_SCUOLA' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Activity className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Quadro Generale Sostituzioni</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Prospetto pulito per ATA / Docenti</span>
+                        </div>
+                      </div>
+                      {tabVice === 'QUADRO_SCUOLA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabVice('STORICO');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabVice === 'STORICO'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabVice === 'STORICO' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <History className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Registro Storico</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Storico assenze, uscite e debiti</span>
+                        </div>
+                      </div>
+                      {tabVice === 'STORICO' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabVice('REPORT');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabVice === 'REPORT'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabVice === 'REPORT' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <BarChart3 className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Report & Statistiche</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Equità sostegni, permessi e uscite</span>
+                        </div>
+                      </div>
+                      {tabVice === 'REPORT' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabVice('DOCENTI');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabVice === 'DOCENTI'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabVice === 'DOCENTI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Users className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="block font-black text-sm">Anagrafica & Orario</span>
+                            {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length > 0 && (
+                              <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
+                                {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-slate-500 font-normal">Gestione docenti, account ed orari</span>
+                        </div>
+                      </div>
+                      {tabVice === 'DOCENTI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    {Boolean(
+                      (impostazioniScuola?.calendariGoogle?.impegni && impostazioniScuola.calendariGoogle.impegni.length > 0) ||
+                      impostazioniScuola?.calendariGoogle?.impegniPlenariId ||
+                      impostazioniScuola?.calendariGoogle?.impegniSecondariaId
+                    ) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTabVice('IMPEGNI');
+                          setIsSidebarOpen(false);
+                        }}
+                        className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                          tabVice === 'IMPEGNI'
+                            ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                            : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${tabVice === 'IMPEGNI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                            <Calendar className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="block font-black text-sm">Impegni Scolastici</span>
+                            <span className="text-[11px] text-slate-500 font-normal">Calendari e scadenze collegiali</span>
+                          </div>
+                        </div>
+                        {tabVice === 'IMPEGNI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                      </button>
+                    )}
+
+                    {Boolean(
+                      (impostazioniScuola?.calendariGoogle?.risorse && impostazioniScuola.calendariGoogle.risorse.length > 0) ||
+                      impostazioniScuola?.calendariGoogle?.risorseInformaticaId ||
+                      impostazioniScuola?.calendariGoogle?.risorseTeatroId
+                    ) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTabVice('RISORSE');
+                          setIsSidebarOpen(false);
+                        }}
+                        className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                          tabVice === 'RISORSE'
+                            ? 'bg-teal-50 text-teal-900 border border-teal-200 shadow-2xs font-black'
+                            : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg ${tabVice === 'RISORSE' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                            <Monitor className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="block font-black text-sm">Risorse & Spazi</span>
+                            <span className="text-[11px] text-slate-500 font-normal">Aule speciali, laboratori e spazi</span>
+                          </div>
+                        </div>
+                        {tabVice === 'RISORSE' && <span className="w-2 h-2 rounded-full bg-teal-600" />}
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabVice('PERSONALIZZAZIONI');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabVice === 'PERSONALIZZAZIONI'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabVice === 'PERSONALIZZAZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Sliders className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Personalizzazioni</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Nome scuola, regole Sostitutore Smart e vista</span>
+                        </div>
+                      </div>
+                      {tabVice === 'PERSONALIZZAZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* FOOTER SIDEBAR FISSO IN FONDO */}
+              <div className="shrink-0 p-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+                <div className="leading-tight">
+                  <span className="font-black text-xs text-slate-800 block">Sostituzioni Smart</span>
+                  <span className="font-mono text-[10px] text-slate-500 font-bold">v0.0.5 (RC5)</span>
+                </div>
+                <span className="font-bold text-emerald-600 text-xs flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Operativo
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CONTENUTO PRINCIPALE (OCCUPA IL RESTO DELLO SPAZIO SU PC) */}
+        <main className="flex-1 min-w-0 max-w-7xl mx-auto px-3 sm:px-6 py-4 w-full space-y-4">
+          {ruoloAttivo === 'PORTALE_DOCENTE' || (ruoloAttivo === 'VICEPRESIDENZA' && utenteInfo.ruolo !== 'VICEPRESIDENZA') ? (
+            <PortaleDocente currentTab={tabDocente} onTabChange={setTabDocente} />
+          ) : ruoloAttivo === 'QUADRO_SCUOLA' ? (
+            <div className="space-y-4">
+              {/* NAVIGAZIONE SCHEDE DEDICATA PER IL PERSONALE ATA */}
+              <div className="no-print bg-white p-2.5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
-                  onClick={() => setTabVice('DOCENTI')}
-                  className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer shrink-0"
+                  onClick={() => setTabAta('QUADRO_SCUOLA')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                    tabAta === 'QUADRO_SCUOLA'
+                      ? 'bg-amber-600 text-white shadow-md'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  }`}
                 >
-                  Gestisci Richieste →
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Quadro Generale Sostituzioni</span>
                 </button>
-              </div>
-            )}
 
-            {/* VISTA PRINCIPALE A 2 COLONNE CON TABELLONE IN PRIMO PIANO */}
-            {tabVice === 'GESTIONE_GIORNALIERA' && (
-              <div className="space-y-3 sm:space-y-4">
-                {/* BLOCCO UNIFICATO: AVANZAMENTO LAVORI + GESTIONE ASSENZE + EVENTI E RISORSE */}
-                <div className="shadow-2xs rounded-2xl">
-                  <PanoramicaLavori 
-                    selectedDate={selectedDate} 
-                    onSelectDate={(newDate) => setSelectedDate(newDate)} 
-                  />
-                  <GestioneAssenze 
+                <button
+                  type="button"
+                  onClick={() => setTabAta('ORARIO')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                    tabAta === 'ORARIO'
+                      ? 'bg-amber-600 text-white shadow-md'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Orario (Docenti & Classi)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setTabAta('CONSIGLI_CLASSE')}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                    tabAta === 'CONSIGLI_CLASSE'
+                      ? 'bg-amber-600 text-white shadow-md'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Consigli di Classe</span>
+                </button>
+
+                {Boolean(
+                  (impostazioniScuola?.calendariGoogle?.impegni && impostazioniScuola.calendariGoogle.impegni.length > 0) ||
+                  impostazioniScuola?.calendariGoogle?.impegniPlenariId ||
+                  impostazioniScuola?.calendariGoogle?.impegniSecondariaId
+                ) && (
+                  <button
+                    type="button"
+                    onClick={() => setTabAta('IMPEGNI')}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                      tabAta === 'IMPEGNI'
+                        ? 'bg-amber-600 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Calendar className="w-4 h-4 text-amber-500" />
+                    <span>Impegni Scolastici</span>
+                  </button>
+                )}
+
+                {Boolean(
+                  (impostazioniScuola?.calendariGoogle?.risorse && impostazioniScuola.calendariGoogle.risorse.length > 0) ||
+                  impostazioniScuola?.calendariGoogle?.risorseInformaticaId ||
+                  impostazioniScuola?.calendariGoogle?.risorseTeatroId
+                ) && (
+                  <button
+                    type="button"
+                    onClick={() => setTabAta('RISORSE')}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+                      tabAta === 'RISORSE'
+                        ? 'bg-teal-600 text-white shadow-md'
+                        : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span className="text-sm">🏢</span>
+                    <span>Risorse & Spazi</span>
+                  </button>
+                )}
+              </div>
+
+              {tabAta === 'QUADRO_SCUOLA' ? (
+                <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={true} />
+              ) : tabAta === 'IMPEGNI' || tabAta === 'RISORSE' ? (
+                <VistaCalendariGoogle modalita={tabAta} />
+              ) : (
+                <PortaleDocente currentTab={tabAta as any} onTabChange={(t) => setTabAta(t as any)} isAtaView={true} />
+              )}
+            </div>
+          ) : (
+            <>
+              {/* AVVISO GLOBALE RICHIESTE DOCENTI IN SOSPESO PER LA VICEPRESIDENZA */}
+              {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length > 0 && tabVice !== 'DOCENTI' && (
+                <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-3.5 sm:p-4 shadow-sm flex items-center justify-between gap-3 animate-in fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-amber-950">
+                        Ci sono {richiesteAccessoDocenti.filter(r => r.stato === 'IN_ATTESA').length} richieste di associazione account docente in sospeso!
+                      </h4>
+                      <p className="text-[11px] text-amber-800">
+                        Un docente ha eseguito l'accesso e attende la tua conferma per entrare nel Portale Docenti.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setTabVice('DOCENTI')}
+                    className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer shrink-0"
+                  >
+                    Gestisci Richieste →
+                  </button>
+                </div>
+              )}
+
+              {/* VISTA PRINCIPALE A 2 COLONNE CON TABELLONE IN PRIMO PIANO */}
+              {tabVice === 'GESTIONE_GIORNALIERA' && (
+                <div className="space-y-3 sm:space-y-4">
+                  {/* BLOCCO UNIFICATO: AVANZAMENTO LAVORI + GESTIONE ASSENZE + EVENTI E RISORSE */}
+                  <div className="shadow-2xs rounded-2xl">
+                    <PanoramicaLavori 
+                      selectedDate={selectedDate} 
+                      onSelectDate={(newDate) => setSelectedDate(newDate)} 
+                    />
+                    <GestioneAssenze 
+                      selectedDate={selectedDate} 
+                      selectedGiorno={selectedGiorno} 
+                      onChangeDate={(newDate) => setSelectedDate(newDate)}
+                      mostraRisorseLaterale={mostraRisorseLaterale}
+                      onToggleRisorseLaterale={() => setMostraRisorseLaterale(prev => !prev)}
+                    />
+                  </div>
+
+                  {/* AREA PRINCIPALE: TABELLONE A TUTTA LARGHEZZA (O CON LATERALE SE APERTO) */}
+                  <TabelloneSostituzioni 
                     selectedDate={selectedDate} 
                     selectedGiorno={selectedGiorno} 
                     onChangeDate={(newDate) => setSelectedDate(newDate)}
                     mostraRisorseLaterale={mostraRisorseLaterale}
-                    onToggleRisorseLaterale={() => setMostraRisorseLaterale(prev => !prev)}
                   />
                 </div>
+              )}
 
-                {/* AREA PRINCIPALE: TABELLONE A TUTTA LARGHEZZA (O CON LATERALE SE APERTO) */}
-                <TabelloneSostituzioni 
-                  selectedDate={selectedDate} 
-                  selectedGiorno={selectedGiorno} 
-                  onChangeDate={(newDate) => setSelectedDate(newDate)}
-                  mostraRisorseLaterale={mostraRisorseLaterale}
-                />
-              </div>
-            )}
+              {tabVice === 'QUADRO_SCUOLA' && (
+                <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={true} />
+              )}
 
-            {tabVice === 'QUADRO_SCUOLA' && (
-              <QuadroSostituzioniScuola initialDate={selectedDate} isEmbedInVicepresidenza={true} />
-            )}
+              {tabVice === 'STORICO' && (
+                <RegistroStoricoAssenze />
+              )}
 
-            {tabVice === 'STORICO' && (
-              <RegistroStoricoAssenze />
-            )}
+              {tabVice === 'REPORT' && (
+                <ReportStatistiche />
+              )}
 
-            {tabVice === 'REPORT' && (
-              <ReportStatistiche />
-            )}
+              {tabVice === 'DOCENTI' && (
+                <AnagraficaOrario />
+              )}
 
-            {tabVice === 'DOCENTI' && (
-              <AnagraficaOrario />
-            )}
+              {tabVice === 'IMPEGNI' && (
+                <VistaCalendariGoogle modalita="IMPEGNI" />
+              )}
 
-            {tabVice === 'IMPEGNI' && (
-              <VistaCalendariGoogle modalita="IMPEGNI" />
-            )}
+              {tabVice === 'RISORSE' && (
+                <VistaCalendariGoogle modalita="RISORSE" />
+              )}
 
-            {tabVice === 'RISORSE' && (
-              <VistaCalendariGoogle modalita="RISORSE" />
-            )}
-
-            {tabVice === 'PERSONALIZZAZIONI' && (
-              <PersonalizzazioniScuola />
-            )}
-          </>
-        )}
-      </main>
+              {tabVice === 'PERSONALIZZAZIONI' && (
+                <PersonalizzazioniScuola />
+              )}
+            </>
+          )}
+        </main>
+      </div>
 
       <Coachmark isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} ruolo={ruoloAttivo} />
     </div>
