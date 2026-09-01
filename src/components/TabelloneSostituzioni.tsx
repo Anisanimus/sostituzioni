@@ -470,11 +470,11 @@ export const TabelloneSostituzioni: React.FC<{
                     <button
                       type="button"
                       onClick={handleToggleTutto}
-                      className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-xl border border-slate-200 transition flex items-center gap-1 cursor-pointer shadow-2xs"
-                      title={isTuttoAperto ? "Comprimi tutte le schede" : "Espandi tutte le schede"}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                      title={isTuttoAperto ? "Comprimi tutte le schede (chiudi accordion)" : "Espandi tutte le schede (apri accordion)"}
                     >
-                      <ChevronsUpDown className="w-3.5 h-3.5 text-slate-500" />
-                      <span className="hidden sm:inline">{isTuttoAperto ? 'Comprimi tutto' : 'Espandi tutto'}</span>
+                      <ChevronsUpDown className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>{isTuttoAperto ? 'Comprimi' : 'Espandi'}</span>
                     </button>
                   );
                 })()
