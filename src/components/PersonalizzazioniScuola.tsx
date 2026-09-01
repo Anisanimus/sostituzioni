@@ -966,9 +966,16 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     </button>
 
                     {mostraInfoRegolaMail && (
-                      <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-xl z-20 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1">
-                        <div className="flex items-center gap-1.5 font-bold text-amber-400">
-                          <span>💡 Regola di invio automatico</span>
+                      <div className="absolute right-0 sm:left-0 sm:right-auto top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
+                        <div className="flex items-center justify-between font-bold text-amber-400">
+                          <span className="flex items-center gap-1.5">💡 Regola di invio automatico</span>
+                          <button
+                            type="button"
+                            onClick={() => setMostraInfoRegolaMail(false)}
+                            className="text-slate-400 hover:text-white p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                         <p className="text-slate-200 text-[11px]">
                           La mail viene generata all'orario indicato <strong>solo ed esclusivamente se ci sono assenze o sostituzioni attive</strong> per la giornata. Se non c'è nessun docente assente, l'invio viene automaticamente saltato per non disturbare i docenti.
