@@ -4,7 +4,7 @@ import {
   Building2, Clock, Eye, Calendar, CheckCircle, RotateCcw, 
   Save, School, Sliders, ShieldAlert, Sparkles, LayoutGrid, List,
   Download, Upload, Plus, Trash2, ShieldCheck, Database,
-  Mail, Send, ExternalLink, Info
+  Mail, Send, ExternalLink, Info, HelpCircle, Code2, Copy, X
 } from 'lucide-react';
 import { DEFAULT_IMPOSTAZIONI_SCUOLA, DEFAULT_IMPOSTAZIONI_PRIORITA } from '../context/AppContext';
 import { formatDataItaliana } from '../utils/docentiHelper';
@@ -23,6 +23,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [vistaTabellone, setVistaTabellone] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>(impostazioniScuola.vistaTabellonePredefinita || 'GRUPPI_ORA');
   const [nascondiWeekend, setNascondiWeekend] = useState(impostazioniScuola.nascondiWeekendCalendario ?? true);
   const [mostraInfoRegolaMail, setMostraInfoRegolaMail] = useState<boolean>(false);
+  const [mostraGuidaWebhook, setMostraGuidaWebhook] = useState<boolean>(false);
+  const [copiatoScript, setCopiatoScript] = useState<boolean>(false);
 
   // Gestione Notifiche Email Gruppo Docenti
   const cfgEmail = impostazioniScuola.notificheEmailGruppo;
@@ -1101,28 +1103,169 @@ export const PersonalizzazioniScuola: React.FC = () => {
             </div>
 
             {/* WEBHOOK GOOGLE APPS SCRIPT PER INVIO AUTOMATICO TOTALE */}
-            <div className="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-200 space-y-2">
-              <div className="flex items-center justify-between">
+            <div className="p-4 bg-indigo-50/70 rounded-2xl border border-indigo-200 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <span className="text-base">🚀</span>
                   <label className="text-xs font-black text-indigo-950">
-                    Webhook Google Apps Script (Invio 100% Automatico Silenzioso)
+                    Webhook Google Apps Script (Invio Automatico Silenzioso)
                   </label>
+                  
+                  {/* ICONA 'i' CERCHIATA CON GUIDA COMPLETA */}
+                  <button
+                    type="button"
+                    onClick={() => setMostraGuidaWebhook(!mostraGuidaWebhook)}
+                    className="p-1 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-100 rounded-full transition cursor-pointer"
+                    title="Clicca per visualizzare le istruzioni e il codice dello script"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                  </button>
                 </div>
-                <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded">
-                  Opzionale / Consigliato
-                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setMostraGuidaWebhook(!mostraGuidaWebhook)}
+                  className="text-[11px] font-black text-indigo-700 bg-white hover:bg-indigo-100 border border-indigo-300 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  <Code2 className="w-3.5 h-3.5" />
+                  <span>{mostraGuidaWebhook ? 'Nascondi Istruzioni & Codice' : 'Come creare lo Script & Codice ➔'}</span>
+                </button>
               </div>
-              <p className="text-[11px] text-indigo-900">
-                Inserendo l'URL Web App di uno script Google, le email verranno inviate <strong>in modo totalmente invisibile direttamente dal server di Google</strong> senza aprire alcuna finestra del browser.
+
+              <p className="text-[11px] text-indigo-900 leading-relaxed">
+                Inserendo l'URL Web App di uno script Google, le email verranno inviate <strong>in modo totalmente invisibile direttamente dal server di Google</strong> senza aprire finestre del browser o client di posta.
               </p>
+
               <input
                 type="url"
                 value={mailGruppoWebhookUrl}
                 onChange={(e) => setMailGruppoWebhookUrl(e.target.value)}
-                placeholder="https://script.google.com/macros/s/.../exec"
-                className="w-full bg-white border border-indigo-200 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-600 transition"
+                placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+                className="w-full bg-white border border-indigo-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-600 transition shadow-2xs"
               />
+
+              {/* GUIDA PASSO PASSO E CODICE DA COPIARE */}
+              {mostraGuidaWebhook && (
+                <div className="mt-3 p-4 bg-slate-900 text-white rounded-2xl border border-slate-700 space-y-3.5 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">📋</span>
+                      <h4 className="text-xs font-black text-amber-400 uppercase tracking-wider">
+                        Istruzioni di configurazione Google Apps Script (in 2 minuti)
+                      </h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMostraGuidaWebhook(false)}
+                      className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <ol className="list-decimal list-inside space-y-2 text-[11px] text-slate-300 leading-relaxed">
+                    <li>
+                      Vai su <a href="https://script.google.com" target="_blank" rel="noopener noreferrer" className="text-indigo-400 font-bold underline hover:text-indigo-300">script.google.com</a> con l'account Google da cui vuoi spedire le mail.
+                    </li>
+                    <li>
+                      Clicca su <strong>"Nuovo progetto"</strong> in alto a sinistra.
+                    </li>
+                    <li>
+                      Cancella tutto il codice presente nell'editor e <strong>incolla il codice sottostante</strong>:
+                    </li>
+                  </ol>
+
+                  {/* BOX CODICE CON TASTO COPIA RAPIDO */}
+                  <div className="relative bg-slate-950 rounded-xl p-3 border border-slate-800 font-mono text-[11px] text-emerald-400 overflow-x-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const scriptCode = `function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var destinatario = data.destinatario;
+    var oggetto = data.oggetto;
+    var corpo = data.corpo;
+
+    // Invia l'email con nome mittente personalizzato
+    GmailApp.sendEmail(destinatario, oggetto, corpo, {
+      name: "Vicepresidenza - Gestione Sostituzioni",
+      replyTo: "vicepresidenza@scuola.edu.it"
+    });
+
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`;
+                        navigator.clipboard.writeText(scriptCode);
+                        setCopiatoScript(true);
+                        setTimeout(() => setCopiatoScript(false), 2500);
+                      }}
+                      className="absolute top-2.5 right-2.5 bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                    >
+                      {copiatoScript ? (
+                        <>
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-300" />
+                          <span>Copiato! ✓</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copia Codice</span>
+                        </>
+                      )}
+                    </button>
+
+                    <pre className="text-[11px] leading-relaxed select-all pr-24 whitespace-pre">
+{`function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var destinatario = data.destinatario;
+    var oggetto = data.oggetto;
+    var corpo = data.corpo;
+
+    // Invia l'email con nome mittente personalizzato
+    GmailApp.sendEmail(destinatario, oggetto, corpo, {
+      name: "Vicepresidenza - Gestione Sostituzioni",
+      replyTo: "vicepresidenza@scuola.edu.it"
+    });
+
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}`}
+                    </pre>
+                  </div>
+
+                  <ol start={4} className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-300 leading-relaxed">
+                    <li>
+                      Clicca in alto a destra su <strong>"Distribuisci" ➔ "Nuova implementazione"</strong>.
+                    </li>
+                    <li>
+                      Clicca sull'ingranaggio ⚙️ ➔ seleziona <strong>"Applicazione web"</strong>.
+                    </li>
+                    <li>
+                      Imposta:
+                      <ul className="list-disc list-inside pl-4 text-slate-400 space-y-0.5 mt-0.5">
+                        <li><strong>Esegui come:</strong> <em>Me stesso (la tua email)</em></li>
+                        <li><strong>Chi può accedere:</strong> <em>Chiunque</em> (fondamentale affinché l'app possa inviare)</li>
+                      </ul>
+                    </li>
+                    <li>
+                      Clicca <strong>"Distribuisci"</strong> (autorizza i permessi di invio email con il tuo account Google).
+                    </li>
+                    <li>
+                      Copia l'<strong>URL applicazione web</strong> (che finisce con <code>/exec</code>) e incollalo nel campo qui sopra!
+                    </li>
+                  </ol>
+                </div>
+              )}
             </div>
           </div>
         </div>
