@@ -1696,14 +1696,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const resetOrarioPredefinito = async () => {
     setDocenti(DOCENTI_PRECARICATI);
     setOrariDocenti(ORARI_DOCENTI_PRECARICATI);
+    setAssenze([]);
+    setUscite([]);
+    setSostituzioni([]);
+    setMovimentiDebito([]);
+    setNotifiche([]);
+    setNomineSupplenti([]);
     localStorage.removeItem('scuola_docenti');
     localStorage.removeItem('scuola_orari');
+    localStorage.removeItem('scuola_assenze');
+    localStorage.removeItem('scuola_uscite');
+    localStorage.removeItem('scuola_sostituzioni');
+    localStorage.removeItem('scuola_movimenti_debito');
+    localStorage.removeItem('scuola_notifiche');
+    localStorage.removeItem('scuola_nomine_supplenti');
     localStorage.setItem('scuola_orario_version', CURRENT_TIMETABLE_VERSION);
     try {
       const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
       await setDoc(scuolaDocRef, {
         docenti: DOCENTI_PRECARICATI,
         orariDocenti: ORARI_DOCENTI_PRECARICATI,
+        assenze: [],
+        uscite: [],
+        sostituzioni: [],
+        movimentiDebito: [],
+        notifiche: [],
+        nomineSupplenti: [],
         ultimoAggiornamento: new Date().toISOString()
       }, { merge: true });
     } catch (e) {
@@ -1714,9 +1732,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const azzeraDocentiEOrario = async () => {
     setDocenti([]);
     setOrariDocenti([]);
+    setAssenze([]);
+    setUscite([]);
+    setSostituzioni([]);
+    setMovimentiDebito([]);
+    setNotifiche([]);
+    setNomineSupplenti([]);
     try {
       localStorage.setItem('scuola_docenti', JSON.stringify([]));
       localStorage.setItem('scuola_orari', JSON.stringify([]));
+      localStorage.setItem('scuola_assenze', JSON.stringify([]));
+      localStorage.setItem('scuola_uscite', JSON.stringify([]));
+      localStorage.setItem('scuola_sostituzioni', JSON.stringify([]));
+      localStorage.setItem('scuola_movimenti_debito', JSON.stringify([]));
+      localStorage.setItem('scuola_notifiche', JSON.stringify([]));
+      localStorage.setItem('scuola_nomine_supplenti', JSON.stringify([]));
       localStorage.setItem('scuola_orario_version', 'empty_' + Date.now());
       const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
       await setDoc(scuolaDocRef, {
@@ -1725,6 +1755,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         assenze: [],
         uscite: [],
         sostituzioni: [],
+        movimentiDebito: [],
+        notifiche: [],
+        nomineSupplenti: [],
         ultimoAggiornamento: new Date().toISOString()
       }, { merge: true });
       console.log('✅ Database azzerato su Cloud Firestore!');
