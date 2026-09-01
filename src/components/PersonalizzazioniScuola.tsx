@@ -4,7 +4,8 @@ import {
   Building2, Clock, Eye, Calendar, CheckCircle, RotateCcw, 
   Save, School, Sliders, ShieldAlert, Sparkles, LayoutGrid, List,
   Download, Upload, Plus, Trash2, ShieldCheck, Database,
-  Mail, Send, ExternalLink, Info, HelpCircle, Code2, Copy, X
+  Mail, Send, ExternalLink, Info, HelpCircle, Code2, Copy, X,
+  ChevronDown, ChevronUp
 } from 'lucide-react';
 import { DEFAULT_IMPOSTAZIONI_SCUOLA, DEFAULT_IMPOSTAZIONI_PRIORITA } from '../context/AppContext';
 import { formatDataItaliana } from '../utils/docentiHelper';
@@ -25,6 +26,51 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [mostraInfoRegolaMail, setMostraInfoRegolaMail] = useState<boolean>(false);
   const [mostraGuidaWebhook, setMostraGuidaWebhook] = useState<boolean>(false);
   const [copiatoScript, setCopiatoScript] = useState<boolean>(false);
+
+  // Gestione Accordion Sezioni (Tutte Chiuse di default)
+  const [sezioniAperte, setSezioniAperte] = useState<Record<string, boolean>>({
+    sez_intestazione: false,
+    sez_tetti: false,
+    sez_vista: false,
+    sez_priorita: false,
+    sez_festivita: false,
+    sez_notifiche_mail: false,
+    sez_calendari_google: false,
+    sez_backup: false
+  });
+
+  const toggleSezione = (idSezione: string) => {
+    setSezioniAperte(prev => ({
+      ...prev,
+      [idSezione]: !prev[idSezione]
+    }));
+  };
+
+  const apriTutte = () => {
+    setSezioniAperte({
+      sez_intestazione: true,
+      sez_tetti: true,
+      sez_vista: true,
+      sez_priorita: true,
+      sez_festivita: true,
+      sez_notifiche_mail: true,
+      sez_calendari_google: true,
+      sez_backup: true
+    });
+  };
+
+  const chiudiTutte = () => {
+    setSezioniAperte({
+      sez_intestazione: false,
+      sez_tetti: false,
+      sez_vista: false,
+      sez_priorita: false,
+      sez_festivita: false,
+      sez_notifiche_mail: false,
+      sez_calendari_google: false,
+      sez_backup: false
+    });
+  };
 
   // Gestione Notifiche Email Gruppo Docenti
   const cfgEmail = impostazioniScuola.notificheEmailGruppo;
@@ -362,474 +408,581 @@ export const PersonalizzazioniScuola: React.FC = () => {
             <span>Personalizzazioni Istituto & Visualizzazione</span>
           </h2>
           <p className="text-xs text-slate-500">
-            Configura il nome del tuo istituto scolastico, i massimali orari per il personale, festività e backup.
+            Tutte le sezioni sono raggruppate in comodi pannelli a comparsa (accordion). Clicca su un titolo per espanderlo e modificarlo.
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleRipristinaPredefiniti}
-          className="text-xs text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition cursor-pointer"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Ripristina Default</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={apriTutte}
+            className="text-xs text-indigo-700 hover:text-indigo-900 font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 transition cursor-pointer shadow-2xs"
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+            <span>Espandi Tutto</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={chiudiTutte}
+            className="text-xs text-slate-600 hover:text-slate-900 font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition cursor-pointer"
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+            <span>Comprimi Tutto</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleRipristinaPredefiniti}
+            className="text-xs text-slate-500 hover:text-slate-800 font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Ripristina Default</span>
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSalva} className="space-y-4">
-        {/* SEZIONE 1: NOME DELLA SCUOLA & SICUREZZA ACCESSI */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
-          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
-              <Building2 className="w-5 h-5" />
+        {/* SEZIONE 1: NOME DELLA SCUOLA & SICUREZZA ACCESSI (ACCORDION) */}
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+          <button
+            type="button"
+            onClick={() => toggleSezione('sez_intestazione')}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl">
+                <Building2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Intestazione Scuola & Sicurezza Accesso</h3>
+                <p className="text-xs text-slate-500">Denominazione istituto, PIN ATA e domini Google autorizzati</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">Intestazione & Sicurezza Accesso</h3>
-              <p className="text-xs text-slate-500">Denominazione istituto e PIN per l'accesso protetto del personale.</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Denominazione Scuola / Istituto Comprensivo / IIS
-              </label>
-              <input
-                type="text"
-                value={nomeScuola}
-                onChange={(e) => setNomeScuola(e.target.value)}
-                placeholder="es. I.C. Anna Frank - Torino"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
-                required
-              />
-              <span className="text-[11px] text-slate-400 mt-1 block">
-                Anteprima barra superiore: <strong className="text-slate-700">{nomeScuola || 'Gestione Sostituzioni'}</strong>
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                {sezioniAperte.sez_intestazione ? 'Chiudi' : 'Modifica'}
               </span>
+              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_intestazione ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
+                <ChevronDown className="w-4 h-4" />
+              </div>
             </div>
+          </button>
 
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <label className="block text-xs font-bold text-slate-800 mb-1">
-                🔒 PIN Personale ATA / Segreteria
-              </label>
-              <p className="text-[10px] text-slate-500 mb-2">
-                Codice numerico richiesto ai collaboratori scolastici per visualizzare il quadro giornaliero.
-              </p>
-              <input
-                type="text"
-                value={pinPersonaleAta}
-                onChange={(e) => setPinPersonaleAta(e.target.value)}
-                placeholder="1234"
-                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-black text-indigo-700 text-center tracking-widest outline-none focus:border-indigo-500"
-                maxLength={6}
-                required
-              />
-            </div>
-          </div>
-
-          {/* GESTIONE ACCESSI GOOGLE WORKSPACE & VICEPRESIDENZA */}
-          <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-1.5">
-              <label className="block text-xs font-black text-indigo-950">
-                🌐 Domini Google Workspace Autorizzati (Docenti & Personale)
-              </label>
-              <p className="text-[11px] text-slate-600">
-                Inserisci i domini consentiti separati da virgola (es. <code className="bg-white px-1 py-0.5 rounded border text-indigo-700 font-mono">icannafrank.edu.it, gmail.com</code>). Gli account esterni saranno bloccati.
-              </p>
-              <input
-                type="text"
-                value={dominiGoogleStr}
-                onChange={(e) => setDominiGoogleStr(e.target.value)}
-                placeholder="icannafrank.edu.it, scuola.edu.it"
-                className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
-              />
-            </div>
-
-            <div className="p-3.5 bg-purple-50/50 rounded-xl border border-purple-100 space-y-1.5">
-              <label className="block text-xs font-black text-purple-950">
-                👑 Email Amministratori & Vicepresidenza
-              </label>
-              <p className="text-[11px] text-slate-600">
-                Email che hanno pieno accesso gestionale al Tabellone e alle Assenze (separate da virgola).
-              </p>
-              <input
-                type="text"
-                value={emailViceStr}
-                onChange={(e) => setEmailViceStr(e.target.value)}
-                placeholder="vicepresidenza@scuola.edu.it, preside@scuola.edu.it"
-                className="w-full bg-white border border-purple-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-purple-500"
-              />
-            </div>
-          </div>
-
-          {/* DIAGNOSTICA & TEST DIRETTO CLOUD FIRESTORE */}
-          <div className="pt-3 border-t border-slate-100">
-            <div className="p-3.5 bg-slate-900 text-white rounded-xl flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
-                  <Database className="w-4 h-4" />
+          {sezioniAperte.sez_intestazione && (
+            <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Denominazione Scuola / Istituto Comprensivo / IIS
+                  </label>
+                  <input
+                    type="text"
+                    value={nomeScuola}
+                    onChange={(e) => setNomeScuola(e.target.value)}
+                    placeholder="es. I.C. Anna Frank - Torino"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
+                    required
+                  />
+                  <span className="text-[11px] text-slate-400 mt-1 block">
+                    Anteprima barra superiore: <strong className="text-slate-700">{nomeScuola || 'Gestione Sostituzioni'}</strong>
+                  </span>
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold">Diagnostica Cloud Firebase & Database</h4>
-                  <p className="text-[10px] text-slate-400">Verifica la connessione in tempo reale e il ping del database</p>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <label className="block text-xs font-bold text-slate-800 mb-1">
+                    🔒 PIN Personale ATA / Segreteria
+                  </label>
+                  <p className="text-[10px] text-slate-500 mb-2">
+                    Codice numerico richiesto ai collaboratori scolastici per visualizzare il quadro giornaliero.
+                  </p>
+                  <input
+                    type="text"
+                    value={pinPersonaleAta}
+                    onChange={(e) => setPinPersonaleAta(e.target.value)}
+                    placeholder="1234"
+                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-mono font-black text-indigo-700 text-center tracking-widest outline-none focus:border-indigo-500"
+                    maxLength={6}
+                    required
+                  />
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={async () => {
-                  setTestCloudStato('IN_CORSO');
-                  setTestCloudMessaggio('Invio pacchetto di test a Cloud Firestore...');
-                  try {
-                    const { db } = await import('../firebase');
-                    const { doc, setDoc, getDoc } = await import('firebase/firestore');
-                    const testRef = doc(db, 'diagnostica_connessione', 'ping_test');
-                    const now = new Date().toISOString();
-                    
-                    await setDoc(testRef, {
-                      ultimoPing: now,
-                      nomeScuola: nomeScuola,
-                      esito: 'OK'
-                    });
 
-                    const snap = await getDoc(testRef);
-                    if (snap.exists()) {
-                      setTestCloudStato('SUCCESSO');
-                      setTestCloudMessaggio(`✅ Connessione Cloud Perfetta! Scrittura e lettura Firestore eseguite con successo alle ${new Date().toLocaleTimeString('it-IT')}.`);
-                    } else {
-                      setTestCloudStato('ERRORE');
-                      setTestCloudMessaggio('Documento non trovato dopo la scrittura.');
-                    }
-                  } catch (err: any) {
-                    console.error('Errore test Firestore completo:', err);
-                    setTestCloudStato('ERRORE');
-                    setTestCloudMessaggio(`❌ [${err.code || 'ERRORE'}]: ${err.message || 'Verifica console per dettagli'}`);
-                  }
-                }}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition cursor-pointer shadow-xs flex items-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Testa Connessione Cloud Database</span>
-              </button>
-            </div>
+              {/* GESTIONE ACCESSI GOOGLE WORKSPACE & VICEPRESIDENZA */}
+              <div className="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-1.5">
+                  <label className="block text-xs font-black text-indigo-950">
+                    🌐 Domini Google Workspace Autorizzati (Docenti & Personale)
+                  </label>
+                  <p className="text-[11px] text-slate-600">
+                    Inserisci i domini consentiti separati da virgola (es. <code className="bg-white px-1 py-0.5 rounded border text-indigo-700 font-mono">icannafrank.edu.it, gmail.com</code>). Gli account esterni saranno bloccati.
+                  </p>
+                  <input
+                    type="text"
+                    value={dominiGoogleStr}
+                    onChange={(e) => setDominiGoogleStr(e.target.value)}
+                    placeholder="icannafrank.edu.it, scuola.edu.it"
+                    className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+                  />
+                </div>
 
-            {testCloudStato !== 'IDLE' && (
-              <div className={`mt-2 p-2.5 rounded-lg text-xs font-bold animate-in fade-in ${
-                testCloudStato === 'SUCCESSO' 
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
-                  : testCloudStato === 'ERRORE' 
-                  ? 'bg-rose-50 text-rose-800 border border-rose-200' 
-                  : 'bg-indigo-50 text-indigo-800 border border-indigo-200 animate-pulse'
-              }`}>
-                {testCloudMessaggio}
+                <div className="p-3.5 bg-purple-50/50 rounded-xl border border-purple-100 space-y-1.5">
+                  <label className="block text-xs font-black text-purple-950">
+                    👑 Email Amministratori & Vicepresidenza
+                  </label>
+                  <p className="text-[11px] text-slate-600">
+                    Email che hanno pieno accesso gestionale al Tabellone e alle Assenze (separate da virgola).
+                  </p>
+                  <input
+                    type="text"
+                    value={emailViceStr}
+                    onChange={(e) => setEmailViceStr(e.target.value)}
+                    placeholder="vicepresidenza@scuola.edu.it, preside@scuola.edu.it"
+                    className="w-full bg-white border border-purple-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 outline-none focus:border-purple-500"
+                  />
+                </div>
               </div>
-            )}
-          </div>
+
+              {/* DIAGNOSTICA & TEST DIRETTO CLOUD FIRESTORE */}
+              <div className="pt-3 border-t border-slate-100">
+                <div className="p-3.5 bg-slate-900 text-white rounded-xl flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                      <Database className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold">Diagnostica Cloud Firebase & Database</h4>
+                      <p className="text-[10px] text-slate-400">Verifica la connessione in tempo reale e il ping del database</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setTestCloudStato('IN_CORSO');
+                      setTestCloudMessaggio('Invio pacchetto di test a Cloud Firestore...');
+                      try {
+                        const { db } = await import('../firebase');
+                        const { doc, setDoc, getDoc } = await import('firebase/firestore');
+                        const testRef = doc(db, 'diagnostica_connessione', 'ping_test');
+                        const now = new Date().toISOString();
+                        
+                        await setDoc(testRef, {
+                          ultimoPing: now,
+                          nomeScuola: nomeScuola,
+                          esito: 'OK'
+                        });
+
+                        const snap = await getDoc(testRef);
+                        if (snap.exists()) {
+                          setTestCloudStato('SUCCESSO');
+                          setTestCloudMessaggio(`✅ Connessione Cloud Perfetta! Scrittura e lettura Firestore eseguite con successo alle ${new Date().toLocaleTimeString('it-IT')}.`);
+                        } else {
+                          setTestCloudStato('ERRORE');
+                          setTestCloudMessaggio('Documento non trovato dopo la scrittura.');
+                        }
+                      } catch (err: any) {
+                        console.error('Errore test Firestore completo:', err);
+                        setTestCloudStato('ERRORE');
+                        setTestCloudMessaggio(`❌ [${err.code || 'ERRORE'}]: ${err.message || 'Verifica console per dettagli'}`);
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition cursor-pointer shadow-xs flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Testa Connessione Cloud Database</span>
+                  </button>
+                </div>
+
+                {testCloudStato !== 'IDLE' && (
+                  <div className={`mt-2 p-2.5 rounded-lg text-xs font-bold animate-in fade-in ${
+                    testCloudStato === 'SUCCESSO' 
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                      : testCloudStato === 'ERRORE' 
+                      ? 'bg-rose-50 text-rose-800 border border-rose-200' 
+                      : 'bg-indigo-50 text-indigo-800 border border-indigo-200 animate-pulse'
+                  }`}>
+                    {testCloudMessaggio}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* SEZIONE 2: TETTI MASSIMI PERMESSI E ASSEMBLEE SINDACALI */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-3">
-          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <div className="p-2 bg-purple-50 text-purple-700 rounded-xl">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">Tetti Massimi & Limiti Monte Ore Annuale</h3>
-              <p className="text-xs text-slate-500">Valori di riferimento per allarmi, badge e verifiche nella pagina Report.</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-1.5">
-              <label className="block text-xs font-black text-slate-800">
-                ⏱️ Tetto Ore Permessi Brevi / Anno
-              </label>
-              <p className="text-[11px] text-slate-500">
-                Monte ore contrattuale annuo max fruibile (solitamente pari all'orario settimanale, es. 12h o 18h).
-              </p>
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={tettoPermessi}
-                  onChange={(e) => setTettoPermessi(Number(e.target.value))}
-                  className="w-24 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 text-center"
-                />
-                <span className="text-xs font-bold text-slate-600">ore / anno scolastico</span>
+        {/* SEZIONE 2: TETTI MASSIMI PERMESSI E ASSEMBLEE SINDACALI (ACCORDION) */}
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+          <button
+            type="button"
+            onClick={() => toggleSezione('sez_tetti')}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-purple-50 text-purple-700 rounded-xl">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Tetti Massimi & Limiti Monte Ore Annuale</h3>
+                <p className="text-xs text-slate-500">Valori di riferimento per allarmi e verifiche permessi/assemblee</p>
               </div>
             </div>
-
-            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-1.5">
-              <label className="block text-xs font-black text-slate-800">
-                📢 Tetto Assemblee Sindacali / Anno
-              </label>
-              <p className="text-[11px] text-slate-500">
-                Limite massimo nazionale previsto dal CCNL Scuola (predefinito 10 ore pro-capite).
-              </p>
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={tettoAssemblee}
-                  onChange={(e) => setTettoAssemblee(Number(e.target.value))}
-                  className="w-24 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 text-center"
-                />
-                <span className="text-xs font-bold text-slate-600">ore / anno scolastico</span>
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                {sezioniAperte.sez_tetti ? 'Chiudi' : 'Modifica'}
+              </span>
+              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_tetti ? 'rotate-180 bg-purple-50 text-purple-600' : ''}`}>
+                <ChevronDown className="w-4 h-4" />
               </div>
             </div>
-          </div>
-        </div>
+          </button>
 
-        {/* SEZIONE 3: PREFERENZE VISUALIZZAZIONE & CALENDARIO */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-3">
-          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <div className="p-2 bg-amber-50 text-amber-700 rounded-xl">
-              <Eye className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">Preferenze di Visualizzazione & Calendario</h3>
-              <p className="text-xs text-slate-500">Configura la modalità con cui si apre il tabellone e la visualizzazione del calendario.</p>
-            </div>
-          </div>
-
-          <div className="space-y-3.5">
-            <div>
-              <label className="block text-xs font-black text-slate-800 mb-2">
-                Modalità di Visualizzazione Preferita del Tabellone Sostituzioni
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setVistaTabellone('GRUPPI_ORA')}
-                  className={`p-3 rounded-xl border text-left flex items-start gap-3 transition cursor-pointer ${
-                    vistaTabellone === 'GRUPPI_ORA'
-                      ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-200'
-                      : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
-                  }`}
-                >
-                  <div className={`p-2 rounded-lg ${vistaTabellone === 'GRUPPI_ORA' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                    <Clock className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="block text-xs font-black text-slate-900">Vista a Blocchi Orari (1ª Ora, 2ª Ora...)</span>
-                    <span className="text-[11px] text-slate-500">Raggruppa le sostituzioni ora per ora in ordine cronologico.</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setVistaTabellone('PER_DOCENTE')}
-                  className={`p-3 rounded-xl border text-left flex items-start gap-3 transition cursor-pointer ${
-                    vistaTabellone === 'PER_DOCENTE'
-                      ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-200'
-                      : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
-                  }`}
-                >
-                  <div className={`p-2 rounded-lg ${vistaTabellone === 'PER_DOCENTE' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                    <List className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="block text-xs font-black text-slate-900">Vista per Docente Assente</span>
-                    <span className="text-[11px] text-slate-500">Raggruppa le ore scoperte per ciascun docente assente.</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100">
-              <label className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition cursor-pointer">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-slate-200 text-slate-700 rounded-lg">
-                    <Calendar className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="block text-xs font-black text-slate-900">
-                      Nascondi Sabato e Domenica dal Calendario (Settimana Corta)
-                    </span>
-                    <span className="text-[11px] text-slate-500">
-                      Mostra esclusivamente i giorni scolastici da Lunedì a Venerdì nella panoramica lavori e nei selettori.
-                    </span>
+          {sezioniAperte.sez_tetti && (
+            <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-3 animate-in fade-in duration-150">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-1.5">
+                  <label className="block text-xs font-black text-slate-800">
+                    ⏱️ Tetto Ore Permessi Brevi / Anno
+                  </label>
+                  <p className="text-[11px] text-slate-500">
+                    Monte ore contrattuale annuo max fruibile (solitamente pari all'orario settimanale, es. 12h o 18h).
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={tettoPermessi}
+                      onChange={(e) => setTettoPermessi(Number(e.target.value))}
+                      className="w-24 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 text-center"
+                    />
+                    <span className="text-xs font-bold text-slate-600">ore / anno scolastico</span>
                   </div>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={nascondiWeekend}
-                  onChange={(e) => setNascondiWeekend(e.target.checked)}
-                  className="w-5 h-5 text-indigo-600 rounded-lg border-slate-300 focus:ring-indigo-500 cursor-pointer"
-                />
-              </label>
+
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-1.5">
+                  <label className="block text-xs font-black text-slate-800">
+                    📢 Tetto Assemblee Sindacali / Anno
+                  </label>
+                  <p className="text-[11px] text-slate-500">
+                    Limite massimo nazionale previsto dal CCNL Scuola (predefinito 10 ore pro-capite).
+                  </p>
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={tettoAssemblee}
+                      onChange={(e) => setTettoAssemblee(Number(e.target.value))}
+                      className="w-24 bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 text-center"
+                    />
+                    <span className="text-xs font-bold text-slate-600">ore / anno scolastico</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* SEZIONE 4: SOSTITUTORE SMART & PRIORITÀ ALGORITMO */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
+        {/* SEZIONE 3: PREFERENZE VISUALIZZAZIONE & CALENDARIO (ACCORDION) */}
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+          <button
+            type="button"
+            onClick={() => toggleSezione('sez_vista')}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl">
+                <Eye className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Preferenze di Visualizzazione & Calendario</h3>
+                <p className="text-xs text-slate-500">Modalità predefinita tabellone e settimana corta (sabato/domenica)</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                {sezioniAperte.sez_vista ? 'Chiudi' : 'Modifica'}
+              </span>
+              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_vista ? 'rotate-180 bg-amber-50 text-amber-600' : ''}`}>
+                <ChevronDown className="w-4 h-4" />
+              </div>
+            </div>
+          </button>
+
+          {sezioniAperte.sez_vista && (
+            <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-3.5 animate-in fade-in duration-150">
+              <div className="pt-4">
+                <label className="block text-xs font-black text-slate-800 mb-2">
+                  Modalità di Visualizzazione Preferita del Tabellone Sostituzioni
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setVistaTabellone('GRUPPI_ORA')}
+                    className={`p-3 rounded-xl border text-left flex items-start gap-3 transition cursor-pointer ${
+                      vistaTabellone === 'GRUPPI_ORA'
+                        ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-200'
+                        : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg ${vistaTabellone === 'GRUPPI_ORA' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block text-xs font-black text-slate-900">Vista a Blocchi Orari (1ª Ora, 2ª Ora...)</span>
+                      <span className="text-[11px] text-slate-500">Raggruppa le sostituzioni ora per ora in ordine cronologico.</span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setVistaTabellone('PER_DOCENTE')}
+                    className={`p-3 rounded-xl border text-left flex items-start gap-3 transition cursor-pointer ${
+                      vistaTabellone === 'PER_DOCENTE'
+                        ? 'border-indigo-600 bg-indigo-50/70 ring-2 ring-indigo-200'
+                        : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <div className={`p-2 rounded-lg ${vistaTabellone === 'PER_DOCENTE' ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                      <List className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block text-xs font-black text-slate-900">Vista per Docente Assente</span>
+                      <span className="text-[11px] text-slate-500">Raggruppa le ore scoperte per ciascun docente assente.</span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <label className="flex items-center justify-between gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-slate-200 text-slate-700 rounded-lg">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="block text-xs font-black text-slate-900">
+                        Nascondi Sabato e Domenica dal Calendario (Settimana Corta)
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Mostra esclusivamente i giorni scolastici da Lunedì a Venerdì nella panoramica lavori e nei selettori.
+                      </span>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={nascondiWeekend}
+                    onChange={(e) => setNascondiWeekend(e.target.checked)}
+                    className="w-5 h-5 text-indigo-600 rounded-lg border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* SEZIONE 4: SOSTITUTORE SMART & PRIORITÀ ALGORITMO (ACCORDION) */}
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+          <button
+            type="button"
+            onClick={() => toggleSezione('sez_priorita')}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
                 <h3 className="text-sm sm:text-base font-black text-slate-900">Sostitutore Smart & Priorità Assegnazione</h3>
-                <p className="text-xs text-slate-500">Imposta la sequenza di priorità con cui il sistema propone e assegna automaticamente i docenti.</p>
+                <p className="text-xs text-slate-500">Sequenza con cui l'algoritmo propone i docenti per assenze e uscite</p>
               </div>
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setPrioritaAssenze(DEFAULT_IMPOSTAZIONI_PRIORITA.prioritaAssenze);
-                setPrioritaGite(DEFAULT_IMPOSTAZIONI_PRIORITA.prioritaGite);
-              }}
-              className="text-xs font-bold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Priorità Predefinite</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-1">
-            {/* PRIORITÀ ASSENZE ORDINARIE */}
-            <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200 space-y-3">
-              <span className="block text-xs font-black text-slate-900 uppercase tracking-wider">
-                1. Priorità Assenze Ordinarie
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                {sezioniAperte.sez_priorita ? 'Chiudi' : 'Modifica'}
               </span>
-              <p className="text-[11px] text-slate-500">
-                L'algoritmo verificherà i candidati dall'alto verso il basso (1ª scelta, 2ª scelta, ecc.).
-              </p>
-
-              <div className="space-y-1.5">
-                {prioritaAssenze.map((cat, idx) => {
-                  const labelMap: Record<string, string> = {
-                    'COMPRESENTE_CLASSE': '👥 Docente Compresente in Classe',
-                    'RECUPERO_STESSA_CLASSE': '🔄 Recupero Docente Stessa Classe (Debito)',
-                    'POTENZIAMENTO': '⚡ Docente in Potenziamento',
-                    'SOSTEGNO': '♿ Docente di Sostegno (Senza Caso Grave)',
-                    'RECUPERO_GENERICO': '🔄 Recupero Generico (Debito / A Disposizione)',
-                    'STRAORDINARIO_D': '💰 Ora a Disposizione / Straordinario'
-                  };
-
-                  return (
-                    <div
-                      key={cat}
-                      className="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xs gap-2"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-5 h-5 rounded-lg bg-indigo-50 text-indigo-700 font-black text-[11px] flex items-center justify-center shrink-0">
-                          {idx + 1}
-                        </span>
-                        <span className="text-xs font-bold text-slate-800 truncate">
-                          {labelMap[cat] || cat}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          disabled={idx === 0}
-                          onClick={() => setPrioritaAssenze(prev => spostaElemento(prev, idx, 'SU'))}
-                          className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
-                          title="Sposta su"
-                        >
-                          ▲
-                        </button>
-                        <button
-                          type="button"
-                          disabled={idx === prioritaAssenze.length - 1}
-                          onClick={() => setPrioritaAssenze(prev => spostaElemento(prev, idx, 'GIU'))}
-                          className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
-                          title="Sposta giù"
-                        >
-                          ▼
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_priorita ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
+                <ChevronDown className="w-4 h-4" />
               </div>
             </div>
+          </button>
 
-            {/* PRIORITÀ GITE / USCITE DIDATTICHE */}
-            <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200 space-y-3">
-              <span className="block text-xs font-black text-slate-900 uppercase tracking-wider">
-                2. Priorità Uscite & Gite Didattiche
-              </span>
-              <p className="text-[11px] text-slate-500">
-                Priorità quando una o più classi sono in uscita e liberano i docenti titolari.
-              </p>
+          {sezioniAperte.sez_priorita && (
+            <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
+              <div className="flex items-center justify-end pt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPrioritaAssenze(DEFAULT_IMPOSTAZIONI_PRIORITA.prioritaAssenze);
+                    setPrioritaGite(DEFAULT_IMPOSTAZIONI_PRIORITA.prioritaGite);
+                  }}
+                  className="text-xs font-bold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Ripristina Priorità Predefinite</span>
+                </button>
+              </div>
 
-              <div className="space-y-1.5">
-                {prioritaGite.map((cat, idx) => {
-                  const labelMap: Record<string, string> = {
-                    'COMPRESENTE_CLASSE': '👥 Compresente in Classe',
-                    'LIBERATO_STESSA_CLASSE': '🚌 Liberato da Gita (Stessa Classe)',
-                    'LIBERATO_STESSA_MATERIA': '🚌 Liberato da Gita (Stessa Materia)',
-                    'LIBERATO_ALTRA_CLASSE': '🚌 Liberato da Gita (Altra Classe)',
-                    'RECUPERO_STESSA_CLASSE': '🔄 Recupero Debito Stessa Classe',
-                    'POTENZIAMENTO': '⚡ Docente in Potenziamento',
-                    'SOSTEGNO': '♿ Sostegno (Senza Caso Grave)',
-                    'STRAORDINARIO_D': '💰 Ora a Disposizione / Straordinario'
-                  };
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* PRIORITÀ ASSENZE ORDINARIE */}
+                <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200 space-y-3">
+                  <span className="block text-xs font-black text-slate-900 uppercase tracking-wider">
+                    1. Priorità Assenze Ordinarie
+                  </span>
+                  <p className="text-[11px] text-slate-500">
+                    L'algoritmo verificherà i candidati dall'alto verso il basso (1ª scelta, 2ª scelta, ecc.).
+                  </p>
 
-                  return (
-                    <div
-                      key={cat}
-                      className="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xs gap-2"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-5 h-5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-[11px] flex items-center justify-center shrink-0">
-                          {idx + 1}
-                        </span>
-                        <span className="text-xs font-bold text-slate-800 truncate">
-                          {labelMap[cat] || cat}
-                        </span>
-                      </div>
+                  <div className="space-y-1.5">
+                    {prioritaAssenze.map((cat, idx) => {
+                      const labelMap: Record<string, string> = {
+                        'COMPRESENTE_CLASSE': '👥 Docente Compresente in Classe',
+                        'RECUPERO_STESSA_CLASSE': '🔄 Recupero Docente Stessa Classe (Debito)',
+                        'POTENZIAMENTO': '⚡ Docente in Potenziamento',
+                        'SOSTEGNO': '♿ Docente di Sostegno (Senza Caso Grave)',
+                        'RECUPERO_GENERICO': '🔄 Recupero Generico (Debito / A Disposizione)',
+                        'STRAORDINARIO_D': '💰 Ora a Disposizione / Straordinario'
+                      };
 
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          disabled={idx === 0}
-                          onClick={() => setPrioritaGite(prev => spostaElemento(prev, idx, 'SU'))}
-                          className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
-                          title="Sposta su"
+                      return (
+                        <div
+                          key={cat}
+                          className="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xs gap-2"
                         >
-                          ▲
-                        </button>
-                        <button
-                          type="button"
-                          disabled={idx === prioritaGite.length - 1}
-                          onClick={() => setPrioritaGite(prev => spostaElemento(prev, idx, 'GIU'))}
-                          className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
-                          title="Sposta giù"
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="w-5 h-5 rounded-lg bg-indigo-50 text-indigo-700 font-black text-[11px] flex items-center justify-center shrink-0">
+                              {idx + 1}
+                            </span>
+                            <span className="text-xs font-bold text-slate-800 truncate">
+                              {labelMap[cat] || cat}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => setPrioritaAssenze(prev => spostaElemento(prev, idx, 'SU'))}
+                              className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
+                              title="Sposta su"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === prioritaAssenze.length - 1}
+                              onClick={() => setPrioritaAssenze(prev => spostaElemento(prev, idx, 'GIU'))}
+                              className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
+                              title="Sposta giù"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* PRIORITÀ GITE / USCITE DIDATTICHE */}
+                <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200 space-y-3">
+                  <span className="block text-xs font-black text-slate-900 uppercase tracking-wider">
+                    2. Priorità Uscite & Gite Didattiche
+                  </span>
+                  <p className="text-[11px] text-slate-500">
+                    Priorità quando una o più classi sono in uscita e liberano i docenti titolari.
+                  </p>
+
+                  <div className="space-y-1.5">
+                    {prioritaGite.map((cat, idx) => {
+                      const labelMap: Record<string, string> = {
+                        'COMPRESENTE_CLASSE': '👥 Compresente in Classe',
+                        'LIBERATO_STESSA_CLASSE': '🚌 Liberato da Gita (Stessa Classe)',
+                        'LIBERATO_STESSA_MATERIA': '🚌 Liberato da Gita (Stessa Materia)',
+                        'LIBERATO_ALTRA_CLASSE': '🚌 Liberato da Gita (Altra Classe)',
+                        'RECUPERO_STESSA_CLASSE': '🔄 Recupero Debito Stessa Classe',
+                        'POTENZIAMENTO': '⚡ Docente in Potenziamento',
+                        'SOSTEGNO': '♿ Sostegno (Senza Caso Grave)',
+                        'RECUPERO_GENERICO': '🔄 Recupero Generico (Debito)',
+                        'STRAORDINARIO_D': '💰 Ora a Disposizione / Straordinario'
+                      };
+
+                      return (
+                        <div
+                          key={cat}
+                          className="bg-white border border-slate-200 rounded-xl px-3 py-2 flex items-center justify-between shadow-2xs gap-2"
                         >
-                          ▼
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="w-5 h-5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-[11px] flex items-center justify-center shrink-0">
+                              {idx + 1}
+                            </span>
+                            <span className="text-xs font-bold text-slate-800 truncate">
+                              {labelMap[cat] || cat}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => setPrioritaGite(prev => spostaElemento(prev, idx, 'SU'))}
+                              className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
+                              title="Sposta su"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === prioritaGite.length - 1}
+                              onClick={() => setPrioritaGite(prev => spostaElemento(prev, idx, 'GIU'))}
+                              className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition"
+                              title="Sposta giù"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* SEZIONE 5: GIORNI FESTIVI, PONTI E CHIUSURE SCUOLA */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-3">
-          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <div className="p-2 bg-rose-50 text-rose-700 rounded-xl">
-              <Calendar className="w-5 h-5" />
+        {/* SEZIONE 5: GIORNI FESTIVI, PONTI E CHIUSURE SCUOLA (ACCORDION) */}
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+          <button
+            type="button"
+            onClick={() => toggleSezione('sez_festivita')}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-rose-50 text-rose-700 rounded-xl">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Giorni Festivi, Ponti & Chiusura Scuola</h3>
+                <p className="text-xs text-slate-500">Calendario festività escluse dalle lezioni scolastiche</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">Giorni Festivi, Ponti & Chiusura Scuola</h3>
-              <p className="text-xs text-slate-500">I giorni festivi registrati vengono saltati dal calendario e non conteggiati come giorni di lezione.</p>
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                {sezioniAperte.sez_festivita ? 'Chiudi' : 'Modifica'}
+              </span>
+              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_festivita ? 'rotate-180 bg-rose-50 text-rose-600' : ''}`}>
+                <ChevronDown className="w-4 h-4" />
+              </div>
             </div>
-          </div>
+          </button>
 
-          <div className="space-y-3.5">
-            {/* SELETTORE SINGOLO GIORNO / PERIODO */}
-            <div className="flex items-center gap-4 text-xs font-bold text-slate-700 pb-1">
-              <label className="flex items-center gap-1.5 cursor-pointer">
-                <input
+          {sezioniAperte.sez_festivita && (
+            <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-3 animate-in fade-in duration-150">
+              <div className="space-y-3.5 pt-4">
+                {/* SELETTORE SINGOLO GIORNO / PERIODO */}
+                <div className="flex items-center gap-4 text-xs font-bold text-slate-700 pb-1">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
                   type="radio"
                   name="tipoInserimentoFestivita"
                   checked={tipoInserimentoFestivita === 'SINGOLO'}
@@ -896,63 +1049,85 @@ export const PersonalizzazioniScuola: React.FC = () => {
               </button>
             </div>
 
-            {/* LISTA FESTIVITÀ REGISTRATE */}
-            <div className="pt-2 border-t border-slate-100">
-              <div className="flex items-center justify-between pb-2">
-                <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
-                  Chiusure Registrate ({giorniFestivi.length} giorni)
-                </span>
-                {giorniFestivi.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm("Vuoi cancellare tutti i giorni festivi registrati?")) {
-                        setGiorniFestivi([]);
-                      }
-                    }}
-                    className="text-[10px] text-rose-600 hover:underline font-bold"
-                  >
-                    Rimuovi tutti
-                  </button>
-                )}
-              </div>
+                {/* LISTA FESTIVITÀ REGISTRATE */}
+                <div className="pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between pb-2">
+                    <span className="text-[11px] font-black text-slate-700 uppercase tracking-wider">
+                      Chiusure Registrate ({giorniFestivi.length} giorni)
+                    </span>
+                    {giorniFestivi.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm("Vuoi cancellare tutti i giorni festivi registrati?")) {
+                            setGiorniFestivi([]);
+                          }
+                        }}
+                        className="text-[10px] text-rose-600 hover:underline font-bold"
+                      >
+                        Rimuovi tutti
+                      </button>
+                    )}
+                  </div>
 
-              <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1">
-                {giorniFestivi.map(dataFest => (
-                  <span
-                    key={dataFest}
-                    className="bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs px-2.5 py-1 rounded-xl flex items-center gap-2 shadow-2xs"
-                  >
-                    <span>🎉 {formatDataItaliana(dataFest)}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRimuoviFestivita(dataFest)}
-                      className="text-rose-400 hover:text-rose-700 transition"
-                      title="Rimuovi data"
-                    >
-                      ✕
-                    </button>
-                  </span>
-                ))}
-                {giorniFestivi.length === 0 && (
-                  <p className="text-xs text-slate-400 italic">Nessun giorno festivo o ponte scolastico registrato.</p>
-                )}
+                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-1">
+                    {giorniFestivi.map(dataFest => (
+                      <span
+                        key={dataFest}
+                        className="bg-rose-50 border border-rose-200 text-rose-800 font-bold text-xs px-2.5 py-1 rounded-xl flex items-center gap-2 shadow-2xs"
+                      >
+                        <span>🎉 {formatDataItaliana(dataFest)}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRimuoviFestivita(dataFest)}
+                          className="text-rose-400 hover:text-rose-700 transition"
+                          title="Rimuovi data"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                    {giorniFestivi.length === 0 && (
+                      <p className="text-xs text-slate-400 italic">Nessun giorno festivo o ponte scolastico registrato.</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* SEZIONE 6: NOTIFICHE EMAIL AUTOMATICHE A GRUPPO DOCENTI */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
+        {/* SEZIONE 6: NOTIFICHE EMAIL AUTOMATICHE A GRUPPO DOCENTI (ACCORDION) */}
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+          <button
+            type="button"
+            onClick={() => toggleSezione('sez_notifiche_mail')}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl">
                 <Mail className="w-5 h-5" />
               </div>
               <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Email Promemoria Giornaliero a Gruppo Google</h3>
+                <p className="text-xs text-slate-500">Invio automatico mattutino con webhook invisibile di Apps Script</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                {sezioniAperte.sez_notifiche_mail ? 'Chiudi' : 'Modifica'}
+              </span>
+              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_notifiche_mail ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
+                <ChevronDown className="w-4 h-4" />
+              </div>
+            </div>
+          </button>
+
+          {sezioniAperte.sez_notifiche_mail && (
+            <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
+              <div className="flex items-center justify-between flex-wrap gap-2 pt-4 border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-black text-slate-900">Email Promemoria Giornaliero a Gruppo Google</h3>
-                  {/* ICONA 'i' CERCHIATA CON POPUP INFORMATIVO */}
+                  <span className="text-xs font-bold text-slate-600">Regola: invio attivo solo in presenza di supplenze</span>
                   <div className="relative">
                     <button
                       type="button"
@@ -984,210 +1159,204 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-slate-500">Invia automaticamente una mail al gruppo docenti solo nei giorni in cui sono presenti supplenze.</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                disabled={statoInvioTestMail === 'INVIANDO'}
-                onClick={handleTestInvioMail}
-                className="text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs disabled:opacity-50"
-                title="Invia o prova l'email con i parametri correnti"
-              >
-                {statoInvioTestMail === 'INVIANDO' ? (
-                  <>
-                    <span className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                    <span>Invio in corso...</span>
-                  </>
-                ) : statoInvioTestMail === 'SUCCESSO' ? (
-                  <>
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700">Inviata con Successo!</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Prova Invio Subito</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {messaggioInvioTestMail && (
-            <div className={`p-2.5 rounded-xl text-xs font-bold ${
-              statoInvioTestMail === 'SUCCESSO' ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-rose-50 text-rose-900 border border-rose-200'
-            }`}>
-              {messaggioInvioTestMail}
-            </div>
-          )}
-
-          <div className="space-y-4 pt-1">
-            {/* TOGGLE ABILITAZIONE */}
-            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between">
-              <div>
-                <span className="block text-xs font-black text-slate-900">
-                  Abilita Invio Automatico Promemoria Giornaliero
-                </span>
-                <span className="text-[11px] text-slate-500">
-                  Invia una notifica email all'orario stabilito con il promemoria e il link per firmare sul portale.
-                </span>
-              </div>
-              <input
-                type="checkbox"
-                checked={mailGruppoAbilitato}
-                onChange={(e) => setMailGruppoAbilitato(e.target.checked)}
-                className="w-5 h-5 text-indigo-600 rounded-lg border-slate-300 focus:ring-indigo-500 cursor-pointer"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* INDIRIZZO EMAIL GRUPPO GOOGLE */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-black text-slate-800">
-                  📧 Indirizzo Email Gruppo Docenti / Mailing List
-                </label>
-                <input
-                  type="email"
-                  value={mailGruppoIndirizzo}
-                  onChange={(e) => setMailGruppoIndirizzo(e.target.value)}
-                  placeholder="es. docenti-tutti@icannafrank.edu.it"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
-                />
-                <span className="text-[10px] text-slate-500 block">
-                  Indirizzo del gruppo Google Workspace o lista di distribuzione di tutto il corpo docente.
-                </span>
-              </div>
-
-              {/* ORARIO DI INVIO */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-black text-slate-800">
-                  ⏰ Orario di Invio Automatico Mattutino
-                </label>
-                <input
-                  type="time"
-                  value={mailGruppoOrario}
-                  onChange={(e) => setMailGruppoOrario(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-black text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
-                />
-                <span className="text-[10px] text-slate-500 block">
-                  Orario consigliato prima dell'inizio delle lezioni (es. 07:30 o 07:45).
-                </span>
-              </div>
-            </div>
-
-            {/* OGGETTO EMAIL */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-black text-slate-800">
-                📝 Oggetto dell'Email
-              </label>
-              <input
-                type="text"
-                value={mailGruppoOggetto}
-                onChange={(e) => setMailGruppoOggetto(e.target.value)}
-                placeholder="es. 🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
-              />
-            </div>
-
-            {/* CORPO DEL MESSAGGIO EDITABILE */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-black text-slate-800">
-                📄 Testo del Messaggio (Completamente Editabile)
-              </label>
-              <textarea
-                rows={6}
-                value={mailGruppoCorpo}
-                onChange={(e) => setMailGruppoCorpo(e.target.value)}
-                placeholder="Scrivi qui il testo della mail..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition leading-relaxed"
-              />
-              <span className="text-[10px] text-slate-500 block">
-                Puoi modificare il testo a tuo piacimento. Ricorda di lasciare il link al portale <code>https://sostituzioni-smart.web.app</code> affinché i docenti possano accedere con un click.
-              </span>
-            </div>
-
-            {/* WEBHOOK GOOGLE APPS SCRIPT PER INVIO AUTOMATICO TOTALE */}
-            <div className="p-4 bg-indigo-50/70 rounded-2xl border border-indigo-200 space-y-3">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🚀</span>
-                  <label className="text-xs font-black text-indigo-950">
-                    Webhook Google Apps Script (Invio Automatico Silenzioso)
-                  </label>
-                  
-                  {/* ICONA 'i' CERCHIATA CON GUIDA COMPLETA */}
-                  <button
-                    type="button"
-                    onClick={() => setMostraGuidaWebhook(!mostraGuidaWebhook)}
-                    className="p-1 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-100 rounded-full transition cursor-pointer"
-                    title="Clicca per visualizzare le istruzioni e il codice dello script"
-                  >
-                    <HelpCircle className="w-4 h-4" />
-                  </button>
-                </div>
 
                 <button
                   type="button"
-                  onClick={() => setMostraGuidaWebhook(!mostraGuidaWebhook)}
-                  className="text-[11px] font-black text-indigo-700 bg-white hover:bg-indigo-100 border border-indigo-300 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  disabled={statoInvioTestMail === 'INVIANDO'}
+                  onClick={handleTestInvioMail}
+                  className="text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-2xs disabled:opacity-50"
+                  title="Invia o prova l'email con i parametri correnti"
                 >
-                  <Code2 className="w-3.5 h-3.5" />
-                  <span>{mostraGuidaWebhook ? 'Nascondi Istruzioni & Codice' : 'Come creare lo Script & Codice ➔'}</span>
+                  {statoInvioTestMail === 'INVIANDO' ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                      <span>Invio in corso...</span>
+                    </>
+                  ) : statoInvioTestMail === 'SUCCESSO' ? (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                      <span className="text-emerald-700">Inviata con Successo!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Prova Invio Subito</span>
+                    </>
+                  )}
                 </button>
               </div>
 
-              <p className="text-[11px] text-indigo-900 leading-relaxed">
-                Inserendo l'URL Web App di uno script Google, le email verranno inviate <strong>in modo totalmente invisibile direttamente dal server di Google</strong> senza aprire finestre del browser o client di posta.
-              </p>
+              {messaggioInvioTestMail && (
+                <div className={`p-2.5 rounded-xl text-xs font-bold ${
+                  statoInvioTestMail === 'SUCCESSO' ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-rose-50 text-rose-900 border border-rose-200'
+                }`}>
+                  {messaggioInvioTestMail}
+                </div>
+              )}
 
-              <input
-                type="url"
-                value={mailGruppoWebhookUrl}
-                onChange={(e) => setMailGruppoWebhookUrl(e.target.value)}
-                placeholder="https://script.google.com/macros/s/AKfycb.../exec"
-                className="w-full bg-white border border-indigo-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-600 transition shadow-2xs"
-              />
+              <div className="space-y-4 pt-1">
+                {/* TOGGLE ABILITAZIONE */}
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between">
+                  <div>
+                    <span className="block text-xs font-black text-slate-900">
+                      Abilita Invio Automatico Promemoria Giornaliero
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      Invia una notifica email all'orario stabilito con il promemoria e il link per firmare sul portale.
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={mailGruppoAbilitato}
+                    onChange={(e) => setMailGruppoAbilitato(e.target.checked)}
+                    className="w-5 h-5 text-indigo-600 rounded-lg border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                  />
+                </div>
 
-              {/* GUIDA PASSO PASSO E CODICE DA COPIARE */}
-              {mostraGuidaWebhook && (
-                <div className="mt-3 p-4 bg-slate-900 text-white rounded-2xl border border-slate-700 space-y-3.5 animate-in fade-in duration-200">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* INDIRIZZO EMAIL GRUPPO GOOGLE */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-black text-slate-800">
+                      📧 Indirizzo Email Gruppo Docenti / Mailing List
+                    </label>
+                    <input
+                      type="email"
+                      value={mailGruppoIndirizzo}
+                      onChange={(e) => setMailGruppoIndirizzo(e.target.value)}
+                      placeholder="es. docenti@icannafrank.edu.it"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
+                    />
+                    <span className="text-[10px] text-slate-400 block">
+                      Indirizzo del Google Group o lista di distribuzione di tutto il corpo docente.
+                    </span>
+                  </div>
+
+                  {/* ORARIO DI INVIO */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-black text-slate-800">
+                      ⏰ Orario di Invio Automatico Mattutino
+                    </label>
+                    <input
+                      type="time"
+                      value={mailGruppoOrario}
+                      onChange={(e) => setMailGruppoOrario(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
+                    />
+                    <span className="text-[10px] text-slate-400 block">
+                      Orario consigliato prima dell'inizio delle lezioni (es. 07:30 o 07:45).
+                    </span>
+                  </div>
+                </div>
+
+                {/* OGGETTO EMAIL */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-black text-slate-800">
+                    ✉️ Oggetto della Mail
+                  </label>
+                  <input
+                    type="text"
+                    value={mailGruppoOggetto}
+                    onChange={(e) => setMailGruppoOggetto(e.target.value)}
+                    placeholder="Oggetto dell'email..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
+                  />
+                </div>
+
+                {/* CORPO MESSAGGIO */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-black text-slate-800">
+                    📝 Testo del Messaggio (Completamente Editabile)
+                  </label>
+                  <textarea
+                    rows={5}
+                    value={mailGruppoCorpo}
+                    onChange={(e) => setMailGruppoCorpo(e.target.value)}
+                    placeholder="Scrivi qui il testo della mail..."
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition leading-relaxed"
+                  />
+                  <span className="text-[10px] text-slate-500 block">
+                    Puoi modificare il testo a tuo piacimento. Ricorda di lasciare il link al portale <code>https://sostituzioni-smart.web.app</code> affinché i docenti possano accedere con un click.
+                  </span>
+                </div>
+
+                {/* WEBHOOK GOOGLE APPS SCRIPT PER INVIO AUTOMATICO TOTALE */}
+                <div className="p-4 bg-indigo-50/70 rounded-2xl border border-indigo-200 space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm">📋</span>
-                      <h4 className="text-xs font-black text-amber-400 uppercase tracking-wider">
-                        Istruzioni di configurazione Google Apps Script (in 2 minuti)
-                      </h4>
+                      <span className="text-base">🚀</span>
+                      <label className="text-xs font-black text-indigo-950">
+                        Webhook Google Apps Script (Invio Automatico Silenzioso)
+                      </label>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setMostraGuidaWebhook(!mostraGuidaWebhook)}
+                        className="p-1 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-100 rounded-full transition cursor-pointer"
+                        title="Clicca per visualizzare le istruzioni e il codice dello script"
+                      >
+                        <HelpCircle className="w-4 h-4" />
+                      </button>
                     </div>
+
                     <button
                       type="button"
-                      onClick={() => setMostraGuidaWebhook(false)}
-                      className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+                      onClick={() => setMostraGuidaWebhook(!mostraGuidaWebhook)}
+                      className="text-[11px] font-black text-indigo-700 bg-white hover:bg-indigo-100 border border-indigo-300 px-2.5 py-1 rounded-lg transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
                     >
-                      <X className="w-4 h-4" />
+                      <Code2 className="w-3.5 h-3.5" />
+                      <span>{mostraGuidaWebhook ? 'Nascondi Istruzioni & Codice' : 'Come creare lo Script & Codice ➔'}</span>
                     </button>
                   </div>
 
-                  <ol className="list-decimal list-inside space-y-2 text-[11px] text-slate-300 leading-relaxed">
-                    <li>
-                      Vai su <a href="https://script.google.com" target="_blank" rel="noopener noreferrer" className="text-indigo-400 font-bold underline hover:text-indigo-300">script.google.com</a> con l'account Google da cui vuoi spedire le mail.
-                    </li>
-                    <li>
-                      Clicca su <strong>"Nuovo progetto"</strong> in alto a sinistra.
-                    </li>
-                    <li>
-                      Cancella tutto il codice presente nell'editor e <strong>incolla il codice sottostante</strong>:
-                    </li>
-                  </ol>
+                  <p className="text-[11px] text-indigo-900 leading-relaxed">
+                    Inserendo l'URL Web App di uno script Google, le email verranno inviate <strong>in modo totalmente invisibile direttamente dal server di Google</strong> senza aprire finestre del browser o client di posta.
+                  </p>
 
-                  {/* BOX CODICE CON TASTO COPIA RAPIDO */}
-                  <div className="relative bg-slate-950 rounded-xl p-3 border border-slate-800 font-mono text-[11px] text-emerald-400 overflow-x-auto">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const scriptCode = `function doPost(e) {
+                  <input
+                    type="url"
+                    value={mailGruppoWebhookUrl}
+                    onChange={(e) => setMailGruppoWebhookUrl(e.target.value)}
+                    placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+                    className="w-full bg-white border border-indigo-300 rounded-xl px-3.5 py-2 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-600 transition shadow-2xs"
+                  />
+
+                  {/* GUIDA PASSO PASSO E CODICE DA COPIARE */}
+                  {mostraGuidaWebhook && (
+                    <div className="mt-3 p-4 bg-slate-900 text-white rounded-2xl border border-slate-700 space-y-3.5 animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">📋</span>
+                          <h4 className="text-xs font-black text-amber-400 uppercase tracking-wider">
+                            Istruzioni di configurazione Google Apps Script (in 2 minuti)
+                          </h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setMostraGuidaWebhook(false)}
+                          className="text-slate-400 hover:text-white p-1 rounded-lg transition"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <ol className="list-decimal list-inside space-y-2 text-[11px] text-slate-300 leading-relaxed">
+                        <li>
+                          Vai su <a href="https://script.google.com" target="_blank" rel="noopener noreferrer" className="text-indigo-400 font-bold underline hover:text-indigo-300">script.google.com</a> con l'account Google da cui vuoi spedire le mail.
+                        </li>
+                        <li>
+                          Clicca su <strong>"Nuovo progetto"</strong> in alto a sinistra.
+                        </li>
+                        <li>
+                          Cancella tutto il codice presente nell'editor e <strong>incolla il codice sottostante</strong>:
+                        </li>
+                      </ol>
+
+                      {/* BOX CODICE CON TASTO COPIA RAPIDO */}
+                      <div className="relative bg-slate-950 rounded-xl p-3 border border-slate-800 font-mono text-[11px] text-emerald-400 overflow-x-auto">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const scriptCode = `function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var destinatario = data.destinatario;
@@ -1207,26 +1376,26 @@ export const PersonalizzazioniScuola: React.FC = () => {
       .setMimeType(ContentService.MimeType.JSON);
   }
 }`;
-                        navigator.clipboard.writeText(scriptCode);
-                        setCopiatoScript(true);
-                        setTimeout(() => setCopiatoScript(false), 2500);
-                      }}
-                      className="absolute top-2.5 right-2.5 bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm"
-                    >
-                      {copiatoScript ? (
-                        <>
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-300" />
-                          <span>Copiato! ✓</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>Copia Codice</span>
-                        </>
-                      )}
-                    </button>
+                            navigator.clipboard.writeText(scriptCode);
+                            setCopiatoScript(true);
+                            setTimeout(() => setCopiatoScript(false), 2500);
+                          }}
+                          className="absolute top-2.5 right-2.5 bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                        >
+                          {copiatoScript ? (
+                            <>
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-300" />
+                              <span>Copiato! ✓</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copia Codice</span>
+                            </>
+                          )}
+                        </button>
 
-                    <pre className="text-[11px] leading-relaxed select-all pr-24 whitespace-pre">
+                        <pre className="text-[11px] leading-relaxed select-all pr-24 whitespace-pre">
 {`function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
@@ -1247,221 +1416,241 @@ export const PersonalizzazioniScuola: React.FC = () => {
       .setMimeType(ContentService.MimeType.JSON);
   }
 }`}
-                    </pre>
-                  </div>
+                        </pre>
+                      </div>
 
-                  <ol start={4} className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-300 leading-relaxed">
-                    <li>
-                      Clicca in alto a destra su <strong>"Distribuisci" ➔ "Nuova implementazione"</strong>.
-                    </li>
-                    <li>
-                      Clicca sull'ingranaggio ⚙️ ➔ seleziona <strong>"Applicazione web"</strong>.
-                    </li>
-                    <li>
-                      Imposta:
-                      <ul className="list-disc list-inside pl-4 text-slate-400 space-y-0.5 mt-0.5">
-                        <li><strong>Esegui come:</strong> <em>Me stesso (la tua email)</em></li>
-                        <li><strong>Chi può accedere:</strong> <em>Chiunque</em> (fondamentale affinché l'app possa inviare)</li>
-                      </ul>
-                    </li>
-                    <li>
-                      Clicca <strong>"Distribuisci"</strong> (autorizza i permessi di invio email con il tuo account Google).
-                    </li>
-                    <li>
-                      Copia l'<strong>URL applicazione web</strong> (che finisce con <code>/exec</code>) e incollalo nel campo qui sopra!
-                    </li>
-                  </ol>
+                      <ol start={4} className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-300 leading-relaxed">
+                        <li>
+                          Clicca in alto a destra su <strong>"Distribuisci" ➔ "Nuova implementazione"</strong>.
+                        </li>
+                        <li>
+                          Clicca sull'ingranaggio ⚙️ ➔ seleziona <strong>"Applicazione web"</strong>.
+                        </li>
+                        <li>
+                          Imposta:
+                          <ul className="list-disc list-inside pl-4 text-slate-400 space-y-0.5 mt-0.5">
+                            <li><strong>Esegui come:</strong> <em>Me stesso (la tua email)</em></li>
+                            <li><strong>Chi può accedere:</strong> <em>Chiunque</em> (fondamentale affinché l'app possa inviare)</li>
+                          </ul>
+                        </li>
+                        <li>
+                          Clicca <strong>"Distribuisci"</strong> (autorizza i permessi di invio email con il tuo account Google).
+                        </li>
+                        <li>
+                          Copia l'<strong>URL applicazione web</strong> (che finisce con <code>/exec</code>) e incollalo nel campo qui sopra!
+                        </li>
+                      </ol>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* SEZIONE 7: INTEGRAZIONE GOOGLE CALENDAR (IMPEGNI & RISORSE DINAMICI) */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
-          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
-              <Calendar className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">Integrazione Google Calendar (Impegni & Risorse)</h3>
-              <p className="text-xs text-slate-500">Aggiungi quanti calendari o stanze desideri. Le relative schede appariranno automaticamente nel Portale Docenti e ATA solo se sono stati configurati.</p>
-            </div>
-          </div>
-
-          <div className="space-y-5 pt-1">
-            {/* SOTTO-BLOCCO 1: CALENDARI IMPEGNI SCOLASTICI */}
-            <div className="p-4 bg-indigo-50/40 rounded-2xl border border-indigo-200 space-y-3.5">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">📌</span>
-                  <div>
-                    <h4 className="font-black text-slate-900 text-xs sm:text-sm uppercase tracking-wider">
-                      1. Calendari Impegni Scolastici
-                    </h4>
-                    <p className="text-[11px] text-slate-500">
-                      Consigli di classe, collegi docenti, scrutini, ponti e scadenze dell'istituto.
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCalImpegniList(prev => [
-                      ...prev,
-                      { id: `impegno_${Date.now()}`, nome: '', googleId: '', colore: '#039BE5' }
-                    ]);
-                  }}
-                  className="text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Aggiungi Impegno</span>
-                </button>
+        {/* SEZIONE 7: INTEGRAZIONE GOOGLE CALENDAR (IMPEGNI & RISORSE DINAMICI) (ACCORDION) */}
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+          <button
+            type="button"
+            onClick={() => toggleSezione('sez_calendari_google')}
+            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl">
+                <Calendar className="w-5 h-5" />
               </div>
-
-              {calImpegniList.length === 0 ? (
-                <div className="p-4 bg-white rounded-xl border border-dashed border-indigo-200 text-center text-xs text-slate-500">
-                  Nessun calendario impegni aggiunto. Clicca su <strong>"+ Aggiungi Impegno"</strong> per collegarne uno (es. <em>Plenari</em> o <em>Secondaria</em>).
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {calImpegniList.map((cal, idx) => (
-                    <div key={cal.id || idx} className="p-3 bg-white rounded-xl border border-indigo-100 shadow-2xs flex items-center gap-2.5 flex-wrap sm:flex-nowrap animate-in fade-in">
-                      <div className="w-full sm:w-1/3 space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">
-                          Nome Calendario
-                        </label>
-                        <input
-                          type="text"
-                          value={cal.nome}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setCalImpegniList(prev => prev.map((item, i) => i === idx ? { ...item, nome: val } : item));
-                          }}
-                          placeholder="es. Plenari / Unitari, Secondaria..."
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
-                        />
-                      </div>
-
-                      <div className="w-full sm:flex-1 space-y-1">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase">
-                          ID Google Calendar o Indirizzo
-                        </label>
-                        <input
-                          type="text"
-                          value={cal.googleId}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setCalImpegniList(prev => prev.map((item, i) => i === idx ? { ...item, googleId: val } : item));
-                          }}
-                          placeholder="es. c_xxxxxx@group.calendar.google.com o email@scuola.it"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
-                        />
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCalImpegniList(prev => prev.filter((_, i) => i !== idx));
-                        }}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition self-end sm:self-center cursor-pointer"
-                        title="Rimuovi Calendario"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* SOTTO-BLOCCO 2: CALENDARI RISORSE E SPAZI (AULE SPECIALI / STANZE) */}
-            <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-200 space-y-3.5">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">🏢</span>
-                  <div>
-                    <h4 className="font-black text-teal-950 text-xs sm:text-sm uppercase tracking-wider">
-                      2. Calendari Risorse & Spazi (Aule Speciali / Stanze)
-                    </h4>
-                    <p className="text-[11px] text-teal-800">
-                      Visualizza e verifica la disponibilità delle aule speciali (es. Lab. Informatica, Teatro, Palestra).
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCalRisorseList(prev => [
-                      ...prev,
-                      { id: `stanza_${Date.now()}`, nome: '', googleId: '', colore: '#009688' }
-                    ]);
-                  }}
-                  className="text-xs font-black bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Aggiungi Stanza / Risorsa</span>
-                </button>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Integrazione Google Calendar (Impegni & Risorse)</h3>
+                <p className="text-xs text-slate-500">Aggiungi calendari per impegni scolastici e aule/risorse speciali</p>
               </div>
-
-              {calRisorseList.length === 0 ? (
-                <div className="p-4 bg-white rounded-xl border border-dashed border-teal-200 text-center text-xs text-slate-500">
-                  Nessuna stanza o risorsa aggiunta. Clicca su <strong>"+ Aggiungi Stanza / Risorsa"</strong> per collegarne una.
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  {calRisorseList.map((res, idx) => (
-                    <div key={res.id || idx} className="p-3 bg-white rounded-xl border border-teal-100 shadow-2xs flex items-center gap-2.5 flex-wrap sm:flex-nowrap animate-in fade-in">
-                      <div className="w-full sm:w-1/3 space-y-1">
-                        <label className="block text-[10px] font-bold text-teal-900 uppercase">
-                          Nome Stanza / Spazio
-                        </label>
-                        <input
-                          type="text"
-                          value={res.nome}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setCalRisorseList(prev => prev.map((item, i) => i === idx ? { ...item, nome: val } : item));
-                          }}
-                          placeholder="es. Lab. Informatica, Teatro, Palestra..."
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-teal-500 transition"
-                        />
-                      </div>
-
-                      <div className="w-full sm:flex-1 space-y-1">
-                        <label className="block text-[10px] font-bold text-teal-900 uppercase">
-                          ID Google Calendar o Indirizzo
-                        </label>
-                        <input
-                          type="text"
-                          value={res.googleId}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setCalRisorseList(prev => prev.map((item, i) => i === idx ? { ...item, googleId: val } : item));
-                          }}
-                          placeholder="es. c_informatica@group.calendar.google.com"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-teal-500 transition"
-                        />
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCalRisorseList(prev => prev.filter((_, i) => i !== idx));
-                        }}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition self-end sm:self-center cursor-pointer"
-                        title="Rimuovi Stanza"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-          </div>
+            <div className="flex items-center gap-2 text-slate-400">
+              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                {sezioniAperte.sez_calendari_google ? 'Chiudi' : 'Modifica'}
+              </span>
+              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_calendari_google ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
+                <ChevronDown className="w-4 h-4" />
+              </div>
+            </div>
+          </button>
+
+          {sezioniAperte.sez_calendari_google && (
+            <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-5 animate-in fade-in duration-150">
+              <div className="space-y-5 pt-4">
+                {/* SOTTO-BLOCCO 1: CALENDARI IMPEGNI SCOLASTICI */}
+                <div className="p-4 bg-indigo-50/40 rounded-2xl border border-indigo-200 space-y-3.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">📌</span>
+                      <div>
+                        <h4 className="font-black text-slate-900 text-xs sm:text-sm uppercase tracking-wider">
+                          1. Calendari Impegni Scolastici
+                        </h4>
+                        <p className="text-[11px] text-slate-500">
+                          Consigli di classe, collegi docenti, scrutini, ponti e scadenze dell'istituto.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCalImpegniList(prev => [
+                          ...prev,
+                          { id: `impegno_${Date.now()}`, nome: '', googleId: '', colore: '#039BE5' }
+                        ]);
+                      }}
+                      className="text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Aggiungi Impegno</span>
+                    </button>
+                  </div>
+
+                  {calImpegniList.length === 0 ? (
+                    <div className="p-4 bg-white rounded-xl border border-dashed border-indigo-200 text-center text-xs text-slate-500">
+                      Nessun calendario impegni aggiunto. Clicca su <strong>"+ Aggiungi Impegno"</strong> per collegarne uno (es. <em>Plenari</em> o <em>Secondaria</em>).
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {calImpegniList.map((cal, idx) => (
+                        <div key={cal.id || idx} className="p-3 bg-white rounded-xl border border-indigo-100 shadow-2xs flex items-center gap-2.5 flex-wrap sm:flex-nowrap animate-in fade-in">
+                          <div className="w-full sm:w-1/3 space-y-1">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase">
+                              Nome Calendario
+                            </label>
+                            <input
+                              type="text"
+                              value={cal.nome}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setCalImpegniList(prev => prev.map((item, i) => i === idx ? { ...item, nome: val } : item));
+                              }}
+                              placeholder="es. Plenari / Unitari, Secondaria..."
+                              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
+                            />
+                          </div>
+
+                          <div className="w-full sm:flex-1 space-y-1">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase">
+                              ID Google Calendar o Indirizzo
+                            </label>
+                            <input
+                              type="text"
+                              value={cal.googleId}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setCalImpegniList(prev => prev.map((item, i) => i === idx ? { ...item, googleId: val } : item));
+                              }}
+                              placeholder="es. c_xxxxxx@group.calendar.google.com o email@scuola.it"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCalImpegniList(prev => prev.filter((_, i) => i !== idx));
+                            }}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition self-end sm:self-center cursor-pointer"
+                            title="Rimuovi Calendario"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* SOTTO-BLOCCO 2: CALENDARI RISORSE E SPAZI (AULE SPECIALI / STANZE) */}
+                <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-200 space-y-3.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🏢</span>
+                      <div>
+                        <h4 className="font-black text-teal-950 text-xs sm:text-sm uppercase tracking-wider">
+                          2. Calendari Risorse & Spazi (Aule Speciali / Stanze)
+                        </h4>
+                        <p className="text-[11px] text-teal-800">
+                          Visualizza e verifica la disponibilità delle aule speciali (es. Lab. Informatica, Teatro, Palestra).
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCalRisorseList(prev => [
+                          ...prev,
+                          { id: `stanza_${Date.now()}`, nome: '', googleId: '', colore: '#009688' }
+                        ]);
+                      }}
+                      className="text-xs font-black bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Aggiungi Stanza / Risorsa</span>
+                    </button>
+                  </div>
+
+                  {calRisorseList.length === 0 ? (
+                    <div className="p-4 bg-white rounded-xl border border-dashed border-teal-200 text-center text-xs text-slate-500">
+                      Nessuna stanza o risorsa aggiunta. Clicca su <strong>"+ Aggiungi Stanza / Risorsa"</strong> per collegarne una.
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {calRisorseList.map((res, idx) => (
+                        <div key={res.id || idx} className="p-3 bg-white rounded-xl border border-teal-100 shadow-2xs flex items-center gap-2.5 flex-wrap sm:flex-nowrap animate-in fade-in">
+                          <div className="w-full sm:w-1/3 space-y-1">
+                            <label className="block text-[10px] font-bold text-teal-900 uppercase">
+                              Nome Stanza / Spazio
+                            </label>
+                            <input
+                              type="text"
+                              value={res.nome}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setCalRisorseList(prev => prev.map((item, i) => i === idx ? { ...item, nome: val } : item));
+                              }}
+                              placeholder="es. Lab. Informatica, Teatro, Palestra..."
+                              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-teal-500 transition"
+                            />
+                          </div>
+
+                          <div className="w-full sm:flex-1 space-y-1">
+                            <label className="block text-[10px] font-bold text-teal-900 uppercase">
+                              ID Google Calendar o Indirizzo
+                            </label>
+                            <input
+                              type="text"
+                              value={res.googleId}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setCalRisorseList(prev => prev.map((item, i) => i === idx ? { ...item, googleId: val } : item));
+                              }}
+                              placeholder="es. c_informatica@group.calendar.google.com"
+                              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-teal-500 transition"
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCalRisorseList(prev => prev.filter((_, i) => i !== idx));
+                            }}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition self-end sm:self-center cursor-pointer"
+                            title="Rimuovi Stanza"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* PULSANTE DI SALVATAGGIO CONFIGURAZIONE CON MORPHING FEEDBACK */}
@@ -1496,70 +1685,88 @@ export const PersonalizzazioniScuola: React.FC = () => {
         </div>
       </form>
 
-      {/* SEZIONE 5: SALVATAGGIO BACKUP & RIPRISTINO COMPLETO */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-3 mt-6">
-        <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-          <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl">
-            <Database className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="text-sm sm:text-base font-black text-slate-900">Salvataggio Backup & Ripristino Dati</h3>
-            <p className="text-xs text-slate-500">Esporta o importa l'intero archivio (docenti, orari, assenze, uscite, debiti e impostazioni).</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-          {/* EXPORT BACKUP */}
-          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3">
-            <div>
-              <span className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
-                <Download className="w-4 h-4 text-emerald-600" />
-                <span>Scarica File di Backup (.json)</span>
-              </span>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Salva una copia completa di sicurezza di tutti i dati per conservarli o trasferirli su un altro PC.
-              </p>
+      {/* SEZIONE 8: SALVATAGGIO BACKUP & RIPRISTINO COMPLETO (ACCORDION) */}
+      <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200 mt-6">
+        <button
+          type="button"
+          onClick={() => toggleSezione('sez_backup')}
+          className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl">
+              <Database className="w-5 h-5" />
             </div>
-            <button
-              type="button"
-              onClick={handleDownloadBackup}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Esporta Backup Completo</span>
-            </button>
-          </div>
-
-          {/* IMPORT RESTORE */}
-          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3">
             <div>
-              <span className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
-                <Upload className="w-4 h-4 text-indigo-600" />
-                <span>Ripristina da File Backup (.json)</span>
-              </span>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Carica un file di backup scaricato in precedenza per ripristinare l'intero stato della scuola.
-              </p>
+              <h3 className="text-sm sm:text-base font-black text-slate-900">Salvataggio Backup & Ripristino Dati</h3>
+              <p className="text-xs text-slate-500">Esporta o importa l'intero archivio (docenti, orari, assenze, uscite, debiti e impostazioni)</p>
             </div>
-
-            <input
-              type="file"
-              ref={fileBackupRef}
-              onChange={handleUploadBackup}
-              accept=".json"
-              className="hidden"
-            />
-
-            <button
-              type="button"
-              onClick={() => fileBackupRef.current?.click()}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span>Carica File Backup</span>
-            </button>
           </div>
-        </div>
+          <div className="flex items-center gap-2 text-slate-400">
+            <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+              {sezioniAperte.sez_backup ? 'Chiudi' : 'Visualizza'}
+            </span>
+            <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_backup ? 'rotate-180 bg-emerald-50 text-emerald-600' : ''}`}>
+              <ChevronDown className="w-4 h-4" />
+            </div>
+          </div>
+        </button>
+
+        {sezioniAperte.sez_backup && (
+          <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+              {/* EXPORT BACKUP */}
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3">
+                <div>
+                  <span className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
+                    <Download className="w-4 h-4 text-emerald-600" />
+                    <span>Scarica File di Backup (.json)</span>
+                  </span>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Salva una copia completa di sicurezza di tutti i dati per conservarli o trasferirli su un altro PC.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDownloadBackup}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Esporta Backup Completo</span>
+                </button>
+              </div>
+
+              {/* IMPORT RESTORE */}
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3">
+                <div>
+                  <span className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
+                    <Upload className="w-4 h-4 text-indigo-600" />
+                    <span>Ripristina da File Backup (.json)</span>
+                  </span>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Carica un file di backup scaricato in precedenza per ripristinare l'intero stato della scuola.
+                  </p>
+                </div>
+
+                <input
+                  type="file"
+                  ref={fileBackupRef}
+                  onChange={handleUploadBackup}
+                  accept=".json"
+                  className="hidden"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => fileBackupRef.current?.click()}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Carica File Backup</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
