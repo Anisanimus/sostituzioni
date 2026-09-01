@@ -445,12 +445,12 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
       <form onSubmit={handleSalva} className="space-y-4">
         {/* SEZIONE 1: NOME DELLA SCUOLA & SICUREZZA ACCESSI (ACCORDION) */}
-        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-visible transition-all duration-200">
           <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
             <button
               type="button"
               onClick={() => toggleSezione('sez_intestazione')}
-              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left min-w-0"
             >
               <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl shrink-0">
                 <Building2 className="w-5 h-5" />
@@ -458,52 +458,52 @@ export const PersonalizzazioniScuola: React.FC = () => {
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-sm sm:text-base font-black text-slate-900">Intestazione Scuola & Sicurezza Accesso</h3>
+                  
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInfoSezioneAperta(prev => prev === 'sez_intestazione' ? null : 'sez_intestazione');
+                      }}
+                      className={`p-1 rounded-full transition cursor-pointer flex items-center justify-center ${
+                        infoSezioneAperta === 'sez_intestazione'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
+                      }`}
+                      title="Spiegazione di questa sezione"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+
+                    {infoSezioneAperta === 'sez_intestazione' && (
+                      <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between font-bold text-amber-400">
+                          <span className="flex items-center gap-1.5">💡 Intestazione & Accessi</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInfoSezioneAperta(null);
+                            }}
+                            className="text-slate-400 hover:text-white p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-slate-200 text-[11px]">
+                          Personalizza il nome dell'istituto mostrato nella barra superiore, definisce il <strong>PIN numerico</strong> richiesto al personale ATA/segreteria per consultare il quadro e i <strong>domini Google Workspace</strong> autorizzati a fare login.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <p className="text-xs text-slate-500">Denominazione istituto, PIN ATA e domini Google autorizzati</p>
               </div>
             </button>
 
             <div className="flex items-center gap-2 text-slate-400 shrink-0">
-              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInfoSezioneAperta(prev => prev === 'sez_intestazione' ? null : 'sez_intestazione');
-                  }}
-                  className={`p-1.5 rounded-full transition cursor-pointer ${
-                    infoSezioneAperta === 'sez_intestazione'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
-                  }`}
-                  title="Cosa permette di configurare questa sezione?"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
-
-                {infoSezioneAperta === 'sez_intestazione' && (
-                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
-                    <div className="flex items-center justify-between font-bold text-amber-400">
-                      <span className="flex items-center gap-1.5">💡 Intestazione & Accessi</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setInfoSezioneAperta(null);
-                        }}
-                        className="text-slate-400 hover:text-white p-0.5"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <p className="text-slate-200 text-[11px]">
-                      Personalizza il nome dell'istituto mostrato nella barra superiore, definisce il <strong>PIN numerico</strong> richiesto al personale ATA/segreteria per consultare il quadro e i <strong>domini Google Workspace</strong> autorizzati a fare login.
-                    </p>
-                  </div>
-                )}
-              </div>
-
               <button
                 type="button"
                 onClick={() => toggleSezione('sez_intestazione')}
@@ -660,63 +660,65 @@ export const PersonalizzazioniScuola: React.FC = () => {
         </div>
 
         {/* SEZIONE 2: TETTI MASSIMI PERMESSI E ASSEMBLEE SINDACALI (ACCORDION) */}
-        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-visible transition-all duration-200">
           <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
             <button
               type="button"
               onClick={() => toggleSezione('sez_tetti')}
-              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left min-w-0"
             >
               <div className="p-2.5 bg-purple-50 text-purple-700 rounded-xl shrink-0">
                 <Clock className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-black text-slate-900">Tetti Massimi & Limiti Monte Ore Annuale</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Tetti Massimi & Limiti Monte Ore Annuale</h3>
+                  
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInfoSezioneAperta(prev => prev === 'sez_tetti' ? null : 'sez_tetti');
+                      }}
+                      className={`p-1 rounded-full transition cursor-pointer flex items-center justify-center ${
+                        infoSezioneAperta === 'sez_tetti'
+                          ? 'bg-purple-600 text-white shadow-xs'
+                          : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50'
+                      }`}
+                      title="Spiegazione di questa sezione"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+
+                    {infoSezioneAperta === 'sez_tetti' && (
+                      <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between font-bold text-amber-400">
+                          <span className="flex items-center gap-1.5">💡 Tetti Massimi Orari</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInfoSezioneAperta(null);
+                            }}
+                            className="text-slate-400 hover:text-white p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-slate-200 text-[11px]">
+                          Imposta i limiti contrattuali CCNL per il monte ore annuo fruibile di <strong>Permessi Brevi</strong> (generalmente pari all'orario settimanale del docente) e di <strong>Assemblee Sindacali</strong> (10h). Permette all'app di avvisare la vicepresidenza in caso di superamento.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <p className="text-xs text-slate-500">Valori di riferimento per allarmi e verifiche permessi/assemblee</p>
               </div>
             </button>
 
             <div className="flex items-center gap-2 text-slate-400 shrink-0">
-              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInfoSezioneAperta(prev => prev === 'sez_tetti' ? null : 'sez_tetti');
-                  }}
-                  className={`p-1.5 rounded-full transition cursor-pointer ${
-                    infoSezioneAperta === 'sez_tetti'
-                      ? 'bg-purple-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50'
-                  }`}
-                  title="Cosa permette di configurare questa sezione?"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
-
-                {infoSezioneAperta === 'sez_tetti' && (
-                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
-                    <div className="flex items-center justify-between font-bold text-amber-400">
-                      <span className="flex items-center gap-1.5">💡 Tetti Massimi Orari</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setInfoSezioneAperta(null);
-                        }}
-                        className="text-slate-400 hover:text-white p-0.5"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <p className="text-slate-200 text-[11px]">
-                      Imposta i limiti contrattuali CCNL per il monte ore annuo fruibile di <strong>Permessi Brevi</strong> (generalmente pari all'orario settimanale del docente) e di <strong>Assemblee Sindacali</strong> (10h). Permette all'app di avvisare la vicepresidenza in caso di superamento.
-                    </p>
-                  </div>
-                )}
-              </div>
-
               <button
                 type="button"
                 onClick={() => toggleSezione('sez_tetti')}
@@ -780,63 +782,65 @@ export const PersonalizzazioniScuola: React.FC = () => {
         </div>
 
         {/* SEZIONE 3: PREFERENZE VISUALIZZAZIONE & CALENDARIO (ACCORDION) */}
-        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-visible transition-all duration-200">
           <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
             <button
               type="button"
               onClick={() => toggleSezione('sez_vista')}
-              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left min-w-0"
             >
               <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl shrink-0">
                 <Eye className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-black text-slate-900">Preferenze di Visualizzazione & Calendario</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Preferenze di Visualizzazione & Calendario</h3>
+                  
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInfoSezioneAperta(prev => prev === 'sez_vista' ? null : 'sez_vista');
+                      }}
+                      className={`p-1 rounded-full transition cursor-pointer flex items-center justify-center ${
+                        infoSezioneAperta === 'sez_vista'
+                          ? 'bg-amber-600 text-white shadow-xs'
+                          : 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'
+                      }`}
+                      title="Spiegazione di questa sezione"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+
+                    {infoSezioneAperta === 'sez_vista' && (
+                      <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between font-bold text-amber-400">
+                          <span className="flex items-center gap-1.5">💡 Preferenze Visualizzazione</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInfoSezioneAperta(null);
+                            }}
+                            className="text-slate-400 hover:text-white p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-slate-200 text-[11px]">
+                          Scegli il layout predefinito del tabellone (a <strong>Blocchi Orari</strong> per ora di lezione, oppure <strong>Per Docente Assente</strong>) e attiva la <strong>Settimana Corta</strong> per nascondere sabato e domenica da tutti i calendari.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <p className="text-xs text-slate-500">Modalità predefinita tabellone e settimana corta (sabato/domenica)</p>
               </div>
             </button>
 
             <div className="flex items-center gap-2 text-slate-400 shrink-0">
-              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInfoSezioneAperta(prev => prev === 'sez_vista' ? null : 'sez_vista');
-                  }}
-                  className={`p-1.5 rounded-full transition cursor-pointer ${
-                    infoSezioneAperta === 'sez_vista'
-                      ? 'bg-amber-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'
-                  }`}
-                  title="Cosa permette di configurare questa sezione?"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
-
-                {infoSezioneAperta === 'sez_vista' && (
-                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
-                    <div className="flex items-center justify-between font-bold text-amber-400">
-                      <span className="flex items-center gap-1.5">💡 Preferenze Visualizzazione</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setInfoSezioneAperta(null);
-                        }}
-                        className="text-slate-400 hover:text-white p-0.5"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <p className="text-slate-200 text-[11px]">
-                      Scegli il layout predefinito del tabellone (a <strong>Blocchi Orari</strong> per ora di lezione, oppure <strong>Per Docente Assente</strong>) e attiva la <strong>Settimana Corta</strong> per nascondere sabato e domenica da tutti i calendari.
-                    </p>
-                  </div>
-                )}
-              </div>
-
               <button
                 type="button"
                 onClick={() => toggleSezione('sez_vista')}
@@ -925,63 +929,65 @@ export const PersonalizzazioniScuola: React.FC = () => {
         </div>
 
         {/* SEZIONE 4: SOSTITUTORE SMART & PRIORITÀ ALGORITMO (ACCORDION) */}
-        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-visible transition-all duration-200">
           <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
             <button
               type="button"
               onClick={() => toggleSezione('sez_priorita')}
-              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left min-w-0"
             >
               <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl shrink-0">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-black text-slate-900">Sostitutore Smart & Priorità Assegnazione</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Sostitutore Smart & Priorità Assegnazione</h3>
+                  
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInfoSezioneAperta(prev => prev === 'sez_priorita' ? null : 'sez_priorita');
+                      }}
+                      className={`p-1 rounded-full transition cursor-pointer flex items-center justify-center ${
+                        infoSezioneAperta === 'sez_priorita'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
+                      }`}
+                      title="Spiegazione di questa sezione"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+
+                    {infoSezioneAperta === 'sez_priorita' && (
+                      <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between font-bold text-amber-400">
+                          <span className="flex items-center gap-1.5">💡 Algoritmo Sostitutore Smart</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInfoSezioneAperta(null);
+                            }}
+                            className="text-slate-400 hover:text-white p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-slate-200 text-[11px]">
+                          Configura l'ordine esatto con cui il motore automatico seleziona i candidati ottimali per coprire un'ora scoperta (es. prima <strong>Compresenti</strong>, poi <strong>Recupero debito</strong>, poi <strong>Potenziamento</strong>, ecc.), separato per assenze ordinarie e uscite didattiche.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <p className="text-xs text-slate-500">Sequenza con cui l'algoritmo propone i docenti per assenze e uscite</p>
               </div>
             </button>
 
             <div className="flex items-center gap-2 text-slate-400 shrink-0">
-              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInfoSezioneAperta(prev => prev === 'sez_priorita' ? null : 'sez_priorita');
-                  }}
-                  className={`p-1.5 rounded-full transition cursor-pointer ${
-                    infoSezioneAperta === 'sez_priorita'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
-                  }`}
-                  title="Cosa permette di configurare questa sezione?"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
-
-                {infoSezioneAperta === 'sez_priorita' && (
-                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
-                    <div className="flex items-center justify-between font-bold text-amber-400">
-                      <span className="flex items-center gap-1.5">💡 Algoritmo Sostitutore Smart</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setInfoSezioneAperta(null);
-                        }}
-                        className="text-slate-400 hover:text-white p-0.5"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <p className="text-slate-200 text-[11px]">
-                      Configura l'ordine esatto con cui il motore automatico seleziona i candidati ottimali per coprire un'ora scoperta (es. prima <strong>Compresenti</strong>, poi <strong>Recupero debito</strong>, poi <strong>Potenziamento</strong>, ecc.), separato per assenze ordinarie e uscite didattiche.
-                    </p>
-                  </div>
-                )}
-              </div>
-
               <button
                 type="button"
                 onClick={() => toggleSezione('sez_priorita')}
@@ -1142,63 +1148,65 @@ export const PersonalizzazioniScuola: React.FC = () => {
         </div>
 
         {/* SEZIONE 5: GIORNI FESTIVI, PONTI E CHIUSURE SCUOLA (ACCORDION) */}
-        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-visible transition-all duration-200">
           <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
             <button
               type="button"
               onClick={() => toggleSezione('sez_festivita')}
-              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left min-w-0"
             >
               <div className="p-2.5 bg-rose-50 text-rose-700 rounded-xl shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-black text-slate-900">Giorni Festivi, Ponti & Chiusura Scuola</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Giorni Festivi, Ponti & Chiusura Scuola</h3>
+                  
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInfoSezioneAperta(prev => prev === 'sez_festivita' ? null : 'sez_festivita');
+                      }}
+                      className={`p-1 rounded-full transition cursor-pointer flex items-center justify-center ${
+                        infoSezioneAperta === 'sez_festivita'
+                          ? 'bg-rose-600 text-white shadow-xs'
+                          : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                      }`}
+                      title="Spiegazione di questa sezione"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+
+                    {infoSezioneAperta === 'sez_festivita' && (
+                      <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between font-bold text-amber-400">
+                          <span className="flex items-center gap-1.5">💡 Festività & Chiusure</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInfoSezioneAperta(null);
+                            }}
+                            className="text-slate-400 hover:text-white p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-slate-200 text-[11px]">
+                          Registra le festività nazionali, i ponti e i periodi di vacanza (Natale, Pasqua). I giorni registrati vengono <strong>saltati dal calendario</strong> e non considerati come giorni di lezione né conteggiati come assenze.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <p className="text-xs text-slate-500">Calendario festività escluse dalle lezioni scolastiche</p>
               </div>
             </button>
 
             <div className="flex items-center gap-2 text-slate-400 shrink-0">
-              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInfoSezioneAperta(prev => prev === 'sez_festivita' ? null : 'sez_festivita');
-                  }}
-                  className={`p-1.5 rounded-full transition cursor-pointer ${
-                    infoSezioneAperta === 'sez_festivita'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
-                  }`}
-                  title="Cosa permette di configurare questa sezione?"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
-
-                {infoSezioneAperta === 'sez_festivita' && (
-                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
-                    <div className="flex items-center justify-between font-bold text-amber-400">
-                      <span className="flex items-center gap-1.5">💡 Festività & Chiusure</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setInfoSezioneAperta(null);
-                        }}
-                        className="text-slate-400 hover:text-white p-0.5"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <p className="text-slate-200 text-[11px]">
-                      Registra le festività nazionali, i ponti e i periodi di vacanza (Natale, Pasqua). I giorni registrati vengono <strong>saltati dal calendario</strong> e non considerati come giorni di lezione né conteggiati come assenze.
-                    </p>
-                  </div>
-                )}
-              </div>
-
               <button
                 type="button"
                 onClick={() => toggleSezione('sez_festivita')}
@@ -1336,63 +1344,65 @@ export const PersonalizzazioniScuola: React.FC = () => {
         </div>
 
         {/* SEZIONE 6: NOTIFICHE EMAIL AUTOMATICHE A GRUPPO DOCENTI (ACCORDION) */}
-        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-visible transition-all duration-200">
           <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
             <button
               type="button"
               onClick={() => toggleSezione('sez_notifiche_mail')}
-              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left min-w-0"
             >
               <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl shrink-0">
                 <Mail className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-black text-slate-900">Email Promemoria Giornaliero a Gruppo Google</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Email Promemoria Giornaliero a Gruppo Google</h3>
+                  
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInfoSezioneAperta(prev => prev === 'sez_notifiche_mail' ? null : 'sez_notifiche_mail');
+                      }}
+                      className={`p-1 rounded-full transition cursor-pointer flex items-center justify-center ${
+                        infoSezioneAperta === 'sez_notifiche_mail'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
+                      }`}
+                      title="Spiegazione di questa sezione"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+
+                    {infoSezioneAperta === 'sez_notifiche_mail' && (
+                      <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between font-bold text-amber-400">
+                          <span className="flex items-center gap-1.5">💡 Promemoria Email Mattutino</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInfoSezioneAperta(null);
+                            }}
+                            className="text-slate-400 hover:text-white p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-slate-200 text-[11px]">
+                          Spedisce ogni mattina all'orario prestabilito un'email al gruppo docenti per ricordare di accedere al portale per firmare le supplenze. L'invio avviene <strong>solo se ci sono supplenze</strong> attive per la giornata.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <p className="text-xs text-slate-500">Invio automatico mattutino con webhook invisibile di Apps Script</p>
               </div>
             </button>
 
             <div className="flex items-center gap-2 text-slate-400 shrink-0">
-              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInfoSezioneAperta(prev => prev === 'sez_notifiche_mail' ? null : 'sez_notifiche_mail');
-                  }}
-                  className={`p-1.5 rounded-full transition cursor-pointer ${
-                    infoSezioneAperta === 'sez_notifiche_mail'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
-                  }`}
-                  title="Cosa permette di configurare questa sezione?"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
-
-                {infoSezioneAperta === 'sez_notifiche_mail' && (
-                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
-                    <div className="flex items-center justify-between font-bold text-amber-400">
-                      <span className="flex items-center gap-1.5">💡 Promemoria Email Mattutino</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setInfoSezioneAperta(null);
-                        }}
-                        className="text-slate-400 hover:text-white p-0.5"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <p className="text-slate-200 text-[11px]">
-                      Spedisce ogni mattina all'orario prestabilito un'email al gruppo docenti per ricordare di accedere al portale per firmare le supplenze. L'invio avviene <strong>solo se ci sono supplenze</strong> attive per la giornata.
-                    </p>
-                  </div>
-                )}
-              </div>
-
               <button
                 type="button"
                 onClick={() => toggleSezione('sez_notifiche_mail')}
@@ -1648,13 +1658,18 @@ export const PersonalizzazioniScuola: React.FC = () => {
     var oggetto = data.oggetto;
     var corpo = data.corpo;
 
-    // Invia l'email con nome mittente personalizzato
-    GmailApp.sendEmail(destinatario, oggetto, corpo, {
-      name: "Vicepresidenza - Gestione Sostituzioni",
-      replyTo: "vicepresidenza@scuola.edu.it"
+    if (!destinatario || !oggetto) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Parametri mancanti" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    MailApp.sendEmail({
+      to: destinatario,
+      subject: oggetto,
+      body: corpo
     });
 
-    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", message: "Email inviata con successo da " + Session.getActiveUser().getEmail() }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
@@ -1662,25 +1677,14 @@ export const PersonalizzazioniScuola: React.FC = () => {
   }
 }`;
                             navigator.clipboard.writeText(scriptCode);
-                            setCopiatoScript(true);
-                            setTimeout(() => setCopiatoScript(false), 2500);
+                            alert("Codice Google Apps Script copiato negli appunti!");
                           }}
-                          className="absolute top-2.5 right-2.5 bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                          className="absolute right-2.5 top-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-[10px] font-bold px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1 shadow-xs"
                         >
-                          {copiatoScript ? (
-                            <>
-                              <CheckCircle className="w-3.5 h-3.5 text-emerald-300" />
-                              <span>Copiato! ✓</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5" />
-                              <span>Copia Codice</span>
-                            </>
-                          )}
+                          <Copy className="w-3 h-3 text-indigo-400" />
+                          <span>Copia Script</span>
                         </button>
-
-                        <pre className="text-[11px] leading-relaxed select-all pr-24 whitespace-pre">
+                        <pre className="text-[11px] font-mono leading-tight pr-24 whitespace-pre">
 {`function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
@@ -1688,13 +1692,18 @@ export const PersonalizzazioniScuola: React.FC = () => {
     var oggetto = data.oggetto;
     var corpo = data.corpo;
 
-    // Invia l'email con nome mittente personalizzato
-    GmailApp.sendEmail(destinatario, oggetto, corpo, {
-      name: "Vicepresidenza - Gestione Sostituzioni",
-      replyTo: "vicepresidenza@scuola.edu.it"
+    if (!destinatario || !oggetto) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Parametri mancanti" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    MailApp.sendEmail({
+      to: destinatario,
+      subject: oggetto,
+      body: corpo
     });
 
-    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", message: "Email inviata con successo da " + Session.getActiveUser().getEmail() }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
@@ -1734,63 +1743,65 @@ export const PersonalizzazioniScuola: React.FC = () => {
         </div>
 
         {/* SEZIONE 7: INTEGRAZIONE GOOGLE CALENDAR (IMPEGNI & RISORSE DINAMICI) (ACCORDION) */}
-        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
+        <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-visible transition-all duration-200">
           <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
             <button
               type="button"
               onClick={() => toggleSezione('sez_calendari_google')}
-              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left min-w-0"
             >
               <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-base font-black text-slate-900">Integrazione Google Calendar (Impegni & Risorse)</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Integrazione Google Calendar (Impegni & Risorse)</h3>
+                  
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInfoSezioneAperta(prev => prev === 'sez_calendari_google' ? null : 'sez_calendari_google');
+                      }}
+                      className={`p-1 rounded-full transition cursor-pointer flex items-center justify-center ${
+                        infoSezioneAperta === 'sez_calendari_google'
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
+                      }`}
+                      title="Spiegazione di questa sezione"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+
+                    {infoSezioneAperta === 'sez_calendari_google' && (
+                      <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-between font-bold text-amber-400">
+                          <span className="flex items-center gap-1.5">💡 Google Calendar & Aule</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInfoSezioneAperta(null);
+                            }}
+                            className="text-slate-400 hover:text-white p-0.5"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-slate-200 text-[11px]">
+                          Collega i calendari Google istituzionali di <strong>Impegni Scolastici</strong> (consigli di classe, collegi docenti) e di <strong>Risorse & Spazi</strong> (lab. informatica, teatro, palestra). Le schede appariranno automaticamente nel menu dei docenti solo se compilate.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <p className="text-xs text-slate-500">Aggiungi calendari per impegni scolastici e aule/risorse speciali</p>
               </div>
             </button>
 
             <div className="flex items-center gap-2 text-slate-400 shrink-0">
-              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setInfoSezioneAperta(prev => prev === 'sez_calendari_google' ? null : 'sez_calendari_google');
-                  }}
-                  className={`p-1.5 rounded-full transition cursor-pointer ${
-                    infoSezioneAperta === 'sez_calendari_google'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
-                  }`}
-                  title="Cosa permette di configurare questa sezione?"
-                >
-                  <Info className="w-4 h-4" />
-                </button>
-
-                {infoSezioneAperta === 'sez_calendari_google' && (
-                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
-                    <div className="flex items-center justify-between font-bold text-amber-400">
-                      <span className="flex items-center gap-1.5">💡 Google Calendar & Aule</span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setInfoSezioneAperta(null);
-                        }}
-                        className="text-slate-400 hover:text-white p-0.5"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <p className="text-slate-200 text-[11px]">
-                      Collega i calendari Google istituzionali di <strong>Impegni Scolastici</strong> (consigli di classe, collegi docenti) e di <strong>Risorse & Spazi</strong> (lab. informatica, teatro, palestra). Le schede appariranno automaticamente nel menu dei docenti solo se compilate.
-                    </p>
-                  </div>
-                )}
-              </div>
-
               <button
                 type="button"
                 onClick={() => toggleSezione('sez_calendari_google')}
@@ -1807,19 +1818,19 @@ export const PersonalizzazioniScuola: React.FC = () => {
           </div>
 
           {sezioniAperte.sez_calendari_google && (
-            <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-5 animate-in fade-in duration-150">
-              <div className="space-y-5 pt-4">
-                {/* SOTTO-BLOCCO 1: CALENDARI IMPEGNI SCOLASTICI */}
-                <div className="p-4 bg-indigo-50/40 rounded-2xl border border-indigo-200 space-y-3.5">
+            <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
+              <div className="space-y-4 pt-4">
+                {/* 1. CALENDARI IMPEGNI SCOLASTICI */}
+                <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200 space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-base">📌</span>
+                      <span className="text-base">📅</span>
                       <div>
                         <h4 className="font-black text-slate-900 text-xs sm:text-sm uppercase tracking-wider">
-                          1. Calendari Impegni Scolastici
+                          1. Calendari Impegni Scolastici (Consigli, Collegi, Riunioni)
                         </h4>
                         <p className="text-[11px] text-slate-500">
-                          Consigli di classe, collegi docenti, scrutini, ponti e scadenze dell'istituto.
+                          Collega i calendari Google che contengono le scadenze e gli appuntamenti collegiali.
                         </p>
                       </div>
                     </div>
@@ -1829,27 +1840,27 @@ export const PersonalizzazioniScuola: React.FC = () => {
                       onClick={() => {
                         setCalImpegniList(prev => [
                           ...prev,
-                          { id: `impegno_${Date.now()}`, nome: '', googleId: '', colore: '#039BE5' }
+                          { id: `cal_${Date.now()}`, nome: '', googleId: '', colore: '#039BE5' }
                         ]);
                       }}
                       className="text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Aggiungi Impegno</span>
+                      <span>Aggiungi Calendario Impegno</span>
                     </button>
                   </div>
 
                   {calImpegniList.length === 0 ? (
-                    <div className="p-4 bg-white rounded-xl border border-dashed border-indigo-200 text-center text-xs text-slate-500">
-                      Nessun calendario impegni aggiunto. Clicca su <strong>"+ Aggiungi Impegno"</strong> per collegarne uno (es. <em>Plenari</em> o <em>Secondaria</em>).
+                    <div className="p-4 bg-white rounded-xl border border-dashed border-slate-300 text-center text-xs text-slate-500">
+                      Nessun calendario di impegni aggiunto. Clicca su <strong>"+ Aggiungi Calendario Impegno"</strong> per configurarne uno.
                     </div>
                   ) : (
                     <div className="space-y-2.5">
                       {calImpegniList.map((cal, idx) => (
-                        <div key={cal.id || idx} className="p-3 bg-white rounded-xl border border-indigo-100 shadow-2xs flex items-center gap-2.5 flex-wrap sm:flex-nowrap animate-in fade-in">
+                        <div key={cal.id || idx} className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2.5 flex-wrap sm:flex-nowrap animate-in fade-in">
                           <div className="w-full sm:w-1/3 space-y-1">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase">
-                              Nome Calendario
+                            <label className="block text-[10px] font-bold text-slate-700 uppercase">
+                              Nome / Etichetta Scheda
                             </label>
                             <input
                               type="text"
@@ -1858,13 +1869,13 @@ export const PersonalizzazioniScuola: React.FC = () => {
                                 const val = e.target.value;
                                 setCalImpegniList(prev => prev.map((item, i) => i === idx ? { ...item, nome: val } : item));
                               }}
-                              placeholder="es. Plenari / Unitari, Secondaria..."
+                              placeholder="es. Secondaria, Primaria, Plenari..."
                               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
                             />
                           </div>
 
                           <div className="w-full sm:flex-1 space-y-1">
-                            <label className="block text-[10px] font-bold text-slate-500 uppercase">
+                            <label className="block text-[10px] font-bold text-slate-700 uppercase">
                               ID Google Calendar o Indirizzo
                             </label>
                             <input
@@ -1874,7 +1885,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                                 const val = e.target.value;
                                 setCalImpegniList(prev => prev.map((item, i) => i === idx ? { ...item, googleId: val } : item));
                               }}
-                              placeholder="es. c_xxxxxx@group.calendar.google.com o email@scuola.it"
+                              placeholder="es. c_xxxxxxxxxxxx@group.calendar.google.com"
                               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
                             />
                           </div>
@@ -1895,8 +1906,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
                   )}
                 </div>
 
-                {/* SOTTO-BLOCCO 2: CALENDARI RISORSE E SPAZI (AULE SPECIALI / STANZE) */}
-                <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-200 space-y-3.5">
+                {/* 2. CALENDARI RISORSE & SPAZI (STANZE) */}
+                <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-200 space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
                       <span className="text-base">🏢</span>
@@ -2018,63 +2029,65 @@ export const PersonalizzazioniScuola: React.FC = () => {
       </form>
 
       {/* SEZIONE 8: SALVATAGGIO BACKUP & RIPRISTINO COMPLETO (ACCORDION) */}
-      <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200 mt-6">
+      <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-visible transition-all duration-200 mt-6">
         <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
           <button
             type="button"
             onClick={() => toggleSezione('sez_backup')}
-            className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+            className="flex items-center gap-3 flex-1 cursor-pointer text-left min-w-0"
           >
             <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl shrink-0">
               <Database className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="text-sm sm:text-base font-black text-slate-900">Salvataggio Backup & Ripristino Dati</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Salvataggio Backup & Ripristino Dati</h3>
+                
+                {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setInfoSezioneAperta(prev => prev === 'sez_backup' ? null : 'sez_backup');
+                    }}
+                    className={`p-1 rounded-full transition cursor-pointer flex items-center justify-center ${
+                      infoSezioneAperta === 'sez_backup'
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
+                    }`}
+                    title="Spiegazione di questa sezione"
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+
+                  {infoSezioneAperta === 'sez_backup' && (
+                    <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-between font-bold text-amber-400">
+                        <span className="flex items-center gap-1.5">💡 Backup & Ripristino</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setInfoSezioneAperta(null);
+                          }}
+                          className="text-slate-400 hover:text-white p-0.5"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <p className="text-slate-200 text-[11px]">
+                        Scarica un file <code>.json</code> contenente tutti i docenti, l'orario scolastico, le assenze, le uscite e le preferenze per metterlo al sicuro sul tuo PC o importalo per ripristinare i dati istantaneamente.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
               <p className="text-xs text-slate-500">Esporta o importa l'intero archivio (docenti, orari, assenze, uscite, debiti e impostazioni)</p>
             </div>
           </button>
 
           <div className="flex items-center gap-2 text-slate-400 shrink-0">
-            {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setInfoSezioneAperta(prev => prev === 'sez_backup' ? null : 'sez_backup');
-                }}
-                className={`p-1.5 rounded-full transition cursor-pointer ${
-                  infoSezioneAperta === 'sez_backup'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
-                }`}
-                title="Cosa permette di configurare questa sezione?"
-              >
-                <Info className="w-4 h-4" />
-              </button>
-
-              {infoSezioneAperta === 'sez_backup' && (
-                <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
-                  <div className="flex items-center justify-between font-bold text-amber-400">
-                    <span className="flex items-center gap-1.5">💡 Backup & Ripristino</span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setInfoSezioneAperta(null);
-                      }}
-                      className="text-slate-400 hover:text-white p-0.5"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                  <p className="text-slate-200 text-[11px]">
-                    Scarica un file <code>.json</code> contenente tutti i docenti, l'orario scolastico, le assenze, le uscite e le preferenze per metterlo al sicuro sul tuo PC o importalo per ripristinare i dati istantaneamente.
-                  </p>
-                </div>
-              )}
-            </div>
-
             <button
               type="button"
               onClick={() => toggleSezione('sez_backup')}
