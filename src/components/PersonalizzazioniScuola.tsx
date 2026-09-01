@@ -26,6 +26,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [mostraInfoRegolaMail, setMostraInfoRegolaMail] = useState<boolean>(false);
   const [mostraGuidaWebhook, setMostraGuidaWebhook] = useState<boolean>(false);
   const [copiatoScript, setCopiatoScript] = useState<boolean>(false);
+  const [infoSezioneAperta, setInfoSezioneAperta] = useState<string | null>(null);
 
   // Gestione Accordion Sezioni (Tutte Chiuse di default)
   const [sezioniAperte, setSezioniAperte] = useState<Record<string, boolean>>({
@@ -445,29 +446,78 @@ export const PersonalizzazioniScuola: React.FC = () => {
       <form onSubmit={handleSalva} className="space-y-4">
         {/* SEZIONE 1: NOME DELLA SCUOLA & SICUREZZA ACCESSI (ACCORDION) */}
         <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
-          <button
-            type="button"
-            onClick={() => toggleSezione('sez_intestazione')}
-            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl">
+          <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
+            <button
+              type="button"
+              onClick={() => toggleSezione('sez_intestazione')}
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+            >
+              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl shrink-0">
                 <Building2 className="w-5 h-5" />
               </div>
-              <div>
-                <h3 className="text-sm sm:text-base font-black text-slate-900">Intestazione Scuola & Sicurezza Accesso</h3>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Intestazione Scuola & Sicurezza Accesso</h3>
+                </div>
                 <p className="text-xs text-slate-500">Denominazione istituto, PIN ATA e domini Google autorizzati</p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400">
-              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
-                {sezioniAperte.sez_intestazione ? 'Chiudi' : 'Modifica'}
-              </span>
-              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_intestazione ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
-                <ChevronDown className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 text-slate-400 shrink-0">
+              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInfoSezioneAperta(prev => prev === 'sez_intestazione' ? null : 'sez_intestazione');
+                  }}
+                  className={`p-1.5 rounded-full transition cursor-pointer ${
+                    infoSezioneAperta === 'sez_intestazione'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
+                  }`}
+                  title="Cosa permette di configurare questa sezione?"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+
+                {infoSezioneAperta === 'sez_intestazione' && (
+                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
+                    <div className="flex items-center justify-between font-bold text-amber-400">
+                      <span className="flex items-center gap-1.5">💡 Intestazione & Accessi</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInfoSezioneAperta(null);
+                        }}
+                        className="text-slate-400 hover:text-white p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-slate-200 text-[11px]">
+                      Personalizza il nome dell'istituto mostrato nella barra superiore, definisce il <strong>PIN numerico</strong> richiesto al personale ATA/segreteria per consultare il quadro e i <strong>domini Google Workspace</strong> autorizzati a fare login.
+                    </p>
+                  </div>
+                )}
               </div>
+
+              <button
+                type="button"
+                onClick={() => toggleSezione('sez_intestazione')}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                  {sezioniAperte.sez_intestazione ? 'Chiudi' : 'Modifica'}
+                </span>
+                <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_intestazione ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </button>
             </div>
-          </button>
+          </div>
 
           {sezioniAperte.sez_intestazione && (
             <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
@@ -611,29 +661,76 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
         {/* SEZIONE 2: TETTI MASSIMI PERMESSI E ASSEMBLEE SINDACALI (ACCORDION) */}
         <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
-          <button
-            type="button"
-            onClick={() => toggleSezione('sez_tetti')}
-            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-purple-50 text-purple-700 rounded-xl">
+          <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
+            <button
+              type="button"
+              onClick={() => toggleSezione('sez_tetti')}
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+            >
+              <div className="p-2.5 bg-purple-50 text-purple-700 rounded-xl shrink-0">
                 <Clock className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-sm sm:text-base font-black text-slate-900">Tetti Massimi & Limiti Monte Ore Annuale</h3>
                 <p className="text-xs text-slate-500">Valori di riferimento per allarmi e verifiche permessi/assemblee</p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400">
-              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
-                {sezioniAperte.sez_tetti ? 'Chiudi' : 'Modifica'}
-              </span>
-              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_tetti ? 'rotate-180 bg-purple-50 text-purple-600' : ''}`}>
-                <ChevronDown className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 text-slate-400 shrink-0">
+              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInfoSezioneAperta(prev => prev === 'sez_tetti' ? null : 'sez_tetti');
+                  }}
+                  className={`p-1.5 rounded-full transition cursor-pointer ${
+                    infoSezioneAperta === 'sez_tetti'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50'
+                  }`}
+                  title="Cosa permette di configurare questa sezione?"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+
+                {infoSezioneAperta === 'sez_tetti' && (
+                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
+                    <div className="flex items-center justify-between font-bold text-amber-400">
+                      <span className="flex items-center gap-1.5">💡 Tetti Massimi Orari</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInfoSezioneAperta(null);
+                        }}
+                        className="text-slate-400 hover:text-white p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-slate-200 text-[11px]">
+                      Imposta i limiti contrattuali CCNL per il monte ore annuo fruibile di <strong>Permessi Brevi</strong> (generalmente pari all'orario settimanale del docente) e di <strong>Assemblee Sindacali</strong> (10h). Permette all'app di avvisare la vicepresidenza in caso di superamento.
+                    </p>
+                  </div>
+                )}
               </div>
+
+              <button
+                type="button"
+                onClick={() => toggleSezione('sez_tetti')}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                  {sezioniAperte.sez_tetti ? 'Chiudi' : 'Modifica'}
+                </span>
+                <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_tetti ? 'rotate-180 bg-purple-50 text-purple-600' : ''}`}>
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </button>
             </div>
-          </button>
+          </div>
 
           {sezioniAperte.sez_tetti && (
             <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-3 animate-in fade-in duration-150">
@@ -684,29 +781,76 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
         {/* SEZIONE 3: PREFERENZE VISUALIZZAZIONE & CALENDARIO (ACCORDION) */}
         <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
-          <button
-            type="button"
-            onClick={() => toggleSezione('sez_vista')}
-            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl">
+          <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
+            <button
+              type="button"
+              onClick={() => toggleSezione('sez_vista')}
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+            >
+              <div className="p-2.5 bg-amber-50 text-amber-700 rounded-xl shrink-0">
                 <Eye className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-sm sm:text-base font-black text-slate-900">Preferenze di Visualizzazione & Calendario</h3>
                 <p className="text-xs text-slate-500">Modalità predefinita tabellone e settimana corta (sabato/domenica)</p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400">
-              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
-                {sezioniAperte.sez_vista ? 'Chiudi' : 'Modifica'}
-              </span>
-              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_vista ? 'rotate-180 bg-amber-50 text-amber-600' : ''}`}>
-                <ChevronDown className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 text-slate-400 shrink-0">
+              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInfoSezioneAperta(prev => prev === 'sez_vista' ? null : 'sez_vista');
+                  }}
+                  className={`p-1.5 rounded-full transition cursor-pointer ${
+                    infoSezioneAperta === 'sez_vista'
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-amber-600 hover:bg-amber-50'
+                  }`}
+                  title="Cosa permette di configurare questa sezione?"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+
+                {infoSezioneAperta === 'sez_vista' && (
+                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
+                    <div className="flex items-center justify-between font-bold text-amber-400">
+                      <span className="flex items-center gap-1.5">💡 Preferenze Visualizzazione</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInfoSezioneAperta(null);
+                        }}
+                        className="text-slate-400 hover:text-white p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-slate-200 text-[11px]">
+                      Scegli il layout predefinito del tabellone (a <strong>Blocchi Orari</strong> per ora di lezione, oppure <strong>Per Docente Assente</strong>) e attiva la <strong>Settimana Corta</strong> per nascondere sabato e domenica da tutti i calendari.
+                    </p>
+                  </div>
+                )}
               </div>
+
+              <button
+                type="button"
+                onClick={() => toggleSezione('sez_vista')}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                  {sezioniAperte.sez_vista ? 'Chiudi' : 'Modifica'}
+                </span>
+                <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_vista ? 'rotate-180 bg-amber-50 text-amber-600' : ''}`}>
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </button>
             </div>
-          </button>
+          </div>
 
           {sezioniAperte.sez_vista && (
             <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-3.5 animate-in fade-in duration-150">
@@ -782,29 +926,76 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
         {/* SEZIONE 4: SOSTITUTORE SMART & PRIORITÀ ALGORITMO (ACCORDION) */}
         <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
-          <button
-            type="button"
-            onClick={() => toggleSezione('sez_priorita')}
-            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl">
+          <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
+            <button
+              type="button"
+              onClick={() => toggleSezione('sez_priorita')}
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+            >
+              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl shrink-0">
                 <Sparkles className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-sm sm:text-base font-black text-slate-900">Sostitutore Smart & Priorità Assegnazione</h3>
                 <p className="text-xs text-slate-500">Sequenza con cui l'algoritmo propone i docenti per assenze e uscite</p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400">
-              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
-                {sezioniAperte.sez_priorita ? 'Chiudi' : 'Modifica'}
-              </span>
-              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_priorita ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
-                <ChevronDown className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 text-slate-400 shrink-0">
+              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInfoSezioneAperta(prev => prev === 'sez_priorita' ? null : 'sez_priorita');
+                  }}
+                  className={`p-1.5 rounded-full transition cursor-pointer ${
+                    infoSezioneAperta === 'sez_priorita'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
+                  }`}
+                  title="Cosa permette di configurare questa sezione?"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+
+                {infoSezioneAperta === 'sez_priorita' && (
+                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
+                    <div className="flex items-center justify-between font-bold text-amber-400">
+                      <span className="flex items-center gap-1.5">💡 Algoritmo Sostitutore Smart</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInfoSezioneAperta(null);
+                        }}
+                        className="text-slate-400 hover:text-white p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-slate-200 text-[11px]">
+                      Configura l'ordine esatto con cui il motore automatico seleziona i candidati ottimali per coprire un'ora scoperta (es. prima <strong>Compresenti</strong>, poi <strong>Recupero debito</strong>, poi <strong>Potenziamento</strong>, ecc.), separato per assenze ordinarie e uscite didattiche.
+                    </p>
+                  </div>
+                )}
               </div>
+
+              <button
+                type="button"
+                onClick={() => toggleSezione('sez_priorita')}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                  {sezioniAperte.sez_priorita ? 'Chiudi' : 'Modifica'}
+                </span>
+                <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_priorita ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </button>
             </div>
-          </button>
+          </div>
 
           {sezioniAperte.sez_priorita && (
             <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
@@ -952,29 +1143,76 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
         {/* SEZIONE 5: GIORNI FESTIVI, PONTI E CHIUSURE SCUOLA (ACCORDION) */}
         <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
-          <button
-            type="button"
-            onClick={() => toggleSezione('sez_festivita')}
-            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-rose-50 text-rose-700 rounded-xl">
+          <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
+            <button
+              type="button"
+              onClick={() => toggleSezione('sez_festivita')}
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+            >
+              <div className="p-2.5 bg-rose-50 text-rose-700 rounded-xl shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-sm sm:text-base font-black text-slate-900">Giorni Festivi, Ponti & Chiusura Scuola</h3>
                 <p className="text-xs text-slate-500">Calendario festività escluse dalle lezioni scolastiche</p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400">
-              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
-                {sezioniAperte.sez_festivita ? 'Chiudi' : 'Modifica'}
-              </span>
-              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_festivita ? 'rotate-180 bg-rose-50 text-rose-600' : ''}`}>
-                <ChevronDown className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 text-slate-400 shrink-0">
+              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInfoSezioneAperta(prev => prev === 'sez_festivita' ? null : 'sez_festivita');
+                  }}
+                  className={`p-1.5 rounded-full transition cursor-pointer ${
+                    infoSezioneAperta === 'sez_festivita'
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                  }`}
+                  title="Cosa permette di configurare questa sezione?"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+
+                {infoSezioneAperta === 'sez_festivita' && (
+                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
+                    <div className="flex items-center justify-between font-bold text-amber-400">
+                      <span className="flex items-center gap-1.5">💡 Festività & Chiusure</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInfoSezioneAperta(null);
+                        }}
+                        className="text-slate-400 hover:text-white p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-slate-200 text-[11px]">
+                      Registra le festività nazionali, i ponti e i periodi di vacanza (Natale, Pasqua). I giorni registrati vengono <strong>saltati dal calendario</strong> e non considerati come giorni di lezione né conteggiati come assenze.
+                    </p>
+                  </div>
+                )}
               </div>
+
+              <button
+                type="button"
+                onClick={() => toggleSezione('sez_festivita')}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                  {sezioniAperte.sez_festivita ? 'Chiudi' : 'Modifica'}
+                </span>
+                <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_festivita ? 'rotate-180 bg-rose-50 text-rose-600' : ''}`}>
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </button>
             </div>
-          </button>
+          </div>
 
           {sezioniAperte.sez_festivita && (
             <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-3 animate-in fade-in duration-150">
@@ -1099,29 +1337,76 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
         {/* SEZIONE 6: NOTIFICHE EMAIL AUTOMATICHE A GRUPPO DOCENTI (ACCORDION) */}
         <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
-          <button
-            type="button"
-            onClick={() => toggleSezione('sez_notifiche_mail')}
-            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl">
+          <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
+            <button
+              type="button"
+              onClick={() => toggleSezione('sez_notifiche_mail')}
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+            >
+              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl shrink-0">
                 <Mail className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-sm sm:text-base font-black text-slate-900">Email Promemoria Giornaliero a Gruppo Google</h3>
                 <p className="text-xs text-slate-500">Invio automatico mattutino con webhook invisibile di Apps Script</p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400">
-              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
-                {sezioniAperte.sez_notifiche_mail ? 'Chiudi' : 'Modifica'}
-              </span>
-              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_notifiche_mail ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
-                <ChevronDown className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 text-slate-400 shrink-0">
+              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInfoSezioneAperta(prev => prev === 'sez_notifiche_mail' ? null : 'sez_notifiche_mail');
+                  }}
+                  className={`p-1.5 rounded-full transition cursor-pointer ${
+                    infoSezioneAperta === 'sez_notifiche_mail'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
+                  }`}
+                  title="Cosa permette di configurare questa sezione?"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+
+                {infoSezioneAperta === 'sez_notifiche_mail' && (
+                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
+                    <div className="flex items-center justify-between font-bold text-amber-400">
+                      <span className="flex items-center gap-1.5">💡 Promemoria Email Mattutino</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInfoSezioneAperta(null);
+                        }}
+                        className="text-slate-400 hover:text-white p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-slate-200 text-[11px]">
+                      Spedisce ogni mattina all'orario prestabilito un'email al gruppo docenti per ricordare di accedere al portale per firmare le supplenze. L'invio avviene <strong>solo se ci sono supplenze</strong> attive per la giornata.
+                    </p>
+                  </div>
+                )}
               </div>
+
+              <button
+                type="button"
+                onClick={() => toggleSezione('sez_notifiche_mail')}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                  {sezioniAperte.sez_notifiche_mail ? 'Chiudi' : 'Modifica'}
+                </span>
+                <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_notifiche_mail ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </button>
             </div>
-          </button>
+          </div>
 
           {sezioniAperte.sez_notifiche_mail && (
             <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
@@ -1450,29 +1735,76 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
         {/* SEZIONE 7: INTEGRAZIONE GOOGLE CALENDAR (IMPEGNI & RISORSE DINAMICI) (ACCORDION) */}
         <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200">
-          <button
-            type="button"
-            onClick={() => toggleSezione('sez_calendari_google')}
-            className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl">
+          <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
+            <button
+              type="button"
+              onClick={() => toggleSezione('sez_calendari_google')}
+              className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+            >
+              <div className="p-2.5 bg-indigo-50 text-indigo-700 rounded-xl shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="text-sm sm:text-base font-black text-slate-900">Integrazione Google Calendar (Impegni & Risorse)</h3>
                 <p className="text-xs text-slate-500">Aggiungi calendari per impegni scolastici e aule/risorse speciali</p>
               </div>
-            </div>
-            <div className="flex items-center gap-2 text-slate-400">
-              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
-                {sezioniAperte.sez_calendari_google ? 'Chiudi' : 'Modifica'}
-              </span>
-              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_calendari_google ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
-                <ChevronDown className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 text-slate-400 shrink-0">
+              {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setInfoSezioneAperta(prev => prev === 'sez_calendari_google' ? null : 'sez_calendari_google');
+                  }}
+                  className={`p-1.5 rounded-full transition cursor-pointer ${
+                    infoSezioneAperta === 'sez_calendari_google'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
+                  }`}
+                  title="Cosa permette di configurare questa sezione?"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+
+                {infoSezioneAperta === 'sez_calendari_google' && (
+                  <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
+                    <div className="flex items-center justify-between font-bold text-amber-400">
+                      <span className="flex items-center gap-1.5">💡 Google Calendar & Aule</span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setInfoSezioneAperta(null);
+                        }}
+                        className="text-slate-400 hover:text-white p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-slate-200 text-[11px]">
+                      Collega i calendari Google istituzionali di <strong>Impegni Scolastici</strong> (consigli di classe, collegi docenti) e di <strong>Risorse & Spazi</strong> (lab. informatica, teatro, palestra). Le schede appariranno automaticamente nel menu dei docenti solo se compilate.
+                    </p>
+                  </div>
+                )}
               </div>
+
+              <button
+                type="button"
+                onClick={() => toggleSezione('sez_calendari_google')}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                  {sezioniAperte.sez_calendari_google ? 'Chiudi' : 'Modifica'}
+                </span>
+                <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_calendari_google ? 'rotate-180 bg-indigo-50 text-indigo-600' : ''}`}>
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </button>
             </div>
-          </button>
+          </div>
 
           {sezioniAperte.sez_calendari_google && (
             <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-5 animate-in fade-in duration-150">
@@ -1687,29 +2019,76 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
       {/* SEZIONE 8: SALVATAGGIO BACKUP & RIPRISTINO COMPLETO (ACCORDION) */}
       <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-hidden transition-all duration-200 mt-6">
-        <button
-          type="button"
-          onClick={() => toggleSezione('sez_backup')}
-          className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition cursor-pointer gap-3"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl">
+        <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
+          <button
+            type="button"
+            onClick={() => toggleSezione('sez_backup')}
+            className="flex items-center gap-3 flex-1 cursor-pointer text-left"
+          >
+            <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl shrink-0">
               <Database className="w-5 h-5" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h3 className="text-sm sm:text-base font-black text-slate-900">Salvataggio Backup & Ripristino Dati</h3>
               <p className="text-xs text-slate-500">Esporta o importa l'intero archivio (docenti, orari, assenze, uscite, debiti e impostazioni)</p>
             </div>
-          </div>
-          <div className="flex items-center gap-2 text-slate-400">
-            <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
-              {sezioniAperte.sez_backup ? 'Chiudi' : 'Visualizza'}
-            </span>
-            <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_backup ? 'rotate-180 bg-emerald-50 text-emerald-600' : ''}`}>
-              <ChevronDown className="w-4 h-4" />
+          </button>
+
+          <div className="flex items-center gap-2 text-slate-400 shrink-0">
+            {/* ICONA 'i' CERCHIATA CON POPUP ESPLICATIVO */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setInfoSezioneAperta(prev => prev === 'sez_backup' ? null : 'sez_backup');
+                }}
+                className={`p-1.5 rounded-full transition cursor-pointer ${
+                  infoSezioneAperta === 'sez_backup'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-emerald-600 hover:bg-emerald-50'
+                }`}
+                title="Cosa permette di configurare questa sezione?"
+              >
+                <Info className="w-4 h-4" />
+              </button>
+
+              {infoSezioneAperta === 'sez_backup' && (
+                <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-3rem)] sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5">
+                  <div className="flex items-center justify-between font-bold text-amber-400">
+                    <span className="flex items-center gap-1.5">💡 Backup & Ripristino</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setInfoSezioneAperta(null);
+                      }}
+                      className="text-slate-400 hover:text-white p-0.5"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <p className="text-slate-200 text-[11px]">
+                    Scarica un file <code>.json</code> contenente tutti i docenti, l'orario scolastico, le assenze, le uscite e le preferenze per metterlo al sicuro sul tuo PC o importalo per ripristinare i dati istantaneamente.
+                  </p>
+                </div>
+              )}
             </div>
+
+            <button
+              type="button"
+              onClick={() => toggleSezione('sez_backup')}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">
+                {sezioniAperte.sez_backup ? 'Chiudi' : 'Visualizza'}
+              </span>
+              <div className={`p-1.5 rounded-lg bg-slate-100 text-slate-600 transition-transform duration-200 ${sezioniAperte.sez_backup ? 'rotate-180 bg-emerald-50 text-emerald-600' : ''}`}>
+                <ChevronDown className="w-4 h-4" />
+              </div>
+            </button>
           </div>
-        </button>
+        </div>
 
         {sezioniAperte.sez_backup && (
           <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
