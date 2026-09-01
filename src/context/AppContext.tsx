@@ -128,10 +128,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const saved = localStorage.getItem('scuola_docenti');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (e) {}
-    return [];
+    return DOCENTI_PRECARICATI;
   });
 
   const [orariDocenti, setOrariDocenti] = useState<OrarioDocente[]>(() => {
@@ -139,10 +139,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const saved = localStorage.getItem('scuola_orari');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch (e) {}
-    return [];
+    return ORARI_DOCENTI_PRECARICATI;
   });
 
   const [assenze, setAssenze] = useState<AssenzaDocente[]>(() => {
@@ -314,11 +314,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const initialSnap = await getDoc(scuolaDocRef);
         if (initialSnap.exists()) {
           const cloudData = initialSnap.data();
-          if (cloudData.docenti && Array.isArray(cloudData.docenti)) {
+          if (cloudData.docenti && Array.isArray(cloudData.docenti) && cloudData.docenti.length > 0) {
             setDocenti(cloudData.docenti);
             localStorage.setItem('scuola_docenti', JSON.stringify(cloudData.docenti));
+          } else {
+            // Se docenti vuoti sul Cloud, ripristina precaricati
+            setDocenti(DOCENTI_PRECARICATI);
+            setOrariDocenti(ORARI_DOCENTI_PRECARICATI);
+            setDoc(scuolaDocRef, {
+              docenti: DOCENTI_PRECARICATI,
+              orariDocenti: ORARI_DOCENTI_PRECARICATI,
+              ultimoAggiornamento: new Date().toISOString()
+            }, { merge: true });
           }
-          if (cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti)) {
+          if (cloudData.orariDocenti && Array.isArray(cloudData.orariDocenti) && cloudData.orariDocenti.length > 0) {
             setOrariDocenti(cloudData.orariDocenti);
             localStorage.setItem('scuola_orari', JSON.stringify(cloudData.orariDocenti));
           }
