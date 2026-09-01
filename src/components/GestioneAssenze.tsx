@@ -578,7 +578,7 @@ export const GestioneAssenze: React.FC<{
                 onChange={(e) => {
                   const val = e.target.value as MotivoAssenza;
                   setMotivo(val);
-                  if (val === 'Oraria') {
+                  if (val === 'Oraria' || val === 'Assemblea sindacale') {
                     setTipoDurataDoc('ORARIA');
                   } else if (val === 'Giornaliera') {
                     setTipoDurataDoc('GIORNALIERA');
@@ -587,8 +587,8 @@ export const GestioneAssenze: React.FC<{
                 className="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold bg-white"
               >
                 <option value="Giornaliera">Giornaliera</option>
-                <option value="Oraria">Oraria</option>
-                <option value="Assemblea sindacale">Assemblea sindacale</option>
+                <option value="Oraria">Oraria (Permesso breve da recuperare)</option>
+                <option value="Assemblea sindacale">Assemblea sindacale (Diritto CCNL, NO recupero)</option>
               </select>
             </div>
           </div>
@@ -615,7 +615,11 @@ export const GestioneAssenze: React.FC<{
                   onChange={() => setTipoDurataDoc('ORARIA')}
                   className="text-indigo-600"
                 />
-                <span>Fascia Oraria (Permesso breve)</span>
+                <span>
+                  {motivo === 'Assemblea sindacale' 
+                    ? 'Fascia Oraria Assemblea (NO debito)' 
+                    : 'Fascia Oraria (Permesso breve con debito)'}
+                </span>
               </label>
             </div>
 
