@@ -967,7 +967,7 @@ const MainApp: React.FC = () => {
         )}
       </main>
 
-      <Coachmark isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} />
+      <Coachmark isOpen={isTourOpen} onClose={() => setIsTourOpen(false)} ruolo={ruoloAttivo} />
     </div>
   );
 };
