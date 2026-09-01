@@ -240,10 +240,8 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
 
   const handleSelectGiorno = (dataStr: string) => {
     onSelectDate(dataStr);
-    // Su schermi mobile (< 640px) chiude automaticamente la tendina dopo la selezione
-    if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      setCompresso(true);
-    }
+    // Chiude automaticamente il pannello espanso ed entra nel giorno selezionato (sia desktop che mobile)
+    setCompresso(true);
   };
 
   if (!visibile) {
@@ -531,7 +529,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                       key={s.dataStr}
                       id={`day_card_${s.dataStr}`}
                       type="button"
-                      onClick={() => onSelectDate(s.dataStr)}
+                      onClick={() => handleSelectGiorno(s.dataStr)}
                       className={`min-w-[210px] sm:min-w-[230px] p-2.5 rounded-2xl text-left transition-all duration-200 cursor-pointer flex flex-col justify-between gap-2 shrink-0 ${
                         s.isSelezionata 
                           ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-4 ring-indigo-200/80 shadow-md scale-[1.01]' 
@@ -678,7 +676,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
                         <button
                           key={`desk_m_${s.dataStr}`}
                           type="button"
-                          onClick={() => onSelectDate(s.dataStr)}
+                          onClick={() => handleSelectGiorno(s.dataStr)}
                           className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-1.5 ${
                             s.isSelezionata
                               ? 'bg-indigo-50/90 border-2 border-indigo-600 ring-2 ring-indigo-200 shadow-sm'
