@@ -254,4 +254,14 @@ export interface NominaSupplente {
   creataIl: string;
 }
 
+export interface AnnuncioBacheca {
+  id: string;
+  data: string;          // YYYY-MM-DD
+  dataFine?: string;      // YYYY-MM-DD (se periodo)
+  testo: string;
+  autore?: string;
+  createdAt: string;
+}
+
+
 

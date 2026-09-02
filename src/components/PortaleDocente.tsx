@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Clock, ShieldCheck, RefreshCw, Table, Search, 
   BookOpen, GraduationCap, Accessibility, Users, School, FileDown, 
   Printer, CheckSquare, Square, Check, Filter, ExternalLink, CalendarPlus,
-  Scale, ArrowDownUp, TrendingDown, TrendingUp
+  Scale, ArrowDownUp, TrendingDown, TrendingUp, Megaphone, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { 
   getDocentiCollegatiIds, getDocentiUnici, trovaCorrispondenzaDocente, 
@@ -32,7 +32,7 @@ interface PortaleDocenteProps {
 export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTabChange, isAtaView = false }) => {
   const { 
     docenti, orariDocenti, sostituzioni, movimentiDebito, notifiche, firmaSostituzione, segnaNotificheLette, rimuoviNotifica,
-    richiesteAccessoDocenti, associaEmailDocente, creaRichiestaAccessoDocente, impostazioniScuola
+    richiesteAccessoDocenti, associaEmailDocente, creaRichiestaAccessoDocente, impostazioniScuola, annunciBacheca
   } = useApp();
   const { utenteInfo, logout } = useAuth();
 
@@ -40,6 +40,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
   const [internalTab, setInternalTab] = useState<TabDocenteType>('MIE_SOSTITUZIONI');
   const [richiestaInviata, setRichiestaInviata] = useState<boolean>(false);
   const [mostraGuidaIos, setMostraGuidaIos] = useState<boolean>(false);
+  const [accordionAnnunciAperto, setAccordionAnnunciAperto] = useState<boolean>(true);
 
   // Tab effettivo sincronizzato tra props e stato interno
   const tabDocente = currentTab || internalTab;
@@ -619,19 +620,88 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
 
       {/* CONTENUTO SCHEDA 1: LE MIE SOSTITUZIONI */}
       {tabDocente === 'MIE_SOSTITUZIONI' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-indigo-600" />
-                <span>Le tue Sostituzioni Assegnate</span>
-              </h3>
-              <p className="text-xs text-slate-500">Firma per presa visione delle ore di supplenza a te affidate</p>
+        <div className="space-y-4">
+          {/* ACCORDION ANNUNCI & COMUNICAZIONI VICEPRESIDENZA */}
+          {(() => {
+            const todayIso = new Date().toISOString().split('T')[0];
+            const annunciAttivi = annunciBacheca.filter(a => {
+              const fineIso = (a.dataFine || a.data).split('T')[0];
+              return fineIso >= todayIso;
+            });
+
+            if (annunciAttivi.length === 0) return null;
+
+            return (
+              <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border-2 border-violet-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in">
+                <div 
+                  onClick={() => setAccordionAnnunciAperto(prev => !prev)}
+                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-violet-100/40 transition select-none"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-2xs">
+                      <Megaphone className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-black text-sm text-violet-950">
+                          Bacheca Annunci & Comunicazioni
+                        </h4>
+                        <span className="bg-violet-200 text-violet-900 font-bold text-[10px] px-2 py-0.5 rounded-full">
+                          {annunciAttivi.length} {annunciAttivi.length === 1 ? 'Avviso' : 'Avvisi'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-violet-700">Comunicazioni ufficiali dalla Vicepresidenza</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-violet-700">
+                    <span className="text-xs font-bold hidden sm:inline">
+                      {accordionAnnunciAperto ? 'Comprimi' : 'Espandi'}
+                    </span>
+                    {accordionAnnunciAperto ? (
+                      <ChevronUp className="w-5 h-5 text-violet-700" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-violet-700" />
+                    )}
+                  </div>
+                </div>
+
+                {accordionAnnunciAperto && (
+                  <div className="p-4 pt-1 border-t border-violet-200/60 divide-y divide-violet-200/50 space-y-3">
+                    {annunciAttivi.map(a => (
+                      <div key={a.id} className="pt-3 first:pt-1 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <span className="bg-violet-700 text-white font-bold text-[10px] px-2.5 py-0.5 rounded-md shadow-2xs">
+                            {formatDataItaliana(a.data)} {a.dataFine && a.dataFine !== a.data ? `➔ ${formatDataItaliana(a.dataFine)}` : ''}
+                          </span>
+                          <span className="text-[10px] font-bold text-violet-800 bg-violet-200/70 px-2 py-0.5 rounded">
+                            {a.autore || 'Vicepresidenza'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-800 font-medium whitespace-pre-wrap leading-relaxed bg-white/80 p-3 rounded-xl border border-violet-200">
+                          {a.testo}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-indigo-600" />
+                  <span>Le tue Sostituzioni Assegnate</span>
+                </h3>
+                <p className="text-xs text-slate-500">Firma per presa visione delle ore di supplenza a te affidate</p>
+              </div>
+              <span className="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">
+                {mieSostituzioni.length} Assegnazioni
+              </span>
             </div>
-            <span className="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full">
-              {mieSostituzioni.length} Assegnazioni
-            </span>
-          </div>
 
           {mieSostituzioni.length === 0 ? (
             <div className="p-12 text-center text-slate-400">
@@ -703,6 +773,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
               })}
             </div>
           )}
+          </div>
         </div>
       )}
 

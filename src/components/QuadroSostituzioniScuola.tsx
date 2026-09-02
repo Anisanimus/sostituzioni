@@ -5,7 +5,7 @@ import {
   Search, Filter, Printer, KeyRound, ShieldAlert,
   ChevronLeft, ChevronRight, User, AlertCircle,
   FileDown, X, CheckSquare, Square, Download, Check,
-  ChevronsUpDown, ChevronDown
+  ChevronsUpDown, ChevronDown, Megaphone
 } from 'lucide-react';
 import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
 
@@ -19,7 +19,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
   isEmbedInVicepresidenza = false 
 }) => {
   const { 
-    docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola, nomineSupplenti 
+    docenti, orariDocenti, assenze, uscite, sostituzioni, impostazioniScuola, nomineSupplenti, annunciBacheca 
   } = useApp();
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -645,6 +645,54 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           </div>
         </div>
       )}
+
+      {/* BANNER ANNUNCI & COMUNICAZIONI VICEPRESIDENZA ATTIVI NEL GIORNO SELEZIONATO */}
+      {(() => {
+        const dIso = selectedDate.split('T')[0];
+        const annunciOggi = annunciBacheca.filter(a => {
+          const fineIso = (a.dataFine || a.data).split('T')[0];
+          return dIso >= a.data.split('T')[0] && dIso <= fineIso;
+        });
+
+        if (annunciOggi.length === 0) return null;
+
+        return (
+          <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border-2 border-violet-300 rounded-2xl p-4 shadow-sm space-y-3 animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 bg-violet-600 text-white rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs">
+                <Megaphone className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <h3 className="text-xs sm:text-sm font-black text-violet-950 flex items-center gap-2">
+                  <span>Comunicazioni & Avvisi Vicepresidenza</span>
+                  <span className="bg-violet-200 text-violet-900 text-[10px] px-2 py-0.2 rounded-full font-bold">
+                    {annunciOggi.length} {annunciOggi.length === 1 ? 'Avviso' : 'Avvisi'}
+                  </span>
+                </h3>
+                <p className="text-[10px] text-violet-700">Avvisi ufficiali per la giornata di {giornoSettimana} {formatDataItaliana(selectedDate)}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              {annunciOggi.map(a => (
+                <div key={a.id} className="bg-white/90 p-3 rounded-xl border border-violet-200 text-xs shadow-2xs space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="bg-violet-700 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                      {formatDataItaliana(a.data)} {a.dataFine && a.dataFine !== a.data ? `➔ ${formatDataItaliana(a.dataFine)}` : ''}
+                    </span>
+                    <span className="text-[10px] font-bold text-violet-800 bg-violet-100 px-1.5 py-0.2 rounded">
+                      {a.autore || 'Vicepresidenza'}
+                    </span>
+                  </div>
+                  <p className="text-slate-800 font-medium whitespace-pre-wrap leading-relaxed text-xs">
+                    {a.testo}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* BANNER NOMINE SUPPLENTI ATTIVE OGGI (PER PERSONALE ATA & SEGRETERIA / ACCOGLIENZA) */}
       {(() => {

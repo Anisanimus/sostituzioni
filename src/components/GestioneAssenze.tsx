@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { MotivoAssenza, GiornoSettimana, AssenzaDocente } from '../types';
-import { UserMinus, Bus, Plus, Trash2, Calendar, Clock, MapPin, Users, ChevronDown, Check, X, Search, Ban, LayoutDashboard, ChevronLeft, ChevronRight, Info, Filter, UserCheck, ShieldCheck, Send, Bell, AlertTriangle, Scale } from 'lucide-react';
+import { UserMinus, Bus, Plus, Trash2, Calendar, Clock, MapPin, Users, ChevronDown, Check, X, Search, Ban, LayoutDashboard, ChevronLeft, ChevronRight, Info, Filter, UserCheck, ShieldCheck, Send, Bell, AlertTriangle, Scale, Megaphone } from 'lucide-react';
 import { FASCE_ORARIE } from '../utils/fasceOrarie';
 import { getDocentiUnici, getDocentiCollegatiIds, getBaseNomeDocente, formatDataItaliana, getOreStraordinarioDocente, getOrarioUnificatoDocente } from '../utils/docentiHelper';
 
@@ -34,16 +34,26 @@ export const GestioneAssenze: React.FC<{
     nomineSupplenti,
     addNominaSupplente,
     rimuoviNominaSupplente,
-    prorogaNominaSupplente
+    prorogaNominaSupplente,
+    annunciBacheca,
+    addAnnuncioBacheca,
+    rimuoviAnnuncioBacheca
   } = useApp();
 
   const [assenzaDaAnnullareConferma, setAssenzaDaAnnullareConferma] = useState<AssenzaDocente | null>(null);
 
-  // Finestra aperta: null (chiusa), 'DOCENTE', 'GITA', o 'NOMINA'
-  const [modalitaAperta, setModalitaAperta] = useState<'DOCENTE' | 'GITA' | 'NOMINA' | null>(null);
+  // Finestra aperta: null (chiusa), 'DOCENTE', 'GITA', 'NOMINA' o 'ANNUNCIO'
+  const [modalitaAperta, setModalitaAperta] = useState<'DOCENTE' | 'GITA' | 'NOMINA' | 'ANNUNCIO' | null>(null);
   const [mostraInfo, setMostraInfo] = useState<boolean>(false);
   const [mostraDettagliEventi, setMostraDettagliEventi] = useState<boolean>(false);
   const [mostraRisorseInlineMobile, setMostraRisorseInlineMobile] = useState<boolean>(false);
+
+  // --- STATO ANNUNCIO / COMUNICAZIONE BACHECA ---
+  const [testoAnnuncio, setTestoAnnuncio] = useState<string>('');
+  const [dataAnnuncio, setDataAnnuncio] = useState<string>(selectedDate);
+  const [dataAnnuncioFine, setDataAnnuncioFine] = useState<string>(selectedDate);
+  const [isAnnuncioPeriodo, setIsAnnuncioPeriodo] = useState<boolean>(false);
+  const [invioInCorsoAnnuncio, setInvioInCorsoAnnuncio] = useState<boolean>(false);
 
   // --- STATO NOMINA SUPPLENTE CATTEDRA ---
   const [docenteTitolareNominaId, setDocenteTitolareNominaId] = useState<string>('');
@@ -539,8 +549,8 @@ export const GestioneAssenze: React.FC<{
           </button>
         </div>
 
-        {/* GRUPPO 2: PULSANTI "EVENTI (N)" E "RISORSE (N)" */}
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2 flex-1 sm:flex-none">
+        {/* GRUPPO 2: PULSANTI "EVENTI (N)", "RISORSE (N)" E MEGAFONO "AVVISI (N)" */}
+        <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5 sm:gap-2 flex-1 sm:flex-none">
           <button
             type="button"
             onClick={() => setMostraDettagliEventi(prev => !prev)}
@@ -560,6 +570,10 @@ export const GestioneAssenze: React.FC<{
               {assenzeOggiDeduplicate.length + usciteOggi.length + nomineSupplenti.filter(n => {
                 const dIso = selectedDate.split('T')[0];
                 return dIso >= n.dataInizio.split('T')[0] && dIso <= n.dataFine.split('T')[0];
+              }).length + annunciBacheca.filter(a => {
+                const dIso = selectedDate.split('T')[0];
+                const fineIso = (a.dataFine || a.data).split('T')[0];
+                return dIso >= a.data.split('T')[0] && dIso <= fineIso;
               }).length}
             </span>
           </button>
@@ -588,6 +602,36 @@ export const GestioneAssenze: React.FC<{
             }`}>
               {totRisorseTotaliMobile}
             </span>
+          </button>
+
+          {/* PULSANTE MEGAFONO: SCRIVI AVVISO BACHECA / NOTIFICA BROADCAST */}
+          <button
+            type="button"
+            onClick={() => setModalitaAperta(modalitaAperta === 'ANNUNCIO' ? null : 'ANNUNCIO')}
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer shadow-2xs ${
+              modalitaAperta === 'ANNUNCIO'
+                ? 'bg-violet-600 text-white border-violet-700 ring-2 ring-violet-300 shadow-sm'
+                : 'bg-violet-50 text-violet-900 border-violet-200 hover:bg-violet-100'
+            }`}
+            title="Pubblica Annuncio / Avviso Generale per tutti i docenti e ATA"
+          >
+            <Megaphone className={`w-3.5 h-3.5 ${modalitaAperta === 'ANNUNCIO' ? 'text-white' : 'text-violet-600'}`} />
+            <span className="text-[11px] sm:text-xs">Avviso</span>
+            {(() => {
+              const dIso = selectedDate.split('T')[0];
+              const countOggi = annunciBacheca.filter(a => {
+                const fineIso = (a.dataFine || a.data).split('T')[0];
+                return dIso >= a.data.split('T')[0] && dIso <= fineIso;
+              }).length;
+              if (countOggi === 0) return null;
+              return (
+                <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${
+                  modalitaAperta === 'ANNUNCIO' ? 'bg-violet-900 text-white' : 'bg-violet-200 text-violet-900'
+                }`}>
+                  {countOggi}
+                </span>
+              );
+            })()}
           </button>
         </div>
       </div>
@@ -1233,14 +1277,185 @@ export const GestioneAssenze: React.FC<{
       )}
 
       {/* ========================================================= */}
+      {/* FINESTRINA POPUP / MODALE PER PUBBLICAZIONE ANNUNCIO      */}
+      {/* ========================================================= */}
+      {modalitaAperta === 'ANNUNCIO' && (
+        <div className="bg-violet-50/70 border-2 border-violet-200 rounded-2xl p-4 space-y-3.5 shadow-md relative animate-in fade-in zoom-in-95 duration-150">
+          <div className="flex items-center justify-between border-b border-violet-100 pb-2">
+            <span className="text-xs font-black text-violet-950 flex items-center gap-1.5">
+              <Megaphone className="w-4 h-4 text-violet-600" />
+              <span>Pubblica Avviso / Comunicazione Vicepresidenza</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setModalitaAperta(null)}
+              className="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 rounded-lg p-1 transition border border-slate-200 cursor-pointer"
+              title="Chiudi"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!testoAnnuncio.trim()) {
+                alert('Inserisci il testo dell\'annuncio prima di inviare.');
+                return;
+              }
+              setInvioInCorsoAnnuncio(true);
+              try {
+                await addAnnuncioBacheca({
+                  data: dataAnnuncio,
+                  dataFine: isAnnuncioPeriodo ? dataAnnuncioFine : dataAnnuncio,
+                  testo: testoAnnuncio.trim(),
+                  autore: 'Vicepresidenza'
+                });
+                setTestoAnnuncio('');
+                setModalitaAperta(null);
+                setMostraDettagliEventi(true);
+              } catch (err) {
+                console.error('Errore pubblicazione annuncio:', err);
+              } finally {
+                setInvioInCorsoAnnuncio(false);
+              }
+            }}
+            className="space-y-3"
+          >
+            {/* SELEZIONE DATA / PERIODO */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-3.5 h-3.5 text-violet-600" />
+                <span className="text-xs font-bold text-slate-700">Data Visibilità:</span>
+                <input
+                  type="date"
+                  value={dataAnnuncio}
+                  onChange={(e) => setDataAnnuncio(e.target.value)}
+                  className="border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold bg-white text-slate-900 focus:ring-2 focus:ring-violet-400"
+                />
+              </div>
+
+              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                <input
+                  type="checkbox"
+                  checked={isAnnuncioPeriodo}
+                  onChange={(e) => {
+                    setIsAnnuncioPeriodo(e.target.checked);
+                    if (e.target.checked && dataAnnuncioFine < dataAnnuncio) {
+                      setDataAnnuncioFine(dataAnnuncio);
+                    }
+                  }}
+                  className="rounded text-violet-600"
+                />
+                <span>Fino a data (Periodo)</span>
+              </label>
+
+              {isAnnuncioPeriodo && (
+                <div className="flex items-center gap-1.5 animate-in fade-in">
+                  <span className="text-xs font-bold text-slate-500">Fino al:</span>
+                  <input
+                    type="date"
+                    min={dataAnnuncio}
+                    value={dataAnnuncioFine}
+                    onChange={(e) => setDataAnnuncioFine(e.target.value)}
+                    className="border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold bg-white text-slate-900 focus:ring-2 focus:ring-violet-400"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* TESTO AVVISO */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-bold text-violet-950 uppercase">
+                Testo dell'Avviso per Docenti & ATA
+              </label>
+              <textarea
+                required
+                rows={3}
+                value={testoAnnuncio}
+                onChange={(e) => setTestoAnnuncio(e.target.value)}
+                placeholder="Es: Si ricorda che venerdì alle 14:30 si terrà il Collegio Docenti in aula magna..."
+                className="w-full border border-slate-300 rounded-xl p-3 text-xs bg-white text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-violet-400 focus:border-violet-500 outline-none resize-y"
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-violet-100 text-xs">
+              <p className="text-[11px] text-slate-500 flex items-center gap-1">
+                <Bell className="w-3.5 h-3.5 text-violet-600" />
+                <span>Invierà una <strong>notifica push</strong> a tutti e comparirà in cima ai tabelloni</span>
+              </p>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModalitaAperta(null)}
+                  className="px-3 py-1.5 rounded-lg text-slate-600 hover:bg-slate-200 transition font-bold cursor-pointer"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="submit"
+                  disabled={invioInCorsoAnnuncio}
+                  className="bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-bold px-4 py-1.5 rounded-xl flex items-center gap-1.5 shadow-md transition cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{invioInCorsoAnnuncio ? 'Invio in corso...' : 'Invia e Notifica a Tutti'}</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ========================================================= */}
       {/* 3. LISTA EVENTI REGISTRATI PER LA DATA SELEZIONATA        */}
       {/* ========================================================= */}
       {(assenzeOggiDeduplicate.length > 0 || usciteOggi.length > 0 || nomineSupplenti.some(n => {
         const dIso = selectedDate.split('T')[0];
         return dIso >= n.dataInizio.split('T')[0] && dIso <= n.dataFine.split('T')[0];
+      }) || annunciBacheca.some(a => {
+        const dIso = selectedDate.split('T')[0];
+        const fineIso = (a.dataFine || a.data).split('T')[0];
+        return dIso >= a.data.split('T')[0] && dIso <= fineIso;
       })) && mostraDettagliEventi && (
         <div className="pt-2 border-t border-slate-200 space-y-2 animate-in fade-in slide-in-from-top-1 duration-150">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1">
+              {/* Annunci e Comunicazioni Bacheca Attivi nella data selezionata */}
+              {annunciBacheca.filter(a => {
+                const dIso = selectedDate.split('T')[0];
+                const fineIso = (a.dataFine || a.data).split('T')[0];
+                return dIso >= a.data.split('T')[0] && dIso <= fineIso;
+              }).map(a => (
+                <div key={a.id} className="bg-violet-50/90 border border-violet-300 rounded-xl p-2.5 flex items-start justify-between gap-2 text-xs shadow-2xs">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-violet-950">
+                      <Megaphone className="w-3.5 h-3.5 text-violet-700 shrink-0" />
+                      <span>Avviso Vicepresidenza</span>
+                      <span className="bg-violet-200 text-violet-900 font-bold text-[9px] px-1.5 py-0.2 rounded-full">
+                        {a.dataFine && a.dataFine !== a.data ? 'Periodo' : 'Giornaliero'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-800 font-medium whitespace-pre-wrap">
+                      {a.testo}
+                    </p>
+                    <div className="text-[10px] text-violet-700 font-medium">
+                      Visibile: {formatDataItaliana(a.data)} {a.dataFine && a.dataFine !== a.data ? `➔ ${formatDataItaliana(a.dataFine)}` : ''}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(`Vuoi eliminare questo avviso: "${a.testo.substring(0, 35)}..."?`)) {
+                        rimuoviAnnuncioBacheca(a.id);
+                      }
+                    }}
+                    className="text-violet-700 hover:text-red-600 p-1 hover:bg-violet-100 rounded transition shrink-0 cursor-pointer"
+                    title="Elimina avviso dalla bacheca"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
               {/* Gite con Accompagnatori inclusi nello slot */}
               {usciteOggi.map(u => {
                 const isGiornaliera = (u.ore.length >= 5) || (u.note?.includes('Intera Giornata')) || (!u.oraInizio && !u.oraFine);

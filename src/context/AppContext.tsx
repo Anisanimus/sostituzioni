@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente, NominaSupplente } from '../types';
+import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente, NominaSupplente, AnnuncioBacheca } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente, formatDataItaliana, getMateriaDocenteNellOra } from '../utils/docentiHelper';
 import { db, auth } from '../firebase';
@@ -88,6 +88,11 @@ interface AppContextType {
   addNominaSupplente: (nomina: Omit<NominaSupplente, 'id' | 'creataIl'>) => Promise<void>;
   rimuoviNominaSupplente: (nominaId: string) => Promise<void>;
   prorogaNominaSupplente: (nominaId: string, nuovaDataFine: string) => Promise<void>;
+
+  annunciBacheca: AnnuncioBacheca[];
+  setAnnunciBacheca: React.Dispatch<React.SetStateAction<AnnuncioBacheca[]>>;
+  addAnnuncioBacheca: (annuncio: Omit<AnnuncioBacheca, 'id' | 'createdAt'>) => Promise<void>;
+  rimuoviAnnuncioBacheca: (annuncioId: string) => Promise<void>;
 
   addAssenza: (assenza: Omit<AssenzaDocente, 'id' | 'createdAt'>, compensaConStraordinario?: boolean) => void;
   removeAssenza: (id: string) => void;
@@ -208,6 +213,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  const [annunciBacheca, setAnnunciBacheca] = useState<AnnuncioBacheca[]>(() => {
+    try {
+      const saved = localStorage.getItem('scuola_annunci_bacheca');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   const [impostazioniPriorita, setImpostazioniPriorita] = useState<ImpostazioniPriorita>(() => {
     try {
       const saved = localStorage.getItem('scuola_impostazioni_priorita');
@@ -308,6 +322,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         // Inizializza l'insieme degli ID delle sostituzioni già pubblicate all'avvio per NON notificare vecchie supplenze
         const knownPublishedSostituzioniIdsRef = new Set<string>();
+        const knownAnnunciIdsRef = new Set<string>();
         let isFirstSyncSnapshot = true;
 
         // 1. Fetch iniziale immediato per caricare subito lo stato reale
@@ -362,6 +377,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setNomineSupplenti(cloudData.nomineSupplenti);
             localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(cloudData.nomineSupplenti));
           }
+          if (cloudData.annunciBacheca && Array.isArray(cloudData.annunciBacheca)) {
+            setAnnunciBacheca(cloudData.annunciBacheca);
+            localStorage.setItem('scuola_annunci_bacheca', JSON.stringify(cloudData.annunciBacheca));
+            cloudData.annunciBacheca.forEach((a: any) => {
+              knownAnnunciIdsRef.add(a.id);
+            });
+          }
           if (cloudData.impostazioniScuola) {
             setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
             localStorage.setItem('scuola_impostazioni_generali', JSON.stringify(cloudData.impostazioniScuola));
@@ -401,6 +423,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (cloudData.nomineSupplenti && Array.isArray(cloudData.nomineSupplenti)) {
               setNomineSupplenti(cloudData.nomineSupplenti);
               localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(cloudData.nomineSupplenti));
+            }
+            if (cloudData.annunciBacheca && Array.isArray(cloudData.annunciBacheca)) {
+              const currentCloudAnnunci = cloudData.annunciBacheca;
+              // Se arriva un nuovo annuncio non presente all'avvio, notifica via push
+              if (!isFirstSyncSnapshot && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                const nuoviAnnunci = currentCloudAnnunci.filter((a: any) => !knownAnnunciIdsRef.has(a.id));
+                if (nuoviAnnunci.length > 0) {
+                  try {
+                    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(520, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(780, audioCtx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                  } catch (e) {}
+
+                  nuoviAnnunci.forEach((ann: any) => {
+                    const notifTitle = '📢 Avviso dalla Vicepresidenza';
+                    const notifMsg = ann.testo;
+                    const notifTag = `ann_${ann.id}`;
+                    try {
+                      if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.ready.then(reg => {
+                          reg.showNotification(notifTitle, {
+                            body: notifMsg,
+                            icon: '/favicon.svg',
+                            tag: notifTag,
+                            renotify: true
+                          } as any);
+                        }).catch(() => {
+                          new Notification(notifTitle, { body: notifMsg, icon: '/favicon.svg', tag: notifTag });
+                        });
+                      } else {
+                        new Notification(notifTitle, { body: notifMsg, icon: '/favicon.svg', tag: notifTag });
+                      }
+                    } catch (err) {
+                      console.warn('Errore push annuncio:', err);
+                    }
+                  });
+                }
+              }
+
+              knownAnnunciIdsRef.clear();
+              currentCloudAnnunci.forEach((a: any) => knownAnnunciIdsRef.add(a.id));
+              setAnnunciBacheca(currentCloudAnnunci);
+              localStorage.setItem('scuola_annunci_bacheca', JSON.stringify(currentCloudAnnunci));
             }
 
             // Controlla se sono arrivate nuove sostituzioni pubblicate o annullate e invia notifica push di sistema SOLO AL DOCENTE INTERESSATO
@@ -697,6 +771,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   richiesteAccessoDocentiRef.current = richiesteAccessoDocenti;
   const nomineSupplentiRef = React.useRef(nomineSupplenti);
   nomineSupplentiRef.current = nomineSupplenti;
+  const annunciBachecaRef = React.useRef(annunciBacheca);
+  annunciBachecaRef.current = annunciBacheca;
   const impostazioniScuolaRef = React.useRef(impostazioniScuola);
   impostazioniScuolaRef.current = impostazioniScuola;
 
@@ -716,6 +792,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           notifiche: notificheRef.current,
           richiesteAccessoDocenti: richiesteAccessoDocentiRef.current,
           nomineSupplenti: nomineSupplentiRef.current,
+          annunciBacheca: annunciBachecaRef.current,
           impostazioniScuola: impostazioniScuolaRef.current,
           ultimoAggiornamento: new Date().toISOString(),
           ...override
@@ -1747,6 +1824,73 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // =========================================================================
+  // GESTIONE ANNUNCI BACHECA / COMUNICAZIONI VICEPRESIDENZA
+  // =========================================================================
+  const addAnnuncioBacheca = async (annuncioData: Omit<AnnuncioBacheca, 'id' | 'createdAt'>) => {
+    const nuovoAnnuncio: AnnuncioBacheca = {
+      ...annuncioData,
+      id: 'ann_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      createdAt: new Date().toISOString()
+    };
+
+    const prevAnnunci = annunciBachecaRef.current || [];
+    const updatedAnnunci = [nuovoAnnuncio, ...prevAnnunci];
+    setAnnunciBacheca(updatedAnnunci);
+    localStorage.setItem('scuola_annunci_bacheca', JSON.stringify(updatedAnnunci));
+
+    // Genera notifica interna per tutti i docenti registrati
+    const tuttePersoneIds = Array.from(new Set(docentiRef.current.map(d => d.id)));
+    const nuoveNotif: NotificaDocente[] = tuttePersoneIds.map(docId => ({
+      id: 'notif_ann_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      docenteId: docId,
+      data: nuovoAnnuncio.data,
+      ora: 1,
+      classe: 'AVVISO',
+      tipo: 'NUOVA_SOSTITUZIONE' as const,
+      titolo: '📢 Nuovo Avviso dalla Vicepresidenza',
+      messaggio: nuovoAnnuncio.testo,
+      letta: false,
+      createdAt: new Date().toISOString()
+    }));
+
+    const prevNotif = notificheRef.current || [];
+    const updatedNotif = [...nuoveNotif, ...prevNotif];
+    setNotifiche(updatedNotif);
+    localStorage.setItem('scuola_notifiche', JSON.stringify(updatedNotif));
+
+    // Salva immediatamente su Cloud Firestore
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, {
+        annunciBacheca: JSON.parse(JSON.stringify(updatedAnnunci)),
+        notifiche: JSON.parse(JSON.stringify(updatedNotif)),
+        ultimoAggiornamento: new Date().toISOString()
+      }, { merge: true });
+      triggerCloudSync();
+      console.log('✅ Annuncio bacheca salvato e notificato su Firestore!');
+    } catch (e) {
+      console.error('Errore salvataggio annuncio bacheca:', e);
+    }
+  };
+
+  const rimuoviAnnuncioBacheca = async (annuncioId: string) => {
+    const updated = (annunciBachecaRef.current || []).filter(a => a.id !== annuncioId);
+    setAnnunciBacheca(updated);
+    localStorage.setItem('scuola_annunci_bacheca', JSON.stringify(updated));
+
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, {
+        annunciBacheca: JSON.parse(JSON.stringify(updated)),
+        ultimoAggiornamento: new Date().toISOString()
+      }, { merge: true });
+      triggerCloudSync();
+    } catch (e) {
+      console.error('Errore rimozione annuncio bacheca:', e);
+    }
+  };
+
   const updateDocente = async (docenteAggiornato: Docente) => {
     setDocenti(prev => {
       const updated = prev.map(d => d.id === docenteAggiornato.id ? docenteAggiornato : d);
@@ -2035,6 +2179,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addNominaSupplente,
       rimuoviNominaSupplente,
       prorogaNominaSupplente,
+      annunciBacheca,
+      setAnnunciBacheca,
+      addAnnuncioBacheca,
+      rimuoviAnnuncioBacheca,
       addAssenza,
       removeAssenza,
       annullaAssenza,
