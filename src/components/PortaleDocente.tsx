@@ -425,7 +425,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
             <span className="text-xs font-bold text-indigo-600 uppercase">Docente Collegato</span>
             <h2 className="text-2xl font-black text-slate-900">{docente?.nome}</h2>
             <p className="text-xs text-slate-500">
-              Materia: <strong>{docente?.materia}</strong> • Debito Permessi: <strong>{docente?.oreDebitoPermesso} ore</strong>
+              Materia: <strong>{docente?.materia}</strong>
             </p>
           </div>
 
