@@ -765,7 +765,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-600">
-                      Sostituisce: <strong className="text-slate-800 font-bold">{nom.docenteTitolareNome}</strong> ({nom.motivo || 'Maternità / Congedo'})
+                      Sostituisce: <strong className="text-slate-800 font-bold">{nom.docenteTitolareNome}</strong>
                     </p>
                     <p className="text-[10px] text-slate-500">
                       Periodo: {formatDataItaliana(nom.dataInizio)} ➔ {formatDataItaliana(nom.dataFine)}
