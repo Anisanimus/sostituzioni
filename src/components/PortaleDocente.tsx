@@ -6,7 +6,8 @@ import {
   LayoutDashboard, Clock, ShieldCheck, RefreshCw, Table, Search, 
   BookOpen, GraduationCap, Accessibility, Users, School, FileDown, 
   Printer, CheckSquare, Square, Check, Filter, ExternalLink, CalendarPlus,
-  Scale, ArrowDownUp, TrendingDown, TrendingUp, Megaphone, ChevronDown, ChevronUp
+  Scale, ArrowDownUp, TrendingDown, TrendingUp, Megaphone, ChevronDown, ChevronUp,
+  Sliders
 } from 'lucide-react';
 import { 
   getDocentiCollegatiIds, getDocentiUnici, trovaCorrispondenzaDocente, 
@@ -21,7 +22,7 @@ import { GiornoSettimana } from '../types';
 
 const GIORNI_SETTIMANA: GiornoSettimana[] = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 
-export type TabDocenteType = 'MIE_SOSTITUZIONI' | 'BILANCIO_ORE' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE';
+export type TabDocenteType = 'MIE_SOSTITUZIONI' | 'BILANCIO_ORE' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE' | 'PERSONALIZZAZIONI';
 
 interface PortaleDocenteProps {
   currentTab?: TabDocenteType;
@@ -419,43 +420,30 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
         </div>
       )}
 
-      {/* HEADER PROFILO DOCENTE (NON VISIBILE IN VISTA ATA) */}
+      {/* HEADER PROFILO DOCENTE COMPATTO (NON VISIBILE IN VISTA ATA) */}
       {!isAtaView && (
-        <div className="no-print bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <span className="text-xs font-bold text-indigo-600 uppercase">Docente Collegato</span>
-            <h2 className="text-2xl font-black text-slate-900">{docente?.nome}</h2>
-            <p className="text-xs text-slate-500">
-              Materia: <strong>{docente?.materia}</strong>
-            </p>
+        <div className="no-print bg-white px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl shadow-2xs border border-slate-200 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-2xs shrink-0">
+              {docente?.nome ? docente.nome.split(' ').map(n => n[0]).slice(0, 2).join('') : 'DOC'}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-black text-slate-900 leading-tight">{docente?.nome}</h2>
+                <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 hidden sm:inline">
+                  {docente?.materia}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium sm:hidden">
+                {docente?.materia}
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={handleRichiediNotifiche}
-              className={`px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition cursor-pointer ${
-                notificaAttiva
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-200'
-              }`}
-            >
-              <Bell className="w-4 h-4 text-indigo-600" />
-              <span>{notificaAttiva ? 'Notifiche Push Attive ✓' : 'Attiva Notifiche Push'}</span>
-            </button>
-
-            {notificaAttiva && (
-              <button
-                onClick={handleInviaNotificaTest}
-                className="px-2.5 py-2 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer flex items-center gap-1"
-                title="Invia notifica sonora di test"
-              >
-                <span>🔔 Prova Notifica</span>
-              </button>
-            )}
-
+          <div className="flex items-center gap-2">
             <button
               onClick={logout}
-              className="text-xs text-slate-500 hover:text-slate-800 underline p-2 cursor-pointer"
+              className="text-xs font-bold text-slate-500 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 transition cursor-pointer"
             >
               Esci
             </button>
@@ -605,6 +593,20 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
               <span>Risorse & Spazi</span>
             </button>
           )}
+
+          {/* Scheda Personalizzazioni Docente */}
+          <button
+            type="button"
+            onClick={() => setTabDocente('PERSONALIZZAZIONI')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              tabDocente === 'PERSONALIZZAZIONI'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <Sliders className="w-4 h-4 text-slate-500" />
+            <span>Personalizzazioni</span>
+          </button>
         </div>
       )}
 
@@ -616,6 +618,88 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
       {/* CONTENUTO SCHEDA RISORSE E SPAZI */}
       {tabDocente === 'RISORSE' && (
         <VistaCalendariGoogle modalita="RISORSE" />
+      )}
+
+      {/* CONTENUTO SCHEDA PERSONALIZZAZIONI DOCENTE */}
+      {tabDocente === 'PERSONALIZZAZIONI' && (
+        <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-6 animate-in fade-in">
+          <div>
+            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Impostazioni Personali</span>
+            <h3 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2 mt-0.5">
+              <Sliders className="w-6 h-6 text-indigo-600" />
+              <span>Personalizzazioni & Notifiche</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+              Configura la ricezione delle notifiche push istantanee sul tuo dispositivo (iPhone, Android, PC/Mac).
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* BOX NOTIFICHE PUSH */}
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-2xs ${
+                  notificaAttiva ? 'bg-emerald-600' : 'bg-indigo-600'
+                }`}>
+                  <Bell className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-black text-sm text-slate-900">Notifiche Push di Supplenza</h4>
+                  <p className="text-xs text-slate-500">
+                    Stato: {notificaAttiva ? <strong className="text-emerald-700">Attive ✓</strong> : <strong className="text-amber-700">Non attive</strong>}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Ricevi immediatamente un suono e un avviso sul telefono o computer ogni volta che la Vicepresidenza ti assegna una supplenza, pubblica un avviso o registra un'uscita.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleRichiediNotifiche}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold border flex items-center gap-2 transition cursor-pointer shadow-2xs ${
+                    notificaAttiva
+                      ? 'bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700'
+                      : 'bg-indigo-600 text-white border-indigo-700 hover:bg-indigo-700'
+                  }`}
+                >
+                  <Bell className="w-4 h-4" />
+                  <span>{notificaAttiva ? 'Notifiche Push Attive ✓' : 'Attiva Notifiche Push'}</span>
+                </button>
+
+                {notificaAttiva && (
+                  <button
+                    type="button"
+                    onClick={handleInviaNotificaTest}
+                    className="px-3.5 py-2.5 rounded-xl text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                    title="Invia notifica sonora di prova"
+                  >
+                    <span>🔔 Prova Notifica</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* BOX GUIDA IPHONE / IPAD */}
+            <div className="bg-indigo-900 text-white p-5 rounded-2xl border border-indigo-800 space-y-3 shadow-sm">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">📲</span>
+                <h4 className="font-black text-sm text-white">Istruzioni per iPhone & iPad</h4>
+              </div>
+              <p className="text-xs text-indigo-200">
+                Su iOS 16.4+ le notifiche push Web richiedono l'installazione dell'app nella Home:
+              </p>
+              <ol className="list-decimal list-inside space-y-1.5 text-xs text-indigo-100 bg-white/10 p-3.5 rounded-xl border border-white/10 font-medium">
+                <li>Apri il sito in <strong>Safari</strong>.</li>
+                <li>Tocca <strong>Condividi</strong> (icona ⬆ in basso).</li>
+                <li>Tocca <strong>"Aggiungi alla schermata Home"</strong>.</li>
+                <li>Apri l'app dalla Home e premi <strong>Attiva Notifiche</strong>.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* CONTENUTO SCHEDA 1: LE MIE SOSTITUZIONI */}

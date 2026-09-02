@@ -44,7 +44,7 @@ const MainApp: React.FC = () => {
     return 'PORTALE_DOCENTE';
   });
   const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'QUADRO_SCUOLA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'PERSONALIZZAZIONI' | 'IMPEGNI' | 'RISORSE'>('GESTIONE_GIORNALIERA');
-  const [tabDocente, setTabDocente] = useState<'MIE_SOSTITUZIONI' | 'BILANCIO_ORE' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE'>('MIE_SOSTITUZIONI');
+  const [tabDocente, setTabDocente] = useState<'MIE_SOSTITUZIONI' | 'BILANCIO_ORE' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE' | 'PERSONALIZZAZIONI'>('MIE_SOSTITUZIONI');
   const [tabAta, setTabAta] = useState<'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE'>('QUADRO_SCUOLA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarPinnedDesktop, setIsSidebarPinnedDesktop] = useState<boolean>(() => {
@@ -443,6 +443,27 @@ const MainApp: React.FC = () => {
                       </div>
                     </div>
                     {tabDocente === 'CONSIGLI_CLASSE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTabDocente('PERSONALIZZAZIONI')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                      tabDocente === 'PERSONALIZZAZIONI'
+                        ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabDocente === 'PERSONALIZZAZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        <Sliders className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="block font-black text-xs">Personalizzazioni</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Notifiche e preferenze</span>
+                      </div>
+                    </div>
+                    {tabDocente === 'PERSONALIZZAZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                   </button>
                 </>
               )}
@@ -902,6 +923,30 @@ const MainApp: React.FC = () => {
                         </div>
                       </div>
                       {tabDocente === 'CONSIGLI_CLASSE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabDocente('PERSONALIZZAZIONI');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabDocente === 'PERSONALIZZAZIONI'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabDocente === 'PERSONALIZZAZIONI' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Sliders className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Personalizzazioni</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Notifiche push e preferenze</span>
+                        </div>
+                      </div>
+                      {tabDocente === 'PERSONALIZZAZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                     </button>
                   </>
                 )}
