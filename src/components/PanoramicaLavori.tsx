@@ -384,11 +384,11 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. HEADER MOBILE (SMARTPHONE REDESIGN RAFFINATO ED ELEGANTE)              */}
+      {/* 2. HEADER MOBILE (SMARTPHONE MINIMALE E PULITO)                           */}
       {/* ========================================================================= */}
       <div className="sm:hidden space-y-2 pb-1 border-b border-slate-100">
         
-        {/* RIGA 1: TITOLO + DATA (A SINISTRA) | FRECCE SCORRIMENTO + ICONA TREND (A DESTRA) */}
+        {/* RIGA: TITOLO + DATA (A SINISTRA) | FRECCE SCORRIMENTO + ICONA TREND (A DESTRA) */}
         <div className="flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-base font-black tracking-tight text-slate-900 shrink-0">
@@ -431,54 +431,6 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
             >
               <TrendingUp className="w-4 h-4" />
             </button>
-          </div>
-        </div>
-
-        {/* RIGA 2: I 3 STATI DI AVANZAMENTO LAVORI IN UN'UNICA RIGA ORIZZONTALE */}
-        <div className="grid grid-cols-3 gap-1.5 pt-0.5">
-          {/* STATO 1: ASSEGNATE */}
-          <div className={`text-center py-1 px-1 rounded-xl border flex flex-col items-center justify-center ${
-            totGiornoScoperte === 0 
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              : percentualeGiorno === 100 
-                ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
-                : 'bg-amber-50 text-amber-950 border-amber-200'
-          }`}>
-            <span className="text-[11px] font-black leading-tight flex items-center gap-0.5">
-              🕒 {totGiornoCoperte}/{totGiornoScoperte}
-              {totGiornoCoperte === totGiornoScoperte && totGiornoScoperte > 0 && <span className="text-[10px]">✓</span>}
-            </span>
-            <span className="text-[9px] font-bold opacity-80 leading-none mt-0.5">Assegnate</span>
-          </div>
-
-          {/* STATO 2: INVIATE */}
-          <div className={`text-center py-1 px-1 rounded-xl border flex flex-col items-center justify-center ${
-            currentStat.totPubblicate === totGiornoCoperte && totGiornoCoperte > 0
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-              : currentStat.totPubblicate > 0
-                ? 'bg-sky-50 text-sky-900 border-sky-200'
-                : 'bg-slate-50 text-slate-500 border-slate-200'
-          }`}>
-            <span className="text-[11px] font-black leading-tight flex items-center gap-0.5">
-              📤 {currentStat.totPubblicate}/{totGiornoCoperte}
-              {currentStat.totPubblicate === totGiornoCoperte && totGiornoCoperte > 0 && <span className="text-[10px]">✓</span>}
-            </span>
-            <span className="text-[9px] font-bold opacity-80 leading-none mt-0.5">Inviate</span>
-          </div>
-
-          {/* STATO 3: FIRMATE */}
-          <div className={`text-center py-1 px-1 rounded-xl border flex flex-col items-center justify-center ${
-            currentStat.totFirmate === totGiornoCoperte && totGiornoCoperte > 0
-              ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
-              : currentStat.totFirmate > 0
-                ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
-                : 'bg-slate-50 text-slate-500 border-slate-200'
-          }`}>
-            <span className="text-[11px] font-black leading-tight flex items-center gap-0.5">
-              ✍️ {currentStat.totFirmate}/{totGiornoCoperte}
-              {currentStat.totFirmate === totGiornoCoperte && totGiornoCoperte > 0 && <span className="text-[10px]">✓</span>}
-            </span>
-            <span className="text-[9px] font-bold opacity-80 leading-none mt-0.5">Firmate</span>
           </div>
         </div>
 
