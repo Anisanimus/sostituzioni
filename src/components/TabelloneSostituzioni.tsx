@@ -1752,18 +1752,18 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
           {/* SEZIONE 1: RECUPERO ORE DEBITO PERMESSO STESSA CLASSE */}
           {candidati.RECUPERO_STESSA_CLASSE.length > 0 && (
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-slate-700 block uppercase tracking-wide">
-                1. Recupero Debito Permessi (Stessa Classe)
+              <span className="text-xs font-bold text-rose-950 block uppercase tracking-wide flex items-center gap-1.5">
+                <span>⚖️ 1. Recupero Debito Permessi (Stessa Classe)</span>
               </span>
               {candidati.RECUPERO_STESSA_CLASSE.map((cand, i) => (
-                <div key={i} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div key={i} className="flex items-center justify-between p-2.5 bg-rose-50/80 rounded-xl border border-rose-200 shadow-2xs">
                   <div>
-                    <strong className="text-xs font-bold text-slate-900 block">{cand.docente.nome}</strong>
-                    <span className="text-[11px] text-slate-500 block">{cand.dettagli}</span>
+                    <strong className="text-xs font-bold text-rose-950 block">{cand.docente.nome}</strong>
+                    <span className="text-[11px] text-rose-800 block font-medium">{cand.dettagli}</span>
                   </div>
                   <button
                     onClick={() => onAssegna(cand.docente.id, 'RECUPERO_STESSA_CLASSE', false, true)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg transition"
+                    className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer hover:scale-105 active:scale-95"
                   >
                     Recupera Debito (-1h)
                   </button>
@@ -1867,18 +1867,18 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
           {/* SEZIONE 4: RECUPERO DEBITO GENERICO */}
           {candidati.RECUPERO_GENERICO.length > 0 && (
             <div className="space-y-1.5">
-              <span className="text-xs font-bold text-slate-700 block uppercase tracking-wide">
-                4. Recupero Debito Permessi (Altra Classe / Libero)
+              <span className="text-xs font-bold text-rose-950 block uppercase tracking-wide flex items-center gap-1.5">
+                <span>⚖️ 4. Recupero Debito Permessi (Altra Classe / Libero)</span>
               </span>
               {candidati.RECUPERO_GENERICO.map((cand, i) => (
-                <div key={i} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div key={i} className="flex items-center justify-between p-2.5 bg-rose-50/80 rounded-xl border border-rose-200 shadow-2xs">
                   <div>
-                    <strong className="text-xs font-bold text-slate-900 block">{cand.docente.nome}</strong>
-                    <span className="text-[11px] text-slate-500 block">{cand.dettagli}</span>
+                    <strong className="text-xs font-bold text-rose-950 block">{cand.docente.nome}</strong>
+                    <span className="text-[11px] text-rose-800 block font-medium">{cand.dettagli}</span>
                   </div>
                   <button
                     onClick={() => onAssegna(cand.docente.id, 'RECUPERO_GENERICO', false, true)}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg transition"
+                    className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer hover:scale-105 active:scale-95"
                   >
                     Recupera Debito (-1h)
                   </button>
