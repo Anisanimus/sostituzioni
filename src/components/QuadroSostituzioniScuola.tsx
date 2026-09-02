@@ -320,77 +320,6 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
         {/* CONTROLLI DATA & PULSANTE STAMPA */}
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
-          {/* SELETTORE VISTA: PER ORA VS PER DOCENTE + TASTO ESPANDI/COMPRIMI */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setVisualizzazione('PER_ORA')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                  visualizzazione === 'PER_ORA'
-                    ? 'bg-white text-indigo-900 shadow-2xs font-black'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Clock className="w-3.5 h-3.5" />
-                <span>Per Ora</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setVisualizzazione('PER_DOCENTE')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
-                  visualizzazione === 'PER_DOCENTE'
-                    ? 'bg-white text-indigo-900 shadow-2xs font-black'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>Per Docente</span>
-              </button>
-            </div>
-
-            {/* PULSANTE DISCRETO SOLO ICONA ESPANDI / COMPRIMI TUTTO */}
-            {righeFiltrate.length > 0 && (
-              (() => {
-                const isTuttoAperto = visualizzazione === 'PER_ORA'
-                  ? oreChiuse.length === 0
-                  : docentiChiusi.length === 0;
-
-                const handleToggleTutto = () => {
-                  if (visualizzazione === 'PER_ORA') {
-                    if (isTuttoAperto) {
-                      setOreChiuse(gruppiPerOra.map(([oraNum]) => oraNum));
-                    } else {
-                      setOreChiuse([]);
-                    }
-                  } else {
-                    if (isTuttoAperto) {
-                      setDocentiChiusi(gruppiPerDocente.map(([nomeDoc]) => nomeDoc));
-                    } else {
-                      setDocentiChiusi([]);
-                    }
-                  }
-                };
-
-                return (
-                  <button
-                    type="button"
-                    onClick={handleToggleTutto}
-                    className={`p-1.5 rounded-xl border transition flex items-center justify-center cursor-pointer shadow-2xs ${
-                      isTuttoAperto
-                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-700 shadow-xs'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200'
-                    }`}
-                    title={isTuttoAperto ? "Tutto aperto - Clicca per Comprimere tutto" : "Tutto chiuso - Clicca per Espandere tutto"}
-                  >
-                    <ChevronsUpDown className={`w-4 h-4 ${isTuttoAperto ? 'text-white' : 'text-slate-600'}`} />
-                  </button>
-                );
-              })()
-            )}
-          </div>
-
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
             <button
               type="button"
@@ -858,6 +787,88 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           </div>
         </div>
       )}
+
+      {/* BARRA CONTROLLI TABELLONE: SWITCH VISTA PER ORA / PER DOCENTE & ESPANDI/COMPRIMI (SOPRA AL PRIMO ASSENTE) */}
+      <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setVisualizzazione('PER_ORA')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                visualizzazione === 'PER_ORA'
+                  ? 'bg-indigo-600 text-white shadow-2xs font-black'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span>Per Ora</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setVisualizzazione('PER_DOCENTE')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                visualizzazione === 'PER_DOCENTE'
+                  ? 'bg-indigo-600 text-white shadow-2xs font-black'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+              }`}
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Per Docente</span>
+            </button>
+          </div>
+
+          {/* PULSANTE DISCRETO SOLO ICONA ESPANDI / COMPRIMI TUTTO */}
+          {righeFiltrate.length > 0 && (
+            (() => {
+              const isTuttoAperto = visualizzazione === 'PER_ORA'
+                ? oreChiuse.length === 0
+                : docentiChiusi.length === 0;
+
+              const handleToggleTutto = () => {
+                if (visualizzazione === 'PER_ORA') {
+                  if (isTuttoAperto) {
+                    setOreChiuse(gruppiPerOra.map(([oraNum]) => oraNum));
+                  } else {
+                    setOreChiuse([]);
+                  }
+                } else {
+                  if (isTuttoAperto) {
+                    setDocentiChiusi(gruppiPerDocente.map(([nomeDoc]) => nomeDoc));
+                  } else {
+                    setDocentiChiusi([]);
+                  }
+                }
+              };
+
+              return (
+                <button
+                  type="button"
+                  onClick={handleToggleTutto}
+                  className={`p-2 rounded-xl border transition flex items-center justify-center cursor-pointer shadow-2xs ${
+                    isTuttoAperto
+                      ? 'bg-indigo-50 text-indigo-700 border-indigo-300 hover:bg-indigo-100'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                  }`}
+                  title={isTuttoAperto ? "Tutto aperto - Clicca per Comprimere tutto" : "Tutto chiuso - Clicca per Espandere tutto"}
+                >
+                  <ChevronsUpDown className="w-4 h-4 text-indigo-600" />
+                </button>
+              );
+            })()
+          )}
+        </div>
+
+        {/* CONTEGGIO STATISTICHE SINTETICO */}
+        {righeQuadro.length > 0 && (
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+            <span className="bg-slate-100 border border-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-xl">
+              {totCoperte}/{totOreScoperte} Coperte
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* ELENCO SOSTITUZIONI: TABELLA COMPATTA ORIZZONTALE AL 100% (ZERO SCROLL / ZERO SWIPE SU MOBILE) */}
       <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
