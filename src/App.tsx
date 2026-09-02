@@ -336,7 +336,7 @@ const MainApp: React.FC = () => {
             {/* LISTA VOCI (NAVIGAZIONE SENZA APRI/CHIUDI) */}
             <div className="flex-1 overflow-y-auto p-3 space-y-1.5 min-h-0">
               {/* ======================================================= */}
-              {/* MENU PORTALE DOCENTI                                    */}
+              {/* MENU SPECIFICO PORTALE DOCENTI                          */}
               {/* ======================================================= */}
               {ruoloAttivo === 'PORTALE_DOCENTE' && (
                 <>
@@ -363,27 +363,6 @@ const MainApp: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => setTabDocente('BILANCIO_ORE')}
-                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
-                      tabDocente === 'BILANCIO_ORE'
-                        ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
-                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className={`p-1.5 rounded-lg ${tabDocente === 'BILANCIO_ORE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                        <Scale className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <span className="block font-black text-xs">Bilancio Ore & Movimenti</span>
-                        <span className="text-[10px] text-slate-500 font-normal">Debiti, crediti e storico</span>
-                      </div>
-                    </div>
-                    {tabDocente === 'BILANCIO_ORE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={() => setTabDocente('QUADRO_SCUOLA')}
                     className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
                       tabDocente === 'QUADRO_SCUOLA'
@@ -396,7 +375,7 @@ const MainApp: React.FC = () => {
                         <LayoutDashboard className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-xs">Quadro Generale</span>
+                        <span className="block font-black text-xs">Quadro Generale Sostituzioni</span>
                         <span className="text-[10px] text-slate-500 font-normal">Tutte le assenze</span>
                       </div>
                     </div>
@@ -498,6 +477,27 @@ const MainApp: React.FC = () => {
                       {tabDocente === 'RISORSE' && <span className="w-2 h-2 rounded-full bg-teal-600" />}
                     </button>
                   )}
+
+                  <button
+                    type="button"
+                    onClick={() => setTabDocente('BILANCIO_ORE')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                      tabDocente === 'BILANCIO_ORE'
+                        ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabDocente === 'BILANCIO_ORE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        <Scale className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="block font-black text-xs">Bilancio Ore & Movimenti</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Debiti, crediti e storico</span>
+                      </div>
+                    </div>
+                    {tabDocente === 'BILANCIO_ORE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                  </button>
 
                   <button
                     type="button"
@@ -859,6 +859,7 @@ const MainApp: React.FC = () => {
                 {/* ======================================================= */}
                 {ruoloAttivo === 'PORTALE_DOCENTE' && (
                   <>
+                    {/* 1. Sostituzioni */}
                     <button
                       type="button"
                       onClick={() => {
@@ -883,30 +884,7 @@ const MainApp: React.FC = () => {
                       {tabDocente === 'MIE_SOSTITUZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTabDocente('BILANCIO_ORE');
-                        setIsSidebarOpen(false);
-                      }}
-                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
-                        tabDocente === 'BILANCIO_ORE'
-                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
-                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${tabDocente === 'BILANCIO_ORE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                          <Scale className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <span className="block font-black text-sm">Bilancio Ore & Movimenti</span>
-                          <span className="text-[11px] text-slate-500 font-normal">Debiti, crediti e storico personale</span>
-                        </div>
-                      </div>
-                      {tabDocente === 'BILANCIO_ORE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
-                    </button>
-
+                    {/* 2. Quadro Generale Sostituzioni */}
                     <button
                       type="button"
                       onClick={() => {
@@ -924,13 +902,14 @@ const MainApp: React.FC = () => {
                           <LayoutDashboard className="w-4 h-4" />
                         </div>
                         <div>
-                          <span className="block font-black text-sm">Quadro Generale</span>
+                          <span className="block font-black text-sm">Quadro Generale Sostituzioni</span>
                           <span className="text-[11px] text-slate-500 font-normal">Prospetto generale delle assenze</span>
                         </div>
                       </div>
                       {tabDocente === 'QUADRO_SCUOLA' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                     </button>
 
+                    {/* 3. Orario */}
                     <button
                       type="button"
                       onClick={() => {
@@ -955,6 +934,7 @@ const MainApp: React.FC = () => {
                       {tabDocente === 'ORARIO' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                     </button>
 
+                    {/* 4. Consigli di Classe */}
                     <button
                       type="button"
                       onClick={() => {
@@ -979,6 +959,7 @@ const MainApp: React.FC = () => {
                       {tabDocente === 'CONSIGLI_CLASSE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                     </button>
 
+                    {/* 5. Impegni Scolastici */}
                     {Boolean(
                       (impostazioniScuola?.calendariGoogle?.impegni && impostazioniScuola.calendariGoogle.impegni.length > 0) ||
                       impostazioniScuola?.calendariGoogle?.impegniPlenariId ||
@@ -1009,6 +990,7 @@ const MainApp: React.FC = () => {
                       </button>
                     )}
 
+                    {/* 6. Risorse & Spazi */}
                     {Boolean(
                       (impostazioniScuola?.calendariGoogle?.risorse && impostazioniScuola.calendariGoogle.risorse.length > 0) ||
                       impostazioniScuola?.calendariGoogle?.risorseInformaticaId ||
@@ -1039,6 +1021,32 @@ const MainApp: React.FC = () => {
                       </button>
                     )}
 
+                    {/* 7. Bilancio Ore & Movimenti */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabDocente('BILANCIO_ORE');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabDocente === 'BILANCIO_ORE'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabDocente === 'BILANCIO_ORE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Scale className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Bilancio Ore & Movimenti</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Debiti, crediti e storico personale</span>
+                        </div>
+                      </div>
+                      {tabDocente === 'BILANCIO_ORE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    {/* 8. Personalizzazioni */}
                     <button
                       type="button"
                       onClick={() => {
