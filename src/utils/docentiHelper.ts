@@ -760,3 +760,29 @@ export function getMateriaDocenteNellOra(
   const doc = docenti.find(d => d.id === docenteId);
   return doc?.materia || 'Docente';
 }
+
+/**
+ * Calcola il totale delle ore di straordinario a pagamento maturate da un docente
+ * (al netto di eventuali ore già compensate con permessi brevi)
+ */
+export function getOreStraordinarioDocente(
+  docenteId: string,
+  docenti: Docente[],
+  sostituzioni: import('../types').SostituzioneAssegnata[],
+  movimentiDebito: import('../types').MovimentoDebito[] = []
+): number {
+  const collegatiIds = getDocentiCollegatiIds(docenteId, docenti);
+
+  // 1. Ore di straordinario assegnate da sostituzioni
+  const oreDaSostituzioni = sostituzioni.filter(s => 
+    collegatiIds.includes(s.docenteSostitutoId) && 
+    (s.isStraordinario || s.categoria === 'STRAORDINARIO_D')
+  ).length;
+
+  // 2. Ore già compensate con permessi brevi (tracciate nei movimenti debito con descrizione COMPENSAZIONE_STRAORDINARIO)
+  const oreCompensate = movimentiDebito
+    .filter(m => collegatiIds.includes(m.docenteId) && m.descrizione?.includes('[COMPENSAZIONE_STRAORDINARIO]'))
+    .reduce((acc, m) => acc + Math.abs(m.deltaOre || 0), 0);
+
+  return Math.max(0, oreDaSostituzioni - oreCompensate);
+}

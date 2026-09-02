@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { MotivoAssenza, GiornoSettimana, AssenzaDocente } from '../types';
-import { UserMinus, Bus, Plus, Trash2, Calendar, Clock, MapPin, Users, ChevronDown, Check, X, Search, Ban, LayoutDashboard, ChevronLeft, ChevronRight, Info, Filter, UserCheck, ShieldCheck, Send, Bell, AlertTriangle } from 'lucide-react';
+import { UserMinus, Bus, Plus, Trash2, Calendar, Clock, MapPin, Users, ChevronDown, Check, X, Search, Ban, LayoutDashboard, ChevronLeft, ChevronRight, Info, Filter, UserCheck, ShieldCheck, Send, Bell, AlertTriangle, Scale } from 'lucide-react';
 import { FASCE_ORARIE } from '../utils/fasceOrarie';
-import { getDocentiUnici, getDocentiCollegatiIds, getBaseNomeDocente, formatDataItaliana } from '../utils/docentiHelper';
+import { getDocentiUnici, getDocentiCollegatiIds, getBaseNomeDocente, formatDataItaliana, getOreStraordinarioDocente, getOrarioUnificatoDocente } from '../utils/docentiHelper';
 
 export const GestioneAssenze: React.FC<{ 
   selectedDate: string; 
@@ -30,6 +30,7 @@ export const GestioneAssenze: React.FC<{
     removeUscita, 
     annullaUscita, 
     sostituzioni,
+    movimentiDebito,
     nomineSupplenti,
     addNominaSupplente,
     rimuoviNominaSupplente,
@@ -169,6 +170,41 @@ export const GestioneAssenze: React.FC<{
     );
   };
 
+  // Stato per la finestra di dialogo scelta compensazione straordinario / debito
+  const [richiestaCompensazioneStraordinario, setRichiestaCompensazioneStraordinario] = useState<{
+    docenteId: string;
+    docenteNome: string;
+    oreDebito: number;
+    oreStraordinarioDisponibili: number;
+    dates: string[];
+    oreInteressate: number[];
+    motivo: MotivoAssenza;
+    isOraria: boolean;
+    note: string;
+  } | null>(null);
+
+  // Esegue il salvataggio effettivo con o senza compensazione dello straordinario
+  const eseguiSalvataggioAssenza = (compensaConStraordinario: boolean, datiParam?: typeof richiestaCompensazioneStraordinario) => {
+    const dati = datiParam || richiestaCompensazioneStraordinario;
+    if (!dati) return;
+
+    dati.dates.forEach(dStr => {
+      addAssenza({
+        data: dStr,
+        giorno: getGiornoFromDate(dStr),
+        docenteId: dati.docenteId,
+        oreInteressate: dati.oreInteressate,
+        motivo: dati.motivo,
+        isOraria: dati.isOraria,
+        note: dati.note
+      }, compensaConStraordinario);
+    });
+
+    setSelectedDocenteId('');
+    setModalitaAperta(null);
+    setRichiestaCompensazioneStraordinario(null);
+  };
+
   // Salvataggio Assenza Docente
   const handleSalvaDocente = (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,21 +212,60 @@ export const GestioneAssenze: React.FC<{
 
     const oreInteressate = calcolaOreLezione(tipoDurataDoc, oraInizioDoc, oraFineDoc);
     const dates = isPeriodo ? getDatesInRange(dataDocente, dataDocenteFine) : [dataDocente];
+    const isOraria = tipoDurataDoc === 'ORARIA' || motivo === 'Oraria';
+    const note = tipoDurataDoc === 'ORARIA' ? `Fascia ${oraInizioDoc}:00 - ${oraFineDoc}:00` : 'Intera Giornata';
 
-    dates.forEach(dStr => {
-      addAssenza({
-        data: dStr,
-        giorno: getGiornoFromDate(dStr),
+    // Calcola quante ore di reale debito verrebbero generate (esclude ore vuote o ore 'D')
+    const orarioFuso = getOrarioUnificatoDocente(selectedDocenteId, docenti, orariDocenti);
+    let totaleOreDebitoCalcolate = 0;
+
+    if (isOraria && (motivo === 'Oraria' || motivo === 'Assenza')) {
+      dates.forEach(dStr => {
+        const targetGiorno = getGiornoFromDate(dStr);
+        oreInteressate.forEach(ora => {
+          const cella = orarioFuso.find(c => c.giorno === targetGiorno && c.ora === ora);
+          const val = (cella?.valore || '').trim().toUpperCase();
+          if (val && val !== 'D') {
+            totaleOreDebitoCalcolate++;
+          }
+        });
+      });
+    }
+
+    // Controlla se il docente ha ore di straordinario maturate a disposizione
+    const oreStraordinarioDisponibili = getOreStraordinarioDocente(selectedDocenteId, docenti, sostituzioni, movimentiDebito);
+
+    // Se genera debito e il docente ha ore di straordinario attive, chiedi alla vicepresidenza come procedere
+    if (totaleOreDebitoCalcolate > 0 && oreStraordinarioDisponibili > 0) {
+      const doc = docenti.find(d => d.id === selectedDocenteId);
+      const nomeDocente = doc ? getBaseNomeDocente(doc.nome) : 'Docente';
+
+      setRichiestaCompensazioneStraordinario({
         docenteId: selectedDocenteId,
+        docenteNome: nomeDocente,
+        oreDebito: totaleOreDebitoCalcolate,
+        oreStraordinarioDisponibili,
+        dates,
         oreInteressate,
         motivo,
-        isOraria: tipoDurataDoc === 'ORARIA',
-        note: tipoDurataDoc === 'ORARIA' ? `Fascia ${oraInizioDoc}:00 - ${oraFineDoc}:00` : 'Intera Giornata'
+        isOraria,
+        note
       });
-    });
+      return;
+    }
 
-    setSelectedDocenteId('');
-    setModalitaAperta(null);
+    // Altrimenti procedi normalmente
+    eseguiSalvataggioAssenza(false, {
+      docenteId: selectedDocenteId,
+      docenteNome: '',
+      oreDebito: totaleOreDebitoCalcolate,
+      oreStraordinarioDisponibili: 0,
+      dates,
+      oreInteressate,
+      motivo,
+      isOraria,
+      note
+    });
   };
 
   // Salvataggio Gita con Accompagnatori Atomico
@@ -1469,6 +1544,116 @@ export const GestioneAssenze: React.FC<{
           </div>
         );
       })()}
+
+      {/* ========================================================= */}
+      {/* MODALE DI SCELTA COMPENSAZIONE STRAORDINARIO vs DEBITO    */}
+      {/* ========================================================= */}
+      {richiestaCompensazioneStraordinario && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full p-5 space-y-4 animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]">
+            
+            {/* Intestazione */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5 text-indigo-950 font-black text-sm sm:text-base">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <Scale className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="leading-tight">Compensazione Ore Straordinario</h3>
+                  <span className="text-[11px] font-normal text-slate-500">Rilevato saldo positivo di ore straordinario</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRichiestaCompensazioneStraordinario(null)}
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Corpo Informativo */}
+            <div className="space-y-3 overflow-y-auto text-xs pr-1">
+              <div className="bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3.5 space-y-2 text-indigo-950">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold">Docente:</span>
+                  <strong className="font-black text-sm text-indigo-900">{richiestaCompensazioneStraordinario.docenteNome}</strong>
+                </div>
+                <div className="flex items-center justify-between text-[11px] pt-1 border-t border-indigo-100">
+                  <span>Permesso Breve richiesto:</span>
+                  <span className="font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                    -{richiestaCompensazioneStraordinario.oreDebito} {richiestaCompensazioneStraordinario.oreDebito === 1 ? 'ora di lezione' : 'ore di lezione'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] pt-1 border-t border-indigo-100">
+                  <span>Ore Straordinario già maturate:</span>
+                  <span className="font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    +{richiestaCompensazioneStraordinario.oreStraordinarioDisponibili} {richiestaCompensazioneStraordinario.oreStraordinarioDisponibili === 1 ? 'ora disponibile' : 'ore disponibili'}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-slate-600 text-xs leading-relaxed">
+                Il docente ha maturato delle ore di straordinario a pagamento. Come desideri procedere per questo permesso breve?
+              </p>
+
+              {/* Opzioni di scelta */}
+              <div className="space-y-2.5 pt-1">
+                {/* Opzione 1: Compensa */}
+                <button
+                  type="button"
+                  onClick={() => eseguiSalvataggioAssenza(true)}
+                  className="w-full text-left p-3.5 rounded-2xl border-2 border-emerald-500 bg-emerald-50/60 hover:bg-emerald-100/70 transition space-y-1 group cursor-pointer shadow-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <strong className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
+                      <Check className="w-4 h-4 text-emerald-600 font-black" />
+                      <span>1. Scala dal monte ore Straordinario (Consigliato)</span>
+                    </strong>
+                    <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                      Zero Debiti
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800 leading-snug pl-5">
+                    Le ore di permesso vengono stornate dallo straordinario ({richiestaCompensazioneStraordinario.oreStraordinarioDisponibili}h &rarr; {Math.max(0, richiestaCompensazioneStraordinario.oreStraordinarioDisponibili - richiestaCompensazioneStraordinario.oreDebito)}h). <strong>Il docente NON accumula debiti e non dovrà recuperare.</strong>
+                  </p>
+                </button>
+
+                {/* Opzione 2: Non compensare */}
+                <button
+                  type="button"
+                  onClick={() => eseguiSalvataggioAssenza(false)}
+                  className="w-full text-left p-3.5 rounded-2xl border border-slate-300 bg-slate-50 hover:bg-slate-100 transition space-y-1 group cursor-pointer"
+                >
+                  <div className="flex items-center justify-between">
+                    <strong className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                      <span>2. Mantieni Straordinario e Assegna Debito</span>
+                    </strong>
+                    <span className="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">
+                      Separati
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-snug pl-1">
+                    Tutto lo straordinario rimane intatto a pagamento (+{richiestaCompensazioneStraordinario.oreStraordinarioDisponibili}h) e il docente riceve regolarmente <strong>+{richiestaCompensazioneStraordinario.oreDebito}h di debito da recuperare</strong> tramite supplenze.
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setRichiestaCompensazioneStraordinario(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+              >
+                Annulla operazione
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

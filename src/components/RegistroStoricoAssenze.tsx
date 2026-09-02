@@ -728,33 +728,46 @@ export const RegistroStoricoAssenze: React.FC = () => {
                         Nessun movimento registrato finora per questo docente.
                       </p>
                     ) : (
-                      movimentiDocente.map(m => (
-                        <div
-                          key={m.id}
-                          className={`p-3 rounded-xl border flex items-center justify-between text-xs transition ${
-                            m.deltaOre < 0 
-                              ? 'bg-rose-50/70 border-rose-200 text-rose-950' 
-                              : 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg font-black flex items-center justify-center text-xs shrink-0 ${
-                              m.deltaOre < 0 ? 'bg-rose-200 text-rose-900' : 'bg-emerald-200 text-emerald-900'
+                      movimentiDocente.map(m => {
+                        const isCompensazione = m.descrizione?.includes('[COMPENSAZIONE_STRAORDINARIO]');
+                        return (
+                          <div
+                            key={m.id}
+                            className={`p-3 rounded-xl border flex items-center justify-between text-xs transition ${
+                              isCompensazione
+                                ? 'bg-indigo-50/80 border-indigo-200 text-indigo-950'
+                                : m.deltaOre < 0 
+                                ? 'bg-rose-50/70 border-rose-200 text-rose-950' 
+                                : 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-lg font-black flex items-center justify-center text-xs shrink-0 ${
+                                isCompensazione
+                                  ? 'bg-indigo-200 text-indigo-900'
+                                  : m.deltaOre < 0 
+                                  ? 'bg-rose-200 text-rose-900' 
+                                  : 'bg-emerald-200 text-emerald-900'
+                              }`}>
+                                {isCompensazione ? '⚖️' : (m.deltaOre < 0 ? `${m.deltaOre}h` : `+${m.deltaOre}h`)}
+                              </div>
+                              <div>
+                                <strong className="block text-slate-900 font-bold">{m.descrizione.replace('[COMPENSAZIONE_STRAORDINARIO]', '').trim()}</strong>
+                                <span className="text-[10px] text-slate-500">Data evento: {m.data}</span>
+                              </div>
+                            </div>
+                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
+                              isCompensazione
+                                ? 'bg-indigo-200 text-indigo-900'
+                                : m.deltaOre < 0 
+                                ? 'bg-rose-200 text-rose-900' 
+                                : 'bg-emerald-200 text-emerald-900'
                             }`}>
-                              {m.deltaOre < 0 ? `${m.deltaOre}h` : `+${m.deltaOre}h`}
-                            </div>
-                            <div>
-                              <strong className="block text-slate-900 font-bold">{m.descrizione}</strong>
-                              <span className="text-[10px] text-slate-500">Data evento: {m.data}</span>
-                            </div>
+                              {isCompensazione ? 'Compensato Straordinario' : (m.deltaOre < 0 ? 'Generato Debito' : 'Recuperato')}
+                            </span>
                           </div>
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${
-                            m.deltaOre < 0 ? 'bg-rose-200 text-rose-900' : 'bg-emerald-200 text-emerald-900'
-                          }`}>
-                            {m.deltaOre < 0 ? 'Generato Debito' : 'Recuperato'}
-                          </span>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </div>

@@ -89,7 +89,7 @@ interface AppContextType {
   rimuoviNominaSupplente: (nominaId: string) => Promise<void>;
   prorogaNominaSupplente: (nominaId: string, nuovaDataFine: string) => Promise<void>;
 
-  addAssenza: (assenza: Omit<AssenzaDocente, 'id' | 'createdAt'>) => void;
+  addAssenza: (assenza: Omit<AssenzaDocente, 'id' | 'createdAt'>, compensaConStraordinario?: boolean) => void;
   removeAssenza: (id: string) => void;
   annullaAssenza: (id: string, motivo?: string) => void;
   eliminaDefinitivamenteAssenza: (id: string) => void;
@@ -767,7 +767,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [movimentiDebito]);
 
   // Aggiungi assenza registrando tutti gli ID collegati alla persona fisica
-  const addAssenza = (nuovaAssenza: Omit<AssenzaDocente, 'id' | 'createdAt'>) => {
+  const addAssenza = (nuovaAssenza: Omit<AssenzaDocente, 'id' | 'createdAt'>, compensaConStraordinario: boolean = false) => {
     // Trova tutti gli ID associati alla persona (es. sia cattedra che alternativa)
     const collegatiIds = getDocentiCollegatiIds(nuovaAssenza.docenteId, docenti);
     const orarioFuso = getOrarioUnificatoDocente(nuovaAssenza.docenteId, docenti, orariDocenti);
@@ -783,7 +783,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     const isOraria = nuovaAssenza.isOraria || nuovaAssenza.motivo === 'Oraria' || (nuovaAssenza.oreInteressate.length < 5);
-    const oreDebito = (isOraria && (nuovaAssenza.motivo === 'Oraria' || nuovaAssenza.motivo === 'Assenza') && oreLezioneCoinvolte > 0) ? oreLezioneCoinvolte : 0;
+    const oreDebitoTeoriche = (isOraria && (nuovaAssenza.motivo === 'Oraria' || nuovaAssenza.motivo === 'Assenza') && oreLezioneCoinvolte > 0) ? oreLezioneCoinvolte : 0;
+    const oreDebitoEffettive = compensaConStraordinario ? 0 : oreDebitoTeoriche;
     const assenzaId = 'ass_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
 
     // Salva un singolo record di assenza con l'ID selezionato (il motore e il tabellone recuperano già l'orario fuso tramite docentiHelper)
@@ -791,16 +792,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...nuovaAssenza,
       id: assenzaId,
       isOraria,
-      oreDebitoGenerate: oreDebito,
+      oreDebitoGenerate: oreDebitoEffettive,
       annullata: false,
+      note: compensaConStraordinario 
+        ? `${nuovaAssenza.note || ''} [Compensato con straordinario]`.trim() 
+        : nuovaAssenza.note,
       createdAt: new Date().toISOString()
     };
 
-    // Se genera debito, incrementa debito docente e registra movimento
-    if (oreDebito > 0) {
+    // Se compensato con straordinario: non aumenta il debito, ma registra il movimento di compensazione
+    if (compensaConStraordinario && oreDebitoTeoriche > 0) {
+      const mov: MovimentoDebito = {
+        id: 'mov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        docenteId: nuovaAssenza.docenteId,
+        data: nuovaAssenza.data,
+        giorno: nuovaAssenza.giorno,
+        tipo: 'MODIFICA_MANUALE',
+        deltaOre: -oreDebitoTeoriche,
+        descrizione: `[COMPENSAZIONE_STRAORDINARIO] Permesso breve di ${oreDebitoTeoriche}h del ${nuovaAssenza.data} compensato da monte ore straordinario (Nessun debito generato)`,
+        createdAt: new Date().toISOString()
+      };
+      setMovimentiDebito(prev => [mov, ...prev]);
+    } else if (oreDebitoEffettive > 0) {
+      // Se genera debito standard, incrementa debito docente e registra movimento
       setDocenti(prev => prev.map(d => {
         if (collegatiIds.includes(d.id)) {
-          return { ...d, oreDebitoPermesso: (d.oreDebitoPermesso || 0) + oreDebito };
+          return { ...d, oreDebitoPermesso: (d.oreDebitoPermesso || 0) + oreDebitoEffettive };
         }
         return d;
       }));
@@ -811,8 +828,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         data: nuovaAssenza.data,
         giorno: nuovaAssenza.giorno,
         tipo: 'DEBITO_GENERATO',
-        deltaOre: -oreDebito,
-        descrizione: `Assenza oraria del ${nuovaAssenza.data} (${nuovaAssenza.oreInteressate.join('ª, ')}ª ora) - ${oreDebito} ore di lezione da recuperare`,
+        deltaOre: -oreDebitoEffettive,
+        descrizione: `Assenza oraria del ${nuovaAssenza.data} (${nuovaAssenza.oreInteressate.join('ª, ')}ª ora) - ${oreDebitoEffettive} ore di lezione da recuperare`,
         createdAt: new Date().toISOString()
       };
       setMovimentiDebito(prev => [mov, ...prev]);
