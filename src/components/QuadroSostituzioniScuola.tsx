@@ -135,7 +135,9 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
               if (!giaInserita) {
                 let materiaOra = prof.materia;
-                if (prof.isAlternativa || prof.nome.toUpperCase().includes('ALTERNATIVA')) {
+                if (prof.isEducatore || prof.nome.toUpperCase().includes('EDUCATORE')) {
+                  materiaOra = 'EDUCATORE';
+                } else if (prof.isAlternativa || prof.nome.toUpperCase().includes('ALTERNATIVA')) {
                   materiaOra = 'ALTERNATIVA';
                 } else if (prof.isPotenziamento || prof.nome.toUpperCase().includes('POTENZIAMENTO')) {
                   materiaOra = 'POTENZIAMENTO';

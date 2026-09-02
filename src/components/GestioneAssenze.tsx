@@ -247,8 +247,9 @@ export const GestioneAssenze: React.FC<{
     setModalitaAperta(null);
   };
 
-  // Lista deduplicata di persone fisiche (singolo nome con materie aggregate)
-  const docentiUnici = getDocentiUnici(docenti);
+  // Lista deduplicata di persone fisiche per assenze (include docenti curricolari, sostegno ed educatori)
+  const docentiEdEducatoriUnici = getDocentiUnici(docenti, true);
+  const docentiUnici = getDocentiUnici(docenti, false);
 
   // Docenti filtrati per la tendina degli accompagnatori
   const docentiFiltratiPerTendina = docentiUnici.filter(d => 
@@ -567,19 +568,19 @@ export const GestioneAssenze: React.FC<{
               </div>
             )}
 
-            {/* DOCENTE DEDUPLICATO A NOME SINGOLO */}
+            {/* DOCENTE DEDUPLICATO A NOME SINGOLO (INCLUSI EDUCATORI) */}
             <div className={isPeriodo ? 'sm:col-span-2 md:col-span-1' : 'md:col-span-2'}>
-              <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">Docente Assente</label>
+              <label className="block text-[10px] font-black text-slate-600 uppercase mb-1">Docente / Educatore Assente</label>
               <select
                 value={selectedDocenteId}
                 onChange={(e) => setSelectedDocenteId(e.target.value)}
                 required
                 className="w-full border border-slate-300 rounded-lg p-2 text-xs font-semibold bg-white"
               >
-                <option value="">-- Scegli Docente --</option>
-                {docentiUnici.map(d => (
+                <option value="">-- Scegli Docente o Educatore --</option>
+                {docentiEdEducatoriUnici.map(d => (
                   <option key={d.id} value={d.id}>
-                    {d.nome} ({d.materie.join(', ')})
+                    {d.isEducatore ? `🧑‍🏫 [EDUCATORE] ${d.nome}` : `${d.nome} (${d.materie.join(', ')})`}
                   </option>
                 ))}
               </select>

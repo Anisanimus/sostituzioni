@@ -212,17 +212,19 @@ export interface DocenteUnico {
   pinAccesso?: string;
 }
 
-export function getDocentiUnici(docenti: Docente[]): DocenteUnico[] {
+export function getDocentiUnici(docenti: Docente[], includeEducatori: boolean = false): DocenteUnico[] {
   const map = new Map<string, DocenteUnico>();
 
   docenti.forEach(d => {
-    if (d.isEducatore) return; // gli educatori rimangono gestiti a parte se necessario
+    if (d.isEducatore && !includeEducatori) return;
 
     const baseNome = getBaseNomeDocente(d.nome);
     
     // Determina la label reale della materia del profilo corrente
     let materiaEffettiva: string = d.materia;
-    if (d.isAlternativa || d.nome.toUpperCase().includes('ALTERNATIVA') || d.dettaglioMateria?.toUpperCase().includes('ALTERNATIVA')) {
+    if (d.isEducatore || d.nome.toUpperCase().includes('EDUCATORE') || d.dettaglioMateria?.toUpperCase().includes('EDUCATORE')) {
+      materiaEffettiva = 'EDUCATORE';
+    } else if (d.isAlternativa || d.nome.toUpperCase().includes('ALTERNATIVA') || d.dettaglioMateria?.toUpperCase().includes('ALTERNATIVA')) {
       materiaEffettiva = 'ALTERNATIVA';
     } else if (d.isPotenziamento || d.nome.toUpperCase().includes('POTENZIAMENTO') || d.dettaglioMateria?.toUpperCase().includes('POTENZIAMENTO')) {
       materiaEffettiva = 'POTENZIAMENTO';
@@ -253,6 +255,7 @@ export function getDocentiUnici(docenti: Docente[]): DocenteUnico[] {
         existing.materie.push(materiaEffettiva);
       }
       existing.isSostegno = existing.isSostegno || d.isSostegno;
+      existing.isEducatore = existing.isEducatore || d.isEducatore;
       existing.isPotenziamento = existing.isPotenziamento || d.isPotenziamento;
       existing.isAlternativa = existing.isAlternativa || d.isAlternativa;
       existing.isCasoGraveSostegno = existing.isCasoGraveSostegno || d.isCasoGraveSostegno || (d as any).casoGraveSostegno;

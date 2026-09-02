@@ -56,7 +56,7 @@ export const TabelloneSostituzioni: React.FC<{
 
   assenzeOggi.forEach(assenza => {
     const doc = docenti.find(d => d.id === assenza.docenteId);
-    if (!doc || doc.isEducatore) return;
+    if (!doc) return;
 
     const collegatiIds = getDocentiCollegatiIds(assenza.docenteId, docenti);
     const profiliDocente = docenti.filter(d => collegatiIds.includes(d.id));
@@ -90,7 +90,9 @@ export const TabelloneSostituzioni: React.FC<{
             if (!giaInserita) {
               // Determina l'esatta materia/attività di quest'ora specifica
               let materiaOra = prof.materia;
-              if (prof.isAlternativa || prof.nome.toUpperCase().includes('ALTERNATIVA') || prof.dettaglioMateria?.toUpperCase().includes('ALTERNATIVA')) {
+              if (prof.isEducatore || prof.nome.toUpperCase().includes('EDUCATORE') || prof.dettaglioMateria?.toUpperCase().includes('EDUCATORE')) {
+                materiaOra = 'EDUCATORE';
+              } else if (prof.isAlternativa || prof.nome.toUpperCase().includes('ALTERNATIVA') || prof.dettaglioMateria?.toUpperCase().includes('ALTERNATIVA')) {
                 materiaOra = 'ALTERNATIVA';
               } else if (prof.isPotenziamento || prof.nome.toUpperCase().includes('POTENZIAMENTO') || prof.dettaglioMateria?.toUpperCase().includes('POTENZIAMENTO') || nomeClasseVisualizzata === 'P') {
                 materiaOra = 'POTENZIAMENTO';
