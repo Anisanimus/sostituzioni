@@ -4,13 +4,15 @@ import { MotivoAssenza, AssenzaDocente } from '../types';
 import { 
   Calendar, Trash2, FileSpreadsheet, History, Scale, User, 
   Clock, Plus, Minus, CheckCircle, AlertTriangle, Search, Filter, Ban, RotateCcw,
-  Users, ArrowRight, UserCheck
+  Users, ArrowRight, UserCheck, Bell, Send
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { getDocentiUnici, getBaseNomeDocente, getDocentiCollegatiIds, getOrarioUnificatoDocente, formatDataItaliana } from '../utils/docentiHelper';
 
 export const RegistroStoricoAssenze: React.FC = () => {
   const { assenze, docenti, uscite, sostituzioni, orariDocenti, annullaAssenza, eliminaDefinitivamenteAssenza, movimentiDebito, modificaDebitoManuale } = useApp();
+
+  const [assenzaDaAnnullareConferma, setAssenzaDaAnnullareConferma] = useState<AssenzaDocente | null>(null);
 
   // Sottomenu interno: "1. Storico Assenze & Gite" oppure "2. Database Debiti & Recuperi Ore"
   const [sottoTab, setSottoTab] = useState<'STORICO_ASSENZE' | 'DATABASE_RECUPERI'>('STORICO_ASSENZE');
@@ -411,12 +413,8 @@ export const RegistroStoricoAssenze: React.FC = () => {
                               <>
                                 <button
                                   type="button"
-                                  onClick={() => {
-                                    if (window.confirm(`Vuoi segnare come ANNULLATA l'assenza di ${getDocenteNome(a.docenteId)} del ${a.data}? (Rimarrà archiviata)`)) {
-                                      annullaAssenza(a.id);
-                                    }
-                                  }}
-                                  className="text-amber-600 hover:text-amber-800 hover:bg-amber-50 p-1.5 rounded-lg transition font-bold text-xs flex items-center gap-1"
+                                  onClick={() => setAssenzaDaAnnullareConferma(a)}
+                                  className="text-amber-600 hover:text-amber-800 hover:bg-amber-50 p-1.5 rounded-lg transition font-bold text-xs flex items-center gap-1 cursor-pointer"
                                   title="Annulla assenza (rimane registrata come annullata)"
                                 >
                                   <Ban className="w-3.5 h-3.5" />
@@ -785,6 +783,135 @@ export const RegistroStoricoAssenze: React.FC = () => {
 
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* MODALE DI CONFERMA: ANNULLAMENTO ASSENZA E NOTIFICA AI SUPPLENTI          */}
+      {/* ========================================================================= */}
+      {assenzaDaAnnullareConferma && (() => {
+        const a = assenzaDaAnnullareConferma;
+        const nomeDocAssente = getDocenteNome(a.docenteId);
+        const collegatiIds = getDocentiCollegatiIds(a.docenteId, docenti);
+        
+        // Trova tutte le sostituzioni assegnate che verranno revocate
+        const sostsCoinvolte = sostituzioni.filter(s => 
+          s.data === a.data && 
+          (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === a.docenteId) && 
+          (a.oreInteressate || []).includes(s.ora) &&
+          s.categoria !== 'NON_SOSTITUIRE' &&
+          s.docenteSostitutoId
+        );
+
+        const sostsDaNotificare = sostsCoinvolte.filter(s => s.pubblicata || s.firmata);
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 text-left">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+              
+              {/* Header Modale */}
+              <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold shrink-0">
+                    <Ban className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 text-base sm:text-lg leading-tight">
+                      Conferma Annullamento Assenza
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      {formatDataItaliana(a.data)} • Prof. {nomeDocAssente}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setAssenzaDaAnnullareConferma(null)}
+                  className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Corpo Modale */}
+              <div className="overflow-y-auto space-y-3 flex-1 pr-1 text-xs">
+                <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-3.5 text-amber-950 space-y-1.5">
+                  <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                    <span>Stai per annullare l'assenza del docente:</span>
+                  </div>
+                  <div className="text-slate-800 space-y-0.5">
+                    <div>Docente: <strong className="text-slate-900 font-black">{nomeDocAssente}</strong></div>
+                    <div>Tipologia: <strong>{a.motivo}</strong> ({a.isOraria ? `Oraria ore: ${a.oreInteressate.join(', ')}` : 'Intera giornata'})</div>
+                  </div>
+                </div>
+
+                {sostsDaNotificare.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3 text-rose-950 space-y-1">
+                      <div className="font-bold flex items-center gap-1.5 text-rose-900">
+                        <Bell className="w-4 h-4 text-rose-600" />
+                        <span>Notifica Push di Annullamento ({sostsDaNotificare.length} docenti):</span>
+                      </div>
+                      <p className="text-[11px] text-rose-800 leading-relaxed">
+                        I seguenti colleghi avevano già ricevuto la supplenza e riceveranno immediatamente una <strong>notifica push con suono</strong> di revoca:
+                      </p>
+                    </div>
+
+                    <div className="space-y-1.5 max-h-44 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-2xl p-2 bg-slate-50/50">
+                      {sostsDaNotificare.map(s => {
+                        const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
+                        return (
+                          <div key={s.id} className="py-2 px-1 flex items-center justify-between text-xs gap-2">
+                            <div>
+                              <strong className="text-slate-900 font-black block">
+                                Prof. {docSost ? getBaseNomeDocente(docSost.nome) : s.docenteSostitutoId}
+                              </strong>
+                              <span className="text-[11px] text-slate-500">
+                                {s.ora}ª ora • Classe {s.classe}
+                              </span>
+                            </div>
+                            <span className="text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-md shrink-0">
+                              Supplenza Revocata
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-slate-500 text-[11px]">
+                    Nessun docente supplente aveva ancora ricevuto la richiesta di firma per questa assenza.
+                  </p>
+                )}
+              </div>
+
+              {/* Footer Azioni */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setAssenzaDaAnnullareConferma(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  Indietro
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    annullaAssenza(a.id);
+                    setAssenzaDaAnnullareConferma(null);
+                  }}
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-black text-xs px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+                >
+                  <Ban className="w-4 h-4" />
+                  <span>Conferma Annullamento</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );
