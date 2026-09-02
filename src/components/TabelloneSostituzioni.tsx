@@ -6,7 +6,7 @@ import {
   Users, AlertCircle, CheckCircle, Clock, ArrowRight, UserPlus, 
   HelpCircle, Trash2, Bus, ShieldAlert, Sparkles, Filter, ChevronRight, ChevronLeft, ChevronDown,
   Printer, LayoutGrid, List, MessageSquare, AlertTriangle, Accessibility, Lock,
-  UserCheck, UserX, UserMinus, GraduationCap, ChevronsUpDown, ChevronUp
+  UserCheck, UserX, UserMinus, GraduationCap, ChevronsUpDown, ChevronUp, Send, Bell
 } from 'lucide-react';
 import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
 
@@ -24,6 +24,10 @@ export const TabelloneSostituzioni: React.FC<{
   } = useApp();
 
   const [selectedOraScoperta, setSelectedOraScoperta] = useState<OraScoperta | null>(null);
+  // Modali di conferma invio notifiche per la firma
+  const [mostraConfermaPubblicaTutto, setMostraConfermaPubblicaTutto] = useState<boolean>(false);
+  const [sostituzionePerInvioSingolo, setSostituzionePerInvioSingolo] = useState<{ sost: SostituzioneAssegnata; oraScoperta?: OraScoperta } | null>(null);
+
   // Due modalità di visualizzazione: A blocchi orari, Per Docente Assente (con default da impostazioniScuola)
   const [visualizzazione, setVisualizzazione] = useState<'GRUPPI_ORA' | 'PER_DOCENTE'>(() => 
     impostazioniScuola?.vistaTabellonePredefinita || 'GRUPPI_ORA'
@@ -501,8 +505,8 @@ export const TabelloneSostituzioni: React.FC<{
               {/* TARGET STEP 7: PUBBLICA (MOBILE) / PUBBLICA FIRME (DESKTOP) */}
               <button
                 id="targetBtnPubblicaFirme"
-                onClick={() => pubblicaTutteSostituzioniData(selectedDate)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs transition whitespace-nowrap"
+                onClick={() => setMostraConfermaPubblicaTutto(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl text-xs flex items-center justify-center gap-1 sm:gap-1.5 shadow-xs transition whitespace-nowrap cursor-pointer"
                 title="Pubblica per le firme"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
@@ -745,7 +749,7 @@ export const TabelloneSostituzioni: React.FC<{
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            pubblicaSingolaSostituzione(sost.id);
+                                            setSostituzionePerInvioSingolo({ sost, oraScoperta: os });
                                           }}
                                           className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[10px] px-2 py-0.5 rounded-md transition shadow-2xs cursor-pointer"
                                           title="Invia la richiesta di firma per presa visione a questo singolo docente"
@@ -1038,7 +1042,7 @@ export const TabelloneSostituzioni: React.FC<{
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            pubblicaSingolaSostituzione(sost.id);
+                                            setSostituzionePerInvioSingolo({ sost, oraScoperta: os });
                                           }}
                                           className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[10px] px-2 py-0.5 rounded-md transition shadow-2xs cursor-pointer"
                                           title="Invia la richiesta di firma per presa visione a questo singolo docente"
@@ -1318,6 +1322,210 @@ export const TabelloneSostituzioni: React.FC<{
           }}
         />
       )}
+
+      {/* ========================================================================= */}
+      {/* MODALE DI CONFERMA: PUBBLICA TUTTE LE SOSTITUZIONI DELLA GIORNATA        */}
+      {/* ========================================================================= */}
+      {mostraConfermaPubblicaTutto && (() => {
+        const daPubblicare = sostituzioniOggi.filter(s => !s.pubblicata && s.docenteSostitutoId && s.categoria !== 'NON_SOSTITUIRE');
+        const giaPubblicate = sostituzioniOggi.filter(s => s.pubblicata && s.docenteSostitutoId && s.categoria !== 'NON_SOSTITUIRE');
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
+              
+              {/* Header Modale */}
+              <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                    <Send className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 text-base sm:text-lg leading-tight">
+                      Pubblica e Invia Notifiche Firme
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      {selectedGiorno} {formatDataItaliana(selectedDate)}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMostraConfermaPubblicaTutto(false)}
+                  className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Corpo Modale: Elenco Docenti da Notificare */}
+              <div className="overflow-y-auto space-y-3 flex-1 pr-1">
+                {daPubblicare.length === 0 ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center space-y-1">
+                    <AlertTriangle className="w-7 h-7 text-amber-600 mx-auto" />
+                    <h4 className="font-bold text-amber-950 text-xs sm:text-sm">Nessuna nuova sostituzione da inviare</h4>
+                    <p className="text-[11px] text-amber-800">
+                      {giaPubblicate.length > 0
+                        ? `Tutte le ${giaPubblicate.length} sostituzioni di oggi sono già state inviate ai docenti.`
+                        : 'Non ci sono ancora sostituti assegnati da pubblicare per questa data.'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3 text-xs text-emerald-950 space-y-1">
+                      <div className="font-bold flex items-center gap-1.5 text-emerald-900">
+                        <Bell className="w-4 h-4 text-emerald-600" />
+                        <span>I seguenti docenti riceveranno notifica push e avviso sonoro:</span>
+                      </div>
+                      <p className="text-[11px] text-emerald-800 leading-relaxed">
+                        All'invio, i docenti troveranno il banner in cima al proprio portale con il pulsante <strong>"Ho Capito ✓"</strong> e la richiesta di apporre la firma digitale.
+                      </p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider block">
+                        Docenti Destinatari ({daPubblicare.length}):
+                      </span>
+
+                      <div className="space-y-1.5 max-h-56 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-2xl p-2 bg-slate-50/50">
+                        {daPubblicare.map(s => {
+                          const docAssente = docenti.find(d => d.id === s.docenteAssenteId);
+                          const docSostituto = docenti.find(d => d.id === s.docenteSostitutoId);
+                          return (
+                            <div key={s.id} className="py-2 px-1 flex items-center justify-between text-xs gap-2">
+                              <div>
+                                <strong className="text-slate-900 font-black block">
+                                  Prof. {docSostituto ? getBaseNomeDocente(docSostituto.nome) : s.docenteSostitutoId}
+                                </strong>
+                                <span className="text-[11px] text-slate-500">
+                                  {s.ora}ª ora • Classe {s.classe} (in sostituzione di {docAssente ? getBaseNomeDocente(docAssente.nome) : 'Docente'})
+                                </span>
+                              </div>
+                              <span className="text-[10px] bg-indigo-100 text-indigo-900 font-bold px-2 py-0.5 rounded-md shrink-0">
+                                {s.categoria.replace(/_/g, ' ')}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Footer Azioni */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setMostraConfermaPubblicaTutto(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  Annulla
+                </button>
+
+                {daPubblicare.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      pubblicaTutteSostituzioniData(selectedDate);
+                      setMostraConfermaPubblicaTutto(false);
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Conferma e Invia ({daPubblicare.length} Notifiche)</span>
+                  </button>
+                )}
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ========================================================================= */}
+      {/* MODALE DI CONFERMA: INVIA NOTIFICA A SINGOLO DOCENTE                      */}
+      {/* ========================================================================= */}
+      {sostituzionePerInvioSingolo && (() => {
+        const { sost, oraScoperta } = sostituzionePerInvioSingolo;
+        const docAssente = docenti.find(d => d.id === sost.docenteAssenteId);
+        const docSostituto = docenti.find(d => d.id === sost.docenteSostitutoId);
+        const nomeSostituto = docSostituto ? getBaseNomeDocente(docSostituto.nome) : sost.docenteSostitutoId;
+        const nomeAssente = docAssente ? getBaseNomeDocente(docAssente.nome) : (oraScoperta ? getBaseNomeDocente(oraScoperta.docenteAssente.nome) : 'Docente');
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150">
+              
+              <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
+                    <Send className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 text-base leading-tight">
+                      Invia Notifica Supplenza
+                    </h3>
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">
+                      {selectedGiorno} {formatDataItaliana(selectedDate)}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSostituzionePerInvioSingolo(null)}
+                  className="text-slate-400 hover:text-slate-700 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="bg-indigo-50/80 border border-indigo-200 rounded-2xl p-3.5 text-indigo-950 space-y-2">
+                  <div className="font-bold flex items-center gap-1.5 text-indigo-900">
+                    <Bell className="w-4 h-4 text-indigo-600" />
+                    <span>Dettagli Invio al Docente:</span>
+                  </div>
+                  <div className="space-y-1 text-slate-800">
+                    <div>Docente: <strong className="text-indigo-950 text-sm">{nomeSostituto}</strong></div>
+                    <div>Ora e Classe: <strong>{sost.ora}ª ora in {sost.classe}</strong></div>
+                    <div>In sostituzione di: <strong>{nomeAssente}</strong></div>
+                  </div>
+                </div>
+
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  Il docente riceverà immediatamente un <strong>avviso sonoro</strong>, la <strong>notifica push a schermo bloccato</strong> e troverà il banner in alto con <strong>"Ho Capito ✓"</strong> nel suo portale per firmare la presa visione.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSostituzionePerInvioSingolo(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  Annulla
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    pubblicaSingolaSostituzione(sost.id);
+                    setSostituzionePerInvioSingolo(null);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Conferma e Invia</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };
@@ -1867,3 +2075,4 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
     </div>
   );
 };
+
