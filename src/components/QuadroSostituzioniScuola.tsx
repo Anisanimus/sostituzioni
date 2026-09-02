@@ -5,7 +5,8 @@ import {
   Search, Filter, Printer, KeyRound, ShieldAlert,
   ChevronLeft, ChevronRight, User, AlertCircle,
   FileDown, X, CheckSquare, Square, Download, Check,
-  ChevronsUpDown, ChevronDown, Megaphone, Bus, Calendar
+  ChevronsUpDown, ChevronDown, Megaphone, Bus, Calendar,
+  LayoutGrid, UserMinus
 } from 'lucide-react';
 import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
 
@@ -788,33 +789,35 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
         </div>
       )}
 
-      {/* BARRA CONTROLLI TABELLONE: SWITCH VISTA PER ORA / PER DOCENTE & ESPANDI/COMPRIMI (SOPRA AL PRIMO ASSENTE) */}
-      <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <div className="flex items-center bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
+      {/* BARRA CONTROLLI TABELLONE: SWITCH VISTA A BLOCCHI / PER DOCENTE & ESPANDI/COMPRIMI (SOPRA AL PRIMO ASSENTE) */}
+      <div className="flex items-center justify-between gap-2 flex-wrap pt-1 pb-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs shrink-0">
             <button
               type="button"
               onClick={() => setVisualizzazione('PER_ORA')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
                 visualizzazione === 'PER_ORA'
-                  ? 'bg-indigo-600 text-white shadow-2xs font-black'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-white text-indigo-700 shadow-xs border border-slate-200 font-black'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
+              title="A blocchi orari"
             >
-              <Clock className="w-3.5 h-3.5" />
-              <span>Per Ora</span>
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>A blocchi</span>
             </button>
 
             <button
               type="button"
               onClick={() => setVisualizzazione('PER_DOCENTE')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
                 visualizzazione === 'PER_DOCENTE'
-                  ? 'bg-indigo-600 text-white shadow-2xs font-black'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  ? 'bg-white text-indigo-700 shadow-xs border border-slate-200 font-black'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
+              title="Per Docente Assente"
             >
-              <User className="w-3.5 h-3.5" />
+              <UserMinus className="w-3.5 h-3.5 text-indigo-600" />
               <span>Per Docente</span>
             </button>
           </div>
@@ -846,14 +849,10 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                 <button
                   type="button"
                   onClick={handleToggleTutto}
-                  className={`p-2 rounded-xl border transition flex items-center justify-center cursor-pointer shadow-2xs ${
-                    isTuttoAperto
-                      ? 'bg-indigo-50 text-indigo-700 border-indigo-300 hover:bg-indigo-100'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-                  }`}
+                  className="w-8 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition shadow-xs cursor-pointer"
                   title={isTuttoAperto ? "Tutto aperto - Clicca per Comprimere tutto" : "Tutto chiuso - Clicca per Espandere tutto"}
                 >
-                  <ChevronsUpDown className="w-4 h-4 text-indigo-600" />
+                  <ChevronsUpDown className="w-4 h-4 text-white" />
                 </button>
               );
             })()
