@@ -1518,65 +1518,72 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 1. CREAZIONE / AGGIORNAMENTO AUTOMATICO DEL PROFILO DOCENTE SUPPLENTE & EREDITARIETÀ ORARIO
     const supplenteBaseNome = getBaseNomeDocente(nuovaNomina.supplenteNome);
-    const titolareDoc = docentiRef.current.find(d => d.id === nuovaNomina.docenteTitolareId) ||
-                       docentiRef.current.find(d => getBaseNomeDocente(d.nome) === getBaseNomeDocente(nuovaNomina.docenteTitolareNome));
-
-    // Trova l'orario del docente sostituito da ereditare
-    const idDaCuiEreditare = nuovaNomina.docenteSostituitoDaNominaId || nuovaNomina.docenteTitolareId;
-    const orarioDaEreditare = orariDocentiRef.current.find(o => o.docenteId === idDaCuiEreditare) ||
-                             (titolareDoc ? orariDocentiRef.current.find(o => o.docenteId === titolareDoc.id) : undefined);
+    
+    // Trova tutti i profili collegati alla persona fisica del docente titolare (es. cattedra, alternativa, potenziamento)
+    const titolareCollegatiIds = getDocentiCollegatiIds(nuovaNomina.docenteTitolareId, docentiRef.current);
+    const titolareProfili = docentiRef.current.filter(d => titolareCollegatiIds.includes(d.id));
 
     let updatedDocenti = [...docentiRef.current];
     let updatedOrari = [...orariDocentiRef.current];
 
-    // Cerca se esiste già un profilo per questo supplente
-    let supplenteDoc = updatedDocenti.find(d => getBaseNomeDocente(d.nome) === supplenteBaseNome);
-    let supplenteId = supplenteDoc ? supplenteDoc.id : `doc_suppl_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    // Rimuovi o aggiorna eventuali profili preesistenti di questo supplente
+    updatedDocenti = updatedDocenti.filter(d => getBaseNomeDocente(d.nome) !== supplenteBaseNome);
+    const supplentiCreatiIds: string[] = [];
 
-    if (!supplenteDoc) {
-      // Crea nuovo profilo Docente
+    // Per ciascun profilo del titolare (es. CASTALDO FIORENZA, CASTALDO FIORENZA (ALTERNATIVA), CASTALDO FIORENZA (POTENZIAMENTO))
+    // creiamo il profilo corrispondente per il supplente
+    if (titolareProfili.length > 0) {
+      titolareProfili.forEach((profTitolare, pIdx) => {
+        const isPrimario = pIdx === 0;
+        // Se il profilo titolare ha un suffisso tipo (ALTERNATIVA) o (POTENZIAMENTO), applicalo anche al supplente
+        const suffixMatch = profTitolare.nome.match(/\s*\([^)]+\)\s*$/);
+        const suffix = suffixMatch ? suffixMatch[0] : '';
+        const nomeProfiloSupplente = `${supplenteBaseNome}${suffix}`.trim().toUpperCase();
+        const supplenteProfiloId = `doc_suppl_${Date.now()}_${pIdx}_${Math.random().toString(36).substr(2, 4)}`;
+        supplentiCreatiIds.push(supplenteProfiloId);
+
+        const nuovoDocenteSupplente: Docente = {
+          id: supplenteProfiloId,
+          nome: nomeProfiloSupplente,
+          email: isPrimario && nuovaNomina.supplenteEmail ? nuovaNomina.supplenteEmail.trim().toLowerCase() : undefined,
+          materia: profTitolare.materia,
+          dettaglioMateria: profTitolare.dettaglioMateria,
+          classeRiferimento: profTitolare.classeRiferimento,
+          isSostegno: profTitolare.isSostegno || false,
+          isCasoGraveSostegno: profTitolare.isCasoGraveSostegno || false,
+          isEducatore: profTitolare.isEducatore || false,
+          isPotenziamento: profTitolare.isPotenziamento || false,
+          isAlternativa: profTitolare.isAlternativa || false,
+          oreDebitoPermesso: 0
+        };
+        updatedDocenti = [nuovoDocenteSupplente, ...updatedDocenti];
+
+        // Eredita l'orario specifico di questo profilo
+        const orarioTitolare = orariDocentiRef.current.find(o => o.docenteId === profTitolare.id);
+        if (orarioTitolare && orarioTitolare.ore) {
+          // Rimuovi eventuale vecchio orario per questo ID
+          updatedOrari = updatedOrari.filter(o => o.docenteId !== supplenteProfiloId);
+          updatedOrari.push({
+            docenteId: supplenteProfiloId,
+            ore: JSON.parse(JSON.stringify(orarioTitolare.ore))
+          });
+        }
+      });
+    } else {
+      // Fallback singolo se non trova collegati
+      const supplenteId = `doc_suppl_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
       const nuovoDocenteSupplente: Docente = {
         id: supplenteId,
-        nome: nuovaNomina.supplenteNome.trim().toUpperCase(),
+        nome: supplenteBaseNome,
         email: nuovaNomina.supplenteEmail ? nuovaNomina.supplenteEmail.trim().toLowerCase() : undefined,
-        materia: titolareDoc?.materia || 'LETTERE',
-        dettaglioMateria: titolareDoc?.dettaglioMateria,
-        classeRiferimento: titolareDoc?.classeRiferimento,
-        isSostegno: titolareDoc?.isSostegno || false,
-        isCasoGraveSostegno: titolareDoc?.isCasoGraveSostegno || false,
+        materia: 'LETTERE',
+        isSostegno: false,
         isEducatore: false,
-        isPotenziamento: titolareDoc?.isPotenziamento || false,
-        isAlternativa: titolareDoc?.isAlternativa || false,
+        isPotenziamento: false,
+        isAlternativa: false,
         oreDebitoPermesso: 0
       };
       updatedDocenti = [nuovoDocenteSupplente, ...updatedDocenti];
-    } else {
-      // Aggiorna email o materia se presenti
-      updatedDocenti = updatedDocenti.map(d => {
-        if (d.id === supplenteDoc!.id) {
-          return {
-            ...d,
-            email: nuovaNomina.supplenteEmail ? nuovaNomina.supplenteEmail.trim().toLowerCase() : d.email,
-            materia: titolareDoc?.materia || d.materia
-          };
-        }
-        return d;
-      });
-    }
-
-    // Eredita o aggiorna l'orario settimanale del docente titolare sulla cattedra del supplente
-    if (orarioDaEreditare && orarioDaEreditare.ore) {
-      const orarioEsistenteIdx = updatedOrari.findIndex(o => o.docenteId === supplenteId);
-      const orarioEreditato: OrarioDocente = {
-        docenteId: supplenteId,
-        ore: JSON.parse(JSON.stringify(orarioDaEreditare.ore))
-      };
-
-      if (orarioEsistenteIdx >= 0) {
-        updatedOrari[orarioEsistenteIdx] = orarioEreditato;
-      } else {
-        updatedOrari.push(orarioEreditato);
-      }
     }
 
     setDocenti(updatedDocenti);
@@ -1589,7 +1596,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // vengono revocate / rimosse perché da quella data la cattedra è coperta dal nuovo supplente nominato.
     const dataPresaServizio = nuovaNomina.dataInizio.split('T')[0];
     const titolareBaseNome = getBaseNomeDocente(nuovaNomina.docenteTitolareNome);
-    const titolareCollegatiIds = getDocentiCollegatiIds(nuovaNomina.docenteTitolareId, updatedDocenti);
 
     let puliteAssenze: AssenzaDocente[] = [];
     setAssenze(prevAssenze => {
