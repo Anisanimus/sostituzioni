@@ -150,7 +150,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                   s.classe === val &&
                   (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId)
                 );
-                const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE');
+                const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE' && s.pubblicata);
 
                 items.push({
                   ora,
@@ -161,7 +161,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                   isUscita: assenza.motivo === 'Uscita',
                   nonSostituita: nonSost,
                   sostituti: sosts
-                    .filter(s => s.categoria !== 'NON_SOSTITUIRE')
+                    .filter(s => s.categoria !== 'NON_SOSTITUIRE' && s.pubblicata)
                     .map(s => {
                       const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
                       return {
