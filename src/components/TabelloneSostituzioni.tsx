@@ -461,7 +461,7 @@ export const TabelloneSostituzioni: React.FC<{
                       if (isTuttoAperto) {
                         setDocentiAperti([]);
                       } else {
-                        setDocentiAperti(docentiAssentiRaggruppati.map(d => d.nomeDocente));
+                        setDocentiAperti(docentiAssentiRaggruppati.map(d => d.docAssente.id));
                       }
                     }
                   };
