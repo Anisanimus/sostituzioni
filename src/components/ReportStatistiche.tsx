@@ -100,7 +100,7 @@ export const ReportStatistiche: React.FC = () => {
     const stats = docentiUnici.map(doc => {
       const assenzePermesso = assenzeFiltrate.filter(a => {
         const d = docenti.find(x => x.id === a.docenteId);
-        return d && getBaseNomeDocente(d.nome) === doc.nome && (a.motivo === 'Oraria' || a.isOraria);
+        return d && getBaseNomeDocente(d.nome) === doc.nome && a.motivo !== 'Assemblea sindacale' && (a.motivo === 'Oraria' || a.isOraria);
       });
       const orePermessiRichieste = assenzePermesso.reduce((acc, a) => acc + a.oreInteressate.length, 0);
 
