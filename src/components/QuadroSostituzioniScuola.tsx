@@ -789,88 +789,88 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
         </div>
       )}
 
-      {/* BARRA CONTROLLI TABELLONE: SWITCH VISTA A BLOCCHI / PER DOCENTE & ESPANDI/COMPRIMI (SOPRA AL PRIMO ASSENTE) */}
-      <div className="flex items-center justify-between gap-2 flex-wrap pt-1 pb-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs shrink-0">
-            <button
-              type="button"
-              onClick={() => setVisualizzazione('PER_ORA')}
-              className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                visualizzazione === 'PER_ORA'
-                  ? 'bg-white text-indigo-700 shadow-xs border border-slate-200 font-black'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="A blocchi orari"
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>A blocchi</span>
-            </button>
+      {/* ELENCO SOSTITUZIONI: CONTENITORE UNIFICATO CON BARRA CONTROLLI INTEGRATA COME IN VICEPRESIDENZA */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+        
+        {/* HEADER UNIFICATO TABELLONE: CONTROLLI VISTA A SINISTRA E STATISTICHE A DESTRA */}
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2 border-b border-slate-100 pb-3 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-xs border border-slate-200 shadow-2xs shrink-0">
+              <button
+                type="button"
+                onClick={() => setVisualizzazione('PER_ORA')}
+                className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                  visualizzazione === 'PER_ORA'
+                    ? 'bg-white text-indigo-700 shadow-xs border border-slate-200 font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="A blocchi orari"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>A blocchi</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setVisualizzazione('PER_DOCENTE')}
-              className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
-                visualizzazione === 'PER_DOCENTE'
-                  ? 'bg-white text-indigo-700 shadow-xs border border-slate-200 font-black'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-              title="Per Docente Assente"
-            >
-              <UserMinus className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Per Docente</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setVisualizzazione('PER_DOCENTE')}
+                className={`px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                  visualizzazione === 'PER_DOCENTE'
+                    ? 'bg-white text-indigo-700 shadow-xs border border-slate-200 font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+                title="Per Docente Assente"
+              >
+                <UserMinus className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Per Docente</span>
+              </button>
+            </div>
+
+            {/* PULSANTE DISCRETO SOLO ICONA ESPANDI / COMPRIMI TUTTO */}
+            {righeFiltrate.length > 0 && (
+              (() => {
+                const isTuttoAperto = visualizzazione === 'PER_ORA'
+                  ? oreChiuse.length === 0
+                  : docentiChiusi.length === 0;
+
+                const handleToggleTutto = () => {
+                  if (visualizzazione === 'PER_ORA') {
+                    if (isTuttoAperto) {
+                      setOreChiuse(gruppiPerOra.map(([oraNum]) => oraNum));
+                    } else {
+                      setOreChiuse([]);
+                    }
+                  } else {
+                    if (isTuttoAperto) {
+                      setDocentiChiusi(gruppiPerDocente.map(([nomeDoc]) => nomeDoc));
+                    } else {
+                      setDocentiChiusi([]);
+                    }
+                  }
+                };
+
+                return (
+                  <button
+                    type="button"
+                    onClick={handleToggleTutto}
+                    className="w-8 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition shadow-xs cursor-pointer"
+                    title={isTuttoAperto ? "Tutto aperto - Clicca per Comprimere tutto" : "Tutto chiuso - Clicca per Espandere tutto"}
+                  >
+                    <ChevronsUpDown className="w-4 h-4 text-white" />
+                  </button>
+                );
+              })()
+            )}
           </div>
 
-          {/* PULSANTE DISCRETO SOLO ICONA ESPANDI / COMPRIMI TUTTO */}
-          {righeFiltrate.length > 0 && (
-            (() => {
-              const isTuttoAperto = visualizzazione === 'PER_ORA'
-                ? oreChiuse.length === 0
-                : docentiChiusi.length === 0;
-
-              const handleToggleTutto = () => {
-                if (visualizzazione === 'PER_ORA') {
-                  if (isTuttoAperto) {
-                    setOreChiuse(gruppiPerOra.map(([oraNum]) => oraNum));
-                  } else {
-                    setOreChiuse([]);
-                  }
-                } else {
-                  if (isTuttoAperto) {
-                    setDocentiChiusi(gruppiPerDocente.map(([nomeDoc]) => nomeDoc));
-                  } else {
-                    setDocentiChiusi([]);
-                  }
-                }
-              };
-
-              return (
-                <button
-                  type="button"
-                  onClick={handleToggleTutto}
-                  className="w-8 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition shadow-xs cursor-pointer"
-                  title={isTuttoAperto ? "Tutto aperto - Clicca per Comprimere tutto" : "Tutto chiuso - Clicca per Espandere tutto"}
-                >
-                  <ChevronsUpDown className="w-4 h-4 text-white" />
-                </button>
-              );
-            })()
+          {/* CONTEGGIO STATISTICHE SINTETICO */}
+          {righeQuadro.length > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+              <span className="bg-slate-100 border border-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-xl">
+                {totCoperte}/{totOreScoperte} Coperte
+              </span>
+            </div>
           )}
         </div>
-
-        {/* CONTEGGIO STATISTICHE SINTETICO */}
-        {righeQuadro.length > 0 && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-            <span className="bg-slate-100 border border-slate-200 text-slate-700 font-bold px-2.5 py-1 rounded-xl">
-              {totCoperte}/{totOreScoperte} Coperte
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* ELENCO SOSTITUZIONI: TABELLA COMPATTA ORIZZONTALE AL 100% (ZERO SCROLL / ZERO SWIPE SU MOBILE) */}
-      <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
         {righeFiltrate.length === 0 ? (
           (() => {
             const dObj = new Date(selectedDate);
