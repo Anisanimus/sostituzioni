@@ -441,7 +441,7 @@ export const GestioneAssenze: React.FC<{
           </button>
         </div>
 
-        {/* GRUPPO 2: PULSANTI "REGISTRATI (N)" E "RISORSE (N)" IN LINEA A 2 COLONNE SU MOBILE */}
+        {/* GRUPPO 2: PULSANTI "EVENTI (N)" E "RISORSE (N)" */}
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2 flex-1 sm:flex-none">
           <button
             type="button"
@@ -454,8 +454,7 @@ export const GestioneAssenze: React.FC<{
           >
             <div className="flex items-center gap-1">
               <span>📋</span>
-              <span className="sm:hidden text-[11px]">Eventi</span>
-              <span className="hidden sm:inline">Eventi Registrati</span>
+              <span className="text-[11px] sm:text-xs">Eventi</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
               mostraDettagliEventi ? 'bg-indigo-800 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'
@@ -484,8 +483,7 @@ export const GestioneAssenze: React.FC<{
           >
             <div className="flex items-center gap-1">
               <span>⚡</span>
-              <span className="sm:hidden text-[11px]">Risorse</span>
-              <span className="hidden sm:inline">Risorse Disponibili</span>
+              <span className="text-[11px] sm:text-xs">Risorse</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
               (window.innerWidth < 640 ? mostraRisorseInlineMobile : mostraRisorseLaterale) ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 border border-amber-200'
