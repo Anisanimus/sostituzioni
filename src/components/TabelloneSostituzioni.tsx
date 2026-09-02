@@ -914,8 +914,8 @@ export const TabelloneSostituzioni: React.FC<{
                   </div>
 
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {/* 1. ORE COPERTE CON ICONA OROLOGIO */}
-                    <span className={`text-xs font-black px-2.5 py-1 rounded-xl shadow-2xs flex items-center gap-1 ${
+                    {/* 1. ORE COPERTE CON ICONA OROLOGIO - VISIBILE SOLO SU MOBILE */}
+                    <span className={`sm:hidden text-xs font-black px-2.5 py-1 rounded-xl shadow-2xs flex items-center gap-1 ${
                       gruppoDoc.totCoperteDoc === gruppoDoc.totOreDoc 
                         ? 'bg-emerald-600 text-white' 
                         : 'bg-amber-500 text-white'
@@ -924,9 +924,9 @@ export const TabelloneSostituzioni: React.FC<{
                       {gruppoDoc.totCoperteDoc === gruppoDoc.totOreDoc && <span>✓</span>}
                     </span>
 
-                    {/* 3. INVIATE */}
+                    {/* 3. INVIATE - VISIBILE SOLO SU MOBILE */}
                     {gruppoDoc.totCoperteDoc > 0 && (
-                      <span className={`text-xs font-black px-2 py-1 rounded-xl border shadow-2xs flex items-center gap-1 transition ${
+                      <span className={`sm:hidden text-xs font-black px-2 py-1 rounded-xl border shadow-2xs flex items-center gap-1 transition ${
                         gruppoDoc.totPubblicateDoc === gruppoDoc.totCoperteDoc
                           ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
                           : 'bg-sky-100 text-sky-900 border-sky-300'
@@ -936,9 +936,9 @@ export const TabelloneSostituzioni: React.FC<{
                       </span>
                     )}
 
-                    {/* 4. PRESE VISIONE (FIRME) */}
+                    {/* 4. PRESE VISIONE (FIRME) - VISIBILE SOLO SU MOBILE */}
                     {gruppoDoc.totCoperteDoc > 0 && (
-                      <span className={`text-xs font-black px-2 py-1 rounded-xl shadow-2xs flex items-center gap-1 transition ${
+                      <span className={`sm:hidden text-xs font-black px-2 py-1 rounded-xl shadow-2xs flex items-center gap-1 transition ${
                         gruppoDoc.totFirmateDoc === gruppoDoc.totCoperteDoc
                           ? 'bg-emerald-600 text-white border border-emerald-700'
                           : gruppoDoc.totFirmateDoc > 0
@@ -946,7 +946,6 @@ export const TabelloneSostituzioni: React.FC<{
                             : 'bg-white text-slate-600 border border-slate-300'
                       }`} title="Prese visione (firme) effettuate dai docenti">
                         <span>✍️ {gruppoDoc.totFirmateDoc}/{gruppoDoc.totCoperteDoc}</span>
-                        <span className="hidden sm:inline font-normal text-[10px]">firmate</span>
                         {gruppoDoc.totFirmateDoc === gruppoDoc.totCoperteDoc && <span>✓</span>}
                       </span>
                     )}
