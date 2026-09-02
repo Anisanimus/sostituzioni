@@ -5,7 +5,7 @@ import {
   Search, Filter, Printer, KeyRound, ShieldAlert,
   ChevronLeft, ChevronRight, User, AlertCircle,
   FileDown, X, CheckSquare, Square, Download, Check,
-  ChevronsUpDown, ChevronDown, Megaphone
+  ChevronsUpDown, ChevronDown, Megaphone, Bus, Calendar
 } from 'lucide-react';
 import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
 
@@ -211,9 +211,10 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
     impostazioniScuola?.vistaTabellonePredefinita === 'PER_DOCENTE' ? 'PER_DOCENTE' : 'PER_ORA'
   );
 
-  // Set per gestire gli accordion aperti. Di default vuoti = TUTTO CHIUSO
-  const [oreAperte, setOreAperte] = useState<number[]>([]);
-  const [docentiAperti, setDocentiAperti] = useState<string[]>([]);
+  // Set per gestire gli accordion aperti. Di default TUTTO APERTO
+  const [oreChiuse, setOreChiuse] = useState<number[]>([]);
+  const [docentiChiusi, setDocentiChiusi] = useState<string[]>([]);
+  const [pillolaAperta, setPillolaAperta] = useState<'ANNUNCI' | 'USCITE' | 'SUPPLENTI' | null>(null);
 
   // Raggruppamento 1: per ORA (senza colonne inutili)
   const gruppiPerOra = useMemo(() => {
@@ -353,21 +354,21 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
             {righeFiltrate.length > 0 && (
               (() => {
                 const isTuttoAperto = visualizzazione === 'PER_ORA'
-                  ? oreAperte.length === gruppiPerOra.length && gruppiPerOra.length > 0
-                  : docentiAperti.length === gruppiPerDocente.length && gruppiPerDocente.length > 0;
+                  ? oreChiuse.length === 0
+                  : docentiChiusi.length === 0;
 
                 const handleToggleTutto = () => {
                   if (visualizzazione === 'PER_ORA') {
                     if (isTuttoAperto) {
-                      setOreAperte([]);
+                      setOreChiuse(gruppiPerOra.map(([oraNum]) => oraNum));
                     } else {
-                      setOreAperte(gruppiPerOra.map(([oraNum]) => oraNum));
+                      setOreChiuse([]);
                     }
                   } else {
                     if (isTuttoAperto) {
-                      setDocentiAperti([]);
+                      setDocentiChiusi(gruppiPerDocente.map(([nomeDoc]) => nomeDoc));
                     } else {
-                      setDocentiAperti(gruppiPerDocente.map(([nomeDoc]) => nomeDoc));
+                      setDocentiChiusi([]);
                     }
                   }
                 };
@@ -646,7 +647,9 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
         </div>
       )}
 
-      {/* BANNER ANNUNCI & COMUNICAZIONI VICEPRESIDENZA ATTIVI NEL GIORNO SELEZIONATO */}
+      {/* ========================================================================= */}
+      {/* STRISCIA MICRO-CHIP COMPATTA EVENTI DEL GIORNO (SOLO SE CI SONO EVENTI)   */}
+      {/* ========================================================================= */}
       {(() => {
         const dIso = selectedDate.split('T')[0];
         const annunciOggi = annunciBacheca.filter(a => {
@@ -654,86 +657,207 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           return dIso >= a.data.split('T')[0] && dIso <= fineIso;
         });
 
-        if (annunciOggi.length === 0) return null;
+        const usciteOggiValide = uscite.filter(u => u.data === selectedDate && !u.annullata);
+        const classiInUscitaOggi = Array.from(new Set(usciteOggiValide.flatMap(u => u.classi || [(u as any).classe] || []))).sort();
 
-        return (
-          <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border-2 border-violet-300 rounded-2xl p-4 shadow-sm space-y-3 animate-in fade-in">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 bg-violet-600 text-white rounded-xl flex items-center justify-center font-bold text-xs shadow-2xs">
-                <Megaphone className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <h3 className="text-xs sm:text-sm font-black text-violet-950 flex items-center gap-2">
-                  <span>Comunicazioni & Avvisi Vicepresidenza</span>
-                  <span className="bg-violet-200 text-violet-900 text-[10px] px-2 py-0.2 rounded-full font-bold">
-                    {annunciOggi.length} {annunciOggi.length === 1 ? 'Avviso' : 'Avvisi'}
-                  </span>
-                </h3>
-                <p className="text-[10px] text-violet-700">Avvisi ufficiali per la giornata di {giornoSettimana} {formatDataItaliana(selectedDate)}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-              {annunciOggi.map(a => (
-                <div key={a.id} className="bg-white/90 p-3 rounded-xl border border-violet-200 text-xs shadow-2xs space-y-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="bg-violet-700 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                      {formatDataItaliana(a.data)} {a.dataFine && a.dataFine !== a.data ? `➔ ${formatDataItaliana(a.dataFine)}` : ''}
-                    </span>
-                    <span className="text-[10px] font-bold text-violet-800 bg-violet-100 px-1.5 py-0.2 rounded">
-                      {a.autore || 'Vicepresidenza'}
-                    </span>
-                  </div>
-                  <p className="text-slate-800 font-medium whitespace-pre-wrap leading-relaxed text-xs">
-                    {a.testo}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* BANNER NOMINE SUPPLENTI ATTIVE OGGI (PER PERSONALE ATA & SEGRETERIA / ACCOGLIENZA) */}
-      {(() => {
         const nomineOggi = nomineSupplenti.filter(n => {
-          const dIso = selectedDate.split('T')[0];
           return dIso >= n.dataInizio.split('T')[0] && dIso <= n.dataFine.split('T')[0];
         });
 
-        if (nomineOggi.length === 0) return null;
+        const haEventi = annunciOggi.length > 0 || usciteOggiValide.length > 0 || nomineOggi.length > 0;
+        if (!haEventi) return null;
 
         return (
-          <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-3.5 sm:p-4 shadow-sm space-y-2 animate-in fade-in">
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 bg-emerald-600 text-white rounded-lg flex items-center justify-center font-bold text-xs">
-                🧑‍🏫
-              </span>
-              <h3 className="text-xs sm:text-sm font-black text-emerald-950">
-                Supplenti in Servizio su Cattedra ({nomineOggi.length})
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {nomineOggi.map(nom => (
-                <div key={nom.id} className="bg-white p-2.5 rounded-xl border border-emerald-200 text-xs shadow-2xs space-y-0.5">
-                  <div className="flex items-center justify-between">
-                    <strong className="text-slate-900 text-xs sm:text-sm">{nom.supplenteNome}</strong>
-                    <span className="text-[10px] bg-emerald-100 text-emerald-900 font-bold px-1.5 py-0.2 rounded">
-                      Supplente
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600">
-                    Sostituisce: <strong className="text-slate-800">{nom.docenteTitolareNome}</strong> ({nom.motivo || 'Maternità / Congedo'})
-                  </p>
-                  <p className="text-[10px] text-slate-400">
-                    Periodo: {formatDataItaliana(nom.dataInizio)} ➔ {formatDataItaliana(nom.dataFine)}
-                  </p>
-                </div>
-              ))}
-            </div>
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap animate-in fade-in py-1">
+            {/* 1. CHIP AVVISI / MEGAFONO */}
+            {annunciOggi.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setPillolaAperta(pillolaAperta === 'ANNUNCI' ? null : 'ANNUNCI')}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                  pillolaAperta === 'ANNUNCI'
+                    ? 'bg-violet-600 text-white border-violet-700 ring-2 ring-violet-300'
+                    : 'bg-violet-50 hover:bg-violet-100 text-violet-950 border-violet-200'
+                }`}
+                title="Visualizza avvisi e comunicazioni"
+              >
+                <Megaphone className="w-3.5 h-3.5 text-violet-700 group-hover:scale-110 shrink-0" />
+                <span className="sm:hidden font-black">{annunciOggi.length}</span>
+                <span className="hidden sm:inline font-bold">
+                  {annunciOggi.length === 1 ? '1 Avviso' : `${annunciOggi.length} Avvisi`}
+                </span>
+              </button>
+            )}
+
+            {/* 2. CHIP CLASSI IN GITA / USCITA */}
+            {usciteOggiValide.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setPillolaAperta(pillolaAperta === 'USCITE' ? null : 'USCITE')}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                  pillolaAperta === 'USCITE'
+                    ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-200'
+                }`}
+                title="Visualizza classi in gita o uscita didattica"
+              >
+                <Bus className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                <span className="sm:hidden font-black">{classiInUscitaOggi.length}</span>
+                <span className="hidden sm:inline font-bold">
+                  Classi in Gita: <strong className="font-black">{classiInUscitaOggi.join(', ')}</strong>
+                </span>
+              </button>
+            )}
+
+            {/* 3. CHIP SUPPLENTI SU CATTEDRA */}
+            {nomineOggi.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setPillolaAperta(pillolaAperta === 'SUPPLENTI' ? null : 'SUPPLENTI')}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                  pillolaAperta === 'SUPPLENTI'
+                    ? 'bg-emerald-600 text-white border-emerald-700 ring-2 ring-emerald-300'
+                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border-emerald-200'
+                }`}
+                title="Visualizza supplenti in servizio su cattedra"
+              >
+                <span className="text-xs">🧑‍🏫</span>
+                <span className="sm:hidden font-black">{nomineOggi.length}</span>
+                <span className="hidden sm:inline font-bold">
+                  {nomineOggi.length === 1 
+                    ? `Supplente: ${nomineOggi[0].supplenteNome.split(' ')[0]}` 
+                    : `${nomineOggi.length} Supplenti`}
+                </span>
+              </button>
+            )}
           </div>
         );
       })()}
+
+      {/* ========================================================================= */}
+      {/* POPUP MODALE DETTAGLI MICRO-CHIP SELEZIONATO                             */}
+      {/* ========================================================================= */}
+      {pillolaAperta && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4 animate-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
+            {/* HEADER POPUP */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-white shadow-2xs ${
+                  pillolaAperta === 'ANNUNCI' ? 'bg-violet-600' : pillolaAperta === 'USCITE' ? 'bg-amber-600' : 'bg-emerald-600'
+                }`}>
+                  {pillolaAperta === 'ANNUNCI' && <Megaphone className="w-4 h-4" />}
+                  {pillolaAperta === 'USCITE' && <Bus className="w-4 h-4" />}
+                  {pillolaAperta === 'SUPPLENTI' && <span>🧑‍🏫</span>}
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">
+                    {pillolaAperta === 'ANNUNCI' && 'Comunicazioni & Avvisi Vicepresidenza'}
+                    {pillolaAperta === 'USCITE' && 'Uscite Didattiche & Classi in Gita'}
+                    {pillolaAperta === 'SUPPLENTI' && 'Supplenti in Servizio su Cattedra'}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">{giornoSettimana} {formatDataItaliana(selectedDate)}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPillolaAperta(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* CONTENUTO 1: ANNUNCI */}
+            {pillolaAperta === 'ANNUNCI' && (
+              <div className="space-y-2.5">
+                {annunciBacheca.filter(a => {
+                  const dIso = selectedDate.split('T')[0];
+                  const fineIso = (a.dataFine || a.data).split('T')[0];
+                  return dIso >= a.data.split('T')[0] && dIso <= fineIso;
+                }).map(a => (
+                  <div key={a.id} className="bg-violet-50/60 p-3.5 rounded-2xl border border-violet-200 text-xs space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="bg-violet-700 text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                        {formatDataItaliana(a.data)} {a.dataFine && a.dataFine !== a.data ? `➔ ${formatDataItaliana(a.dataFine)}` : ''}
+                      </span>
+                      <span className="text-[10px] font-bold text-violet-800 bg-violet-200/70 px-2 py-0.5 rounded">
+                        {a.autore || 'Vicepresidenza'}
+                      </span>
+                    </div>
+                    <p className="text-slate-800 font-medium whitespace-pre-wrap leading-relaxed text-xs">
+                      {a.testo}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* CONTENUTO 2: USCITE & GITE */}
+            {pillolaAperta === 'USCITE' && (
+              <div className="space-y-2.5">
+                {uscite.filter(u => u.data === selectedDate && !u.annullata).map(u => (
+                  <div key={u.id} className="bg-amber-50/60 p-3.5 rounded-2xl border border-amber-200 text-xs space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <strong className="text-slate-900 text-xs sm:text-sm font-black">{u.titoloMeta}</strong>
+                      <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded">
+                        Classi: {(u.classi || [(u as any).classe] || []).join(', ')}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-600">
+                      Ore coinvolte: <strong className="text-slate-800 font-bold">{u.ore.join('ª, ')}ª ora</strong>
+                    </div>
+                    {u.docentiAccompagnatoriIds && u.docentiAccompagnatoriIds.length > 0 && (
+                      <div className="text-[11px] text-slate-600">
+                        Accompagnatori: <strong className="text-slate-800">{u.docentiAccompagnatoriIds.map(dId => {
+                          const doc = docenti.find(d => d.id === dId);
+                          return doc ? getBaseNomeDocente(doc.nome) : 'Docente';
+                        }).join(', ')}</strong>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* CONTENUTO 3: SUPPLENTI */}
+            {pillolaAperta === 'SUPPLENTI' && (
+              <div className="space-y-2.5">
+                {nomineSupplenti.filter(n => {
+                  const dIso = selectedDate.split('T')[0];
+                  return dIso >= n.dataInizio.split('T')[0] && dIso <= n.dataFine.split('T')[0];
+                }).map(nom => (
+                  <div key={nom.id} className="bg-emerald-50/60 p-3.5 rounded-2xl border border-emerald-200 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-slate-900 text-xs sm:text-sm font-black">{nom.supplenteNome}</strong>
+                      <span className="text-[10px] bg-emerald-200 text-emerald-950 font-bold px-2 py-0.5 rounded">
+                        Supplente
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600">
+                      Sostituisce: <strong className="text-slate-800 font-bold">{nom.docenteTitolareNome}</strong> ({nom.motivo || 'Maternità / Congedo'})
+                    </p>
+                    <p className="text-[10px] text-slate-500">
+                      Periodo: {formatDataItaliana(nom.dataInizio)} ➔ {formatDataItaliana(nom.dataFine)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* PULSANTE CHIUDI */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setPillolaAperta(null)}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition cursor-pointer"
+              >
+                Chiudi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ELENCO SOSTITUZIONI: TABELLA COMPATTA ORIZZONTALE AL 100% (ZERO SCROLL / ZERO SWIPE SU MOBILE) */}
       <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
@@ -788,14 +912,14 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           /* ======================================================= */
           <div className="divide-y divide-slate-200">
             {gruppiPerOra.map(([oraNum, righeDellOra]) => {
-              const isAperto = oreAperte.includes(oraNum);
+              const isAperto = !oreChiuse.includes(oraNum);
               return (
                 <div key={oraNum} className="bg-white">
                   {/* INTESTAZIONE ORA ACCORDION */}
                   <button
                     type="button"
                     onClick={() => {
-                      setOreAperte(prev => 
+                      setOreChiuse(prev => 
                         prev.includes(oraNum) ? prev.filter(o => o !== oraNum) : [...prev, oraNum]
                       );
                     }}
@@ -928,7 +1052,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
           /* ======================================================= */
           <div className="space-y-4 p-3 sm:p-4 bg-slate-100/50">
             {gruppiPerDocente.map(([docenteNome, righeDocente], gIdx) => {
-              const isAperto = docentiAperti.includes(docenteNome);
+              const isAperto = !docentiChiusi.includes(docenteNome);
               const totOreDoc = righeDocente.length;
               const totCoperteDoc = righeDocente.filter(r => r.sostituti.length > 0 || r.nonSostituita).length;
               const isTuttoCoperto = totCoperteDoc === totOreDoc;
@@ -944,7 +1068,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                   <button
                     type="button"
                     onClick={() => {
-                      setDocentiAperti(prev => 
+                      setDocentiChiusi(prev => 
                         prev.includes(docenteNome) ? prev.filter(d => d !== docenteNome) : [...prev, docenteNome]
                       );
                     }}

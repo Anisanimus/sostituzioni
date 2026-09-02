@@ -40,7 +40,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
   const [internalTab, setInternalTab] = useState<TabDocenteType>('MIE_SOSTITUZIONI');
   const [richiestaInviata, setRichiestaInviata] = useState<boolean>(false);
   const [mostraGuidaIos, setMostraGuidaIos] = useState<boolean>(false);
-  const [accordionAnnunciAperto, setAccordionAnnunciAperto] = useState<boolean>(true);
+  const [accordionAnnunciAperto, setAccordionAnnunciAperto] = useState<boolean>(false);
 
   // Tab effettivo sincronizzato tra props e stato interno
   const tabDocente = currentTab || internalTab;
@@ -635,33 +635,30 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
               <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border-2 border-violet-200 rounded-2xl shadow-sm overflow-hidden animate-in fade-in">
                 <div 
                   onClick={() => setAccordionAnnunciAperto(prev => !prev)}
-                  className="p-4 flex items-center justify-between cursor-pointer hover:bg-violet-100/40 transition select-none"
+                  className="px-3 py-2 sm:px-4 sm:py-2.5 flex items-center justify-between cursor-pointer hover:bg-violet-100/40 transition select-none"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-2xs">
-                      <Megaphone className="w-4 h-4" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-violet-600 text-white flex items-center justify-center shadow-2xs">
+                      <Megaphone className="w-3.5 h-3.5" />
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-black text-sm text-violet-950">
-                          Bacheca Annunci & Comunicazioni
-                        </h4>
-                        <span className="bg-violet-200 text-violet-900 font-bold text-[10px] px-2 py-0.5 rounded-full">
-                          {annunciAttivi.length} {annunciAttivi.length === 1 ? 'Avviso' : 'Avvisi'}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-violet-700">Comunicazioni ufficiali dalla Vicepresidenza</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-black text-xs sm:text-sm text-violet-950">
+                        Bacheca Annunci & Comunicazioni
+                      </h4>
+                      <span className="bg-violet-200 text-violet-900 font-bold text-[9px] sm:text-[10px] px-2 py-0.2 rounded-full">
+                        {annunciAttivi.length} {annunciAttivi.length === 1 ? 'Avviso' : 'Avvisi'}
+                      </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1 text-violet-700">
-                    <span className="text-xs font-bold hidden sm:inline">
-                      {accordionAnnunciAperto ? 'Comprimi' : 'Espandi'}
+                    <span className="text-[11px] font-bold hidden sm:inline">
+                      {accordionAnnunciAperto ? 'Comprimi' : 'Leggi'}
                     </span>
                     {accordionAnnunciAperto ? (
-                      <ChevronUp className="w-5 h-5 text-violet-700" />
+                      <ChevronUp className="w-4 h-4 text-violet-700" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-violet-700" />
+                      <ChevronDown className="w-4 h-4 text-violet-700" />
                     )}
                   </div>
                 </div>

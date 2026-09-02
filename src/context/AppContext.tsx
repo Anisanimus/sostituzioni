@@ -323,6 +323,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Inizializza l'insieme degli ID delle sostituzioni già pubblicate all'avvio per NON notificare vecchie supplenze
         const knownPublishedSostituzioniIdsRef = new Set<string>();
         const knownAnnunciIdsRef = new Set<string>();
+        const knownUsciteIdsRef = new Set<string>();
         let isFirstSyncSnapshot = true;
 
         // 1. Fetch iniziale immediato per caricare subito lo stato reale
@@ -353,6 +354,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (cloudData.uscite && Array.isArray(cloudData.uscite)) {
             setUscite(cloudData.uscite);
             localStorage.setItem('scuola_uscite', JSON.stringify(cloudData.uscite));
+            cloudData.uscite.forEach((u: any) => {
+              knownUsciteIdsRef.add(u.id);
+            });
           }
           if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
             setSostituzioni(cloudData.sostituzioni);
@@ -409,8 +413,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               localStorage.setItem('scuola_assenze', JSON.stringify(cloudData.assenze));
             }
             if (cloudData.uscite && Array.isArray(cloudData.uscite)) {
-              setUscite(cloudData.uscite);
-              localStorage.setItem('scuola_uscite', JSON.stringify(cloudData.uscite));
+              const currentCloudUscite: UscitaClasse[] = cloudData.uscite;
+              // Se arriva una nuova uscita non presente all'avvio, notifica via push con solo le classi
+              if (!isFirstSyncSnapshot && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                const nuoveUscite = currentCloudUscite.filter(u => !u.annullata && !knownUsciteIdsRef.has(u.id));
+                if (nuoveUscite.length > 0) {
+                  try {
+                    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.4);
+                  } catch (e) {}
+
+                  nuoveUscite.forEach((usc) => {
+                    const classiStr = (usc.classi || [(usc as any).classe] || []).join(', ');
+                    const notifTitle = `🚌 Uscita Didattica: Classi ${classiStr}`;
+                    const notifMsg = `Uscita per le classi ${classiStr}: ${usc.titoloMeta || 'Gita / Uscita Didattica'} (il ${formatDataItaliana(usc.data)})`;
+                    const notifTag = `usc_${usc.id}`;
+                    try {
+                      if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.ready.then(reg => {
+                          reg.showNotification(notifTitle, {
+                            body: notifMsg,
+                            icon: '/favicon.svg',
+                            tag: notifTag,
+                            renotify: true
+                          } as any);
+                        }).catch(() => {
+                          new Notification(notifTitle, { body: notifMsg, icon: '/favicon.svg', tag: notifTag });
+                        });
+                      } else {
+                        new Notification(notifTitle, { body: notifMsg, icon: '/favicon.svg', tag: notifTag });
+                      }
+                    } catch (err) {
+                      console.warn('Errore push uscita:', err);
+                    }
+                  });
+                }
+              }
+
+              knownUsciteIdsRef.clear();
+              currentCloudUscite.forEach(u => knownUsciteIdsRef.add(u.id));
+              setUscite(currentCloudUscite);
+              localStorage.setItem('scuola_uscite', JSON.stringify(currentCloudUscite));
             }
             if (cloudData.notifiche && Array.isArray(cloudData.notifiche)) {
               setNotifiche(cloudData.notifiche);
@@ -1257,11 +1310,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     });
 
+    // Genera notifica interna per tutti i docenti registrati
+    const classiStr = (nuovaUscita.classi || []).join(', ');
+    const tuttePersoneIds = Array.from(new Set(docentiRef.current.map(d => d.id)));
+    const nuoveNotif: NotificaDocente[] = tuttePersoneIds.map(docId => ({
+      id: 'notif_usc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      docenteId: docId,
+      data: nuovaUscita.data,
+      ora: nuovaUscita.ore[0] || 1,
+      classe: classiStr,
+      tipo: 'NUOVA_SOSTITUZIONE' as const,
+      titolo: `🚌 Uscita Didattica: Classi ${classiStr}`,
+      messaggio: `Registrata uscita didattica per le classi ${classiStr}: ${nuovaUscita.titoloMeta} (il ${formatDataItaliana(nuovaUscita.data)})`,
+      letta: false,
+      createdAt: new Date().toISOString()
+    }));
+
+    setNotifiche(prev => [...nuoveNotif, ...prev]);
+
     setUscite(prev => {
       const updatedUscite = [uscita, ...prev];
       setAssenze(prevAss => {
         const updatedAssenze = [...assenzeAccompagnatori, ...prevAss];
-        triggerCloudSync({ uscite: updatedUscite, assenze: updatedAssenze });
+        triggerCloudSync({ 
+          uscite: updatedUscite, 
+          assenze: updatedAssenze,
+          notifiche: [...nuoveNotif, ...(notificheRef.current || [])]
+        });
         return updatedAssenze;
       });
       return updatedUscite;
