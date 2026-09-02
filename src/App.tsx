@@ -27,7 +27,7 @@ import {
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
   Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound, TrendingUp,
-  Monitor, Pin, PinOff, PanelLeftClose, PanelLeftOpen, PanelLeft
+  Monitor, Pin, PinOff, PanelLeftClose, PanelLeftOpen, PanelLeft, Scale, ArrowDownUp
 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -44,7 +44,7 @@ const MainApp: React.FC = () => {
     return 'PORTALE_DOCENTE';
   });
   const [tabVice, setTabVice] = useState<'GESTIONE_GIORNALIERA' | 'QUADRO_SCUOLA' | 'STORICO' | 'REPORT' | 'DOCENTI' | 'PERSONALIZZAZIONI' | 'IMPEGNI' | 'RISORSE'>('GESTIONE_GIORNALIERA');
-  const [tabDocente, setTabDocente] = useState<'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE'>('MIE_SOSTITUZIONI');
+  const [tabDocente, setTabDocente] = useState<'MIE_SOSTITUZIONI' | 'BILANCIO_ORE' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE'>('MIE_SOSTITUZIONI');
   const [tabAta, setTabAta] = useState<'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE'>('QUADRO_SCUOLA');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarPinnedDesktop, setIsSidebarPinnedDesktop] = useState<boolean>(() => {
@@ -332,6 +332,27 @@ const MainApp: React.FC = () => {
                       </div>
                     </div>
                     {tabDocente === 'MIE_SOSTITUZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTabDocente('BILANCIO_ORE')}
+                    className={`w-full p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                      tabDocente === 'BILANCIO_ORE'
+                        ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className={`p-1.5 rounded-lg ${tabDocente === 'BILANCIO_ORE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        <Scale className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="block font-black text-xs">Bilancio Ore & Movimenti</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Debiti, crediti e storico</span>
+                      </div>
+                    </div>
+                    {tabDocente === 'BILANCIO_ORE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                   </button>
 
                   <button
@@ -758,6 +779,30 @@ const MainApp: React.FC = () => {
                         </div>
                       </div>
                       {tabDocente === 'MIE_SOSTITUZIONI' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTabDocente('BILANCIO_ORE');
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full p-3 rounded-xl text-xs font-bold transition flex items-center justify-between gap-3 text-left cursor-pointer ${
+                        tabDocente === 'BILANCIO_ORE'
+                          ? 'bg-indigo-50 text-indigo-900 border border-indigo-200 shadow-2xs font-black'
+                          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${tabDocente === 'BILANCIO_ORE' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                          <Scale className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="block font-black text-sm">Bilancio Ore & Movimenti</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Debiti, crediti e storico personale</span>
+                        </div>
+                      </div>
+                      {tabDocente === 'BILANCIO_ORE' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
                     </button>
 
                     <button

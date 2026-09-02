@@ -1566,8 +1566,8 @@ export const GestioneAssenze: React.FC<{
                   <Scale className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="leading-tight">Compensazione Ore Straordinario</h3>
-                  <span className="text-[11px] font-normal text-slate-500">Rilevato saldo positivo di ore straordinario</span>
+                  <h3 className="leading-tight">Compensazione Ore a Credito</h3>
+                  <span className="text-[11px] font-normal text-slate-500">Rilevato saldo positivo di ore a credito</span>
                 </div>
               </div>
               <button
@@ -1593,15 +1593,15 @@ export const GestioneAssenze: React.FC<{
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-[11px] pt-1 border-t border-indigo-100">
-                  <span>Ore Straordinario già maturate:</span>
+                  <span>Ore a Credito disponibili:</span>
                   <span className="font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                    +{richiestaCompensazioneStraordinario.oreStraordinarioDisponibili} {richiestaCompensazioneStraordinario.oreStraordinarioDisponibili === 1 ? 'ora disponibile' : 'ore disponibili'}
+                    +{richiestaCompensazioneStraordinario.oreStraordinarioDisponibili} {richiestaCompensazioneStraordinario.oreStraordinarioDisponibili === 1 ? 'ora a credito' : 'ore a credito'}
                   </span>
                 </div>
               </div>
 
               <p className="text-slate-600 text-xs leading-relaxed">
-                Il docente ha maturato delle ore di straordinario a pagamento. Come desideri procedere per questo permesso breve?
+                Il docente ha maturato delle ore a credito. Come desideri procedere per questo permesso breve?
               </p>
 
               {/* Opzioni di scelta */}
@@ -1615,14 +1615,14 @@ export const GestioneAssenze: React.FC<{
                   <div className="flex items-center justify-between">
                     <strong className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
                       <Check className="w-4 h-4 text-emerald-600 font-black" />
-                      <span>1. Scala dal monte ore Straordinario (Consigliato)</span>
+                      <span>1. Scala dal monte Ore a Credito (Consigliato)</span>
                     </strong>
                     <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
                       Zero Debiti
                     </span>
                   </div>
                   <p className="text-[11px] text-emerald-800 leading-snug pl-5">
-                    Le ore di permesso vengono stornate dallo straordinario ({richiestaCompensazioneStraordinario.oreStraordinarioDisponibili}h &rarr; {Math.max(0, richiestaCompensazioneStraordinario.oreStraordinarioDisponibili - richiestaCompensazioneStraordinario.oreDebito)}h). <strong>Il docente NON accumula debiti e non dovrà recuperare.</strong>
+                    Le ore di permesso vengono stornate dal credito ({richiestaCompensazioneStraordinario.oreStraordinarioDisponibili}h &rarr; {Math.max(0, richiestaCompensazioneStraordinario.oreStraordinarioDisponibili - richiestaCompensazioneStraordinario.oreDebito)}h). <strong>Il docente NON accumula debiti e non dovrà recuperare.</strong>
                   </p>
                 </button>
 
@@ -1634,14 +1634,14 @@ export const GestioneAssenze: React.FC<{
                 >
                   <div className="flex items-center justify-between">
                     <strong className="text-xs font-black text-slate-800 flex items-center gap-1.5">
-                      <span>2. Mantieni Straordinario e Assegna Debito</span>
+                      <span>2. Mantieni Ore a Credito e Assegna Debito</span>
                     </strong>
                     <span className="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">
                       Separati
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-600 leading-snug pl-1">
-                    Tutto lo straordinario rimane intatto a pagamento (+{richiestaCompensazioneStraordinario.oreStraordinarioDisponibili}h) e il docente riceve regolarmente <strong>+{richiestaCompensazioneStraordinario.oreDebito}h di debito da recuperare</strong> tramite supplenze.
+                    Tutto il credito maturato rimane intatto (+{richiestaCompensazioneStraordinario.oreStraordinarioDisponibili}h) e il docente riceve regolarmente <strong>+{richiestaCompensazioneStraordinario.oreDebito}h di debito da recuperare</strong> tramite supplenze.
                   </p>
                 </button>
               </div>

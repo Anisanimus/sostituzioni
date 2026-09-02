@@ -5,13 +5,15 @@ import {
   CheckCircle2, Bell, User, Key, Calendar, AlertTriangle, X, 
   LayoutDashboard, Clock, ShieldCheck, RefreshCw, Table, Search, 
   BookOpen, GraduationCap, Accessibility, Users, School, FileDown, 
-  Printer, CheckSquare, Square, Check, Filter, ExternalLink, CalendarPlus
+  Printer, CheckSquare, Square, Check, Filter, ExternalLink, CalendarPlus,
+  Scale, ArrowDownUp, TrendingDown, TrendingUp
 } from 'lucide-react';
 import { 
   getDocentiCollegatiIds, getDocentiUnici, trovaCorrispondenzaDocente, 
   formatDataItaliana, getOrarioUnificatoDocente, getBaseNomeDocente, 
   getDocentiCompresentiInClasseNellOra, getClassiUniche, getDocentiConsiglioClasse,
-  generaLinkGoogleCalendar, scaricaFileIcsCalendar, getMateriaDocenteNellOra
+  generaLinkGoogleCalendar, scaricaFileIcsCalendar, getMateriaDocenteNellOra,
+  getOreCreditoDocente
 } from '../utils/docentiHelper';
 import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
 import { VistaCalendariGoogle } from './VistaCalendariGoogle';
@@ -19,7 +21,7 @@ import { GiornoSettimana } from '../types';
 
 const GIORNI_SETTIMANA: GiornoSettimana[] = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 
-export type TabDocenteType = 'MIE_SOSTITUZIONI' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE';
+export type TabDocenteType = 'MIE_SOSTITUZIONI' | 'BILANCIO_ORE' | 'QUADRO_SCUOLA' | 'ORARIO' | 'CONSIGLI_CLASSE' | 'IMPEGNI' | 'RISORSE';
 
 interface PortaleDocenteProps {
   currentTab?: TabDocenteType;
@@ -29,7 +31,7 @@ interface PortaleDocenteProps {
 
 export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTabChange, isAtaView = false }) => {
   const { 
-    docenti, orariDocenti, sostituzioni, notifiche, firmaSostituzione, segnaNotificheLette, rimuoviNotifica,
+    docenti, orariDocenti, sostituzioni, movimentiDebito, notifiche, firmaSostituzione, segnaNotificheLette, rimuoviNotifica,
     richiesteAccessoDocenti, associaEmailDocente, creaRichiestaAccessoDocente, impostazioniScuola
   } = useApp();
   const { utenteInfo, logout } = useAuth();
@@ -513,6 +515,19 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
 
           <button
             type="button"
+            onClick={() => setTabDocente('BILANCIO_ORE')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
+              tabDocente === 'BILANCIO_ORE'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <Scale className="w-4 h-4 text-amber-500" />
+            <span>Bilancio Ore</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setTabDocente('QUADRO_SCUOLA')}
             className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 cursor-pointer ${
               tabDocente === 'QUADRO_SCUOLA'
@@ -690,6 +705,213 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
           )}
         </div>
       )}
+
+      {/* CONTENUTO SCHEDA: BILANCIO ORE (CREDITI, DEBITI & MOVIMENTI DETTAGLIATI) */}
+      {tabDocente === 'BILANCIO_ORE' && (() => {
+        const oreCredito = docente ? getOreCreditoDocente(docente.id, docenti, sostituzioni, movimentiDebito) : 0;
+        const oreDebito = docente?.oreDebitoPermesso || 0;
+        const saldoNetto = oreCredito - oreDebito;
+
+        const mieiMovimenti = movimentiDebito
+          .filter(m => collegatiIds.includes(m.docenteId))
+          .sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+        const mieSupplenzeCredito = sostituzioni
+          .filter(s => collegatiIds.includes(s.docenteSostitutoId) && (s.isStraordinario || s.categoria === 'STRAORDINARIO_D'))
+          .sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+
+        const mieSupplenzeRecupero = sostituzioni
+          .filter(s => collegatiIds.includes(s.docenteSostitutoId) && s.consumaDebito)
+          .sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+
+        return (
+          <div className="space-y-4 animate-fadeIn">
+            {/* INTESTAZIONE E KPI RIEPILOGATIVI */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="font-black text-slate-900 text-lg sm:text-xl flex items-center gap-2.5">
+                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-2xl">
+                      <Scale className="w-5 h-5" />
+                    </div>
+                    <span>Il Tuo Bilancio Ore & Movimenti</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">
+                    Trasparenza contabile completa su ore a credito, permessi brevi fruiti, compensazioni e recuperi effettuati.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl border border-slate-200">
+                    Docente: <strong className="text-slate-950">{docente ? getBaseNomeDocente(docente.nome) : 'Docente'}</strong>
+                  </span>
+                </div>
+              </div>
+
+              {/* CARD KPI */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                {/* 1. ORE A CREDITO */}
+                <div className="bg-emerald-50/70 border border-emerald-200/90 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
+                  <div>
+                    <span className="text-[11px] font-black text-emerald-900 block uppercase tracking-wider">
+                      Ore a Credito Disponibili
+                    </span>
+                    <strong className="text-2xl sm:text-3xl font-black text-emerald-950 block mt-0.5">
+                      +{oreCredito} <span className="text-sm font-bold text-emerald-800">Ore</span>
+                    </strong>
+                    <span className="text-[10px] text-emerald-700 font-medium block mt-1">
+                      Maturate con supplenze / ore aggiuntive
+                    </span>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-emerald-200/80 text-emerald-900 flex items-center justify-center font-bold text-lg shrink-0">
+                    <TrendingUp className="w-6 h-6 text-emerald-800" />
+                  </div>
+                </div>
+
+                {/* 2. ORE A DEBITO */}
+                <div className="bg-rose-50/70 border border-rose-200/90 rounded-2xl p-4 flex items-center justify-between shadow-2xs">
+                  <div>
+                    <span className="text-[11px] font-black text-rose-900 block uppercase tracking-wider">
+                      Ore a Debito da Recuperare
+                    </span>
+                    <strong className="text-2xl sm:text-3xl font-black text-rose-950 block mt-0.5">
+                      {oreDebito > 0 ? `-${oreDebito}` : '0'} <span className="text-sm font-bold text-rose-800">Ore</span>
+                    </strong>
+                    <span className="text-[10px] text-rose-700 font-medium block mt-1">
+                      Da permessi brevi non ancora recuperati
+                    </span>
+                  </div>
+                  <div className="w-11 h-11 rounded-2xl bg-rose-200/80 text-rose-900 flex items-center justify-center font-bold text-lg shrink-0">
+                    <TrendingDown className="w-6 h-6 text-rose-800" />
+                  </div>
+                </div>
+
+                {/* 3. SALDO NETTO */}
+                <div className={`border rounded-2xl p-4 flex items-center justify-between shadow-2xs ${
+                  saldoNetto > 0 
+                    ? 'bg-teal-50/70 border-teal-200/90 text-teal-950'
+                    : saldoNetto < 0 
+                    ? 'bg-amber-50/70 border-amber-200/90 text-amber-950' 
+                    : 'bg-slate-50 border-slate-200 text-slate-800'
+                }`}>
+                  <div>
+                    <span className="text-[11px] font-black uppercase tracking-wider">
+                      Saldo Netto Complessivo
+                    </span>
+                    <strong className="text-2xl sm:text-3xl font-black block mt-0.5">
+                      {saldoNetto > 0 ? `+${saldoNetto}` : saldoNetto} <span className="text-sm font-bold">Ore</span>
+                    </strong>
+                    <span className="text-[10px] font-medium block mt-1">
+                      {saldoNetto > 0 
+                        ? 'Sei in attivo con la scuola' 
+                        : saldoNetto < 0 
+                        ? 'Debito netto da coprire con supplenze' 
+                        : 'Bilancio in perfetto pareggio (0)'}
+                    </span>
+                  </div>
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${
+                    saldoNetto > 0 
+                      ? 'bg-teal-200/80 text-teal-900' 
+                      : saldoNetto < 0 
+                      ? 'bg-amber-200/80 text-amber-900' 
+                      : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    <ArrowDownUp className="w-6 h-6" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SEZIONE STORICO MOVIMENTI E DETTAGLIO CONTABILE */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-5 sm:p-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-indigo-600" />
+                  <h4 className="font-black text-slate-900 text-sm sm:text-base">
+                    Cronologia Completa dei Movimenti Contabili
+                  </h4>
+                </div>
+                <span className="text-[11px] font-bold text-slate-500">
+                  {mieiMovimenti.length} Registrazioni
+                </span>
+              </div>
+
+              {mieiMovimenti.length === 0 && mieSupplenzeCredito.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 space-y-1">
+                  <CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto" />
+                  <p className="font-bold text-slate-700 text-xs">Nessun movimento registrato a tuo carico</p>
+                  <p className="text-[11px]">Tutti i tuoi permessi orari e crediti di supplenza verranno tracciati puntualmente qui.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
+                  {/* Elenco movimenti formattati con badge dedicati */}
+                  {mieiMovimenti.map((m) => {
+                    const isCompensazione = m.descrizione?.includes('[COMPENSAZIONE_STRAORDINARIO]');
+                    const isRecupero = m.tipo === 'DEBITO_RECUPERATO';
+                    const isDebitoGen = m.tipo === 'DEBITO_GENERATO';
+
+                    return (
+                      <div key={m.id} className="py-3 px-1 flex flex-wrap items-center justify-between gap-3 text-xs hover:bg-slate-50 transition rounded-xl">
+                        <div className="space-y-1 max-w-xl">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="bg-slate-800 text-white font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
+                              {m.giorno} {formatDataItaliana(m.data)}
+                            </span>
+
+                            {isCompensazione ? (
+                              <span className="bg-indigo-100 text-indigo-900 border border-indigo-300 font-black text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                                <span>⚖️</span>
+                                <span>Compensato da Credito</span>
+                              </span>
+                            ) : isRecupero ? (
+                              <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-black text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                                <span>✓</span>
+                                <span>Debito Recuperato (+1h)</span>
+                              </span>
+                            ) : isDebitoGen ? (
+                              <span className="bg-rose-100 text-rose-900 border border-rose-300 font-black text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                                <span>⏳</span>
+                                <span>Permesso Breve (Debito Generato)</span>
+                              </span>
+                            ) : (
+                              <span className="bg-slate-100 text-slate-800 font-bold text-[10px] px-2 py-0.5 rounded-md border border-slate-200">
+                                {m.tipo.replace(/_/g, ' ')}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-slate-700 text-xs font-medium leading-relaxed">
+                            {m.descrizione.replace('[COMPENSAZIONE_STRAORDINARIO] ', '')}
+                          </p>
+
+                          {m.createdAt && (
+                            <span className="text-[10px] text-slate-400 block">
+                              Registrato il {new Date(m.createdAt).toLocaleDateString('it-IT')} alle {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Variazione ore delta badge */}
+                        <div className="shrink-0 text-right">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-black shadow-2xs ${
+                            m.deltaOre > 0
+                              ? 'bg-emerald-600 text-white'
+                              : isCompensazione 
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-rose-600 text-white'
+                          }`}>
+                            {m.deltaOre > 0 ? `+${m.deltaOre}h` : `${m.deltaOre}h`}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* CONTENUTO SCHEDA 2: QUADRO GENERALE SCUOLA */}
       {tabDocente === 'QUADRO_SCUOLA' && (

@@ -1912,11 +1912,11 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
             </div>
           )}
 
-          {/* SEZIONE 6: STRAORDINARIO DISPOSIZIONE (D) */}
+          {/* SEZIONE 6: ORE A CREDITO DISPOSIZIONE (D) */}
           {candidati.STRAORDINARIO_D.length > 0 && (
             <div className="space-y-1.5">
               <span className="text-xs font-bold text-slate-700 block uppercase tracking-wide">
-                6. Docenti in Disposizione (D) - Ore a Pagamento
+                6. Docenti in Disposizione (D) - Ore a Credito (Aggiuntive)
               </span>
               {candidati.STRAORDINARIO_D.map((cand, i) => (
                 <div key={i} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
@@ -1928,7 +1928,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                     onClick={() => onAssegna(cand.docente.id, 'STRAORDINARIO_D', true, false)}
                     className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded-lg transition"
                   >
-                    Assegna Disposizione (D)
+                    Assegna Ora a Credito (D)
                   </button>
                 </div>
               ))}
