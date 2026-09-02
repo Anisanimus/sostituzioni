@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente, NominaSupplente } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
-import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente, formatDataItaliana } from '../utils/docentiHelper';
+import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente, formatDataItaliana, getMateriaDocenteNellOra } from '../utils/docentiHelper';
 import { db, auth } from '../firebase';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 
@@ -1376,6 +1376,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const nuoveNotifiche: NotificaDocente[] = sostDaPubblicare.map(s => {
       const docAssente = docenti.find(d => d.id === s.docenteAssenteId);
       const docAssenteNome = docAssente ? getBaseNomeDocente(docAssente.nome) : 'Docente';
+      const materiaAssente = getMateriaDocenteNellOra(s.docenteAssenteId, s.giorno, s.ora, docenti, orariDocenti);
       const dataFmt = formatDataItaliana(s.data);
       return {
         id: 'notif_pub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -1385,7 +1386,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         classe: s.classe,
         tipo: 'NUOVA_SOSTITUZIONE',
         titolo: 'Nuova Supplenza Assegnata',
-        messaggio: `Ti è stata assegnata una supplenza per ${dataFmt} alla ${s.ora}ª ora nella classe ${s.classe} (in sostituzione di ${docAssenteNome}). Ricordati di apporre la firma digitale.`,
+        messaggio: `Ti è stata assegnata una supplenza per ${dataFmt} alla ${s.ora}ª ora nella classe ${s.classe} (in sostituzione di ${docAssenteNome} • ${materiaAssente}). Ricordati di apporre la firma digitale.`,
         letta: false,
         createdAt: new Date().toISOString()
       };
@@ -1418,6 +1419,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (sTarget && !sTarget.pubblicata && sTarget.docenteSostitutoId && sTarget.categoria !== 'NON_SOSTITUIRE') {
       const docAssente = docenti.find(d => d.id === sTarget.docenteAssenteId);
       const docAssenteNome = docAssente ? getBaseNomeDocente(docAssente.nome) : 'Docente';
+      const materiaAssente = getMateriaDocenteNellOra(sTarget.docenteAssenteId, sTarget.giorno, sTarget.ora, docenti, orariDocenti);
       const dataFmt = formatDataItaliana(sTarget.data);
       nuoveNotifiche.push({
         id: 'notif_pub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -1427,7 +1429,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         classe: sTarget.classe,
         tipo: 'NUOVA_SOSTITUZIONE',
         titolo: 'Nuova Supplenza Assegnata',
-        messaggio: `Ti è stata assegnata una supplenza per ${dataFmt} alla ${sTarget.ora}ª ora nella classe ${sTarget.classe} (in sostituzione di ${docAssenteNome}). Ricordati di apporre la firma digitale.`,
+        messaggio: `Ti è stata assegnata una supplenza per ${dataFmt} alla ${sTarget.ora}ª ora nella classe ${sTarget.classe} (in sostituzione di ${docAssenteNome} • ${materiaAssente}). Ricordati di apporre la firma digitale.`,
         letta: false,
         createdAt: new Date().toISOString()
       });

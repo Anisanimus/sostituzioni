@@ -729,3 +729,31 @@ export function getDocentiConsiglioClasse(
   });
 }
 
+/**
+ * Restituisce la materia specifica del docente per quell'ora e giorno
+ */
+export function getMateriaDocenteNellOra(
+  docenteId: string,
+  giorno: GiornoSettimana,
+  ora: number,
+  docenti: Docente[],
+  orariDocenti: OrarioDocente[]
+): string {
+  const collegatiIds = getDocentiCollegatiIds(docenteId, docenti);
+  const profili = docenti.filter(d => collegatiIds.includes(d.id));
+
+  for (const prof of profili) {
+    const orario = orariDocenti.find(o => o.docenteId === prof.id);
+    if (!orario) continue;
+    const cella = orario.ore.find(c => c.giorno === giorno && c.ora === ora);
+    if (cella && cella.valore && cella.valore.trim() !== '') {
+      if (prof.isAlternativa || prof.nome.toUpperCase().includes('ALTERNATIVA')) return 'Alternativa';
+      if (prof.isPotenziamento || prof.nome.toUpperCase().includes('POTENZIAMENTO')) return 'Potenziamento';
+      if (prof.isSostegno || prof.nome.toUpperCase().includes('SOSTEGNO')) return 'Sostegno';
+      if (prof.materia && prof.materia.trim() !== '') return prof.materia;
+    }
+  }
+
+  const doc = docenti.find(d => d.id === docenteId);
+  return doc?.materia || 'Docente';
+}

@@ -8,7 +8,7 @@ import {
   Printer, LayoutGrid, List, MessageSquare, AlertTriangle, Accessibility, Lock,
   UserCheck, UserX, UserMinus, GraduationCap, ChevronsUpDown, ChevronUp, Send, Bell
 } from 'lucide-react';
-import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
+import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente, getStileCardAssenza, getEducatoriInClasseNellOra, getMateriaDocenteNellOra } from '../utils/docentiHelper';
 
 export const TabelloneSostituzioni: React.FC<{ 
   selectedDate: string; 
@@ -1408,6 +1408,7 @@ export const TabelloneSostituzioni: React.FC<{
                         {daPubblicare.map(s => {
                           const docAssente = docenti.find(d => d.id === s.docenteAssenteId);
                           const docSostituto = docenti.find(d => d.id === s.docenteSostitutoId);
+                          const materiaAssente = getMateriaDocenteNellOra(s.docenteAssenteId, s.giorno, s.ora, docenti, orariDocenti);
                           return (
                             <div key={s.id} className="py-2 px-1 flex items-center justify-between text-xs gap-2">
                               <div>
@@ -1415,7 +1416,7 @@ export const TabelloneSostituzioni: React.FC<{
                                   Prof. {docSostituto ? getBaseNomeDocente(docSostituto.nome) : s.docenteSostitutoId}
                                 </strong>
                                 <span className="text-[11px] text-slate-500">
-                                  {s.ora}ª ora • Classe {s.classe} (in sostituzione di {docAssente ? getBaseNomeDocente(docAssente.nome) : 'Docente'})
+                                  {s.ora}ª ora • Classe {s.classe} (in sostituzione di {docAssente ? getBaseNomeDocente(docAssente.nome) : 'Docente'}{materiaAssente ? ` • ${materiaAssente}` : ''})
                                 </span>
                               </div>
                               <span className="text-[10px] bg-indigo-100 text-indigo-900 font-bold px-2 py-0.5 rounded-md shrink-0">
@@ -1469,6 +1470,7 @@ export const TabelloneSostituzioni: React.FC<{
         const docSostituto = docenti.find(d => d.id === sost.docenteSostitutoId);
         const nomeSostituto = docSostituto ? getBaseNomeDocente(docSostituto.nome) : sost.docenteSostitutoId;
         const nomeAssente = docAssente ? getBaseNomeDocente(docAssente.nome) : (oraScoperta ? getBaseNomeDocente(oraScoperta.docenteAssente.nome) : 'Docente');
+        const materiaAssente = getMateriaDocenteNellOra(sost.docenteAssenteId, sost.giorno, sost.ora, docenti, orariDocenti);
 
         return (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200">
@@ -1507,7 +1509,7 @@ export const TabelloneSostituzioni: React.FC<{
                   <div className="space-y-1 text-slate-800">
                     <div>Docente: <strong className="text-indigo-950 text-sm">{nomeSostituto}</strong></div>
                     <div>Ora e Classe: <strong>{sost.ora}ª ora in {sost.classe}</strong></div>
-                    <div>In sostituzione di: <strong>{nomeAssente}</strong></div>
+                    <div>In sostituzione di: <strong>{nomeAssente}</strong> {materiaAssente && <span className="text-indigo-800 font-bold">({materiaAssente})</span>}</div>
                   </div>
                 </div>
 

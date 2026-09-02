@@ -11,7 +11,7 @@ import {
   getDocentiCollegatiIds, getDocentiUnici, trovaCorrispondenzaDocente, 
   formatDataItaliana, getOrarioUnificatoDocente, getBaseNomeDocente, 
   getDocentiCompresentiInClasseNellOra, getClassiUniche, getDocentiConsiglioClasse,
-  generaLinkGoogleCalendar, scaricaFileIcsCalendar
+  generaLinkGoogleCalendar, scaricaFileIcsCalendar, getMateriaDocenteNellOra
 } from '../utils/docentiHelper';
 import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
 import { VistaCalendariGoogle } from './VistaCalendariGoogle';
@@ -626,7 +626,10 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {mieSostituzioni.map(s => (
+              {mieSostituzioni.map((s) => {
+                const materiaAssente = getMateriaDocenteNellOra(s.docenteAssenteId, s.giorno, s.ora, docenti, orariDocenti);
+
+                return (
                 <div key={s.id} className="p-4 hover:bg-slate-50 transition flex flex-wrap items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -640,8 +643,13 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                         Classe {s.classe}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-600">
-                      Sostituzione del docente: <strong>{getDocenteNome(s.docenteAssenteId)}</strong>
+                    <div className="text-xs text-slate-700 font-medium">
+                      Sostituzione del docente: <strong className="text-slate-950 font-black">{getDocenteNome(s.docenteAssenteId)}</strong>
+                      {materiaAssente && (
+                        <span className="ml-1.5 inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-200 font-bold text-[11px]">
+                          📚 {materiaAssente}
+                        </span>
+                      )}
                     </div>
                     <div className="text-[11px] text-indigo-700 font-medium">
                       Tipologia: {s.categoria.replace(/_/g, ' ')}
@@ -676,7 +684,8 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
