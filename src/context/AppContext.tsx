@@ -306,8 +306,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
 
-        // Inizializza l'insieme degli ID già noti all'avvio per NON notificare vecchie sostituzioni pregresse
-        const knownSostituzioniIdsRef = new Set<string>();
+        // Inizializza l'insieme degli ID delle sostituzioni già pubblicate all'avvio per NON notificare vecchie supplenze
+        const knownPublishedSostituzioniIdsRef = new Set<string>();
         let isFirstSyncSnapshot = true;
 
         // 1. Fetch iniziale immediato per caricare subito lo stato reale
@@ -342,7 +342,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
             setSostituzioni(cloudData.sostituzioni);
             localStorage.setItem('scuola_sostituzioni', JSON.stringify(cloudData.sostituzioni));
-            cloudData.sostituzioni.forEach((s: any) => knownSostituzioniIdsRef.add(s.id));
+            cloudData.sostituzioni.forEach((s: any) => {
+              if (s.pubblicata) knownPublishedSostituzioniIdsRef.add(s.id);
+            });
           }
           if (cloudData.movimentiDebito && Array.isArray(cloudData.movimentiDebito)) {
             setMovimentiDebito(cloudData.movimentiDebito);
@@ -404,7 +406,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             // Controlla se sono arrivate nuove sostituzioni pubblicate o annullate e invia notifica push di sistema SOLO AL DOCENTE INTERESSATO
             if (cloudData.sostituzioni && Array.isArray(cloudData.sostituzioni)) {
               const currentCloudSosts: SostituzioneAssegnata[] = cloudData.sostituzioni;
-              const currentCloudIds = new Set(currentCloudSosts.map(s => s.id));
+              const currentCloudPublishedIds = new Set(currentCloudSosts.filter(s => s.pubblicata).map(s => s.id));
 
               if (!isFirstSyncSnapshot && typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
                 const docentiAttuali = cloudData.docenti || docenti;
@@ -447,9 +449,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     }
                   };
 
-                  // 1. Nuove sostituzioni pubblicate appena arrivate (non erano nell'insieme dei noti)
+                  // 1. Nuove sostituzioni pubblicate appena arrivate (non erano pubblicate prima)
                   const nuoveAppenaPubblicate = currentCloudSosts.filter(
-                    s => s.pubblicata && !knownSostituzioniIdsRef.has(s.id) && s.docenteSostitutoId &&
+                    s => s.pubblicata && !knownPublishedSostituzioniIdsRef.has(s.id) && s.docenteSostitutoId &&
                     loggedCollegatiIds.includes(s.docenteSostitutoId)
                   );
 
@@ -490,10 +492,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     });
                   }
 
-                  // 2. Sostituzioni rimosse o annullate (erano nell'insieme dei noti ma non ci sono più nel cloud)
-                  const vecchieLocale = (sostituzioniRef.current || []).filter(s => s.pubblicata);
-                  const annullate = vecchieLocale.filter(
-                    s => !currentCloudIds.has(s.id) && s.docenteSostitutoId &&
+                  // 2. Sostituzioni rimosse o annullate (erano pubblicate ma non ci sono più pubblicate nel cloud)
+                  const annullate = (sostituzioniRef.current || []).filter(
+                    s => s.pubblicata && !currentCloudPublishedIds.has(s.id) && s.docenteSostitutoId &&
                     loggedCollegatiIds.includes(s.docenteSostitutoId)
                   );
 
@@ -536,9 +537,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 }
               }
 
-              // Aggiorna l'insieme noto
-              knownSostituzioniIdsRef.clear();
-              currentCloudSosts.forEach(s => knownSostituzioniIdsRef.add(s.id));
+              // Aggiorna l'insieme noto delle pubblicate
+              knownPublishedSostituzioniIdsRef.clear();
+              currentCloudSosts.forEach(s => {
+                if (s.pubblicata) knownPublishedSostituzioniIdsRef.add(s.id);
+              });
               isFirstSyncSnapshot = false;
               setSostituzioni(currentCloudSosts);
             }
@@ -1367,28 +1370,86 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const pubblicaTutteSostituzioniData = (data: string) => {
-    setSostituzioni(prev => {
-      const updated = prev.map(s => {
-        if (s.data === data) {
-          return { ...s, pubblicata: true };
-        }
-        return s;
-      });
-      triggerCloudSync({ sostituzioni: updated });
-      return updated;
+    // 1. Identifica le sostituzioni che stanno per essere pubblicate per la prima volta
+    const sostDaPubblicare = sostituzioni.filter(s => s.data === data && !s.pubblicata && s.docenteSostitutoId && s.categoria !== 'NON_SOSTITUIRE');
+    
+    const nuoveNotifiche: NotificaDocente[] = sostDaPubblicare.map(s => {
+      const docAssente = docenti.find(d => d.id === s.docenteAssenteId);
+      const docAssenteNome = docAssente ? getBaseNomeDocente(docAssente.nome) : 'Docente';
+      const dataFmt = formatDataItaliana(s.data);
+      return {
+        id: 'notif_pub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        docenteId: s.docenteSostitutoId,
+        data: s.data,
+        ora: s.ora,
+        classe: s.classe,
+        tipo: 'NUOVA_SOSTITUZIONE',
+        titolo: 'Nuova Supplenza Assegnata',
+        messaggio: `Ti è stata assegnata una supplenza per ${dataFmt} alla ${s.ora}ª ora nella classe ${s.classe} (in sostituzione di ${docAssenteNome}). Ricordati di apporre la firma digitale.`,
+        letta: false,
+        createdAt: new Date().toISOString()
+      };
+    });
+
+    const updatedSostituzioni = sostituzioni.map(s => {
+      if (s.data === data) {
+        return { ...s, pubblicata: true };
+      }
+      return s;
+    });
+
+    const updatedNotifiche = [...nuoveNotifiche, ...notifiche];
+
+    setSostituzioni(updatedSostituzioni);
+    if (nuoveNotifiche.length > 0) {
+      setNotifiche(updatedNotifiche);
+    }
+
+    triggerCloudSync({
+      sostituzioni: updatedSostituzioni,
+      ...(nuoveNotifiche.length > 0 ? { notifiche: updatedNotifiche } : {})
     });
   };
 
   const pubblicaSingolaSostituzione = (sostituzioneId: string) => {
-    setSostituzioni(prev => {
-      const updated = prev.map(s => {
-        if (s.id === sostituzioneId) {
-          return { ...s, pubblicata: true };
-        }
-        return s;
+    const sTarget = sostituzioni.find(s => s.id === sostituzioneId);
+    let nuoveNotifiche: NotificaDocente[] = [];
+
+    if (sTarget && !sTarget.pubblicata && sTarget.docenteSostitutoId && sTarget.categoria !== 'NON_SOSTITUIRE') {
+      const docAssente = docenti.find(d => d.id === sTarget.docenteAssenteId);
+      const docAssenteNome = docAssente ? getBaseNomeDocente(docAssente.nome) : 'Docente';
+      const dataFmt = formatDataItaliana(sTarget.data);
+      nuoveNotifiche.push({
+        id: 'notif_pub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        docenteId: sTarget.docenteSostitutoId,
+        data: sTarget.data,
+        ora: sTarget.ora,
+        classe: sTarget.classe,
+        tipo: 'NUOVA_SOSTITUZIONE',
+        titolo: 'Nuova Supplenza Assegnata',
+        messaggio: `Ti è stata assegnata una supplenza per ${dataFmt} alla ${sTarget.ora}ª ora nella classe ${sTarget.classe} (in sostituzione di ${docAssenteNome}). Ricordati di apporre la firma digitale.`,
+        letta: false,
+        createdAt: new Date().toISOString()
       });
-      triggerCloudSync({ sostituzioni: updated });
-      return updated;
+    }
+
+    const updatedSostituzioni = sostituzioni.map(s => {
+      if (s.id === sostituzioneId) {
+        return { ...s, pubblicata: true };
+      }
+      return s;
+    });
+
+    const updatedNotifiche = [...nuoveNotifiche, ...notifiche];
+
+    setSostituzioni(updatedSostituzioni);
+    if (nuoveNotifiche.length > 0) {
+      setNotifiche(updatedNotifiche);
+    }
+
+    triggerCloudSync({
+      sostituzioni: updatedSostituzioni,
+      ...(nuoveNotifiche.length > 0 ? { notifiche: updatedNotifiche } : {})
     });
   };
 

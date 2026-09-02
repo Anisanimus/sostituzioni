@@ -356,37 +356,63 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
-      {/* BANNER NOTIFICHE ANNULLAMENTI/AVVISI (NON VISIBILE IN VISTA ATA) */}
+      {/* BANNER NOTIFICHE: NUOVE SUPPLENZE E ANNULLAMENTI/AVVISI (NON VISIBILE IN VISTA ATA) */}
       {!isAtaView && mieNotificheNonLette.length > 0 && (
-        <div className="space-y-2">
-          {mieNotificheNonLette.map(n => (
-            <div key={n.id} className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-4 shadow-sm flex items-start justify-between gap-3 animate-in fade-in">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
-                  <AlertTriangle className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-rose-950 text-sm flex items-center gap-2">
-                    <span>{n.titolo}</span>
-                    <span className="text-[10px] bg-rose-200 text-rose-800 px-1.5 py-0.2 rounded font-mono">
-                      {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </h4>
-                  <p className="text-xs text-rose-900 mt-0.5">{n.messaggio}</p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => {
-                  rimuoviNotifica(n.id);
-                  segnaNotificheLette(selectedDocenteId);
-                }}
-                className="text-xs font-bold text-rose-700 hover:text-rose-950 bg-rose-100/90 hover:bg-rose-200 border border-rose-300 px-3 py-1.5 rounded-xl transition shrink-0 cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+        <div className="space-y-2.5">
+          {mieNotificheNonLette.map(n => {
+            const isNuova = n.tipo === 'NUOVA_SOSTITUZIONE';
+            return (
+              <div 
+                key={n.id} 
+                className={`border-2 rounded-2xl p-4 shadow-sm flex items-start justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-200 ${
+                  isNuova 
+                    ? 'bg-gradient-to-r from-indigo-50/95 to-emerald-50/90 border-indigo-300' 
+                    : 'bg-rose-50 border-rose-300'
+                }`}
               >
-                Ho Capito ✓
-              </button>
-            </div>
-          ))}
+                <div className="flex items-start gap-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${
+                    isNuova 
+                      ? 'bg-indigo-600 text-white' 
+                      : 'bg-rose-600 text-white'
+                  }`}>
+                    {isNuova ? <Bell className="w-4 h-4 animate-bounce" /> : <AlertTriangle className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <h4 className={`font-black text-sm flex items-center gap-2 ${
+                      isNuova ? 'text-indigo-950' : 'text-rose-950'
+                    }`}>
+                      <span>{n.titolo}</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                        isNuova ? 'bg-indigo-200/80 text-indigo-900 font-bold' : 'bg-rose-200 text-rose-800'
+                      }`}>
+                        {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </h4>
+                    <p className={`text-xs mt-0.5 font-medium ${
+                      isNuova ? 'text-slate-800' : 'text-rose-900'
+                    }`}>
+                      {n.messaggio}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    rimuoviNotifica(n.id);
+                    segnaNotificheLette(selectedDocenteId);
+                  }}
+                  className={`text-xs font-black px-3.5 py-2 rounded-xl transition shrink-0 cursor-pointer shadow-2xs hover:scale-105 active:scale-95 border ${
+                    isNuova
+                      ? 'text-white bg-indigo-600 hover:bg-indigo-700 border-indigo-700'
+                      : 'text-rose-700 hover:text-rose-950 bg-rose-100/90 hover:bg-rose-200 border-rose-300'
+                  }`}
+                >
+                  Ho Capito ✓
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
 
