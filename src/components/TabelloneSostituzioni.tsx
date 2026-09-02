@@ -20,7 +20,7 @@ export const TabelloneSostituzioni: React.FC<{
     docenti, orariDocenti, assenze, uscite, sostituzioni, 
     impostazioniPriorita, impostazioniScuola, assegnaSostituzione, rimuoviSostituzione, 
     pubblicaTutteSostituzioniData, pubblicaSingolaSostituzione,
-    rimuoviSingolaOraAssenza
+    rimuoviSingolaOraAssenza, nomineSupplenti
   } = useApp();
 
   const [selectedOraScoperta, setSelectedOraScoperta] = useState<OraScoperta | null>(null);
@@ -173,7 +173,8 @@ export const TabelloneSostituzioni: React.FC<{
       uscite,
       sostituzioniOggi,
       prioritaAssenzeUtente,
-      prioritaGiteUtente
+      prioritaGiteUtente,
+      nomineSupplenti
     );
 
     nuoveSostituzioni.forEach(sost => {
@@ -198,42 +199,45 @@ export const TabelloneSostituzioni: React.FC<{
       .sort((a, b) => {
         const pA = getStatoPriorita(a);
         const pB = getStatoPriorita(b);
-        if (pA !== pB) return pA - pB;
-        return a.classe.localeCompare(b.classe);
+        return pA - pB;
       });
+
+    const totCoperteGruppo = items.filter(os => !!getSostituzione(os.ora, os.classe)).length;
+    const totPubblicateGruppo = items.filter(os => getSostituzione(os.ora, os.classe)?.pubblicata).length;
+    const totFirmateGruppo = items.filter(os => getSostituzione(os.ora, os.classe)?.firmata).length;
 
     return {
       ora: oraNum,
-      items
+      items,
+      totCoperteGruppo,
+      totPubblicateGruppo,
+      totFirmateGruppo
     };
   }).filter(g => g.items.length > 0);
 
   // 2. Raggruppamento per Docente Assente con ordinamento dinamico interno
-  const docentiAssentiRaggruppati = Array.from(
-    new Set(oreScoperte.map(os => getBaseNomeDocente(os.docenteAssente.nome)))
-  ).map(nomeDocente => {
-    const items = oreScoperte
-      .filter(os => getBaseNomeDocente(os.docenteAssente.nome) === nomeDocente)
-      .sort((a, b) => {
-        const pA = getStatoPriorita(a);
-        const pB = getStatoPriorita(b);
-        if (pA !== pB) return pA - pB;
-        return a.ora - b.ora;
-      });
+  const docentiAssentiUnici = Array.from(
+    new Map(oreScoperte.map(os => [getBaseNomeDocente(os.docenteAssente.nome), os.docenteAssente])).values()
+  );
 
-    const personaUnica = personeUniche.find(p => p.nome === nomeDocente);
-    const docAssente = items[0].docenteAssente;
-    const materiaVisualizzata = personaUnica ? personaUnica.materie.join(', ') : docAssente.materia;
+  const docentiAssentiRaggruppati = docentiAssentiUnici.map(docAss => {
+    const baseNomeAssente = getBaseNomeDocente(docAss.nome);
+    const items = oreScoperte
+      .filter(os => getBaseNomeDocente(os.docenteAssente.nome) === baseNomeAssente)
+      .sort((a, b) => a.ora - b.ora);
+
     const totOreDoc = items.length;
-    const sostsDoc = items.map(os => getSostituzione(os.ora, os.classe)).filter(Boolean);
-    const totCoperteDoc = sostsDoc.length;
-    const totPubblicateDoc = sostsDoc.filter(s => s?.pubblicata).length;
-    const totFirmateDoc = sostsDoc.filter(s => s?.firmata).length;
+    const totCoperteDoc = items.filter(os => !!getSostituzione(os.ora, os.classe)).length;
+    const totPubblicateDoc = items.filter(os => getSostituzione(os.ora, os.classe)?.pubblicata).length;
+    const totFirmateDoc = items.filter(os => getSostituzione(os.ora, os.classe)?.firmata).length;
     const totDaFareDoc = Math.max(0, totOreDoc - totCoperteDoc);
 
+    const materieDocAssente = Array.from(new Set(items.map(os => os.docenteAssente.materia))).join(' / ');
+    const materiaVisualizzata = materieDocAssente || docAss.materia || 'Docente';
+
     return {
-      nomeDocente,
-      docAssente,
+      nomeDocente: baseNomeAssente,
+      docAssente: docAss,
       materiaVisualizzata,
       totOreDoc,
       totCoperteDoc,
@@ -258,6 +262,7 @@ export const TabelloneSostituzioni: React.FC<{
   // CALCOLO SPECCHIETTO COMPATTO RISORSE DISPONIBILI (DIVISI PER ORA E TIPOLOGIA)
   // ==============================================================================
   const oreGiornoList = [1, 2, 3, 4, 5, 6, 7, 8];
+  const dataIsoOggi = selectedDate.split('T')[0];
 
   const risorsePerOra = oreGiornoList.map(oraNum => {
     // 1. Persone assenti nell'ora (o per l'intera giornata)
@@ -277,6 +282,17 @@ export const TabelloneSostituzioni: React.FC<{
           }
         }
       });
+
+    // 1.bis Escludi categoricamente i docenti titolari che oggi hanno una nomina di supplenza attiva (sono assenti e sostituiti)
+    nomineSupplenti.forEach(n => {
+      const inizio = n.dataInizio.split('T')[0];
+      const fine = n.dataFine.split('T')[0];
+      if (dataIsoOggi >= inizio && dataIsoOggi <= fine) {
+        if (n.docenteTitolareNome) personeAssentiOra.add(getBaseNomeDocente(n.docenteTitolareNome));
+        const titolareDoc = docenti.find(d => d.id === n.docenteTitolareId);
+        if (titolareDoc) personeAssentiOra.add(getBaseNomeDocente(titolareDoc.nome));
+      }
+    });
 
     // 2. Persone già impegnate in una sostituzione in quest'ora
     const personeGiaAssegnateOra = new Set<string>();
@@ -1550,7 +1566,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
   onClose,
   onAssegna
 }) => {
-  const { docenti, orariDocenti, assenze, uscite, sostituzioni } = useApp();
+  const { docenti, orariDocenti, assenze, uscite, sostituzioni, nomineSupplenti } = useApp();
 
   const candidati = trovaCandidatiSostituzione(
     selectedDate,
@@ -1563,14 +1579,27 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
     docenti,
     assenze,
     uscite,
-    sostituzioni
+    sostituzioni,
+    nomineSupplenti
   );
 
   const [ricercaManuale, setRicercaManuale] = useState<string>('');
   const [docenteManualeSelezionatoId, setDocenteManualeSelezionatoId] = useState<string>('');
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
-  const docentiUnici = getDocentiUnici(docenti);
+  const dataIsoOggi = selectedDate.split('T')[0];
+  const nomiTitolariSostituiti = new Set<string>();
+  nomineSupplenti.forEach(n => {
+    const inizio = n.dataInizio.split('T')[0];
+    const fine = n.dataFine.split('T')[0];
+    if (dataIsoOggi >= inizio && dataIsoOggi <= fine) {
+      if (n.docenteTitolareNome) nomiTitolariSostituiti.add(getBaseNomeDocente(n.docenteTitolareNome));
+      const titolareDoc = docenti.find(d => d.id === n.docenteTitolareId);
+      if (titolareDoc) nomiTitolariSostituiti.add(getBaseNomeDocente(titolareDoc.nome));
+    }
+  });
+
+  const docentiUnici = getDocentiUnici(docenti).filter(d => !nomiTitolariSostituiti.has(d.nome));
   const docentiFiltrati = docentiUnici.filter(d => 
     d.nome.toLowerCase().includes(ricercaManuale.toLowerCase()) ||
     d.materie.some(m => m.toLowerCase().includes(ricercaManuale.toLowerCase()))

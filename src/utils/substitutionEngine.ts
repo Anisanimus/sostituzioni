@@ -1,4 +1,4 @@
-import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, CandidatoSostituto, CategoriaSostituto, GiornoSettimana } from '../types';
+import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, CandidatoSostituto, CategoriaSostituto, GiornoSettimana, NominaSupplente } from '../types';
 import { getDocentiCollegatiIds, getBaseNomeDocente, getDocentiUnici } from './docentiHelper';
 
 export function trovaCandidatiSostituzione(
@@ -12,7 +12,8 @@ export function trovaCandidatiSostituzione(
   docenti: Docente[],
   assenze: AssenzaDocente[],
   uscite: UscitaClasse[],
-  sostituzioniEsistenti: SostituzioneAssegnata[]
+  sostituzioniEsistenti: SostituzioneAssegnata[],
+  nomineSupplenti: NominaSupplente[] = []
 ): Record<CategoriaSostituto, CandidatoSostituto[]> {
   
   const candidatiPerCategoria: Record<CategoriaSostituto, CandidatoSostituto[]> = {
@@ -28,6 +29,8 @@ export function trovaCandidatiSostituzione(
     NON_SOSTITUIRE: []
   };
 
+  const dataIso = data.split('T')[0];
+
   // 1. Tutti gli ID collegati alle persone assenti nel giorno e nell'ora specifica (non possono sostituire)
   const personeAssentiNomi = new Set<string>();
   assenze
@@ -36,6 +39,17 @@ export function trovaCandidatiSostituzione(
       const doc = docenti.find(d => d.id === a.docenteId);
       if (doc) personeAssentiNomi.add(getBaseNomeDocente(doc.nome));
     });
+
+  // Escludi categoricamente qualsiasi docente titolare che in questa data ha una nomina supplente attiva (è assente e sostituito)
+  nomineSupplenti.forEach(n => {
+    const inizio = n.dataInizio.split('T')[0];
+    const fine = n.dataFine.split('T')[0];
+    if (dataIso >= inizio && dataIso <= fine) {
+      if (n.docenteTitolareNome) personeAssentiNomi.add(getBaseNomeDocente(n.docenteTitolareNome));
+      const titolareDoc = docenti.find(d => d.id === n.docenteTitolareId);
+      if (titolareDoc) personeAssentiNomi.add(getBaseNomeDocente(titolareDoc.nome));
+    }
+  });
 
   // Aggiungi anche il docente assente stesso
   personeAssentiNomi.add(getBaseNomeDocente(docenteAssente.nome));
@@ -292,7 +306,8 @@ export function risolviOttimizzazioneGlobale(
   uscite: UscitaClasse[],
   sostituzioniEsistenti: SostituzioneAssegnata[],
   prioritaAssenze: CategoriaSostituto[],
-  prioritaGite: CategoriaSostituto[]
+  prioritaGite: CategoriaSostituto[],
+  nomineSupplenti: NominaSupplente[] = []
 ): SostituzioneAssegnata[] {
   // Filtra gli slot non ancora assegnati
   const slotRimasti = oreDaCoprire.filter(os => 
@@ -324,7 +339,8 @@ export function risolviOttimizzazioneGlobale(
       docenti,
       assenze,
       uscite,
-      sostituzioniEsistenti
+      sostituzioniEsistenti,
+      nomineSupplenti
     );
 
     const isGita = (uscite.filter(u => u.data === data && !u.annullata).length > 0) || os.isUscita;

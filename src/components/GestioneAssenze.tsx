@@ -275,11 +275,24 @@ export const GestioneAssenze: React.FC<{
   const tutteAssenzeOggi = assenze.filter(a => a.data === selectedDate && !a.annullata);
   const sostituzioniOggi = sostituzioni.filter(s => s.data === selectedDate);
 
+  const dataIsoOggi = selectedDate.split('T')[0];
+
   const risorsePerOraMobile = [1, 2, 3, 4, 5, 6, 7, 8].map(oraNum => {
     const personeAssentiOra = new Set<string>();
     tutteAssenzeOggi.filter(a => a.oreInteressate.includes(oraNum)).forEach(a => {
       const d = docenti.find(doc => doc.id === a.docenteId);
       if (d) personeAssentiOra.add(getBaseNomeDocente(d.nome));
+    });
+
+    // Escludi docenti titolari che oggi hanno una nomina attiva (sono assenti con supplente)
+    nomineSupplenti.forEach(n => {
+      const inizio = n.dataInizio.split('T')[0];
+      const fine = n.dataFine.split('T')[0];
+      if (dataIsoOggi >= inizio && dataIsoOggi <= fine) {
+        if (n.docenteTitolareNome) personeAssentiOra.add(getBaseNomeDocente(n.docenteTitolareNome));
+        const titolareDoc = docenti.find(d => d.id === n.docenteTitolareId);
+        if (titolareDoc) personeAssentiOra.add(getBaseNomeDocente(titolareDoc.nome));
+      }
     });
 
     const personeGiaAssegnateOra = new Set<string>();
