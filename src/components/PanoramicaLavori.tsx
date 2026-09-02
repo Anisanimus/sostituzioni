@@ -331,47 +331,6 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
             </button>
           </div>
 
-          {/* BADGES AVANZAMENTO */}
-          <span className={`text-[11px] font-black px-2.5 py-1 rounded-full border flex items-center gap-1 ${
-            totGiornoScoperte === 0 
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              : percentualeGiorno === 100 
-                ? 'bg-emerald-600 text-white border-emerald-700'
-                : 'bg-amber-50 text-amber-900 border-amber-200'
-          }`}>
-            <span>🕒 {totGiornoCoperte}/{totGiornoScoperte}</span>
-            <span className="font-bold">ore assegnate</span>
-            {totGiornoCoperte === totGiornoScoperte && totGiornoScoperte > 0 && <span>✓</span>}
-          </span>
-
-          {totGiornoCoperte > 0 && (
-            <span className={`text-[11px] font-black px-2 py-1 rounded-full border flex items-center gap-1 transition ${
-              currentStat.totPubblicate === totGiornoCoperte
-                ? 'bg-emerald-50 text-emerald-800 border-emerald-300 shadow-2xs'
-                : currentStat.totPubblicate > 0
-                  ? 'bg-sky-50 text-sky-900 border-sky-200'
-                  : 'bg-slate-100 text-slate-600 border-slate-200'
-            }`}>
-              <span>📤 {currentStat.totPubblicate}/{totGiornoCoperte}</span>
-              <span className="font-normal text-[10px]">inviate</span>
-              {currentStat.totPubblicate === totGiornoCoperte && <span>✓</span>}
-            </span>
-          )}
-
-          {totGiornoCoperte > 0 && (
-            <span className={`text-[11px] font-black px-2 py-1 rounded-full border flex items-center gap-1 transition ${
-              currentStat.totFirmate === totGiornoCoperte
-                ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
-                : currentStat.totFirmate > 0
-                  ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
-                  : 'bg-slate-100 text-slate-600 border-slate-200'
-            }`}>
-              <span>✍️ {currentStat.totFirmate}/{totGiornoCoperte}</span>
-              <span className="font-normal text-[10px]">firmate</span>
-              {currentStat.totFirmate === totGiornoCoperte && <span>✓</span>}
-            </span>
-          )}
-
           <button
             type="button"
             onClick={() => setCompresso(!compresso)}
