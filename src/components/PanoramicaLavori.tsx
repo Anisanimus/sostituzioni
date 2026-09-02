@@ -384,11 +384,11 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. HEADER MOBILE (SMARTPHONE REDESIGN RAFFINATO ED ELEGANTE)              */}
+      {/* 2. HEADER MOBILE (SMARTPHONE MINIMAL & ELEGANTE CON PULSANTE GIORNALE)   */}
       {/* ========================================================================= */}
       <div className="sm:hidden space-y-2 pb-1 border-b border-slate-100">
         
-        {/* RIGA 1: TITOLO + DATA (A SINISTRA) | FRECCE SCORRIMENTO + ICONA TREND (A DESTRA) */}
+        {/* RIGA 1: DATA E NAVIGAZIONE VELOCE A SINISTRA | PULSANTE GIORNALE A DESTRA */}
         <div className="flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-base font-black tracking-tight text-slate-900 shrink-0">
@@ -399,12 +399,12 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
             </span>
           </div>
 
-          {/* FRECCINE < > SEPARATE E DISTANZIATE + ICONA ANDAMENTO FUTURO 📈 */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* PULSANTI RAPIDI: FRECCE E PULSANTE "GIORNALE" */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={() => scrollCarousel(-1)}
-              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 text-xs font-black shadow-2xs border border-slate-300 transition cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded-lg bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 text-xs font-black shadow-2xs border border-slate-300 transition cursor-pointer"
               title="Giorno precedente"
             >
               ❮
@@ -412,73 +412,54 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
             <button
               type="button"
               onClick={() => scrollCarousel(1)}
-              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 text-xs font-black shadow-2xs border border-slate-300 transition cursor-pointer"
+              className="w-7 h-7 flex items-center justify-center rounded-lg bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-800 text-xs font-black shadow-2xs border border-slate-300 transition cursor-pointer"
               title="Giorno successivo"
             >
               ❯
             </button>
 
-            {/* PULSANTE ANDAMENTO FUTURO & TREND 📈 (DISTANZIATO) */}
+            {/* PULSANTE GIORNALE CALENDARIO APRIBILE */}
             <button
               type="button"
-              onClick={() => handleToggleVista(vista || 'GIORNO')}
-              className={`w-8 h-8 rounded-xl border transition flex items-center justify-center cursor-pointer ml-0.5 ${
+              onClick={() => setCompresso(prev => !prev)}
+              className={`px-2.5 py-1.5 rounded-xl border font-black text-xs transition flex items-center gap-1 cursor-pointer shadow-2xs ${
                 !compresso
-                  ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-200 shadow-xs'
-                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200 shadow-2xs'
+                  ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-200'
+                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'
               }`}
-              title="Mostra andamento e prospetto futuro"
             >
-              <TrendingUp className="w-4 h-4" />
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Giornale</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${compresso ? '' : 'rotate-180'}`} />
             </button>
           </div>
         </div>
 
-        {/* RIGA 2: I 3 STATI DI AVANZAMENTO LAVORI IN UN'UNICA RIGA ORIZZONTALE */}
-        <div className="grid grid-cols-3 gap-1.5 pt-0.5">
-          {/* STATO 1: ASSEGNATE */}
-          <div className={`text-center py-1 px-1 rounded-xl border flex flex-col items-center justify-center ${
-            totGiornoScoperte === 0 
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-              : percentualeGiorno === 100 
-                ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
-                : 'bg-amber-50 text-amber-950 border-amber-200'
-          }`}>
-            <span className="text-[11px] font-black leading-tight flex items-center gap-0.5">
-              🕒 {totGiornoCoperte}/{totGiornoScoperte}
-              {totGiornoCoperte === totGiornoScoperte && totGiornoScoperte > 0 && <span className="text-[10px]">✓</span>}
+        {/* RIGA 2: MINI FRASE SINTETICA RIASSUNTIVA DEL GIORNO (SUPER COMPATTA) */}
+        <div 
+          onClick={() => setCompresso(prev => !prev)}
+          className="flex items-center justify-between bg-slate-50 hover:bg-slate-100/80 p-2 rounded-xl border border-slate-200 cursor-pointer transition text-xs"
+        >
+          <div className="flex items-center gap-1.5 truncate">
+            <span className="text-sm">📌</span>
+            <span className="font-black text-slate-900">
+              {totGiornoScoperte === 0 
+                ? 'Nessuna ora scoperta' 
+                : `${totGiornoCoperte} di ${totGiornoScoperte} ore coperte`}
             </span>
-            <span className="text-[9px] font-bold opacity-80 leading-none mt-0.5">Assegnate</span>
+            <span className="text-slate-400 font-medium text-[11px] truncate">
+              ({currentStat.totPubblicate} inviate • {currentStat.totFirmate} firmate)
+            </span>
           </div>
 
-          {/* STATO 2: INVIATE */}
-          <div className={`text-center py-1 px-1 rounded-xl border flex flex-col items-center justify-center ${
-            currentStat.totPubblicate === totGiornoCoperte && totGiornoCoperte > 0
-              ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-              : currentStat.totPubblicate > 0
-                ? 'bg-sky-50 text-sky-900 border-sky-200'
-                : 'bg-slate-50 text-slate-500 border-slate-200'
-          }`}>
-            <span className="text-[11px] font-black leading-tight flex items-center gap-0.5">
-              📤 {currentStat.totPubblicate}/{totGiornoCoperte}
-              {currentStat.totPubblicate === totGiornoCoperte && totGiornoCoperte > 0 && <span className="text-[10px]">✓</span>}
+          <div className="flex items-center gap-1 shrink-0 ml-1">
+            <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-md border ${
+              totGiornoScoperte === 0 || totGiornoCoperte === totGiornoScoperte 
+                ? 'bg-emerald-100 text-emerald-900 border-emerald-300' 
+                : 'bg-amber-100 text-amber-900 border-amber-300'
+            }`}>
+              {totGiornoScoperte === 0 || totGiornoCoperte === totGiornoScoperte ? '100% ✓' : `${percentualeGiorno}%`}
             </span>
-            <span className="text-[9px] font-bold opacity-80 leading-none mt-0.5">Inviate</span>
-          </div>
-
-          {/* STATO 3: FIRMATE */}
-          <div className={`text-center py-1 px-1 rounded-xl border flex flex-col items-center justify-center ${
-            currentStat.totFirmate === totGiornoCoperte && totGiornoCoperte > 0
-              ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
-              : currentStat.totFirmate > 0
-                ? 'bg-indigo-50 text-indigo-900 border-indigo-200'
-                : 'bg-slate-50 text-slate-500 border-slate-200'
-          }`}>
-            <span className="text-[11px] font-black leading-tight flex items-center gap-0.5">
-              ✍️ {currentStat.totFirmate}/{totGiornoCoperte}
-              {currentStat.totFirmate === totGiornoCoperte && totGiornoCoperte > 0 && <span className="text-[10px]">✓</span>}
-            </span>
-            <span className="text-[9px] font-bold opacity-80 leading-none mt-0.5">Firmate</span>
           </div>
         </div>
 
