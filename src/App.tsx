@@ -27,7 +27,7 @@ import {
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
   Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound, TrendingUp,
-  Monitor, Pin, PinOff, PanelLeftClose, PanelLeftOpen, PanelLeft, Scale, ArrowDownUp
+  Monitor, Pin, PinOff, PanelLeftClose, PanelLeftOpen, PanelLeft, Scale, ArrowDownUp, RotateCw
 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -262,6 +262,33 @@ const MainApp: React.FC = () => {
                 <span className="text-xs font-bold text-slate-200 truncate max-w-[120px]">{utenteInfo.displayName}</span>
                 <span className="text-[10px] text-slate-400">{utenteInfo.ruolo}</span>
               </div>
+
+              {/* PULSANTE FORZA AGGIORNAMENTO / SVUOTA CACHE */}
+              <button
+                type="button"
+                onClick={() => {
+                  if ('caches' in window) {
+                    caches.keys().then((keys) => {
+                      keys.forEach((k) => caches.delete(k));
+                    });
+                  }
+                  if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then((registrations) => {
+                      for (const reg of registrations) {
+                        reg.unregister();
+                      }
+                    });
+                  }
+                  localStorage.removeItem('app_installed_build_id');
+                  window.location.reload();
+                }}
+                className="p-1.5 bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                title="Svuota cache e ricarica l'ultima versione dell'app"
+              >
+                <RotateCw className="w-4 h-4 text-indigo-400 hover:text-white" />
+                <span className="hidden xl:inline text-xs font-bold">Aggiorna</span>
+              </button>
+
               <button
                 type="button"
                 onClick={logout}

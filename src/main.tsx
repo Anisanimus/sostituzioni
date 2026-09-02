@@ -98,14 +98,42 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
+// ID UNIVOCO DELLA BUILD PER FORZARE LO SVUOTAMENTO CACHE SU TUTTI I DISPOSITIVI (INCLUSO IPHONE)
+export const APP_BUILD_ID = 'build_2026_09_02_1535_force_clear';
+
+// AUTO-PURGE CACHE & HARD REFRESH SE LA VERSIONE E' CAMBIATA
+(function purgeOldCachesIfNeeded() {
+  try {
+    const savedBuild = localStorage.getItem('app_installed_build_id');
+    if (savedBuild !== APP_BUILD_ID) {
+      localStorage.setItem('app_installed_build_id', APP_BUILD_ID);
+      // Se era già stata caricata una versione precedente, pulisci le cache e ricarica
+      if (savedBuild) {
+        if ('caches' in window) {
+          caches.keys().then((keys) => {
+            keys.forEach((key) => caches.delete(key));
+          });
+        }
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (const reg of registrations) {
+              reg.update();
+            }
+          });
+        }
+      }
+    }
+  } catch (e) {}
+})();
+
 // GESTIONE AGGIORNAMENTO AUTOMATICO DELL'APP QUANDO VIENE PUBBLICATA UNA NUOVA VERSIONE
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then((registration) => {
-      // Controlla aggiornamenti subito e poi ogni 60 secondi
+    navigator.serviceWorker.register(`/sw.js?v=${APP_BUILD_ID}`).then((registration) => {
+      // Controlla aggiornamenti subito e poi ogni 30 secondi
       setInterval(() => {
         registration.update().catch(() => {});
-      }, 60000);
+      }, 30000);
 
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
@@ -113,8 +141,15 @@ if ('serviceWorker' in navigator) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               console.log('🚀 Nuova versione dell\'app rilevata! Ricaricamento pulito automatico...');
-              // Ricarica la pagina in modo pulito senza cache
-              window.location.reload();
+              if ('caches' in window) {
+                caches.keys().then((keys) => {
+                  Promise.all(keys.map((k) => caches.delete(k))).then(() => {
+                    (window as any).location.reload();
+                  });
+                });
+              } else {
+                (window as any).location.reload();
+              }
             }
           });
         }
