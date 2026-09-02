@@ -1843,7 +1843,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const ripristinaBackupCompleto = (datiBackup: any) => {
+  const ripristinaBackupCompleto = async (datiBackup: any) => {
     if (!datiBackup) return;
     if (datiBackup.docenti) {
       setDocenti(datiBackup.docenti);
@@ -1877,7 +1877,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setImpostazioniPriorita(datiBackup.impostazioniPriorita);
       localStorage.setItem('scuola_impostazioni_priorita', JSON.stringify(datiBackup.impostazioniPriorita));
     }
+    if (datiBackup.nomineSupplenti) {
+      setNomineSupplenti(datiBackup.nomineSupplenti);
+      localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(datiBackup.nomineSupplenti));
+    }
     localStorage.setItem('scuola_orario_version', 'backup_restored_' + Date.now());
+
+    // SALVATAGGIO DIRETTO ED IMMEDIATO SU CLOUD FIRESTORE
+    try {
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      const payload = deepCleanUndefined({
+        docenti: datiBackup.docenti || docenti,
+        orariDocenti: datiBackup.orariDocenti || orariDocenti,
+        assenze: datiBackup.assenze || [],
+        uscite: datiBackup.uscite || [],
+        sostituzioni: datiBackup.sostituzioni || [],
+        movimentiDebito: datiBackup.movimentiDebito || [],
+        impostazioniScuola: datiBackup.impostazioniScuola || impostazioniScuola,
+        impostazioniPriorita: datiBackup.impostazioniPriorita || impostazioniPriorita,
+        nomineSupplenti: datiBackup.nomineSupplenti || [],
+        ultimoAggiornamento: new Date().toISOString()
+      });
+      await setDoc(scuolaDocRef, payload, { merge: true });
+      console.log('✅ Backup ripristinato e sincronizzato con successo su Cloud Firestore!');
+    } catch (e) {
+      console.error('Errore salvataggio backup su Cloud:', e);
+    }
   };
 
   return (
