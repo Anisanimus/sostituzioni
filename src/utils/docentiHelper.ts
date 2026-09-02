@@ -772,16 +772,28 @@ export function getOreStraordinarioDocente(
   movimentiDebito: import('../types').MovimentoDebito[] = []
 ): number {
   const collegatiIds = getDocentiCollegatiIds(docenteId, docenti);
+  const targetDoc = docenti.find(d => collegatiIds.includes(d.id));
+  const baseNome = targetDoc ? getBaseNomeDocente(targetDoc.nome) : '';
 
-  // 1. Ore di straordinario assegnate da sostituzioni
-  const oreDaSostituzioni = sostituzioni.filter(s => 
-    collegatiIds.includes(s.docenteSostitutoId) && 
-    (s.isStraordinario || s.categoria === 'STRAORDINARIO_D')
-  ).length;
+  // 1. Ore di straordinario assegnate da sostituzioni (sia per ID collegato che per nome docente)
+  const oreDaSostituzioni = sostituzioni.filter(s => {
+    if (!s.docenteSostitutoId || s.categoria === 'NON_SOSTITUIRE') return false;
+    const isStraord = s.isStraordinario || s.categoria === 'STRAORDINARIO_D';
+    if (!isStraord) return false;
+    
+    if (collegatiIds.includes(s.docenteSostitutoId)) return true;
+    const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
+    if (docSost && baseNome && getBaseNomeDocente(docSost.nome) === baseNome) return true;
+    return false;
+  }).length;
 
   // 2. Ore già compensate con permessi brevi (tracciate nei movimenti debito con descrizione COMPENSAZIONE_STRAORDINARIO)
   const oreCompensate = movimentiDebito
-    .filter(m => collegatiIds.includes(m.docenteId) && m.descrizione?.includes('[COMPENSAZIONE_STRAORDINARIO]'))
+    .filter(m => {
+      const matchId = collegatiIds.includes(m.docenteId);
+      const matchName = baseNome && docenti.find(d => d.id === m.docenteId && getBaseNomeDocente(d.nome) === baseNome);
+      return (matchId || matchName) && m.descrizione?.includes('[COMPENSAZIONE_STRAORDINARIO]');
+    })
     .reduce((acc, m) => acc + Math.abs(m.deltaOre || 0), 0);
 
   return Math.max(0, oreDaSostituzioni - oreCompensate);

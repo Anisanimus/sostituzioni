@@ -115,13 +115,20 @@ export const GestioneAssenze: React.FC<{
   const orariDalleAlle = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 
   const getGiornoFromDate = (dateStr: string): GiornoSettimana => {
-    const d = new Date(dateStr);
-    const day = d.getDay();
-    if (day === 1) return 'Lunedì';
-    if (day === 2) return 'Martedì';
-    if (day === 3) return 'Mercoledì';
-    if (day === 4) return 'Giovedì';
-    if (day === 5) return 'Venerdì';
+    if (!dateStr) return 'Lunedì';
+    const parts = dateStr.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      const d = new Date(year, month, day);
+      const dayNum = d.getDay();
+      if (dayNum === 1) return 'Lunedì';
+      if (dayNum === 2) return 'Martedì';
+      if (dayNum === 3) return 'Mercoledì';
+      if (dayNum === 4) return 'Giovedì';
+      if (dayNum === 5) return 'Venerdì';
+    }
     return 'Lunedì';
   };
 
