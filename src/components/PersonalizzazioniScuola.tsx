@@ -456,11 +456,11 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 <Building2 className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 truncate sm:whitespace-normal">Intestazione Scuola & Sicurezza Accesso</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Intestazione Scuola & Sicurezza Accesso</h3>
                   
-                  {/* ICONA 'i' SUBITO A FIANCO AL TITOLO */}
-                  <div className="relative inline-block shrink-0" onClick={(e) => e.stopPropagation()}>
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -675,11 +675,11 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 <Clock className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 truncate sm:whitespace-normal">Tetti Massimi & Limiti Monte Ore Annuale</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Tetti Massimi & Limiti Monte Ore Annuale</h3>
                   
-                  {/* ICONA 'i' SUBITO A FIANCO AL TITOLO */}
-                  <div className="relative inline-block shrink-0" onClick={(e) => e.stopPropagation()}>
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -797,11 +797,11 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 <Eye className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 truncate sm:whitespace-normal">Preferenze di Visualizzazione & Calendario</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Preferenze di Visualizzazione & Calendario</h3>
                   
-                  {/* ICONA 'i' SUBITO A FIANCO AL TITOLO */}
-                  <div className="relative inline-block shrink-0" onClick={(e) => e.stopPropagation()}>
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -944,11 +944,11 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 <Sparkles className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 truncate sm:whitespace-normal">Sostitutore Smart & Priorità Assegnazione</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Sostitutore Smart & Priorità Assegnazione</h3>
                   
-                  {/* ICONA 'i' SUBITO A FIANCO AL TITOLO */}
-                  <div className="relative inline-block shrink-0" onClick={(e) => e.stopPropagation()}>
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -1163,11 +1163,11 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 <Calendar className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 truncate sm:whitespace-normal">Giorni Festivi, Ponti & Chiusura Scuola</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Giorni Festivi, Ponti & Chiusura Scuola</h3>
                   
-                  {/* ICONA 'i' SUBITO A FIANCO AL TITOLO */}
-                  <div className="relative inline-block shrink-0" onClick={(e) => e.stopPropagation()}>
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -1359,11 +1359,11 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 <Mail className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 truncate sm:whitespace-normal">Email Promemoria Giornaliero a Gruppo Google</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Email Promemoria Giornaliero a Gruppo Google</h3>
                   
-                  {/* ICONA 'i' SUBITO A FIANCO AL TITOLO */}
-                  <div className="relative inline-block shrink-0" onClick={(e) => e.stopPropagation()}>
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -1758,11 +1758,11 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 <Calendar className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-black text-slate-900 truncate sm:whitespace-normal">Integrazione Google Calendar (Impegni & Risorse)</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">Integrazione Google Calendar (Impegni & Risorse)</h3>
                   
-                  {/* ICONA 'i' SUBITO A FIANCO AL TITOLO */}
-                  <div className="relative inline-block shrink-0" onClick={(e) => e.stopPropagation()}>
+                  {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                  <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -1778,6 +1778,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     >
                       <Info className="w-4 h-4" />
                     </button>
+
                     {infoSezioneAperta === 'sez_calendari_google' && (
                       <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between font-bold text-amber-400">
@@ -1860,10 +1861,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
                   ) : (
                     <div className="space-y-2.5">
                       {calImpegniList.map((cal, idx) => (
-                        <div key={cal.id || idx} className="p-3 bg-white rounded-xl border border-indigo-100 shadow-2xs flex items-center gap-2.5 flex-wrap sm:flex-nowrap animate-in fade-in">
+                        <div key={cal.id || idx} className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2.5 flex-wrap sm:flex-nowrap animate-in fade-in">
                           <div className="w-full sm:w-1/3 space-y-1">
                             <label className="block text-[10px] font-bold text-slate-700 uppercase">
-                              Nome Scheda Impegno
+                              Nome / Etichetta Scheda
                             </label>
                             <input
                               type="text"
@@ -1872,7 +1873,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                                 const val = e.target.value;
                                 setCalImpegniList(prev => prev.map((item, i) => i === idx ? { ...item, nome: val } : item));
                               }}
-                              placeholder="es. Consigli di Classe, Plenari..."
+                              placeholder="es. Secondaria, Primaria, Plenari..."
                               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
                             />
                           </div>
@@ -1888,7 +1889,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                                 const val = e.target.value;
                                 setCalImpegniList(prev => prev.map((item, i) => i === idx ? { ...item, googleId: val } : item));
                               }}
-                              placeholder="es. c_abc123@group.calendar.google.com"
+                              placeholder="es. c_xxxxxxxxxxxx@group.calendar.google.com"
                               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
                             />
                           </div>
@@ -1909,17 +1910,17 @@ export const PersonalizzazioniScuola: React.FC = () => {
                   )}
                 </div>
 
-                {/* 2. CALENDARI RISORSE E STANZE SPECIALI */}
+                {/* 2. CALENDARI RISORSE & SPAZI (STANZE) */}
                 <div className="p-4 bg-teal-50/50 rounded-2xl border border-teal-200 space-y-3">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
                       <span className="text-base">🏢</span>
                       <div>
                         <h4 className="font-black text-teal-950 text-xs sm:text-sm uppercase tracking-wider">
-                          2. Calendari Stanze, Aule & Risorse Speciali (Informatica, Teatro, Palestra)
+                          2. Calendari Risorse & Spazi (Aule Speciali / Stanze)
                         </h4>
                         <p className="text-[11px] text-teal-800">
-                          Visualizza le prenotazioni delle aule condivise direttamente nell'applicazione.
+                          Visualizza e verifica la disponibilità delle aule speciali (es. Lab. Informatica, Teatro, Palestra).
                         </p>
                       </div>
                     </div>
@@ -1929,7 +1930,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                       onClick={() => {
                         setCalRisorseList(prev => [
                           ...prev,
-                          { id: `cal_${Date.now()}`, nome: '', googleId: '', colore: '#009688' }
+                          { id: `stanza_${Date.now()}`, nome: '', googleId: '', colore: '#009688' }
                         ]);
                       }}
                       className="text-xs font-black bg-teal-600 hover:bg-teal-700 text-white px-3 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
@@ -2031,7 +2032,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
         </div>
       </form>
 
-        {/* SEZIONE 8: SALVATAGGIO BACKUP & RIPRISTINO COMPLETO (ACCORDION) */}
+      {/* SEZIONE 8: SALVATAGGIO BACKUP & RIPRISTINO COMPLETO (ACCORDION) */}
       <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-visible transition-all duration-200 mt-6">
         <div className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/80 transition gap-3">
           <button
@@ -2043,11 +2044,11 @@ export const PersonalizzazioniScuola: React.FC = () => {
               <Database className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-black text-slate-900 truncate sm:whitespace-normal">Salvataggio Backup & Ripristino Dati</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Salvataggio Backup & Ripristino Dati</h3>
                 
-                {/* ICONA 'i' SUBITO A FIANCO AL TITOLO */}
-                <div className="relative inline-block shrink-0" onClick={(e) => e.stopPropagation()}>
+                {/* ICONA 'i' SUBITO DOPO IL TITOLO */}
+                <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
                     onClick={(e) => {
