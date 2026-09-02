@@ -1773,33 +1773,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAssenze([]);
     setUscite([]);
     setSostituzioni([]);
+    setMovimentiDebito([]);
+    setNomineSupplenti([]);
 
     // 2. Sovrascrive immediatamente il localStorage per garantire persistenza assoluta
     try {
       localStorage.setItem('scuola_docenti', JSON.stringify(nuoviDocenti));
       localStorage.setItem('scuola_orari', JSON.stringify(nuoviOrari));
-      localStorage.removeItem('scuola_assenze');
-      localStorage.removeItem('scuola_uscite');
-      localStorage.removeItem('scuola_sostituzioni');
+      localStorage.setItem('scuola_assenze', JSON.stringify([]));
+      localStorage.setItem('scuola_uscite', JSON.stringify([]));
+      localStorage.setItem('scuola_sostituzioni', JSON.stringify([]));
+      localStorage.setItem('scuola_movimenti_debito', JSON.stringify([]));
+      localStorage.setItem('scuola_nomine_supplenti', JSON.stringify([]));
       localStorage.setItem('scuola_orario_version', 'custom_' + Date.now());
     } catch (e) {
       console.error('Errore durante il salvataggio in localStorage:', e);
     }
 
-    // 3. Salva DIRETTAMENTE e IMMEDIATAMENTE su Cloud Firestore (senza attendere debounce)
+    // 3. Salva DIRETTAMENTE e IMMEDIATAMENTE su Cloud Firestore (100% pulito da undefined)
     try {
       const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
-      await setDoc(scuolaDocRef, {
-        docenti: nuoviDocenti,
-        orariDocenti: nuoviOrari,
+      const payload = deepCleanUndefined({
+        docenti: JSON.parse(JSON.stringify(nuoviDocenti)),
+        orariDocenti: JSON.parse(JSON.stringify(nuoviOrari)),
         assenze: [],
         uscite: [],
         sostituzioni: [],
+        movimentiDebito: [],
+        nomineSupplenti: [],
         ultimoAggiornamento: new Date().toISOString()
-      }, { merge: true });
+      });
+      await setDoc(scuolaDocRef, payload, { merge: true });
       console.log('✅ Orario nuovo salvato con successo direttamente su Cloud Firestore!');
     } catch (cloudErr) {
       console.error('Errore salvataggio diretto Cloud:', cloudErr);
+      alert('Avviso: Salvataggio locale completato, ma si è verificato un errore di connessione con il Cloud Firestore. Verifica la connessione.');
     }
   };
 
@@ -1829,17 +1837,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('Errore durante l\'aggiornamento orario in localStorage:', e);
     }
 
-    // Salva DIRETTAMENTE su Cloud Firestore
+    // Salva DIRETTAMENTE su Cloud Firestore (100% pulito da undefined)
     try {
       const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
-      await setDoc(scuolaDocRef, {
-        docenti: docentiAggiornati,
-        orariDocenti: nuoviOrari,
+      const payload = deepCleanUndefined({
+        docenti: JSON.parse(JSON.stringify(docentiAggiornati)),
+        orariDocenti: JSON.parse(JSON.stringify(nuoviOrari)),
         ultimoAggiornamento: new Date().toISOString()
-      }, { merge: true });
+      });
+      await setDoc(scuolaDocRef, payload, { merge: true });
       console.log('✅ Orario aggiornato salvato con successo direttamente su Cloud Firestore!');
     } catch (cloudErr) {
       console.error('Errore salvataggio diretto Cloud:', cloudErr);
+      alert('Avviso: Salvataggio locale completato, ma si è verificato un errore di connessione con il Cloud Firestore. Verifica la connessione.');
     }
   };
 
