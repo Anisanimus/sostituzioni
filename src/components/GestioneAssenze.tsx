@@ -448,7 +448,7 @@ export const GestioneAssenze: React.FC<{
             onClick={() => setMostraDettagliEventi(prev => !prev)}
             className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer shadow-2xs ${
               mostraDettagliEventi
-                ? 'bg-slate-800 text-white border-slate-900 ring-2 ring-slate-400'
+                ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300 shadow-sm'
                 : 'bg-white text-slate-800 border-slate-200 hover:bg-slate-50'
             }`}
           >
@@ -458,7 +458,7 @@ export const GestioneAssenze: React.FC<{
               <span className="hidden sm:inline">Eventi Registrati</span>
             </div>
             <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
-              mostraDettagliEventi ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'
+              mostraDettagliEventi ? 'bg-indigo-800 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'
             }`}>
               {assenzeOggiDeduplicate.length + usciteOggi.length + nomineSupplenti.filter(n => {
                 const dIso = selectedDate.split('T')[0];
