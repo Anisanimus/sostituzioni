@@ -846,8 +846,8 @@ const MainApp: React.FC = () => {
 
             {/* PANNELLO LATERALE SLIDE-IN */}
             <div className="relative w-80 max-w-[85vw] bg-white h-full max-h-[100dvh] shadow-2xl z-10 flex flex-col justify-between animate-in slide-in-from-left duration-200 border-r border-slate-200 overflow-hidden">
-              {/* HEADER SIDEBAR (FISSO IN ALTO) */}
-              <div className="shrink-0 bg-slate-900 text-white p-4 safe-top flex items-center justify-between border-b border-slate-800">
+              {/* HEADER SIDEBAR (FISSO IN ALTO, CON SPAZIO EXTRA PER IPHONE STATUS BAR / NOTCH) */}
+              <div className="shrink-0 bg-slate-900 text-white p-4 safe-drawer-top flex items-center justify-between border-b border-slate-800">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 bg-indigo-600 rounded-xl shadow-2xs">
                     <School className="w-5 h-5 text-white" />

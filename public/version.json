@@ -1,13 +1,13 @@
 {
-  "version": "1.5.5",
-  "buildTime": "2026-09-03T17:29:00Z",
-  "title": "Novità della Versione 1.5.5",
-  "descrizioneGenerale": "Perfezionamento della Safe Area per iPhone (margini superiori e tasto chiudi X del menu).",
+  "version": "1.5.6",
+  "buildTime": "2026-09-03T17:36:00Z",
+  "title": "Novità della Versione 1.5.6",
+  "descrizioneGenerale": "Ripristino spazio compatto su Safari e spaziatura ottimizzata per il menu laterale.",
   "novita": [
     {
-      "titolo": "Margini di Sicurezza e Tasto Chiudi 'X' su iPhone",
-      "descrizione": "Aggiunto un generoso margine superiore al menu laterale e al banner aggiornamenti per garantire la perfetta visibilità del titolo 'Pannello Vicepresidenza' e la facile pressione del tasto di chiusura 'X' su tutti i modelli di iPhone.",
-      "tag": "iPhone & PWA"
+      "titolo": "Ripristino Spazio Compatto Safari & Spaziatura Menu",
+      "descrizione": "Eliminato lo spazio vuoto in eccesso su Safari quando si naviga normalmente. Il gap superiore è ora circoscritto solo al banner degli aggiornamenti, mentre la testata del menu principale si apre leggermente più in basso per consentire la lettura immediata di tutte le scritte e la chiusura con la X.",
+      "tag": "Ergonomia & iPhone"
     },
     {
       "titolo": "Storno e Aggiunta Manuale Ore a Credito e a Debito",
