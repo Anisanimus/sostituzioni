@@ -197,28 +197,28 @@ const MainApp: React.FC = () => {
               {isSidebarPinnedDesktop ? <PanelLeftClose className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            <div className="p-1.5 bg-indigo-600 rounded-lg shadow-sm">
+            <div className="p-1.5 bg-indigo-600 rounded-lg shadow-sm hidden sm:block">
               <School className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h1 className="text-sm sm:text-base font-black tracking-tight leading-tight">
-                <span className="truncate max-w-[220px] sm:max-w-none">{impostazioniScuola?.nomeScuola || 'Gestione Sostituzioni'}</span>
+              <h1 className="text-xs sm:text-base font-black tracking-tight leading-tight">
+                <span className="truncate max-w-[110px] xs:max-w-[140px] sm:max-w-none block">{impostazioniScuola?.nomeScuola || 'Gestione Sostituzioni'}</span>
               </h1>
             </div>
           </div>
 
-          {/* Azioni Header: Guida discreta + Switch Ruolo */}
-          <div className="flex items-center gap-2">
+          {/* Azioni Header: Switch Ruolo + Logout (perfettamente responsive per iPhone) */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => setIsTourOpen(true)}
-              className="text-slate-400 hover:text-white p-1.5 hover:bg-slate-800 rounded-lg transition text-xs font-semibold flex items-center gap-1"
+              className="text-slate-400 hover:text-white p-1.5 hover:bg-slate-800 rounded-lg transition text-xs font-semibold hidden md:flex items-center gap-1"
               title="Guida Rapida all'Uso"
             >
               <HelpCircle className="w-4 h-4 text-indigo-400" />
-              <span className="hidden md:inline">Guida</span>
+              <span>Guida</span>
             </button>
 
-            <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700">
+            <div className="flex items-center gap-0.5 sm:gap-1 bg-slate-800 p-0.5 sm:p-1 rounded-xl border border-slate-700">
               {utenteInfo.ruolo === 'VICEPRESIDENZA' && (
                 <button
                   onClick={() => setRuoloAttivo('VICEPRESIDENZA')}
@@ -244,7 +244,7 @@ const MainApp: React.FC = () => {
                 title="Portale Docenti"
               >
                 <Smartphone className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Portale Docenti</span>
+                <span className="hidden sm:inline">Docenti</span>
               </button>
 
               <button
@@ -262,45 +262,19 @@ const MainApp: React.FC = () => {
             </div>
 
             {/* PROFILO UTENTE AUTENTICATO & LOGOUT */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-700">
+            <div className="flex items-center gap-1.5 pl-1.5 sm:pl-2 border-l border-slate-700">
               <div className="hidden lg:flex flex-col text-right leading-tight">
                 <span className="text-xs font-bold text-slate-200 truncate max-w-[120px]">{utenteInfo.displayName}</span>
                 <span className="text-[10px] text-slate-400">{utenteInfo.ruolo}</span>
               </div>
 
-              {/* PULSANTE FORZA AGGIORNAMENTO / SVUOTA CACHE */}
-              <button
-                type="button"
-                onClick={() => {
-                  if ('caches' in window) {
-                    caches.keys().then((keys) => {
-                      keys.forEach((k) => caches.delete(k));
-                    });
-                  }
-                  if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistrations().then((registrations) => {
-                      for (const reg of registrations) {
-                        reg.unregister();
-                      }
-                    });
-                  }
-                  localStorage.removeItem('app_installed_build_id');
-                  window.location.reload();
-                }}
-                className="p-1.5 bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition cursor-pointer flex items-center gap-1 shadow-2xs"
-                title="Svuota cache e ricarica l'ultima versione dell'app"
-              >
-                <RotateCw className="w-4 h-4 text-indigo-400 hover:text-white" />
-                <span className="hidden xl:inline text-xs font-bold">Aggiorna</span>
-              </button>
-
               <button
                 type="button"
                 onClick={logout}
-                className="p-1.5 bg-slate-800 hover:bg-rose-600/80 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition cursor-pointer flex items-center gap-1"
+                className="p-1.5 bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white rounded-xl border border-slate-700 transition cursor-pointer flex items-center gap-1 shadow-2xs shrink-0"
                 title="Disconnetti (Esci)"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-4 h-4 text-rose-400 group-hover:text-white" />
                 <span className="hidden md:inline text-xs font-semibold">Esci</span>
               </button>
             </div>
