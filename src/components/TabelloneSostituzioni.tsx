@@ -765,18 +765,19 @@ export const TabelloneSostituzioni: React.FC<{
                                         </span>
                                       ) : (
                                         <button
+                                          type="button"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setSostituzionePerInvioSingolo({ sost, oraScoperta: os });
                                           }}
-                                          className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[10px] px-2 py-0.5 rounded-md transition shadow-2xs cursor-pointer"
+                                          className="p-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg transition shadow-2xs cursor-pointer flex items-center justify-center"
                                           title="Invia la richiesta di firma per presa visione a questo singolo docente"
                                         >
-                                          <span>✉️ Invia per Firma</span>
+                                          <Send className="w-3.5 h-3.5 text-indigo-600" />
                                         </button>
                                       )}
 
-                                      {/* PULSANTE WHATSAPP RAPIDO */}
+                                      {/* PULSANTE WHATSAPP RAPIDO (SOLO ICONA) */}
                                       <button
                                         type="button"
                                         onClick={(e) => {
@@ -787,11 +788,10 @@ export const TabelloneSostituzioni: React.FC<{
                                           const testoMsg = `Gentile Prof./Prof.ssa ${nomeSostituto}, Le comunichiamo che il giorno ${dataFmt} è assegnato/a alla ${os.ora}ª ora nella classe ${os.classe} per la sostituzione del Prof. ${nomeAssente}.`;
                                           window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(testoMsg)}`, '_blank');
                                         }}
-                                        className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[10px] px-2 py-0.5 rounded-md transition shadow-2xs cursor-pointer"
+                                        className="p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg transition shadow-2xs cursor-pointer flex items-center justify-center"
                                         title="Invia avviso su WhatsApp con messaggio precompilato"
                                       >
-                                        <MessageSquare className="w-2.5 h-2.5 text-emerald-600" />
-                                        <span>WhatsApp</span>
+                                        <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
                                       </button>
                                     </div>
                                   </div>
@@ -892,10 +892,7 @@ export const TabelloneSostituzioni: React.FC<{
                   }}
                   className={`w-full ${stileCard.bgHeader} ${stileCard.textColor} px-4 py-3 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left`}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-xl ${stileCard.bgAvatar} flex items-center justify-center font-black text-xs`}>
-                      {gruppoDoc.nomeDocente.split(' ').map(n => n[0]).slice(0, 2).join('')}
-                    </div>
+                  <div className="flex items-center gap-2">
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <strong className="text-sm font-black tracking-wide">{gruppoDoc.nomeDocente}</strong>
@@ -908,7 +905,7 @@ export const TabelloneSostituzioni: React.FC<{
                       </div>
                       <span className={`text-[11px] ${stileCard.subTextColor} flex items-center gap-1 mt-0.5 font-medium`}>
                         <span>{stileCard.icon}</span>
-                        <span>Tipologia assenza: <strong>{stileCard.label}</strong></span>
+                        <span><strong>{stileCard.label}</strong></span>
                       </span>
                     </div>
                   </div>
@@ -1058,18 +1055,19 @@ export const TabelloneSostituzioni: React.FC<{
                                         </span>
                                       ) : (
                                         <button
+                                          type="button"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setSostituzionePerInvioSingolo({ sost, oraScoperta: os });
                                           }}
-                                          className="inline-flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[10px] px-2 py-0.5 rounded-md transition shadow-2xs cursor-pointer"
+                                          className="p-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg transition shadow-2xs cursor-pointer flex items-center justify-center"
                                           title="Invia la richiesta di firma per presa visione a questo singolo docente"
                                         >
-                                          <span>✉️ Invia per Firma</span>
+                                          <Send className="w-3.5 h-3.5 text-indigo-600" />
                                         </button>
                                       )}
 
-                                      {/* PULSANTE WHATSAPP RAPIDO */}
+                                      {/* PULSANTE WHATSAPP RAPIDO (SOLO ICONA) */}
                                       <button
                                         type="button"
                                         onClick={(e) => {
@@ -1080,11 +1078,10 @@ export const TabelloneSostituzioni: React.FC<{
                                           const testoMsg = `Gentile Prof./Prof.ssa ${nomeSostituto}, Le comunichiamo che il giorno ${dataFmt} è assegnato/a alla ${os.ora}ª ora nella classe ${os.classe} per la sostituzione del Prof. ${nomeAssente}.`;
                                           window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(testoMsg)}`, '_blank');
                                         }}
-                                        className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-[10px] px-2 py-0.5 rounded-md transition shadow-2xs cursor-pointer"
+                                        className="p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg transition shadow-2xs cursor-pointer flex items-center justify-center"
                                         title="Invia avviso su WhatsApp con messaggio precompilato"
                                       >
-                                        <MessageSquare className="w-2.5 h-2.5 text-emerald-600" />
-                                        <span>WhatsApp</span>
+                                        <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
                                       </button>
                                     </div>
                                   </div>

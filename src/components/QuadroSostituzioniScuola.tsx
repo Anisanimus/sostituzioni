@@ -1084,10 +1084,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                     }}
                     className={`w-full ${stileCard.bgHeader} ${stileCard.textColor} px-4 py-3 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left`}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className={`w-9 h-9 rounded-xl ${stileCard.bgAvatar} flex items-center justify-center font-black text-xs shadow-2xs`}>
-                        {docenteNome.split(' ').map(n => n[0]).slice(0, 2).join('')}
-                      </div>
+                    <div className="flex items-center gap-2">
                       <div>
                         <div className="flex items-center gap-2">
                           <strong className="text-sm font-black tracking-wide">{docenteNome}</strong>
@@ -1095,7 +1092,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                         </div>
                         <span className={`text-[11px] ${stileCard.subTextColor} flex items-center gap-1 mt-0.5 font-medium`}>
                           <span>{stileCard.icon}</span>
-                          <span>Tipologia assenza: <strong>{stileCard.label}</strong></span>
+                          <span><strong>{stileCard.label}</strong></span>
                         </span>
                       </div>
                     </div>
