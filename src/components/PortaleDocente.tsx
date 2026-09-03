@@ -14,7 +14,7 @@ import {
   formatDataItaliana, getOrarioUnificatoDocente, getBaseNomeDocente, 
   getDocentiCompresentiInClasseNellOra, getClassiUniche, getDocentiConsiglioClasse,
   generaLinkGoogleCalendar, scaricaFileIcsCalendar, getMateriaDocenteNellOra,
-  getOreCreditoDocente
+  getOreCreditoDocente, getDescrizioneCategoriaSostituto
 } from '../utils/docentiHelper';
 import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
 import { VistaCalendariGoogle } from './VistaCalendariGoogle';
@@ -717,7 +717,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                       )}
                     </div>
                     <div className="text-[11px] text-indigo-700 font-medium">
-                      Tipologia: {s.categoria.replace(/_/g, ' ')}
+                      Tipologia: {getDescrizioneCategoriaSostituto(s.categoria)}
                     </div>
                   </div>
 

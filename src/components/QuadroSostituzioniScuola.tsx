@@ -8,7 +8,7 @@ import {
   ChevronsUpDown, ChevronDown, Megaphone, Bus, Calendar,
   LayoutGrid, UserMinus
 } from 'lucide-react';
-import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds, getStileCardAssenza, getEducatoriInClasseNellOra } from '../utils/docentiHelper';
+import { getBaseNomeDocente, formatDataItaliana, getOrarioUnificatoDocente, getDocentiCollegatiIds, getStileCardAssenza, getEducatoriInClasseNellOra, getDescrizioneCategoriaSostituto } from '../utils/docentiHelper';
 
 interface QuadroSostituzioniScuolaProps {
   initialDate?: string;
@@ -168,7 +168,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                       return {
                         id: s.id,
                         nomeSostituto: docSost ? getBaseNomeDocente(docSost.nome) : 'Docente Sostituto',
-                        categoria: s.categoria.replace(/_/g, ' '),
+                        categoria: getDescrizioneCategoriaSostituto(s.categoria),
                         firmata: !!s.firmata,
                         pubblicata: !!s.pubblicata
                       };

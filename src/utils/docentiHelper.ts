@@ -800,3 +800,36 @@ export function getOreCreditoDocente(
 }
 
 export const getOreStraordinarioDocente = getOreCreditoDocente;
+
+/**
+ * Converte il codice di CategoriaSostituto nella corretta dicitura richiesta:
+ * - Ora a credito / STRAORDINARIO_D -> 'disposizione'
+ * - COMPRESENTE_CLASSE -> 'compresente'
+ * - RECUPERO_STESSA_CLASSE / RECUPERO_GENERICO -> 'recupero'
+ * - SOSTEGNO -> 'disposizione'
+ * - Altre categorie liberato/potenziamento formattate in minuscolo pulito
+ */
+export function getDescrizioneCategoriaSostituto(categoria: string | undefined): string {
+  if (!categoria) return '';
+  const catUpper = categoria.toUpperCase().trim();
+  
+  if (catUpper === 'STRAORDINARIO_D' || catUpper === 'STRAORDINARIO D' || catUpper === 'STRAORDINARIO') {
+    return 'disposizione';
+  }
+  if (catUpper === 'COMPRESENTE_CLASSE' || catUpper === 'COMPRESENTE CLASSE' || catUpper === 'COMPRESENZA') {
+    return 'compresente';
+  }
+  if (catUpper === 'RECUPERO_STESSA_CLASSE' || catUpper === 'RECUPERO_GENERICO' || catUpper.includes('RECUPERO')) {
+    return 'recupero';
+  }
+  if (catUpper === 'SOSTEGNO') {
+    return 'disposizione';
+  }
+  if (catUpper.startsWith('LIBERATO')) {
+    return 'liberato da gita';
+  }
+  if (catUpper === 'POTENZIAMENTO') {
+    return 'potenziamento';
+  }
+  return categoria.replace(/_/g, ' ').toLowerCase();
+}

@@ -8,7 +8,7 @@ import {
   Printer, LayoutGrid, List, MessageSquare, AlertTriangle, Accessibility, Lock,
   UserCheck, UserX, UserMinus, GraduationCap, ChevronsUpDown, ChevronUp, Send, Bell
 } from 'lucide-react';
-import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente, getStileCardAssenza, getEducatoriInClasseNellOra, getMateriaDocenteNellOra } from '../utils/docentiHelper';
+import { getBaseNomeDocente, getDocentiCollegatiIds, formatDataItaliana, getDocentiUnici, DocenteUnico, getPrimoGiornoScolasticoValido, getOrarioUnificatoDocente, getStileCardAssenza, getEducatoriInClasseNellOra, getMateriaDocenteNellOra, getDescrizioneCategoriaSostituto } from '../utils/docentiHelper';
 
 export const TabelloneSostituzioni: React.FC<{ 
   selectedDate: string; 
@@ -747,7 +747,7 @@ export const TabelloneSostituzioni: React.FC<{
                                   <div className="text-left">
                                     <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
                                       <span className="text-indigo-700">👤 {getDocenteNome(sost.docenteSostitutoId)}</span>
-                                      <span className="text-[10px] font-normal text-slate-500">({sost.categoria.replace(/_/g, ' ')})</span>
+                                      <span className="text-[10px] font-normal text-slate-500 uppercase">({getDescrizioneCategoriaSostituto(sost.categoria)})</span>
                                     </div>
 
                                     {/* TRACKING STATO PRESA VISIONE E CONDIVISIONE RAPIDA */}
@@ -1035,7 +1035,7 @@ export const TabelloneSostituzioni: React.FC<{
                                   <div className="text-left">
                                     <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
                                       <span className="text-indigo-700">👤 {getDocenteNome(sost.docenteSostitutoId)}</span>
-                                      <span className="text-[10px] font-normal text-slate-500">({sost.categoria.replace(/_/g, ' ')})</span>
+                                      <span className="text-[10px] font-normal text-slate-500 uppercase">({getDescrizioneCategoriaSostituto(sost.categoria)})</span>
                                     </div>
 
                                     {/* TRACKING STATO PRESA VISIONE E CONDIVISIONE RAPIDA */}
