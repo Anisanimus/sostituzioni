@@ -169,38 +169,36 @@ export const ReportStatistiche: React.FC = () => {
   const statisticheAssenzeEGite = useMemo(() => {
     // A) Assenze Ordinarie (non dovute a uscite/gite e non assemblee sindacali)
     const assenzeOrdinarie = assenzeFiltrate.filter(a => a.motivo !== 'Uscita' && !a.dettagliUscita && a.motivo !== 'Assemblea sindacale');
-    const totOreAssenzeOrdinarie = assenzeOrdinarie.reduce((acc, a) => acc + a.oreInteressate.length, 0);
 
     const classificaAssenzeOrdinarie = docentiUnici.map(doc => {
       const assDoc = assenzeOrdinarie.filter(a => {
         const d = docenti.find(x => x.id === a.docenteId);
         return d && getBaseNomeDocente(d.nome) === doc.nome;
       });
-      const totOre = assDoc.reduce((acc, a) => acc + a.oreInteressate.length, 0);
       const giorniUnici = new Set(assDoc.map(a => a.data)).size;
       return {
         id: doc.id,
         nome: doc.nome,
         materia: doc.materie.join(', '),
-        totOre,
         giorniUnici,
         numEventi: assDoc.length
       };
-    }).filter(d => d.totOre > 0).sort((a, b) => b.totOre - a.totOre); // Da chi ne ha di più a chi di meno
+    }).filter(d => d.giorniUnici > 0).sort((a, b) => b.giorniUnici - a.giorniUnici); // Da chi ha più giorni di assenza a chi meno
+
+    // Totale giorni di assenza unici registrati (somma giorni per docente)
+    const totGiorniAssenzeOrdinarie = classificaAssenzeOrdinarie.reduce((acc, a) => acc + a.giorniUnici, 0);
 
     // B) Assenze generate per Gita / Uscita Didattica (Accompagnatori)
-    const docentiUsciteCount: Record<string, { totUscite: number; totOre: number; materia: string }> = {};
+    const docentiUsciteCount: Record<string, { totUscite: number; materia: string }> = {};
     usciteFiltrate.forEach(u => {
-      const numOre = u.ore?.length || (u.oraFine - u.oraInizio + 1);
       (u.docentiAccompagnatoriIds || []).forEach(docId => {
         const d = docenti.find(x => x.id === docId);
         if (d) {
           const nome = getBaseNomeDocente(d.nome);
           if (!docentiUsciteCount[nome]) {
-            docentiUsciteCount[nome] = { totUscite: 0, totOre: 0, materia: d.materia || '' };
+            docentiUsciteCount[nome] = { totUscite: 0, materia: d.materia || '' };
           }
           docentiUsciteCount[nome].totUscite += 1;
-          docentiUsciteCount[nome].totOre += numOre;
         }
       });
     });
@@ -208,15 +206,15 @@ export const ReportStatistiche: React.FC = () => {
     const classificaGite = Object.entries(docentiUsciteCount).map(([nome, data]) => ({
       nome,
       ...data
-    })).sort((a, b) => b.totOre - a.totOre); // Da chi ha fatto più gite a chi meno
+    })).sort((a, b) => b.totUscite - a.totUscite); // Da chi ha fatto più gite a chi meno
 
-    const totOreGite = classificaGite.reduce((acc, d) => acc + d.totOre, 0);
+    const totGitePartecipazioni = classificaGite.reduce((acc, d) => acc + d.totUscite, 0);
 
     return {
-      totOreAssenzeOrdinarie,
+      totGiorniAssenzeOrdinarie,
       classificaAssenzeOrdinarie,
       totUsciteEffettuate: usciteFiltrate.length,
-      totOreGite,
+      totGitePartecipazioni,
       classificaGite
     };
   }, [docentiUnici, docenti, assenzeFiltrate, usciteFiltrate]);
@@ -294,17 +292,17 @@ export const ReportStatistiche: React.FC = () => {
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataAssemblee), 'Assemblee Sindacali');
 
-      // Foglio 3: Assenze Ordinarie
+      // Foglio 3: Assenze Ordinarie (Solo Giorni)
       const dataAssenze = statisticheAssenzeEGite.classificaAssenzeOrdinarie.map(a => ({
         'Docente': a.nome, 'Materia': a.materia,
-        'Ore Totali Assenza': a.totOre, 'Giorni con Assenze': a.giorniUnici, 'Num. Eventi': a.numEventi
+        'Giorni di Assenza': a.giorniUnici, 'Num. Eventi': a.numEventi
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataAssenze), 'Assenze Ordinarie');
 
       // Foglio 4: Gite e Uscite
       const dataGite = statisticheAssenzeEGite.classificaGite.map(g => ({
         'Docente Accompagnatore': g.nome, 'Materia': g.materia,
-        'Numero Uscite': g.totUscite, 'Ore Fuori Sede': g.totOre
+        'Numero Uscite / Gite': g.totUscite
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataGite), 'Gite e Uscite Didattiche');
 
@@ -539,29 +537,29 @@ export const ReportStatistiche: React.FC = () => {
                 <span>3. Report Assenze & Gite</span>
               </span>
               <span className="text-[10px] bg-rose-50 text-rose-800 font-bold px-2 py-0.5 rounded-md border border-rose-200">
-                Classifiche per Frequenza
+                Conteggio Giorni & Uscite
               </span>
             </div>
 
-            {/* Macro KPI Numeri a Vista */}
+            {/* Macro KPI Numeri a Vista (GIORNI e GITE) */}
             <div className="grid grid-cols-2 gap-2 text-center pt-1">
               <div className="bg-rose-50/80 border border-rose-200 rounded-xl p-2.5">
-                <span className="text-[10px] font-bold text-rose-800 block">Assenze Ordinarie (No Gita)</span>
-                <strong className="text-lg font-black text-rose-950">{statisticheAssenzeEGite.totOreAssenzeOrdinarie}h</strong>
+                <span className="text-[10px] font-bold text-rose-800 block">Giorni Assenza (No Gita)</span>
+                <strong className="text-lg font-black text-rose-950">{statisticheAssenzeEGite.totGiorniAssenzeOrdinarie} gg</strong>
               </div>
               <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-2.5">
-                <span className="text-[10px] font-bold text-amber-800 block">Ore Fuori Sede per Gite</span>
-                <strong className="text-lg font-black text-amber-950">{statisticheAssenzeEGite.totOreGite}h</strong>
+                <span className="text-[10px] font-bold text-amber-800 block">Partecipazioni a Gite</span>
+                <strong className="text-lg font-black text-amber-950">{statisticheAssenzeEGite.totGitePartecipazioni} uscite</strong>
               </div>
             </div>
           </div>
 
-          {/* Due Micro-Elenchi: A) Chi ha più assenze, B) Chi ha fatto più gite */}
+          {/* Due Micro-Elenchi: A) Chi ha più giorni di assenza, B) Chi ha fatto più gite */}
           <div className="space-y-4 flex-1">
             {/* Sotto-sezione Assenze Ordinarie */}
             <div className="space-y-1.5">
               <h4 className="text-[11px] font-black text-slate-800 flex items-center justify-between">
-                <span>🏥 Classifica Assenze Ordinarie (Da più a meno ore)</span>
+                <span>🏥 Classifica Assenze Ordinarie (Da più a meno giorni)</span>
                 <span className="text-slate-400 font-normal text-[10px]">{statisticheAssenzeEGite.classificaAssenzeOrdinarie.length} docenti</span>
               </h4>
               <div className="divide-y divide-slate-100 max-h-36 overflow-y-auto pr-1">
@@ -572,7 +570,7 @@ export const ReportStatistiche: React.FC = () => {
                       <strong className="font-bold text-slate-900">{doc.nome}</strong>
                     </div>
                     <span className="font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded text-[11px]">
-                      {doc.totOre}h ({doc.giorniUnici} gg)
+                      {doc.giorniUnici} {doc.giorniUnici === 1 ? 'giorno' : 'giorni'}
                     </span>
                   </div>
                 ))}
@@ -596,7 +594,7 @@ export const ReportStatistiche: React.FC = () => {
                       <strong className="font-bold text-slate-900">{doc.nome}</strong>
                     </div>
                     <span className="font-black text-amber-800 bg-amber-50 px-2 py-0.5 rounded text-[11px]">
-                      {doc.totUscite} gite ({doc.totOre}h)
+                      {doc.totUscite} {doc.totUscite === 1 ? 'gita' : 'gite'}
                     </span>
                   </div>
                 ))}
