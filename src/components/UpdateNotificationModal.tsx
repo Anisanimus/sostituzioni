@@ -150,17 +150,39 @@ export const UpdateNotificationModal: React.FC = () => {
 
             <div className="space-y-3">
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                È disponibile un aggiornamento dell'applicazione con le seguenti modifiche e miglioramenti:
+                {nuovaVersioneInfo.descrizioneGenerale || 'È disponibile un aggiornamento dell\'applicazione con i seguenti miglioramenti:'}
               </p>
 
-              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80 space-y-2 max-h-56 overflow-y-auto">
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 space-y-2.5 max-h-72 overflow-y-auto">
                 {nuovaVersioneInfo.novita && nuovaVersioneInfo.novita.length > 0 ? (
-                  nuovaVersioneInfo.novita.map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs text-slate-800">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span className="leading-snug">{item}</span>
-                    </div>
-                  ))
+                  nuovaVersioneInfo.novita.map((item, idx) => {
+                    if (typeof item === 'string') {
+                      return (
+                        <div key={idx} className="flex items-start gap-2 text-xs text-slate-800 bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-2xs">
+                          <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                          <span className="leading-snug">{item}</span>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-2xs space-y-1">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5 font-black text-xs text-slate-900">
+                            <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>{item.titolo}</span>
+                          </div>
+                          {item.tag && (
+                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 shrink-0">
+                              {item.tag}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-600 leading-relaxed pl-5 font-normal">
+                          {item.descrizione}
+                        </p>
+                      </div>
+                    );
+                  })
                 ) : (
                   <div className="flex items-center gap-2 text-xs text-slate-700">
                     <Check className="w-4 h-4 text-emerald-600" />
