@@ -822,7 +822,7 @@ export const TabelloneSostituzioni: React.FC<{
                                   e.stopPropagation();
                                   setSelectedOraScoperta(os);
                                 }}
-                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs p-1 sm:px-2 sm:py-1 rounded-lg flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                                className="w-full md:w-auto mt-1 md:mt-0 justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs p-1 sm:px-2 sm:py-1 rounded-lg flex items-center gap-1 transition shadow-2xs cursor-pointer"
                                 title="Aggiungi un altro docente per coprire questa classe in compresenza"
                               >
                                 <span className="text-xs font-black">+</span>
@@ -1110,7 +1110,7 @@ export const TabelloneSostituzioni: React.FC<{
                                   e.stopPropagation();
                                   setSelectedOraScoperta(os);
                                 }}
-                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs p-1 sm:px-2 sm:py-1 rounded-lg flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                                className="w-full md:w-auto mt-1 md:mt-0 justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs p-1 sm:px-2 sm:py-1 rounded-lg flex items-center gap-1 transition shadow-2xs cursor-pointer"
                                 title="Aggiungi un altro docente per coprire questa classe in compresenza"
                               >
                                 <span className="text-xs font-black">+</span>

@@ -13,11 +13,16 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.4.8',
-  buildTime: '2026-09-03T16:26:00Z',
-  title: 'Novità della Versione 1.4.8',
-  descrizioneGenerale: 'Ottimizzazione del layout del tabellone con allineamento stabile e compatto, e banner di aggiornamento interattivo.',
+  version: '1.4.9',
+  buildTime: '2026-09-03T16:38:00Z',
+  title: 'Novità della Versione 1.4.9',
+  descrizioneGenerale: 'Perfezionamento del pulsante di aggiunta sostituto da smartphone.',
   novita: [
+    {
+      titolo: 'Pulsante "+ Aggiungi" a Capo su Mobile',
+      descrizione: 'Da smartphone, il pulsante per aggiungere un ulteriore docente sostituto va ora sempre a capo a tutta larghezza, migliorando l\'ergonomia del tocco ed evitando qualsiasi sovrapposizione.',
+      tag: 'Mobile & Ergonomia'
+    },
     {
       titolo: 'Layout Compatto e Allineato per Più Sostituti',
       descrizione: 'Risolto ogni spostamento a zig-zag: le classi e i docenti assenti restano perfettamente allineati a sinistra, mentre le card dei docenti sostituti sono compatte e ordinate con poco padding.',
