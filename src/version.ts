@@ -13,11 +13,16 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.5.6',
-  buildTime: '2026-09-03T17:36:00Z',
-  title: 'Novità della Versione 1.5.6',
-  descrizioneGenerale: 'Ripristino spazio compatto su Safari e spaziatura ottimizzata per il menu laterale.',
+  version: '1.6.0',
+  buildTime: '2026-09-03T17:45:00Z',
+  title: 'Novità della Versione 1.6.0',
+  descrizioneGenerale: 'Personalizzazione dell\'icona e del logo ufficiale della scuola direttamente dal pannello Vicepresidenza.',
   novita: [
+    {
+      titolo: 'Caricamento Logo & Icona Personalizzata Scuola',
+      descrizione: 'In Vicepresidenza > Personalizzazioni > Intestazione Scuola è ora possibile caricare lo stemma o logo ufficiale della scuola (PNG, JPG, SVG) oppure scegliere tra diverse icone tematiche (Scuola, Libro, Studio, Campus, Arte, Stemma). Il logo personalizzato viene sincronizzato sul Cloud e mostrato su header, menu e favicon del browser.',
+      tag: 'Personalizzazioni & Brand'
+    },
     {
       titolo: 'Ripristino Spazio Compatto Safari & Spaziatura Menu',
       descrizione: 'Eliminato lo spazio vuoto in eccesso su Safari quando si naviga normalmente. Il gap superiore è ora circoscritto solo al banner degli aggiornamenti, mentre la testata del menu principale si apre leggermente più in basso per consentire la lettura immediata di tutte le scritte e la chiusura con la X.',

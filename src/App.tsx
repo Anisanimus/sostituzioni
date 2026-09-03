@@ -27,7 +27,8 @@ import {
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
   Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound, TrendingUp,
-  Monitor, Pin, PinOff, PanelLeftClose, PanelLeftOpen, PanelLeft, Scale, ArrowDownUp, RotateCw
+  Monitor, Pin, PinOff, PanelLeftClose, PanelLeftOpen, PanelLeft, Scale, ArrowDownUp, RotateCw,
+  BookOpen, GraduationCap, Palette
 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -81,6 +82,50 @@ const MainApp: React.FC = () => {
       }
     }
   }, [utenteInfo]);
+
+  // Helper per renderizzare l'icona o il logo personalizzato della scuola
+  const renderLogoScuola = (classeIcona = "w-4 h-4 text-white", classeContenitore = "p-1.5 bg-indigo-600 rounded-lg shadow-sm") => {
+    const tipo = impostazioniScuola?.logoTipo || 'DEFAULT';
+    const url = impostazioniScuola?.logoUrl;
+
+    if (tipo === 'CUSTOM_IMAGE' && url) {
+      return (
+        <div className={`${classeContenitore} overflow-hidden flex items-center justify-center bg-white border border-slate-700/50 p-0.5`}>
+          <img src={url} alt="Logo Scuola" className="w-full h-full object-contain rounded-md" />
+        </div>
+      );
+    }
+
+    let IconComp = School;
+    if (tipo === 'BOOK') IconComp = BookOpen;
+    else if (tipo === 'GRADUATION') IconComp = GraduationCap;
+    else if (tipo === 'BUILDING') IconComp = Building2;
+    else if (tipo === 'PALETTE') IconComp = Palette;
+    else if (tipo === 'SHIELD') IconComp = ShieldCheck;
+
+    return (
+      <div className={classeContenitore}>
+        <IconComp className={classeIcona} />
+      </div>
+    );
+  };
+
+  // Aggiorna dinamicamente favicon e titolo del browser quando cambia il logo o il nome scuola
+  React.useEffect(() => {
+    if (impostazioniScuola?.nomeScuola) {
+      document.title = impostazioniScuola.nomeScuola;
+    }
+    if (impostazioniScuola?.logoTipo === 'CUSTOM_IMAGE' && impostazioniScuola.logoUrl) {
+      const favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+      if (favicon) {
+        favicon.href = impostazioniScuola.logoUrl;
+      }
+      const appleIcon = document.querySelector("link[rel='apple-touch-icon']") as HTMLLinkElement;
+      if (appleIcon) {
+        appleIcon.href = impostazioniScuola.logoUrl;
+      }
+    }
+  }, [impostazioniScuola?.nomeScuola, impostazioniScuola?.logoUrl, impostazioniScuola?.logoTipo]);
 
   const todayStr = new Date().toISOString().split('T')[0];
   const nascondiWeekend = impostazioniScuola?.nascondiWeekendCalendario ?? true;
@@ -197,9 +242,7 @@ const MainApp: React.FC = () => {
               {isSidebarPinnedDesktop ? <PanelLeftClose className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
 
-            <div className="p-1.5 bg-indigo-600 rounded-lg shadow-sm hidden sm:block">
-              <School className="w-4 h-4 text-white" />
-            </div>
+            {renderLogoScuola("w-4 h-4 text-white", "w-7 h-7 bg-indigo-600 rounded-lg shadow-sm hidden sm:flex items-center justify-center")}
             <div>
               <h1 className="text-xs sm:text-base font-black tracking-tight leading-tight">
                 <span className="truncate max-w-[110px] xs:max-w-[140px] sm:max-w-none block">{impostazioniScuola?.nomeScuola || 'Gestione Sostituzioni'}</span>
@@ -292,9 +335,7 @@ const MainApp: React.FC = () => {
             {/* HEADER SIDEBAR FISSA PC */}
             <div className="shrink-0 bg-slate-900 text-white p-3.5 flex items-center justify-between border-b border-slate-800">
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 bg-indigo-600 rounded-lg shadow-2xs">
-                  <School className="w-4 h-4 text-white" />
-                </div>
+                {renderLogoScuola("w-4 h-4 text-white", "w-7 h-7 bg-indigo-600 rounded-lg shadow-2xs flex items-center justify-center")}
                 <div>
                   <h2 className="text-xs font-black text-white">Menu Navigazione</h2>
                   <p className="text-[10px] text-slate-400">
@@ -849,9 +890,7 @@ const MainApp: React.FC = () => {
               {/* HEADER SIDEBAR (FISSO IN ALTO, CON SPAZIO EXTRA PER IPHONE STATUS BAR / NOTCH) */}
               <div className="shrink-0 bg-slate-900 text-white p-4 safe-drawer-top flex items-center justify-between border-b border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-indigo-600 rounded-xl shadow-2xs">
-                    <School className="w-5 h-5 text-white" />
-                  </div>
+                  {renderLogoScuola("w-5 h-5 text-white", "w-9 h-9 bg-indigo-600 rounded-xl shadow-2xs flex items-center justify-center")}
                   <div>
                     <h2 className="text-sm font-black text-white">Menu Principale</h2>
                     <p className="text-[11px] text-slate-400">

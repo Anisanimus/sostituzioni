@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   Building2, Clock, Eye, Calendar, CheckCircle, RotateCcw, 
   Save, School, Sliders, ShieldAlert, Sparkles, LayoutGrid, List,
   Download, Upload, Plus, Trash2, ShieldCheck, Database,
   Mail, Send, ExternalLink, Info, HelpCircle, Code2, Copy, X,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, BookOpen, GraduationCap, Palette, Image as ImageIcon
 } from 'lucide-react';
 import { DEFAULT_IMPOSTAZIONI_SCUOLA, DEFAULT_IMPOSTAZIONI_PRIORITA } from '../context/AppContext';
 import { formatDataItaliana } from '../utils/docentiHelper';
@@ -18,6 +18,9 @@ export const PersonalizzazioniScuola: React.FC = () => {
   } = useApp();
   
   const [nomeScuola, setNomeScuola] = useState(impostazioniScuola.nomeScuola || 'I.C. Anna Frank');
+  const [logoTipo, setLogoTipo] = useState<'DEFAULT' | 'CUSTOM_IMAGE' | 'BOOK' | 'GRADUATION' | 'BUILDING' | 'PALETTE' | 'SHIELD'>(impostazioniScuola.logoTipo || 'DEFAULT');
+  const [logoUrl, setLogoUrl] = useState<string>(impostazioniScuola.logoUrl || '');
+  const fileLogoRef = useRef<HTMLInputElement>(null);
   const [pinPersonaleAta, setPinPersonaleAta] = useState(impostazioniScuola.pinPersonaleAta || '1234');
   const [tettoPermessi, setTettoPermessi] = useState(impostazioniScuola.tettoMaxPermessiBreviAnno || 12);
   const [tettoAssemblee, setTettoAssemblee] = useState(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
@@ -123,6 +126,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
   React.useEffect(() => {
     if (impostazioniScuola) {
       setNomeScuola(impostazioniScuola.nomeScuola || 'I.C. Anna Frank');
+      setLogoTipo(impostazioniScuola.logoTipo || 'DEFAULT');
+      setLogoUrl(impostazioniScuola.logoUrl || '');
       setPinPersonaleAta(impostazioniScuola.pinPersonaleAta || '1234');
       setTettoPermessi(impostazioniScuola.tettoMaxPermessiBreviAnno || 12);
       setTettoAssemblee(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
@@ -246,6 +251,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
     updateImpostazioniScuola({
       nomeScuola: nomeScuola.trim() || 'Istituto Scolastico',
+      logoUrl: logoUrl.trim(),
+      logoTipo: logoTipo,
       pinPersonaleAta: pinPersonaleAta.trim() || '1234',
       tettoMaxPermessiBreviAnno: Number(tettoPermessi) || 12,
       tettoMaxAssembleeSindacaliAnno: Number(tettoAssemblee) || 10,
@@ -556,6 +563,209 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     required
                   />
                 </div>
+              </div>
+
+              {/* SELEZIONE E CARICAMENTO ICONA / LOGO SCUOLA */}
+              <div className="p-4 bg-gradient-to-br from-indigo-50/70 via-slate-50 to-purple-50/50 rounded-2xl border border-indigo-100/80 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 bg-indigo-600 text-white rounded-lg shadow-2xs">
+                      <School className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900">Icona & Logo dell'Istituto</h4>
+                      <p className="text-[11px] text-slate-500">Scegli un'icona tematica o carica lo stemma/logo ufficiale della tua scuola (PNG, JPG, SVG).</p>
+                    </div>
+                  </div>
+
+                  {/* ANTEPRIMA LIVE ICONA SCELTA */}
+                  <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Anteprima:</span>
+                    <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center overflow-hidden shadow-2xs">
+                      {logoTipo === 'CUSTOM_IMAGE' && logoUrl ? (
+                        <img src={logoUrl} alt="Logo Scuola" className="w-full h-full object-cover" />
+                      ) : logoTipo === 'BOOK' ? (
+                        <BookOpen className="w-4 h-4 text-white" />
+                      ) : logoTipo === 'GRADUATION' ? (
+                        <GraduationCap className="w-4 h-4 text-white" />
+                      ) : logoTipo === 'BUILDING' ? (
+                        <Building2 className="w-4 h-4 text-white" />
+                      ) : logoTipo === 'PALETTE' ? (
+                        <Palette className="w-4 h-4 text-white" />
+                      ) : logoTipo === 'SHIELD' ? (
+                        <ShieldCheck className="w-4 h-4 text-white" />
+                      ) : (
+                        <School className="w-4 h-4 text-white" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* OPZIONI DI SCELTA ICONA */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 pt-1">
+                  {/* OPZIONE 1: SCUOLA (DEFAULT) */}
+                  <button
+                    type="button"
+                    onClick={() => setLogoTipo('DEFAULT')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      logoTipo === 'DEFAULT'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <School className="w-5 h-5" />
+                    <span className="text-[10px]">Scuola</span>
+                  </button>
+
+                  {/* OPZIONE 2: LIBRO */}
+                  <button
+                    type="button"
+                    onClick={() => setLogoTipo('BOOK')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      logoTipo === 'BOOK'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    <span className="text-[10px]">Libro</span>
+                  </button>
+
+                  {/* OPZIONE 3: TOGA / LAUREA */}
+                  <button
+                    type="button"
+                    onClick={() => setLogoTipo('GRADUATION')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      logoTipo === 'GRADUATION'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <GraduationCap className="w-5 h-5" />
+                    <span className="text-[10px]">Studio</span>
+                  </button>
+
+                  {/* OPZIONE 4: EDIFICIO */}
+                  <button
+                    type="button"
+                    onClick={() => setLogoTipo('BUILDING')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      logoTipo === 'BUILDING'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Building2 className="w-5 h-5" />
+                    <span className="text-[10px]">Campus</span>
+                  </button>
+
+                  {/* OPZIONE 5: ARTE / STEMMA */}
+                  <button
+                    type="button"
+                    onClick={() => setLogoTipo('PALETTE')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      logoTipo === 'PALETTE'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Palette className="w-5 h-5" />
+                    <span className="text-[10px]">Arte</span>
+                  </button>
+
+                  {/* OPZIONE 6: STEMMA SCUDO */}
+                  <button
+                    type="button"
+                    onClick={() => setLogoTipo('SHIELD')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      logoTipo === 'SHIELD'
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <ShieldCheck className="w-5 h-5" />
+                    <span className="text-[10px]">Stemma</span>
+                  </button>
+
+                  {/* OPZIONE 7: CARICA IMMAGINE PERSONALIZZATA */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (fileLogoRef.current) fileLogoRef.current.click();
+                    }}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      logoTipo === 'CUSTOM_IMAGE' && logoUrl
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                        : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50/50'
+                    }`}
+                  >
+                    <Upload className="w-5 h-5" />
+                    <span className="text-[10px] truncate max-w-full">Carica Logo</span>
+                  </button>
+                </div>
+
+                {/* INPUT FILE NASCOSTO PER CARICAMENTO IMMAGINE */}
+                <input
+                  ref={fileLogoRef}
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp, image/svg+xml"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 2 * 1024 * 1024) {
+                        alert('L\'immagine scelta è troppo grande (massimo 2MB). Si consiglia un\'immagine leggera o un file PNG trasparente.');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = (uploadEvent) => {
+                        const base64Str = uploadEvent.target?.result as string;
+                        if (base64Str) {
+                          setLogoUrl(base64Str);
+                          setLogoTipo('CUSTOM_IMAGE');
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+
+                {/* BOX DETTAGLIO QUANDO È PRESENTE UN'IMMAGINE PERSONALIZZATA */}
+                {logoTipo === 'CUSTOM_IMAGE' && logoUrl && (
+                  <div className="bg-white p-3 rounded-xl border border-indigo-200 flex items-center justify-between gap-3 shadow-2xs animate-in fade-in duration-150">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img src={logoUrl} alt="Logo Scuola Caricato" className="w-10 h-10 rounded-xl object-contain bg-slate-50 p-1 border border-slate-200 shrink-0 shadow-2xs" />
+                      <div className="min-w-0">
+                        <span className="text-xs font-black text-slate-800 block truncate">Logo Personalizzato Attivo</span>
+                        <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3 inline" /> Pronto per essere visualizzato su barra, menu e favicon
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => fileLogoRef.current?.click()}
+                        className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1.5 rounded-lg border border-indigo-200 transition cursor-pointer"
+                      >
+                        Sostituisci
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLogoUrl('');
+                          setLogoTipo('DEFAULT');
+                          if (fileLogoRef.current) fileLogoRef.current.value = '';
+                        }}
+                        className="text-[11px] font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2 py-1.5 rounded-lg border border-rose-200 transition cursor-pointer"
+                        title="Rimuovi Logo e torna all'icona predefinita"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* GESTIONE ACCESSI GOOGLE WORKSPACE & VICEPRESIDENZA */}
