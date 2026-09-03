@@ -112,6 +112,7 @@ interface AppContextType {
   updateDocente: (docente: Docente) => void;
   updateOrarioDocente: (docenteId: string, nuoveOre: any[]) => void;
   modificaDebitoManuale: (docenteId: string, deltaOre: number, descrizione: string) => void;
+  modificaCreditoManuale: (docenteId: string, deltaOre: number, descrizione: string) => void;
   resetOrarioPredefinito: () => void;
   azzeraDocentiEOrario: () => void;
   importaNuovoOrarioCompleto: (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => void;
@@ -1538,6 +1539,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  const modificaCreditoManuale = (docenteId: string, deltaOre: number, descrizione: string) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isStorno = deltaOre < 0;
+    const tag = isStorno ? '[STORNO_CREDITO]' : '[AGGIUNTA_CREDITO]';
+    const mov: MovimentoDebito = {
+      id: 'mov_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      docenteId,
+      data: todayStr,
+      giorno: 'Lunedì',
+      tipo: 'MODIFICA_MANUALE',
+      deltaOre: deltaOre,
+      descrizione: `${tag} ${descrizione || (isStorno ? 'Storno manuale ore a credito' : 'Aggiunta manuale ore a credito')}`.trim(),
+      createdAt: new Date().toISOString()
+    };
+    setMovimentiDebito(prev => {
+      const updated = [mov, ...prev];
+      triggerCloudSync({ movimentiDebito: updated });
+      return updated;
+    });
+  };
+
   const pubblicaTutteSostituzioniData = (data: string) => {
     // 1. Identifica le sostituzioni che stanno per essere pubblicate per la prima volta
     const sostDaPubblicare = sostituzioni.filter(s => s.data === data && !s.pubblicata && s.docenteSostitutoId && s.categoria !== 'NON_SOSTITUIRE');
@@ -2276,6 +2298,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateDocente,
       updateOrarioDocente,
       modificaDebitoManuale,
+      modificaCreditoManuale,
       resetOrarioPredefinito,
       azzeraDocentiEOrario,
       importaNuovoOrarioCompleto,

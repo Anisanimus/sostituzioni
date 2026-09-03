@@ -787,16 +787,27 @@ export function getOreCreditoDocente(
     return false;
   }).length;
 
-  // 2. Ore già compensate con permessi brevi (tracciate nei movimenti debito con descrizione COMPENSAZIONE_STRAORDINARIO)
-  const oreCompensate = movimentiDebito
+  // 2. Movimenti manuali di credito e compensazioni con permessi brevi
+  const deltaCreditoManuale = movimentiDebito
     .filter(m => {
       const matchId = collegatiIds.includes(m.docenteId);
       const matchName = baseNome && docenti.find(d => d.id === m.docenteId && getBaseNomeDocente(d.nome) === baseNome);
-      return (matchId || matchName) && m.descrizione?.includes('[COMPENSAZIONE_STRAORDINARIO]');
+      return (matchId || matchName);
     })
-    .reduce((acc, m) => acc + Math.abs(m.deltaOre || 0), 0);
+    .reduce((acc, m) => {
+      if (m.descrizione?.includes('[COMPENSAZIONE_STRAORDINARIO]')) {
+        return acc - Math.abs(m.deltaOre || 0);
+      }
+      if (m.descrizione?.includes('[STORNO_CREDITO]')) {
+        return acc - Math.abs(m.deltaOre || 0);
+      }
+      if (m.descrizione?.includes('[AGGIUNTA_CREDITO]')) {
+        return acc + Math.abs(m.deltaOre || 0);
+      }
+      return acc;
+    }, 0);
 
-  return Math.max(0, oreDaSostituzioni - oreCompensate);
+  return Math.max(0, oreDaSostituzioni + deltaCreditoManuale);
 }
 
 export const getOreStraordinarioDocente = getOreCreditoDocente;

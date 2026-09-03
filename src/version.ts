@@ -13,11 +13,16 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.5.2',
-  buildTime: '2026-09-03T17:15:00Z',
-  title: 'Novità della Versione 1.5.2',
-  descrizioneGenerale: 'Aggiornamento delle etichette descrittive per i docenti di sostegno assegnati a supplenze.',
+  version: '1.5.3',
+  buildTime: '2026-09-03T17:22:00Z',
+  title: 'Novità della Versione 1.5.3',
+  descrizioneGenerale: 'Gestione manuale di storni e aggiunte per il bilancio ore a credito e debito.',
   novita: [
+    {
+      titolo: 'Storno e Aggiunta Manuale Ore a Credito e a Debito',
+      descrizione: 'In Bilanci e Report, la Vicepresidenza può ora registrare manualmente storni o aggiunte di ore a credito e debito con causale personalizzata, sia dal riquadro principale che dall\'estratto conto del singolo docente.',
+      tag: 'Bilanci & Vicepresidenza'
+    },
     {
       titolo: 'Dicitura "(SOSTITUZIONE)" per Sostegno Spostato',
       descrizione: 'Quando un docente di sostegno in servizio su un\'altra classe viene assegnato a coprire un\'ora scoperta, nei tabelloni e nei prospetti compare ora la dicitura esatta "(SOSTITUZIONE)".',

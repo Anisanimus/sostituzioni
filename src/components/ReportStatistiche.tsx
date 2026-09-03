@@ -4,7 +4,7 @@ import {
   BarChart3, Users, Clock, ShieldCheck, Bus, Award, 
   Calendar, Download, TrendingUp, TrendingDown, AlertTriangle, FileSpreadsheet,
   CheckCircle2, ArrowUpDown, ChevronDown, Percent, Scale, ArrowDownUp, X, Filter, UserCheck,
-  Megaphone, HeartHandshake, Eye, Sparkles, AlertCircle
+  Megaphone, HeartHandshake, Eye, Sparkles, AlertCircle, Plus, Minus, PenLine
 } from 'lucide-react';
 import { getBaseNomeDocente, formatDataItaliana, getDocentiUnici, getOreCreditoDocente, getDocentiCollegatiIds } from '../utils/docentiHelper';
 import * as XLSX from 'xlsx';
@@ -12,7 +12,7 @@ import * as XLSX from 'xlsx';
 type PeriodoFiltro = 'MESE' | 'QUADRIMESTRE_1' | 'QUADRIMESTRE_2' | 'ANNO_INTERO';
 
 export const ReportStatistiche: React.FC = () => {
-  const { docenti, assenze, uscite, sostituzioni, movimentiDebito, impostazioniScuola } = useApp();
+  const { docenti, assenze, uscite, sostituzioni, movimentiDebito, impostazioniScuola, modificaDebitoManuale, modificaCreditoManuale } = useApp();
 
   const tettoPermessi = impostazioniScuola?.tettoMaxPermessiBreviAnno || 12;
   const tettoAssemblee = impostazioniScuola?.tettoMaxAssembleeSindacaliAnno || 10;
@@ -25,6 +25,25 @@ export const ReportStatistiche: React.FC = () => {
   
   // Drawer / Pannello laterale per il dettaglio movimenti del singolo docente
   const [docenteDrawerDettaglio, setDocenteDrawerDettaglio] = useState<string | null>(null);
+
+  // Modale per Rettifica / Storno / Aggiunta Manuale Ore (Credito o Debito)
+  const [modaleRettifica, setModaleRettifica] = useState<{
+    aperta: boolean;
+    docenteId: string;
+    nomeDocente: string;
+    tipoBilancio: 'CREDITO' | 'DEBITO';
+    operazione: 'AGGIUNGI' | 'STORNA';
+    ore: number;
+    motivo: string;
+  }>({
+    aperta: false,
+    docenteId: '',
+    nomeDocente: '',
+    tipoBilancio: 'CREDITO',
+    operazione: 'AGGIUNGI',
+    ore: 1,
+    motivo: ''
+  });
 
   const { dataInizioFiltro, dataFineFiltro } = useMemo(() => {
     const curYear = today.getFullYear();
@@ -388,9 +407,31 @@ export const ReportStatistiche: React.FC = () => {
                 <Scale className="w-4 h-4 text-indigo-600" />
                 <span>1. Bilancio Ore & Permessi Brevi</span>
               </span>
-              <span className="text-[10px] bg-indigo-50 text-indigo-800 font-bold px-2 py-0.5 rounded-md border border-indigo-200">
-                Tetto Permessi: {tettoPermessi}h/anno
-              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const primoDoc = docentiUnici[0];
+                    setModaleRettifica({
+                      aperta: true,
+                      docenteId: primoDoc?.id || '',
+                      nomeDocente: primoDoc?.nome || '',
+                      tipoBilancio: 'CREDITO',
+                      operazione: 'AGGIUNGI',
+                      ore: 1,
+                      motivo: ''
+                    });
+                  }}
+                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[10.5px] px-2 py-0.5 rounded-lg flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                  title="Registra manualmente uno storno o un'aggiunta di ore a credito o a debito"
+                >
+                  <PenLine className="w-3 h-3 text-indigo-600" />
+                  <span>± Rettifica / Storno</span>
+                </button>
+                <span className="hidden sm:inline-block text-[10px] bg-indigo-50 text-indigo-800 font-bold px-2 py-0.5 rounded-md border border-indigo-200">
+                  Tetto Permessi: {tettoPermessi}h/anno
+                </span>
+              </div>
             </div>
 
             {/* Macro KPI Numeri a Vista */}
@@ -717,19 +758,42 @@ export const ReportStatistiche: React.FC = () => {
             {(() => {
               const docStat = statisticheBilancio.statsDocenti.find(d => d.nome === docenteDrawerDettaglio);
               return (
-                <div className="grid grid-cols-3 gap-2 text-center shrink-0">
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
-                    <span className="text-[10px] font-bold text-emerald-800 block">Credito Netto</span>
-                    <strong className="text-base font-black text-emerald-950">+{docStat?.creditoDisponibileNetto || 0}h</strong>
+                <div className="space-y-2 shrink-0">
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
+                      <span className="text-[10px] font-bold text-emerald-800 block">Credito Netto</span>
+                      <strong className="text-base font-black text-emerald-950">+{docStat?.creditoDisponibileNetto || 0}h</strong>
+                    </div>
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-2.5">
+                      <span className="text-[10px] font-bold text-rose-800 block">Debito Residuo</span>
+                      <strong className="text-base font-black text-rose-950">-{docStat?.debitoResiduo || 0}h</strong>
+                    </div>
+                    <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-2.5">
+                      <span className="text-[10px] font-bold text-indigo-800 block">Permessi Richiesti</span>
+                      <strong className="text-base font-black text-indigo-950">{docStat?.orePermessiRichieste || 0}h</strong>
+                    </div>
                   </div>
-                  <div className="bg-rose-50 border border-rose-200 rounded-xl p-2.5">
-                    <span className="text-[10px] font-bold text-rose-800 block">Debito Residuo</span>
-                    <strong className="text-base font-black text-rose-950">-{docStat?.debitoResiduo || 0}h</strong>
-                  </div>
-                  <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-2.5">
-                    <span className="text-[10px] font-bold text-indigo-800 block">Permessi Richiesti</span>
-                    <strong className="text-base font-black text-indigo-950">{docStat?.orePermessiRichieste || 0}h</strong>
-                  </div>
+
+                  {/* Pulsante Rapido Rettifica dal Drawer */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const docTarget = docentiUnici.find(d => d.nome === docenteDrawerDettaglio);
+                      setModaleRettifica({
+                        aperta: true,
+                        docenteId: docTarget?.id || '',
+                        nomeDocente: docenteDrawerDettaglio || '',
+                        tipoBilancio: 'CREDITO',
+                        operazione: 'AGGIUNGI',
+                        ore: 1,
+                        motivo: ''
+                      });
+                    }}
+                    className="w-full bg-slate-900 hover:bg-black text-white font-bold text-xs py-2 px-3 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <PenLine className="w-3.5 h-3.5 text-indigo-300" />
+                    <span>Registra Storno o Aggiunta Manuale per {docenteDrawerDettaglio}</span>
+                  </button>
                 </div>
               );
             })()}
@@ -802,6 +866,210 @@ export const ReportStatistiche: React.FC = () => {
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow transition cursor-pointer"
               >
                 Chiudi
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODALE RETTIFICA / STORNO / AGGIUNTA MANUALE (CREDITO / DEBITO)          */}
+      {/* ========================================================================= */}
+      {modaleRettifica.aperta && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col space-y-4 p-5 sm:p-6 animate-in zoom-in-95 duration-150">
+            
+            {/* Titolo e Chiusura */}
+            <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-200">
+                  <PenLine className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 leading-tight">
+                    Rettifica Manuale Saldo Ore
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Aggiungi o storna ore a credito o a debito
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setModaleRettifica(prev => ({ ...prev, aperta: false }))}
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Selezione Docente */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 block">Docente:</label>
+              <select
+                value={modaleRettifica.docenteId}
+                onChange={(e) => {
+                  const docFound = docentiUnici.find(d => d.id === e.target.value);
+                  setModaleRettifica(prev => ({
+                    ...prev,
+                    docenteId: e.target.value,
+                    nomeDocente: docFound ? docFound.nome : ''
+                  }));
+                }}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+              >
+                {docentiUnici.map(d => (
+                  <option key={d.id} value={d.id}>
+                    {d.nome} {d.materie.length > 0 ? `(${d.materie.join(', ')})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Scelta: Tipo Bilancio (Credito vs Debito) */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 block">Voce da modificare:</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModaleRettifica(prev => ({ ...prev, tipoBilancio: 'CREDITO' }))}
+                  className={`py-2 px-3 rounded-xl border text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    modaleRettifica.tipoBilancio === 'CREDITO'
+                      ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-400/30'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>Ore a Credito (+)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setModaleRettifica(prev => ({ ...prev, tipoBilancio: 'DEBITO' }))}
+                  className={`py-2 px-3 rounded-xl border text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    modaleRettifica.tipoBilancio === 'DEBITO'
+                      ? 'bg-rose-50 border-rose-500 text-rose-900 ring-2 ring-rose-400/30'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                  <span>Ore a Debito (-)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Scelta: Operazione (Aggiungi vs Storna/Diminuisci) */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 block">Tipo di Operazione:</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModaleRettifica(prev => ({ ...prev, operazione: 'AGGIUNGI' }))}
+                  className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    modaleRettifica.operazione === 'AGGIUNGI'
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-900 ring-2 ring-indigo-400/30 font-black'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <Plus className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Aggiungi Ore</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setModaleRettifica(prev => ({ ...prev, operazione: 'STORNA' }))}
+                  className={`py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                    modaleRettifica.operazione === 'STORNA'
+                      ? 'bg-amber-50 border-amber-500 text-amber-900 ring-2 ring-amber-400/30 font-black'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  <Minus className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Storna / Riduci</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quantità Ore */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 block">Numero di Ore da applicare:</label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModaleRettifica(prev => ({ ...prev, ore: Math.max(1, prev.ore - 1) }))}
+                  className="w-9 h-9 bg-slate-100 hover:bg-slate-200 rounded-xl font-black text-sm flex items-center justify-center text-slate-800 transition cursor-pointer"
+                >
+                  -
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={modaleRettifica.ore}
+                  onChange={(e) => setModaleRettifica(prev => ({ ...prev, ore: Math.max(1, parseInt(e.target.value) || 1) }))}
+                  className="flex-1 text-center bg-slate-50 border border-slate-200 rounded-xl py-1.5 text-sm font-black text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => setModaleRettifica(prev => ({ ...prev, ore: prev.ore + 1 }))}
+                  className="w-9 h-9 bg-slate-100 hover:bg-slate-200 rounded-xl font-black text-sm flex items-center justify-center text-slate-800 transition cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Motivo / Descrizione Rettifica */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 block">Motivo / Nota (opzionale):</label>
+              <input
+                type="text"
+                value={modaleRettifica.motivo}
+                onChange={(e) => setModaleRettifica(prev => ({ ...prev, motivo: e.target.value }))}
+                placeholder="Es. Recupero ore extracurricolari, accordo vicepresidenza..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+              />
+            </div>
+
+            {/* Riepilogo azione */}
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-1">
+              <span className="text-slate-500 block font-medium">Azione che verrà registrata:</span>
+              <p className="font-bold text-slate-900">
+                {modaleRettifica.operazione === 'AGGIUNGI' ? 'Aggiunta di' : 'Storno di'}{' '}
+                <span className="text-indigo-700">{modaleRettifica.ore} {modaleRettifica.ore === 1 ? 'ora' : 'ore'}</span>{' '}
+                {modaleRettifica.tipoBilancio === 'CREDITO' ? 'al Credito' : 'al Debito'} per il docente{' '}
+                <span className="text-slate-950">{modaleRettifica.nomeDocente}</span>.
+              </p>
+            </div>
+
+            {/* Pulsanti Conferma / Annulla */}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setModaleRettifica(prev => ({ ...prev, aperta: false }))}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!modaleRettifica.docenteId) return;
+                  const delta = modaleRettifica.operazione === 'AGGIUNGI' ? modaleRettifica.ore : -modaleRettifica.ore;
+                  const desc = modaleRettifica.motivo.trim();
+
+                  if (modaleRettifica.tipoBilancio === 'CREDITO') {
+                    modificaCreditoManuale(modaleRettifica.docenteId, delta, desc);
+                  } else {
+                    modificaDebitoManuale(modaleRettifica.docenteId, delta, desc);
+                  }
+
+                  setModaleRettifica(prev => ({ ...prev, aperta: false, motivo: '' }));
+                }}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer"
+              >
+                Conferma Registrazione
               </button>
             </div>
 
