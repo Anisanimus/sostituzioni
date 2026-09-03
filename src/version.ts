@@ -13,11 +13,16 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.6.0',
-  buildTime: '2026-09-03T17:45:00Z',
-  title: 'Novità della Versione 1.6.0',
-  descrizioneGenerale: 'Personalizzazione dell\'icona e del logo ufficiale della scuola direttamente dal pannello Vicepresidenza.',
+  version: '1.6.1',
+  buildTime: '2026-09-03T17:48:00Z',
+  title: 'Novità della Versione 1.6.1',
+  descrizioneGenerale: 'Sostituzione dell\'icona a forma di lampo (Favicon scheda del browser) con il logo o l\'icona scelta per la scuola.',
   novita: [
+    {
+      titolo: 'Favicon Scheda Browser Dinamica',
+      descrizione: 'L\'icona a forma di lampo nella scheda del browser (Favicon) si aggiorna ora automaticamente in tempo reale con il logo caricato o con l\'icona tematica scelta per la scuola nelle Personalizzazioni.',
+      tag: 'Browser & Personalizzazioni'
+    },
     {
       titolo: 'Caricamento Logo & Icona Personalizzata Scuola',
       descrizione: 'In Vicepresidenza > Personalizzazioni > Intestazione Scuola è ora possibile caricare lo stemma o logo ufficiale della scuola (PNG, JPG, SVG) oppure scegliere tra diverse icone tematiche (Scuola, Libro, Studio, Campus, Arte, Stemma). Il logo personalizzato viene sincronizzato sul Cloud e mostrato su header, menu e favicon del browser.',
