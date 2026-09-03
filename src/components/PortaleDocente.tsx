@@ -444,8 +444,8 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
         </div>
       )}
 
-      {/* HEADER PROFILO DOCENTE COMPATTO (NON VISIBILE IN VISTA ATA) */}
-      {!isAtaView && (
+      {/* HEADER PROFILO DOCENTE COMPATTO (VISIBILE SOLO NELLA SCHEDA "LE MIE SOSTITUZIONI") */}
+      {!isAtaView && tabDocente === 'MIE_SOSTITUZIONI' && (
         <div className="no-print bg-white px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl shadow-2xs border border-slate-200 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-2xs shrink-0">
