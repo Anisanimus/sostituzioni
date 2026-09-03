@@ -708,8 +708,8 @@ export const TabelloneSostituzioni: React.FC<{
                           <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-1.5 mt-0.5">
                             <span className="font-medium text-slate-600">{os.motivo}</span>
                             {os.isUscita && (
-                              <span className="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded text-[10px] flex items-center gap-1">
-                                <Bus className="w-2.5 h-2.5" /> Accompagnatore
+                              <span className="bg-amber-100 text-amber-800 p-1 rounded-md text-[10px] flex items-center justify-center border border-amber-200 shadow-2xs" title="Docente accompagnatore uscita / gita">
+                                <Bus className="w-3 h-3 text-amber-700" />
                               </span>
                             )}
                           </div>
