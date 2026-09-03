@@ -1,9 +1,14 @@
 {
-  "version": "1.5.0",
-  "buildTime": "2026-09-03T16:40:00Z",
-  "title": "Novità della Versione 1.5.0",
-  "descrizioneGenerale": "Ottimizzazioni per la leggibilità e l'ergonomia da smartphone.",
+  "version": "1.5.1",
+  "buildTime": "2026-09-03T16:45:00Z",
+  "title": "Novità della Versione 1.5.1",
+  "descrizioneGenerale": "Miglioramento dell'ergonomia visiva e orizzontale nella visualizzazione a blocchi.",
   "novita": [
+    {
+      "titolo": "Pulsante '+ Aggiungi' a Tutta Larghezza nella Vista a Blocchi",
+      "descrizione": "Nella vista a blocchi orari da mobile, il pulsante '+ Aggiungi' sfrutta ora l'intera larghezza orizzontale della riga con la dicitura chiara ed esplicita per scandire al meglio ogni blocco.",
+      "tag": "Tabellone a Blocchi"
+    },
     {
       "titolo": "Dicitura Compatta 'Ed.' per Educatori su Mobile",
       "descrizione": "Nei tabelloni delle sostituzioni, la presenza dell'educatore in classe mostra ora la sigla compatta '🎓 Ed.: [Nome]' su smartphone, risparmiando spazio prezioso.",
