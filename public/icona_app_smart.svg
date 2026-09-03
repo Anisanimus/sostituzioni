@@ -18,9 +18,8 @@
     </filter>
   </defs>
 
-  <!-- Sfondo Icona con Angoli Arrotondati (iOS Squircle standard) -->
-  <rect width="512" height="512" rx="115" fill="#1e2433"/>
-  <rect x="24" y="24" width="464" height="464" rx="95" fill="url(#bgGrad)" filter="url(#dropShadow)"/>
+  <!-- Sfondo Icona a pieno schermo (senza cornice nera/scura esterna) -->
+  <rect width="512" height="512" fill="url(#bgGrad)"/>
 
   <!-- Gruppo Grafico Vettoriale Bianco -->
   <g fill="#ffffff" filter="url(#innerGlow)">

@@ -13,11 +13,16 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.6.5',
-  buildTime: '2026-09-03T19:02:00Z',
-  title: 'Novità della Versione 1.6.5',
-  descrizioneGenerale: 'Pulsante di sicurezza "Azzera Dati Storici" aggiunto nel Registro Storico della Vicepresidenza.',
+  version: '1.6.6',
+  buildTime: '2026-09-03T20:05:00Z',
+  title: 'Novità della Versione 1.6.6',
+  descrizioneGenerale: 'Icona dell\'applicazione a pieno schermo (Full-bleed) senza cornice nera/scura esterna.',
   novita: [
+    {
+      titolo: 'Icona App Full-Bleed (Senza Bordo Scuro)',
+      descrizione: 'Rimossa la cornice scura esterna: lo sfondo con sfumatura blu indaco e verde smeraldo ora riempie interamente l\'icona dell\'applicazione sia su iPhone/iPad che su dispositivi Android.',
+      tag: 'Icona & Design'
+    },
     {
       titolo: 'Azzera Dati Storici & Movimenti (Registro Storico)',
       descrizione: 'In Vicepresidenza > Registro Storico è ora disponibile il pulsante "Azzera Dati Storici" protetto da modale di conferma con digitazione obbligatoria (AZZERA). Consente di resettare tutte le assenze, supplenze, uscite, ore sindacali e movimenti di credito/debito, mantenendo intatti l\'organico docenti, l\'orario scolastico e le personalizzazioni.',
