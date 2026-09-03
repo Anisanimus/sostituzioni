@@ -822,10 +822,12 @@ export const TabelloneSostituzioni: React.FC<{
                                   e.stopPropagation();
                                   setSelectedOraScoperta(os);
                                 }}
-                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg flex items-center gap-1 transition shadow-2xs cursor-pointer"
                                 title="Aggiungi un altro docente per coprire questa classe in compresenza"
                               >
-                                <span>+ Aggiungi</span>
+                                <span className="text-xs font-black">+</span>
+                                <UserPlus className="w-3.5 h-3.5 text-indigo-600" />
+                                <span className="hidden lg:inline">Aggiungi</span>
                               </button>
                             )}
                           </div>
@@ -1108,10 +1110,12 @@ export const TabelloneSostituzioni: React.FC<{
                                   e.stopPropagation();
                                   setSelectedOraScoperta(os);
                                 }}
-                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-2xs cursor-pointer"
+                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg flex items-center gap-1 transition shadow-2xs cursor-pointer"
                                 title="Aggiungi un altro docente per coprire questa classe in compresenza"
                               >
-                                <span>+ Aggiungi</span>
+                                <span className="text-xs font-black">+</span>
+                                <UserPlus className="w-3.5 h-3.5 text-indigo-600" />
+                                <span className="hidden lg:inline">Aggiungi</span>
                               </button>
                             )}
                           </div>

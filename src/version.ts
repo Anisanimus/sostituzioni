@@ -13,11 +13,16 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.4.4',
-  buildTime: '2026-09-03T15:45:00Z',
-  title: 'Novità della Versione 1.4.4',
-  descrizioneGenerale: 'Questo aggiornamento introduce importanti miglioramenti per la fruibilità su tutti i dispositivi (Tablet, Smartphone e PC) e arricchisce la gestione dei report e delle gite.',
+  version: '1.4.5',
+  buildTime: '2026-09-03T15:50:00Z',
+  title: 'Novità della Versione 1.4.5',
+  descrizioneGenerale: 'Ottimizzazione del tabellone sostituzioni per dispositivi mobili e tablet con pulsanti di aggiunta compatti e intuitivi.',
   novita: [
+    {
+      titolo: 'Pulsante "+ Sostituto" Compatto su Mobile e Tablet',
+      descrizione: 'Nel tabellone delle sostituzioni (sia vista a blocchi che per docente), il pulsante per aggiungere un sostituto o una compresenza mostra ora solo il simbolo "+" e l\'icona della persona, garantendo la massima pulizia grafica.',
+      tag: 'Tabellone & Tablet'
+    },
     {
       titolo: 'Layout e Pulsanti ad Alta Risoluzione per Tablet e Mobile',
       descrizione: 'I pulsanti d\'azione (+ Assente, + Gita, + Nomina) sono stati compattati per garantire che tutti gli strumenti (Eventi, Risorse, Avviso Bacheca) restino allineati su una sola riga senza uscire dallo schermo.',
