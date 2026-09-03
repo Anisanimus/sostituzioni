@@ -1,13 +1,13 @@
 {
-  "version": "1.6.9",
-  "buildTime": "2026-09-03T20:57:00Z",
-  "title": "Novità della Versione 1.6.9",
-  "descrizioneGenerale": "Smistamento Classe ad alta visibilità (arancio acceso) e pubblicazione immediata sui tabelloni.",
+  "version": "1.7.0",
+  "buildTime": "2026-09-03T21:13:00Z",
+  "title": "Novità della Versione 1.7.0",
+  "descrizioneGenerale": "Editor completo per personalizzare testi, oggetti e segnaposto di tutte le email automatiche per ogni casistica.",
   "novita": [
     {
-      "titolo": "Smistamento Immediatamente Pubblico & Evidenziato",
-      "descrizione": "La selezione dello \"Smistamento Classe\" diventa immediatamente visibile in tempo reale su tutti i tabelloni e nel Quadro Scuola ATA, con una veste grafica arancio acceso ad alto contrasto per risaltare immediatamente rispetto a tutti gli altri stati.",
-      "tag": "Organizzazione & Tabellone"
+      "titolo": "Editor Personalizzabile Modelli Email",
+      "descrizione": "Nel tab Personalizzazioni puoi ora modificare liberamente l'oggetto e il corpo del messaggio per tutte le casistiche (Nuova Assegnazione, Revoca/Annullamento e Riepilogo Mattutino) con segnaposto dinamici cliccabili e ripristino valori predefiniti.",
+      "tag": "Notifiche & Email"
     },
     {
       "titolo": "Banner di Avviso Docenti Senza Email",

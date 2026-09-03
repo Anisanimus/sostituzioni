@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente, NominaSupplente, AnnuncioBacheca } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
-import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente, formatDataItaliana, getMateriaDocenteNellOra } from '../utils/docentiHelper';
+import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente, formatDataItaliana, getMateriaDocenteNellOra, MODELLI_EMAIL_PREDEFINITI, componiTestoEmail } from '../utils/docentiHelper';
 import { db, auth } from '../firebase';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
 
@@ -853,8 +853,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     return `• ${s.ora}ª ora: Classe ${s.classe} (in sostituzione di ${assNome})`;
                   }).join('\n');
 
-                  const oggetto = `📋 Le tue ore di supplenza per oggi (${dataFmt}) - ${currentImpostazioni.nomeScuola || 'Scuola'}`;
-                  const corpo = `Gentile Prof. ${getBaseNomeDocente(doc.nome)},\n\nti riepiloghiamo le ore di sostituzione a te assegnate per oggi (${dataFmt}):\n\n${elencoOre}\n\nTi invitiamo ad accedere al Portale Docenti per prendere visione e apporre la firma digitale:\nhttps://sostituzioni-smart.web.app\n\nBuon lavoro,\nLa Vicepresidenza`;
+                  const tplObj = cfgSingolo.modelli?.riepilogoOggetto || MODELLI_EMAIL_PREDEFINITI.riepilogoOggetto;
+                  const tplBody = cfgSingolo.modelli?.riepilogoCorpo || MODELLI_EMAIL_PREDEFINITI.riepilogoCorpo;
+                  const dati = {
+                    NOME_DOCENTE: getBaseNomeDocente(doc.nome),
+                    DATA: dataFmt,
+                    NOME_SCUOLA: currentImpostazioni.nomeScuola || 'Scuola',
+                    LINK_PORTALE: 'https://sostituzioni-smart.web.app',
+                    ELENCO_SOSTITUZIONI: elencoOre
+                  };
+                  const oggetto = componiTestoEmail(tplObj, dati);
+                  const corpo = componiTestoEmail(tplBody, dati);
 
                   await inviaEmailDocenteSingolo(docId, oggetto, corpo);
                 }
@@ -1555,8 +1564,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (cfgSingolo?.abilitato && cfgSingolo.inviaIstantaneeOrarioLavoro) {
         const docSost = docentiRef.current.find(d => d.id === sost.docenteSostitutoId);
         if (docSost && docSost.email) {
-          const oggetto = `⚠️ Supplenza Revocata / Annullata (${dataFmt} - ${sost.ora}ª ora) - ${impostazioniScuolaRef.current?.nomeScuola || 'Scuola'}`;
-          const corpo = `Gentile Prof. ${getBaseNomeDocente(docSost.nome)},\n\nti informiamo che la seguente supplenza è stata annullata dalla Vicepresidenza:\n\n• Data: ${dataFmt}\n• Ora: ${sost.ora}ª ora\n• Classe: ${sost.classe}\n• Inizialmente prevista per: ${docenteAssenteNome}\n\nNon è richiesta alcuna azione da parte tua.\n\nCordiali saluti,\nLa Vicepresidenza`;
+          const tplObj = cfgSingolo.modelli?.annullamentoOggetto || MODELLI_EMAIL_PREDEFINITI.annullamentoOggetto;
+          const tplBody = cfgSingolo.modelli?.annullamentoCorpo || MODELLI_EMAIL_PREDEFINITI.annullamentoCorpo;
+          const dati = {
+            NOME_DOCENTE: getBaseNomeDocente(docSost.nome),
+            DATA: dataFmt,
+            ORA: sost.ora,
+            CLASSE: sost.classe,
+            DOCENTE_SOSTITUITO: docenteAssenteNome,
+            NOME_SCUOLA: impostazioniScuolaRef.current?.nomeScuola || 'Scuola'
+          };
+          const oggetto = componiTestoEmail(tplObj, dati);
+          const corpo = componiTestoEmail(tplBody, dati);
           inviaEmailDocenteSingolo(sost.docenteSostitutoId, oggetto, corpo).catch(console.error);
         }
       }
@@ -1669,8 +1688,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (cfgSingolo?.abilitato && cfgSingolo.inviaIstantaneeOrarioLavoro) {
         const docSost = docentiRef.current.find(d => d.id === s.docenteSostitutoId);
         if (docSost && docSost.email) {
-          const oggetto = `🔔 Nuova Supplenza Assegnata (${dataFmt} - ${s.ora}ª ora) - ${impostazioniScuolaRef.current?.nomeScuola || 'Scuola'}`;
-          const corpo = `Gentile Prof. ${getBaseNomeDocente(docSost.nome)},\n\nti comunichiamo che ti è stata assegnata una nuova supplenza:\n\n• Data: ${dataFmt}\n• Ora: ${s.ora}ª ora\n• Classe: ${s.classe}\n• In sostituzione di: ${docAssenteNome} (${materiaAssente || 'Lezione'})\n\nTi invitiamo ad accedere al Portale Docenti per prendere visione e apporre la firma digitale:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`;
+          const tplObj = cfgSingolo.modelli?.assegnazioneOggetto || MODELLI_EMAIL_PREDEFINITI.assegnazioneOggetto;
+          const tplBody = cfgSingolo.modelli?.assegnazioneCorpo || MODELLI_EMAIL_PREDEFINITI.assegnazioneCorpo;
+          const dati = {
+            NOME_DOCENTE: getBaseNomeDocente(docSost.nome),
+            DATA: dataFmt,
+            ORA: s.ora,
+            CLASSE: s.classe,
+            DOCENTE_SOSTITUITO: docAssenteNome,
+            MATERIA: materiaAssente || 'Lezione',
+            NOME_SCUOLA: impostazioniScuolaRef.current?.nomeScuola || 'Scuola',
+            LINK_PORTALE: 'https://sostituzioni-smart.web.app'
+          };
+          const oggetto = componiTestoEmail(tplObj, dati);
+          const corpo = componiTestoEmail(tplBody, dati);
           inviaEmailDocenteSingolo(s.docenteSostitutoId, oggetto, corpo).catch(console.error);
         }
       }
@@ -1724,8 +1755,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (cfgSingolo?.abilitato && cfgSingolo.inviaIstantaneeOrarioLavoro) {
         const docSost = docentiRef.current.find(d => d.id === sTarget.docenteSostitutoId);
         if (docSost && docSost.email) {
-          const oggetto = `🔔 Nuova Supplenza Assegnata (${dataFmt} - ${sTarget.ora}ª ora) - ${impostazioniScuolaRef.current?.nomeScuola || 'Scuola'}`;
-          const corpo = `Gentile Prof. ${getBaseNomeDocente(docSost.nome)},\n\nti comunichiamo che ti è stata assegnata una nuova supplenza:\n\n• Data: ${dataFmt}\n• Ora: ${sTarget.ora}ª ora\n• Classe: ${sTarget.classe}\n• In sostituzione di: ${docAssenteNome} (${materiaAssente || 'Lezione'})\n\nTi invitiamo ad accedere al Portale Docenti per prendere visione e apporre la firma digitale:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`;
+          const tplObj = cfgSingolo.modelli?.assegnazioneOggetto || MODELLI_EMAIL_PREDEFINITI.assegnazioneOggetto;
+          const tplBody = cfgSingolo.modelli?.assegnazioneCorpo || MODELLI_EMAIL_PREDEFINITI.assegnazioneCorpo;
+          const dati = {
+            NOME_DOCENTE: getBaseNomeDocente(docSost.nome),
+            DATA: dataFmt,
+            ORA: sTarget.ora,
+            CLASSE: sTarget.classe,
+            DOCENTE_SOSTITUITO: docAssenteNome,
+            MATERIA: materiaAssente || 'Lezione',
+            NOME_SCUOLA: impostazioniScuolaRef.current?.nomeScuola || 'Scuola',
+            LINK_PORTALE: 'https://sostituzioni-smart.web.app'
+          };
+          const oggetto = componiTestoEmail(tplObj, dati);
+          const corpo = componiTestoEmail(tplBody, dati);
           inviaEmailDocenteSingolo(sTarget.docenteSostitutoId, oggetto, corpo).catch(console.error);
         }
       }

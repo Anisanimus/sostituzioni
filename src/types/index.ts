@@ -183,6 +183,17 @@ export interface ImpostazioniScuola {
     abilitato: boolean;           // Abilita invio email personale ai docenti supplenti
     inviaRiepilogoMattino: boolean; // Invio al mattino (orario invio gruppo o personalizzato)
     inviaIstantaneeOrarioLavoro: boolean; // Invio istantaneo tra le 08:00 e le 17:00 per nuove assegnazioni o revoche
+    modelli?: {
+      // 1. Nuova assegnazione istantanea
+      assegnazioneOggetto?: string;
+      assegnazioneCorpo?: string;
+      // 2. Supplenza revocata / annullata
+      annullamentoOggetto?: string;
+      annullamentoCorpo?: string;
+      // 3. Riepilogo mattutino
+      riepilogoOggetto?: string;
+      riepilogoCorpo?: string;
+    };
   };
   calendariGoogle?: {
     // Liste dinamiche generiche

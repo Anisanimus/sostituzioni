@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronUp, BookOpen, GraduationCap, Palette, Image as ImageIcon
 } from 'lucide-react';
 import { DEFAULT_IMPOSTAZIONI_SCUOLA, DEFAULT_IMPOSTAZIONI_PRIORITA } from '../context/AppContext';
-import { formatDataItaliana } from '../utils/docentiHelper';
+import { formatDataItaliana, MODELLI_EMAIL_PREDEFINITI } from '../utils/docentiHelper';
 
 export const PersonalizzazioniScuola: React.FC = () => {
   const { 
@@ -99,6 +99,18 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [mailDocenteSingoloRiepilogo, setMailDocenteSingoloRiepilogo] = useState(cfgEmailSingolo?.inviaRiepilogoMattino ?? true);
   const [mailDocenteSingoloIstantanee, setMailDocenteSingoloIstantanee] = useState(cfgEmailSingolo?.inviaIstantaneeOrarioLavoro ?? true);
 
+  // Modelli email personalizzati per casistica
+  const modelliSaved = cfgEmailSingolo?.modelli;
+  const [tplAssegnazioneOggetto, setTplAssegnazioneOggetto] = useState(modelliSaved?.assegnazioneOggetto || MODELLI_EMAIL_PREDEFINITI.assegnazioneOggetto);
+  const [tplAssegnazioneCorpo, setTplAssegnazioneCorpo] = useState(modelliSaved?.assegnazioneCorpo || MODELLI_EMAIL_PREDEFINITI.assegnazioneCorpo);
+  const [tplAnnullamentoOggetto, setTplAnnullamentoOggetto] = useState(modelliSaved?.annullamentoOggetto || MODELLI_EMAIL_PREDEFINITI.annullamentoOggetto);
+  const [tplAnnullamentoCorpo, setTplAnnullamentoCorpo] = useState(modelliSaved?.annullamentoCorpo || MODELLI_EMAIL_PREDEFINITI.annullamentoCorpo);
+  const [tplRiepilogoOggetto, setTplRiepilogoOggetto] = useState(modelliSaved?.riepilogoOggetto || MODELLI_EMAIL_PREDEFINITI.riepilogoOggetto);
+  const [tplRiepilogoCorpo, setTplRiepilogoCorpo] = useState(modelliSaved?.riepilogoCorpo || MODELLI_EMAIL_PREDEFINITI.riepilogoCorpo);
+
+  // Tab o accordion attivo per l'editor modelli email
+  const [schedaModelloEmail, setSchedaModelloEmail] = useState<'ASSEGNAZIONE' | 'ANNULLAMENTO' | 'RIEPILOGO'>('ASSEGNAZIONE');
+
   const [statoInvioTestMail, setStatoInvioTestMail] = useState<'IDLE' | 'INVIANDO' | 'SUCCESSO' | 'ERRORE'>('IDLE');
   const [messaggioInvioTestMail, setMessaggioInvioTestMail] = useState<string>('');
 
@@ -169,6 +181,14 @@ export const PersonalizzazioniScuola: React.FC = () => {
         setMailDocenteSingoloAbilitato(emailSingoloCfg.abilitato ?? false);
         setMailDocenteSingoloRiepilogo(emailSingoloCfg.inviaRiepilogoMattino ?? true);
         setMailDocenteSingoloIstantanee(emailSingoloCfg.inviaIstantaneeOrarioLavoro ?? true);
+        if (emailSingoloCfg.modelli) {
+          if (emailSingoloCfg.modelli.assegnazioneOggetto) setTplAssegnazioneOggetto(emailSingoloCfg.modelli.assegnazioneOggetto);
+          if (emailSingoloCfg.modelli.assegnazioneCorpo) setTplAssegnazioneCorpo(emailSingoloCfg.modelli.assegnazioneCorpo);
+          if (emailSingoloCfg.modelli.annullamentoOggetto) setTplAnnullamentoOggetto(emailSingoloCfg.modelli.annullamentoOggetto);
+          if (emailSingoloCfg.modelli.annullamentoCorpo) setTplAnnullamentoCorpo(emailSingoloCfg.modelli.annullamentoCorpo);
+          if (emailSingoloCfg.modelli.riepilogoOggetto) setTplRiepilogoOggetto(emailSingoloCfg.modelli.riepilogoOggetto);
+          if (emailSingoloCfg.modelli.riepilogoCorpo) setTplRiepilogoCorpo(emailSingoloCfg.modelli.riepilogoCorpo);
+        }
       }
 
       const calCfg = impostazioniScuola.calendariGoogle;
@@ -299,7 +319,15 @@ export const PersonalizzazioniScuola: React.FC = () => {
       notificheEmailDocenteSingolo: {
         abilitato: Boolean(mailDocenteSingoloAbilitato),
         inviaRiepilogoMattino: Boolean(mailDocenteSingoloRiepilogo),
-        inviaIstantaneeOrarioLavoro: Boolean(mailDocenteSingoloIstantanee)
+        inviaIstantaneeOrarioLavoro: Boolean(mailDocenteSingoloIstantanee),
+        modelli: {
+          assegnazioneOggetto: tplAssegnazioneOggetto.trim(),
+          assegnazioneCorpo: tplAssegnazioneCorpo.trim(),
+          annullamentoOggetto: tplAnnullamentoOggetto.trim(),
+          annullamentoCorpo: tplAnnullamentoCorpo.trim(),
+          riepilogoOggetto: tplRiepilogoOggetto.trim(),
+          riepilogoCorpo: tplRiepilogoCorpo.trim()
+        }
       },
       calendariGoogle: {
         impegni: calImpegniList.filter(c => c.nome.trim() || c.googleId.trim()),
@@ -1945,37 +1973,268 @@ export const PersonalizzazioniScuola: React.FC = () => {
                   </div>
 
                   {mailDocenteSingoloAbilitato && (
-                    <div className="pt-2 border-t border-indigo-100 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-150">
-                      <label className="p-3 bg-white rounded-xl border border-indigo-100 flex items-start gap-2.5 cursor-pointer hover:bg-indigo-50/40 transition">
-                        <input
-                          type="checkbox"
-                          checked={mailDocenteSingoloRiepilogo}
-                          onChange={(e) => setMailDocenteSingoloRiepilogo(e.target.checked)}
-                          className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
-                        />
-                        <div>
-                          <strong className="block text-xs text-slate-800 font-bold">🌅 Riepilogo Mattutino</strong>
-                          <span className="text-[11px] text-slate-500 leading-tight block">
-                            Invia al mattino a ciascun docente l'elenco delle ore di supplenza a lui assegnate per la giornata.
-                          </span>
-                        </div>
-                      </label>
+                    <>
+                      <div className="pt-2 border-t border-indigo-100 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-150">
+                        <label className="p-3 bg-white rounded-xl border border-indigo-100 flex items-start gap-2.5 cursor-pointer hover:bg-indigo-50/40 transition">
+                          <input
+                            type="checkbox"
+                            checked={mailDocenteSingoloRiepilogo}
+                            onChange={(e) => setMailDocenteSingoloRiepilogo(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <div>
+                            <strong className="block text-xs text-slate-800 font-bold">🌅 Riepilogo Mattutino</strong>
+                            <span className="text-[11px] text-slate-500 leading-tight block">
+                              Invia al mattino a ciascun docente l'elenco delle ore di supplenza a lui assegnate per la giornata.
+                            </span>
+                          </div>
+                        </label>
 
-                      <label className="p-3 bg-white rounded-xl border border-indigo-100 flex items-start gap-2.5 cursor-pointer hover:bg-indigo-50/40 transition">
-                        <input
-                          type="checkbox"
-                          checked={mailDocenteSingoloIstantanee}
-                          onChange={(e) => setMailDocenteSingoloIstantanee(e.target.checked)}
-                          className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
-                        />
-                        <div>
-                          <strong className="block text-xs text-slate-800 font-bold">⚡ Notifica Istantanea (08:00 – 17:00)</strong>
-                          <span className="text-[11px] text-slate-500 leading-tight block">
-                            Invia immediatamente un'email se durante l'orario scolastico viene assegnata o revocata una supplenza.
+                        <label className="p-3 bg-white rounded-xl border border-indigo-100 flex items-start gap-2.5 cursor-pointer hover:bg-indigo-50/40 transition">
+                          <input
+                            type="checkbox"
+                            checked={mailDocenteSingoloIstantanee}
+                            onChange={(e) => setMailDocenteSingoloIstantanee(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <div>
+                            <strong className="block text-xs text-slate-800 font-bold">⚡ Notifica Istantanea (08:00 – 17:00)</strong>
+                            <span className="text-[11px] text-slate-500 leading-tight block">
+                              Invia immediatamente un'email se durante l'orario scolastico viene assegnata o revocata una supplenza.
+                            </span>
+                          </div>
+                        </label>
+                      </div>
+
+                      {/* EDITOR MODELLI DI TESTO EMAIL PERSONALIZZATI PER OGNI CASISTICA */}
+                      <div className="pt-3 border-t border-indigo-200/70 space-y-3">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <span className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                            <span>✏️ Personalizza Testi e Modelli Email</span>
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            Modifica il testo per ciascuna casistica. Clicca sui segnaposto per inserirli.
                           </span>
                         </div>
-                      </label>
-                    </div>
+
+                        {/* SELETTORE CASISTICA (TAB) */}
+                        <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-indigo-200 shadow-2xs">
+                          <button
+                            type="button"
+                            onClick={() => setSchedaModelloEmail('ASSEGNAZIONE')}
+                            className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                              schedaModelloEmail === 'ASSEGNAZIONE'
+                                ? 'bg-indigo-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            }`}
+                          >
+                            🔔 Nuova Assegnazione
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSchedaModelloEmail('ANNULLAMENTO')}
+                            className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                              schedaModelloEmail === 'ANNULLAMENTO'
+                                ? 'bg-indigo-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            }`}
+                          >
+                            ⚠️ Revoca / Annullamento
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSchedaModelloEmail('RIEPILOGO')}
+                            className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                              schedaModelloEmail === 'RIEPILOGO'
+                                ? 'bg-indigo-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            }`}
+                          >
+                            📋 Riepilogo Mattutino
+                          </button>
+                        </div>
+
+                        {/* CORPO EDITOR DELLA CASISTICA SELEZIONATA */}
+                        <div className="bg-white p-3.5 rounded-xl border border-indigo-100 space-y-3 shadow-2xs">
+                          {schedaModelloEmail === 'ASSEGNAZIONE' && (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-800">
+                                  Modello: Nuova Supplenza Assegnata (Istantanea 08:00–17:00)
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTplAssegnazioneOggetto(MODELLI_EMAIL_PREDEFINITI.assegnazioneOggetto);
+                                    setTplAssegnazioneCorpo(MODELLI_EMAIL_PREDEFINITI.assegnazioneCorpo);
+                                  }}
+                                  className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                                >
+                                  <RotateCcw className="w-3 h-3" /> Ripristina Default
+                                </button>
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="block text-[11px] font-bold text-slate-700">Oggetto Email</label>
+                                <input
+                                  type="text"
+                                  value={tplAssegnazioneOggetto}
+                                  onChange={(e) => setTplAssegnazioneOggetto(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
+                                />
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="block text-[11px] font-bold text-slate-700">Corpo del Messaggio</label>
+                                <textarea
+                                  rows={7}
+                                  value={tplAssegnazioneCorpo}
+                                  onChange={(e) => setTplAssegnazioneCorpo(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 focus:bg-white leading-relaxed"
+                                />
+                              </div>
+
+                              {/* TAG SEGNAPOSTO CLICCABILI */}
+                              <div className="space-y-1 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">
+                                  Segnaposto Dinamici Disponibili (Clicca per inserire):
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {['{NOME_DOCENTE}', '{DATA}', '{ORA}', '{CLASSE}', '{DOCENTE_SOSTITUITO}', '{MATERIA}', '{NOME_SCUOLA}', '{LINK_PORTALE}'].map((tag) => (
+                                    <button
+                                      key={tag}
+                                      type="button"
+                                      onClick={() => setTplAssegnazioneCorpo(prev => prev + ' ' + tag)}
+                                      className="text-[10.5px] bg-white text-indigo-700 border border-indigo-200 font-mono font-bold px-2 py-0.5 rounded-md hover:bg-indigo-50 transition cursor-pointer shadow-2xs"
+                                    >
+                                      {tag}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {schedaModelloEmail === 'ANNULLAMENTO' && (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-800">
+                                  Modello: Supplenza Annullata / Revocata (Istantanea 08:00–17:00)
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTplAnnullamentoOggetto(MODELLI_EMAIL_PREDEFINITI.annullamentoOggetto);
+                                    setTplAnnullamentoCorpo(MODELLI_EMAIL_PREDEFINITI.annullamentoCorpo);
+                                  }}
+                                  className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                                >
+                                  <RotateCcw className="w-3 h-3" /> Ripristina Default
+                                </button>
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="block text-[11px] font-bold text-slate-700">Oggetto Email</label>
+                                <input
+                                  type="text"
+                                  value={tplAnnullamentoOggetto}
+                                  onChange={(e) => setTplAnnullamentoOggetto(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
+                                />
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="block text-[11px] font-bold text-slate-700">Corpo del Messaggio</label>
+                                <textarea
+                                  rows={7}
+                                  value={tplAnnullamentoCorpo}
+                                  onChange={(e) => setTplAnnullamentoCorpo(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 focus:bg-white leading-relaxed"
+                                />
+                              </div>
+
+                              {/* TAG SEGNAPOSTO CLICCABILI */}
+                              <div className="space-y-1 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">
+                                  Segnaposto Dinamici Disponibili (Clicca per inserire):
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {['{NOME_DOCENTE}', '{DATA}', '{ORA}', '{CLASSE}', '{DOCENTE_SOSTITUITO}', '{NOME_SCUOLA}'].map((tag) => (
+                                    <button
+                                      key={tag}
+                                      type="button"
+                                      onClick={() => setTplAnnullamentoCorpo(prev => prev + ' ' + tag)}
+                                      className="text-[10.5px] bg-white text-indigo-700 border border-indigo-200 font-mono font-bold px-2 py-0.5 rounded-md hover:bg-indigo-50 transition cursor-pointer shadow-2xs"
+                                    >
+                                      {tag}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {schedaModelloEmail === 'RIEPILOGO' && (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-800">
+                                  Modello: Riepilogo Supplenze Giornaliere al Mattino
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTplRiepilogoOggetto(MODELLI_EMAIL_PREDEFINITI.riepilogoOggetto);
+                                    setTplRiepilogoCorpo(MODELLI_EMAIL_PREDEFINITI.riepilogoCorpo);
+                                  }}
+                                  className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                                >
+                                  <RotateCcw className="w-3 h-3" /> Ripristina Default
+                                </button>
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="block text-[11px] font-bold text-slate-700">Oggetto Email</label>
+                                <input
+                                  type="text"
+                                  value={tplRiepilogoOggetto}
+                                  onChange={(e) => setTplRiepilogoOggetto(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
+                                />
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="block text-[11px] font-bold text-slate-700">Corpo del Messaggio</label>
+                                <textarea
+                                  rows={7}
+                                  value={tplRiepilogoCorpo}
+                                  onChange={(e) => setTplRiepilogoCorpo(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 focus:bg-white leading-relaxed"
+                                />
+                              </div>
+
+                              {/* TAG SEGNAPOSTO CLICCABILI */}
+                              <div className="space-y-1 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">
+                                  Segnaposto Dinamici Disponibili (Clicca per inserire):
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {['{NOME_DOCENTE}', '{DATA}', '{ELENCO_SOSTITUZIONI}', '{NOME_SCUOLA}', '{LINK_PORTALE}'].map((tag) => (
+                                    <button
+                                      key={tag}
+                                      type="button"
+                                      onClick={() => setTplRiepilogoCorpo(prev => prev + ' ' + tag)}
+                                      className="text-[10.5px] bg-white text-indigo-700 border border-indigo-200 font-mono font-bold px-2 py-0.5 rounded-md hover:bg-indigo-50 transition cursor-pointer shadow-2xs"
+                                    >
+                                      {tag}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
 

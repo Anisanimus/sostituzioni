@@ -856,3 +856,90 @@ export function getDescrizioneCategoriaSostituto(categoria: string | undefined):
   }
   return categoria.replace(/_/g, ' ').toLowerCase();
 }
+
+/**
+ * Modelli email predefiniti con segnaposto dinamici
+ */
+export const MODELLI_EMAIL_PREDEFINITI = {
+  assegnazioneOggetto: '🔔 Nuova Supplenza Assegnata ({DATA} - {ORA}ª ora) - {NOME_SCUOLA}',
+  assegnazioneCorpo: `Gentile Prof. {NOME_DOCENTE},
+
+ti comunichiamo che ti è stata assegnata una nuova supplenza:
+
+• Data: {DATA}
+• Ora: {ORA}ª ora
+• Classe: {CLASSE}
+• In sostituzione di: {DOCENTE_SOSTITUITO} ({MATERIA})
+
+Ti invitiamo ad accedere al Portale Docenti per prendere visione e apporre la firma digitale:
+{LINK_PORTALE}
+
+Cordiali saluti,
+La Vicepresidenza`,
+
+  annullamentoOggetto: '⚠️ Supplenza Revocata / Annullata ({DATA} - {ORA}ª ora) - {NOME_SCUOLA}',
+  annullamentoCorpo: `Gentile Prof. {NOME_DOCENTE},
+
+ti informiamo che la seguente supplenza è stata annullata dalla Vicepresidenza:
+
+• Data: {DATA}
+• Ora: {ORA}ª ora
+• Classe: {CLASSE}
+• Inizialmente prevista per: {DOCENTE_SOSTITUITO}
+
+Non è richiesta alcuna azione da parte tua.
+
+Cordiali saluti,
+La Vicepresidenza`,
+
+  riepilogoOggetto: '📋 Le tue ore di supplenza per oggi ({DATA}) - {NOME_SCUOLA}',
+  riepilogoCorpo: `Gentile Prof. {NOME_DOCENTE},
+
+ti riepiloghiamo le ore di sostituzione a te assegnate per oggi ({DATA}):
+
+{ELENCO_SOSTITUZIONI}
+
+Ti invitiamo ad accedere al Portale Docenti per prendere visione e apporre la firma digitale:
+{LINK_PORTALE}
+
+Buon lavoro,
+La Vicepresidenza`
+};
+
+/**
+ * Sostituisce i segnaposto dinamici con i valori effettivi
+ */
+export function componiTestoEmail(
+  template: string,
+  dati: {
+    NOME_DOCENTE?: string;
+    DATA?: string;
+    ORA?: string | number;
+    CLASSE?: string;
+    DOCENTE_SOSTITUITO?: string;
+    MATERIA?: string;
+    NOME_SCUOLA?: string;
+    LINK_PORTALE?: string;
+    ELENCO_SOSTITUZIONI?: string;
+  }
+): string {
+  if (!template) return '';
+  let risultato = template;
+  const mappa: Record<string, string> = {
+    '{NOME_DOCENTE}': dati.NOME_DOCENTE || '',
+    '{DATA}': dati.DATA || '',
+    '{ORA}': String(dati.ORA || ''),
+    '{CLASSE}': dati.CLASSE || '',
+    '{DOCENTE_SOSTITUITO}': dati.DOCENTE_SOSTITUITO || '',
+    '{MATERIA}': dati.MATERIA || '',
+    '{NOME_SCUOLA}': dati.NOME_SCUOLA || 'Scuola',
+    '{LINK_PORTALE}': dati.LINK_PORTALE || 'https://sostituzioni-smart.web.app',
+    '{ELENCO_SOSTITUZIONI}': dati.ELENCO_SOSTITUZIONI || ''
+  };
+
+  Object.entries(mappa).forEach(([tag, val]) => {
+    risultato = risultato.split(tag).join(val);
+  });
+
+  return risultato;
+}
