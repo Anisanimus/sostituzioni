@@ -13,15 +13,20 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.5.4',
-  buildTime: '2026-09-03T17:25:00Z',
-  title: 'Novità della Versione 1.5.4',
-  descrizioneGenerale: 'Ottimizzazione del supporto iOS Safe Area per iPhone (Notch e Dynamic Island).',
+  version: '1.5.5',
+  buildTime: '2026-09-03T17:29:00Z',
+  title: 'Novità della Versione 1.5.5',
+  descrizioneGenerale: 'Perfezionamento della Safe Area per iPhone (margini superiori e tasto chiudi X del menu).',
   novita: [
     {
-      titolo: 'Supporto Safe Area e Centratura Notifiche su iPhone',
-      descrizione: 'Risolto il problema di sovrapposizione con la barra di stato e la Dynamic Island di iOS quando l\'app è installata nella Home: il banner degli aggiornamenti e il menu laterale rispettano ora perfettamente l\'area utile dello schermo e sono sempre comodamente cliccabili.',
-      tag: 'iOS & Ergonomia'
+      titolo: 'Margini di Sicurezza e Tasto Chiudi "X" su iPhone',
+      descrizione: 'Aggiunto un generoso margine superiore al menu laterale e al banner aggiornamenti per garantire la perfetta visibilità del titolo "Pannello Vicepresidenza" e la facile pressione del tasto di chiusura "X" su tutti i modelli di iPhone.',
+      tag: 'iPhone & PWA'
+    },
+    {
+      titolo: 'Storno e Aggiunta Manuale Ore a Credito e a Debito',
+      descrizione: 'In Bilanci e Report, la Vicepresidenza può ora registrare manualmente storni o aggiunte di ore a credito e debito con causale personalizzata, sia dal riquadro principale che dall\'estratto conto del singolo docente.',
+      tag: 'Bilanci & Vicepresidenza'
     },
     {
       titolo: 'Storno e Aggiunta Manuale Ore a Credito e a Debito',
