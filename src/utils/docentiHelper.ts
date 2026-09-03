@@ -825,7 +825,13 @@ export function getDescrizioneCategoriaSostituto(categoria: string | undefined):
   if (catUpper === 'SOSTEGNO') {
     return 'disposizione';
   }
-  if (catUpper.startsWith('LIBERATO')) {
+  if (catUpper === 'LIBERATO_STESSA_CLASSE') {
+    return 'stessa classe';
+  }
+  if (catUpper === 'LIBERATO_STESSA_MATERIA') {
+    return 'stessa materia';
+  }
+  if (catUpper === 'LIBERATO_ALTRA_CLASSE' || catUpper.startsWith('LIBERATO')) {
     return 'liberato da gita';
   }
   if (catUpper === 'POTENZIAMENTO') {

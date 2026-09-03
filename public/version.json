@@ -1,9 +1,14 @@
 {
-  "version": "1.4.6",
-  "buildTime": "2026-09-03T16:05:00Z",
-  "title": "Novità della Versione 1.4.6",
-  "descrizioneGenerale": "Standardizzazione e semplificazione delle diciture di copertura e sostituzione in tutti i tabelloni.",
+  "version": "1.4.7",
+  "buildTime": "2026-09-03T16:08:00Z",
+  "title": "Novità della Versione 1.4.7",
+  "descrizioneGenerale": "Perfezionamento delle diciture di sostituzione con etichette sintetiche e precise per i docenti liberati da gite.",
   "novita": [
+    {
+      "titolo": "Diciture 'Stessa Materia' e 'Stessa Classe' per Liberati da Gita",
+      "descrizione": "I docenti liberati dalle uscite didattiche ora mostrano chiaramente se coprono nella 'stessa materia' o nella 'stessa classe', completando la semplificazione con 'disposizione', 'compresente' e 'recupero'.",
+      "tag": "Tabellone & Sostituzioni"
+    },
     {
       "titolo": "Diciture Semplificate nei Tabelloni",
       "descrizione": "Nelle celle di sostituzione ora compaiono termini uniformi e immediati: 'disposizione' (per ore a credito/straordinario D e sostegno), 'compresente' (senza la parola classe), e 'recupero'.",
