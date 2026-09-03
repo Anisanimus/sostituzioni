@@ -1,13 +1,18 @@
 {
-  "version": "1.4.7",
-  "buildTime": "2026-09-03T16:08:00Z",
-  "title": "Novità della Versione 1.4.7",
-  "descrizioneGenerale": "Perfezionamento delle diciture di sostituzione con etichette sintetiche e precise per i docenti liberati da gite.",
+  "version": "1.4.8",
+  "buildTime": "2026-09-03T16:26:00Z",
+  "title": "Novità della Versione 1.4.8",
+  "descrizioneGenerale": "Ottimizzazione del layout del tabellone con allineamento stabile e compatto, e banner di aggiornamento interattivo.",
   "novita": [
     {
-      "titolo": "Diciture 'Stessa Materia' e 'Stessa Classe' per Liberati da Gita",
-      "descrizione": "I docenti liberati dalle uscite didattiche ora mostrano chiaramente se coprono nella 'stessa materia' o nella 'stessa classe', completando la semplificazione con 'disposizione', 'compresente' e 'recupero'.",
-      "tag": "Tabellone & Sostituzioni"
+      "titolo": "Layout Compatto e Allineato per Più Sostituti",
+      "descrizione": "Risolto ogni spostamento a zig-zag: le classi e i docenti assenti restano perfettamente allineati a sinistra, mentre le card dei docenti sostituti sono compatte e ordinate con poco padding.",
+      "tag": "Grafica & Tabellone"
+    },
+    {
+      "titolo": "Banner Aggiornamenti Interamente Cliccabile",
+      "descrizione": "Toccando ovunque sulla barra viola in alto o sul nuovo pulsante '📖 Leggi Novità' si apre istantaneamente il pannello con tutte le spiegazioni delle nuove versioni.",
+      "tag": "Notifiche"
     },
     {
       "titolo": "Diciture Semplificate nei Tabelloni",

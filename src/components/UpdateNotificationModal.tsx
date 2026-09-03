@@ -80,38 +80,47 @@ export const UpdateNotificationModal: React.FC = () => {
 
   return (
     <>
-      {/* BANNER NOTIFICA TOP NON INVASIVO */}
-      <div className="fixed top-0 inset-x-0 z-[9999] bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white px-3.5 py-2.5 shadow-xl animate-in slide-in-from-top-4 duration-300">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3 text-xs">
+      {/* BANNER NOTIFICA TOP NON INVASIVO & INTERAMENTE CLICCABILE */}
+      <div 
+        onClick={() => setMostraModaleDettagli(true)}
+        className="fixed top-0 inset-x-0 z-[9999] bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white px-3 sm:px-4 py-2 shadow-xl animate-in slide-in-from-top-4 duration-300 cursor-pointer hover:brightness-105 transition"
+      >
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2.5 text-xs">
           
           <div className="flex items-center gap-2 min-w-0">
-            <span className="p-1 bg-white/20 rounded-lg shrink-0 animate-bounce">
+            <span className="p-1 bg-white/20 rounded-lg shrink-0 animate-bounce text-xs">
               🚀
             </span>
             <div className="truncate">
               <strong className="font-black tracking-wide">
                 Nuova Versione Disponibile ({nuovaVersioneInfo.version})
               </strong>
-              <span className="hidden sm:inline text-indigo-100 ml-1.5">
+              <span className="hidden md:inline text-indigo-100 ml-1.5 font-normal">
                 — Ci sono novità e miglioramenti pronti per te!
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               type="button"
-              onClick={() => setMostraModaleDettagli(true)}
-              className="text-[11px] font-bold text-indigo-100 hover:text-white underline cursor-pointer px-1 hidden xs:inline"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMostraModaleDettagli(true);
+              }}
+              className="text-[11px] font-bold bg-white/15 hover:bg-white/25 text-white px-2.5 py-1 rounded-lg transition border border-white/20 cursor-pointer flex items-center gap-1"
             >
-              Vedi novità
+              <span>📖 Leggi Novità</span>
             </button>
 
             <button
               type="button"
-              onClick={eseguiAggiornamento}
+              onClick={(e) => {
+                e.stopPropagation();
+                eseguiAggiornamento();
+              }}
               disabled={inAggiornamento}
-              className="bg-white text-indigo-950 hover:bg-indigo-50 font-black px-3.5 py-1.5 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer text-xs"
+              className="bg-white text-indigo-950 hover:bg-indigo-50 font-black px-3 py-1 sm:py-1.5 rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer text-xs"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${inAggiornamento ? 'animate-spin' : ''}`} />
               <span>{inAggiornamento ? 'Aggiornamento...' : 'Aggiorna Ora ⚡'}</span>
