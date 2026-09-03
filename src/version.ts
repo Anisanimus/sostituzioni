@@ -14,14 +14,14 @@ export interface AppVersionInfo {
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
   version: '1.8.0',
-  buildTime: '2026-09-03T21:48:00Z',
+  buildTime: '2026-09-03T21:50:00Z',
   title: 'Novità della Versione 1.8.0',
-  descrizioneGenerale: 'Visualizzazione Nativa e Mirroring dei Calendari Google per il Personale ATA con accesso tramite PIN (senza login Google).',
+  descrizioneGenerale: 'Visualizzazione Nativa e Mirroring dei Calendari Google per Portale Docenti e Personale ATA.',
   novita: [
     {
-      titolo: 'Agenda Nativa per Personale ATA (Senza Account Google)',
-      descrizione: 'I collaboratori scolastici che accedono con il PIN possono ora visualizzare tutti gli impegni della scuola, consigli di classe e occupazione dei laboratori direttamente nell\'app tramite una comoda Agenda Nativa cronologica, senza dover effettuare il login con un account Google.',
-      tag: 'ATA & Calendari'
+      titolo: 'Agenda Nativa per Docenti e Personale ATA',
+      descrizione: 'Tutti gli impegni collegiali, riunioni e prenotazioni laboratori sono ora disponibili sia nel Portale Docenti che per il Personale ATA in una visualizzazione ad Agenda Nativa ultra-veloce e reattiva, con switch rapido su Google Calendar.',
+      tag: 'Docenti, ATA & Calendari'
     },
     {
       titolo: 'Mirroring e Sincronizzazione Database',
