@@ -156,6 +156,7 @@ export interface CalendarioGoogleCustom {
 
 export interface ImpostazioniScuola {
   nomeScuola: string;
+  appUrl?: string; // URL pubblico dell'applicazione web/PWA (es. https://sostituzioni-smart.web.app)
   // 1. Iconcina Intestazione Barra & Menu (Interna)
   logoUrl?: string; // Base64 o URL immagine logo personalizzato
   logoTipo?: 'DEFAULT' | 'CUSTOM_IMAGE' | 'BOOK' | 'GRADUATION' | 'BUILDING' | 'PALETTE' | 'SHIELD';

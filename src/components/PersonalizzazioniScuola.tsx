@@ -18,6 +18,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
   } = useApp();
   
   const [nomeScuola, setNomeScuola] = useState(impostazioniScuola.nomeScuola || 'I.C. Anna Frank');
+  const [appUrl, setAppUrl] = useState(impostazioniScuola.appUrl || 'https://sostituzioni-smart.web.app');
 
   // 1. Stemma / Iconcina Intestazione Barra & Menu
   const [logoTipo, setLogoTipo] = useState<'DEFAULT' | 'CUSTOM_IMAGE' | 'BOOK' | 'GRADUATION' | 'BUILDING' | 'PALETTE' | 'SHIELD'>(impostazioniScuola.logoTipo || 'DEFAULT');
@@ -156,6 +157,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
   React.useEffect(() => {
     if (impostazioniScuola) {
       setNomeScuola(impostazioniScuola.nomeScuola || 'I.C. Anna Frank');
+      setAppUrl(impostazioniScuola.appUrl || 'https://sostituzioni-smart.web.app');
       setLogoTipo(impostazioniScuola.logoTipo || 'DEFAULT');
       setLogoUrl(impostazioniScuola.logoUrl || '');
       setAppIconTipo(impostazioniScuola.appIconTipo || 'DEFAULT');
@@ -301,6 +303,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
     updateImpostazioniScuola({
       nomeScuola: nomeScuola.trim() || 'Istituto Scolastico',
+      appUrl: appUrl.trim() || 'https://sostituzioni-smart.web.app',
       logoUrl: logoUrl.trim(),
       logoTipo: logoTipo,
       appIconUrl: appIconUrl.trim(),
@@ -597,24 +600,57 @@ export const PersonalizzazioniScuola: React.FC = () => {
           {sezioniAperte.sez_intestazione && (
             <div className="p-4 sm:p-5 pt-0 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    Denominazione Scuola / Istituto Comprensivo / IIS
-                  </label>
-                  <input
-                    type="text"
-                    value={nomeScuola}
-                    onChange={(e) => setNomeScuola(e.target.value)}
-                    placeholder="es. I.C. Anna Frank - Torino"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
-                    required
-                  />
-                  <span className="text-[11px] text-slate-400 mt-1 block">
-                    Anteprima barra superiore: <strong className="text-slate-700">{nomeScuola || 'Gestione Sostituzioni'}</strong>
-                  </span>
+                <div className="sm:col-span-2 space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Denominazione Scuola / Istituto Comprensivo / IIS
+                    </label>
+                    <input
+                      type="text"
+                      value={nomeScuola}
+                      onChange={(e) => setNomeScuola(e.target.value)}
+                      placeholder="es. I.C. Anna Frank - Torino"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-black text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
+                      required
+                    />
+                    <span className="text-[11px] text-slate-400 mt-1 block">
+                      Anteprima barra superiore: <strong className="text-slate-700">{nomeScuola || 'Gestione Sostituzioni'}</strong>
+                    </span>
+                  </div>
+
+                  {/* CAMPO LINK APPLICAZIONE / PORTALE WEB */}
+                  <div className="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                        <span>🔗 Link / URL dell'Applicazione Web (PWA)</span>
+                      </label>
+                      {appUrl && (
+                        <a
+                          href={appUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 hover:underline"
+                        >
+                          <span>Apri</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                    <input
+                      type="url"
+                      value={appUrl}
+                      onChange={(e) => setAppUrl(e.target.value)}
+                      placeholder="https://sostituzioni-smart.web.app"
+                      className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-xs font-bold text-indigo-900 outline-none focus:border-indigo-500 transition"
+                      required
+                    />
+                    <span className="text-[10.5px] text-indigo-900/70 mt-1 block leading-tight">
+                      Questo link viene utilizzato automaticamente nei pulsanti di accesso e nei segnaposto <code>{'{LINK_PORTALE}'}</code> di tutte le email inviate ai docenti e ai gruppi.
+                    </span>
+                  </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 h-fit">
                   <label className="block text-xs font-bold text-slate-800 mb-1">
                     🔒 PIN Personale ATA / Segreteria
                   </label>
@@ -2026,7 +2062,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                           className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 transition leading-relaxed"
                         />
                         <span className="text-[10px] text-slate-500 block">
-                          Puoi modificare il testo a tuo piacimento. Ricorda di lasciare il link al portale <code>https://sostituzioni-smart.web.app</code> affinché i docenti possano accedere con un click.
+                          Puoi modificare il testo a tuo piacimento. Il link <code>{appUrl || 'https://sostituzioni-smart.web.app'}</code> (o il segnaposto <code>{'{LINK_PORTALE}'}</code>) permetterà ai docenti di accedere direttamente con un click.
                         </span>
                       </div>
                     </div>

@@ -10,6 +10,7 @@ const SCUOLA_FIRESTORE_ID = 'IC_ANNA_FRANK';
 
 export const DEFAULT_IMPOSTAZIONI_SCUOLA: ImpostazioniScuola = {
   nomeScuola: 'I.C. Anna Frank',
+  appUrl: 'https://sostituzioni-smart.web.app',
   tettoMaxPermessiBreviAnno: 12,
   tettoMaxAssembleeSindacaliAnno: 10,
   vistaTabellonePredefinita: 'GRUPPI_ORA',
@@ -727,8 +728,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ): Promise<{ successo: boolean; modalita: 'APPS_SCRIPT' | 'MAILTO'; messaggio: string }> => {
     const cfg = impostazioniScuola.notificheEmailGruppo;
     const dest = destinatarioOverride || cfg?.emailGruppo || '';
+    const defaultAppUrl = impostazioniScuola.appUrl || 'https://sostituzioni-smart.web.app';
     const subj = oggettoOverride || cfg?.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta';
-    const body = corpoOverride || cfg?.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`;
+    let body = corpoOverride || cfg?.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare:\n${defaultAppUrl}\n\nCordiali saluti,\nLa Vicepresidenza`;
+    
+    // Sostituisce eventuali segnaposto dinamici {LINK_PORTALE} o {NOME_SCUOLA} nel testo di gruppo
+    body = body.split('{LINK_PORTALE}').join(defaultAppUrl);
+    body = body.split('{NOME_SCUOLA}').join(impostazioniScuola.nomeScuola || 'Scuola');
     const webhookUrl = webhookOverride !== undefined ? webhookOverride : (cfg?.webhookAppScriptUrl || '');
 
     if (!dest) {
@@ -863,7 +869,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     NOME_DOCENTE: getBaseNomeDocente(doc.nome),
                     DATA: dataFmt,
                     NOME_SCUOLA: currentImpostazioni.nomeScuola || 'Scuola',
-                    LINK_PORTALE: 'https://sostituzioni-smart.web.app',
+                    LINK_PORTALE: currentImpostazioni.appUrl || 'https://sostituzioni-smart.web.app',
                     ELENCO_SOSTITUZIONI: elencoOre
                   };
                   const oggetto = componiTestoEmail(tplObj, dati);
@@ -1576,7 +1582,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ORA: sost.ora,
             CLASSE: sost.classe,
             DOCENTE_SOSTITUITO: docenteAssenteNome,
-            NOME_SCUOLA: impostazioniScuolaRef.current?.nomeScuola || 'Scuola'
+            NOME_SCUOLA: impostazioniScuolaRef.current?.nomeScuola || 'Scuola',
+            LINK_PORTALE: impostazioniScuolaRef.current?.appUrl || 'https://sostituzioni-smart.web.app'
           };
           const oggetto = componiTestoEmail(tplObj, dati);
           const corpo = componiTestoEmail(tplBody, dati);
@@ -1702,7 +1709,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             DOCENTE_SOSTITUITO: docAssenteNome,
             MATERIA: materiaAssente || 'Lezione',
             NOME_SCUOLA: impostazioniScuolaRef.current?.nomeScuola || 'Scuola',
-            LINK_PORTALE: 'https://sostituzioni-smart.web.app'
+            LINK_PORTALE: impostazioniScuolaRef.current?.appUrl || 'https://sostituzioni-smart.web.app'
           };
           const oggetto = componiTestoEmail(tplObj, dati);
           const corpo = componiTestoEmail(tplBody, dati);
@@ -1769,7 +1776,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             DOCENTE_SOSTITUITO: docAssenteNome,
             MATERIA: materiaAssente || 'Lezione',
             NOME_SCUOLA: impostazioniScuolaRef.current?.nomeScuola || 'Scuola',
-            LINK_PORTALE: 'https://sostituzioni-smart.web.app'
+            LINK_PORTALE: impostazioniScuolaRef.current?.appUrl || 'https://sostituzioni-smart.web.app'
           };
           const oggetto = componiTestoEmail(tplObj, dati);
           const corpo = componiTestoEmail(tplBody, dati);

@@ -13,15 +13,15 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.7.1',
-  buildTime: '2026-09-03T21:24:00Z',
-  title: 'Novità della Versione 1.7.1',
-  descrizioneGenerale: 'Layout personalizzazioni email riordinato e gestione orari dedicati per le notifiche del singolo docente.',
+  version: '1.7.2',
+  buildTime: '2026-09-03T21:35:00Z',
+  title: 'Novità della Versione 1.7.2',
+  descrizioneGenerale: 'Campo Link/URL dell\'Applicazione Web (PWA) configurabile nell\'Intestazione e sincronizzato con tutte le email.',
   novita: [
     {
-      titolo: 'Layout Sezioni Email Riordinato',
-      descrizione: 'Tutti i campi editabili della mail collettiva (indirizzo, orario mattutino, oggetto e testo) sono ora posizionati in modo ordinato direttamente sotto il titolo della sezione 1. La sezione 2 include la configurazione manuale degli orari dedicati e delle fasce orarie per il singolo docente.',
-      tag: 'Notifiche & Personalizzazioni'
+      titolo: 'Link dell\'App Configurabile nell\'Intestazione',
+      descrizione: 'Nella sezione Intestazione (subito sotto la Denominazione Scuola) è ora presente il campo per impostare l\'URL personalizzato dell\'Applicazione. Tutte le email (collettive di gruppo, singole assegnazioni, revoche e riepiloghi mattutini) e il segnaposto {LINK_PORTALE} utilizzeranno automaticamente questo indirizzo.',
+      tag: 'Personalizzazioni & Portale'
     },
     {
       titolo: 'Banner di Avviso Docenti Senza Email',
