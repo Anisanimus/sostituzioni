@@ -18,9 +18,17 @@ export const PersonalizzazioniScuola: React.FC = () => {
   } = useApp();
   
   const [nomeScuola, setNomeScuola] = useState(impostazioniScuola.nomeScuola || 'I.C. Anna Frank');
+
+  // 1. Stemma / Iconcina Intestazione Barra & Menu
   const [logoTipo, setLogoTipo] = useState<'DEFAULT' | 'CUSTOM_IMAGE' | 'BOOK' | 'GRADUATION' | 'BUILDING' | 'PALETTE' | 'SHIELD'>(impostazioniScuola.logoTipo || 'DEFAULT');
   const [logoUrl, setLogoUrl] = useState<string>(impostazioniScuola.logoUrl || '');
   const fileLogoRef = useRef<HTMLInputElement>(null);
+
+  // 2. Icona Principale Applicazione (PWA, Home Screen, Favicon)
+  const [appIconTipo, setAppIconTipo] = useState<'DEFAULT' | 'CUSTOM_IMAGE' | 'SMART_CLOCK' | 'TOGA_SHIELD' | 'SMART_S' | 'CLOCK_TOWER'>(impostazioniScuola.appIconTipo || 'DEFAULT');
+  const [appIconUrl, setAppIconUrl] = useState<string>(impostazioniScuola.appIconUrl || '');
+  const fileAppIconRef = useRef<HTMLInputElement>(null);
+
   const [pinPersonaleAta, setPinPersonaleAta] = useState(impostazioniScuola.pinPersonaleAta || '1234');
   const [tettoPermessi, setTettoPermessi] = useState(impostazioniScuola.tettoMaxPermessiBreviAnno || 12);
   const [tettoAssemblee, setTettoAssemblee] = useState(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
@@ -128,6 +136,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
       setNomeScuola(impostazioniScuola.nomeScuola || 'I.C. Anna Frank');
       setLogoTipo(impostazioniScuola.logoTipo || 'DEFAULT');
       setLogoUrl(impostazioniScuola.logoUrl || '');
+      setAppIconTipo(impostazioniScuola.appIconTipo || 'DEFAULT');
+      setAppIconUrl(impostazioniScuola.appIconUrl || '');
       setPinPersonaleAta(impostazioniScuola.pinPersonaleAta || '1234');
       setTettoPermessi(impostazioniScuola.tettoMaxPermessiBreviAnno || 12);
       setTettoAssemblee(impostazioniScuola.tettoMaxAssembleeSindacaliAnno || 10);
@@ -253,6 +263,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
       nomeScuola: nomeScuola.trim() || 'Istituto Scolastico',
       logoUrl: logoUrl.trim(),
       logoTipo: logoTipo,
+      appIconUrl: appIconUrl.trim(),
+      appIconTipo: appIconTipo,
       pinPersonaleAta: pinPersonaleAta.trim() || '1234',
       tettoMaxPermessiBreviAnno: Number(tettoPermessi) || 12,
       tettoMaxAssembleeSindacaliAnno: Number(tettoAssemblee) || 10,
@@ -565,7 +577,9 @@ export const PersonalizzazioniScuola: React.FC = () => {
                 </div>
               </div>
 
-              {/* SELEZIONE E CARICAMENTO ICONA / LOGO SCUOLA */}
+              {/* ========================================================= */}
+              {/* 1. SELEZIONE E CARICAMENTO STEMMA / LOGO INTESTAZIONE INTERNA */}
+              {/* ========================================================= */}
               <div className="p-4 bg-gradient-to-br from-indigo-50/70 via-slate-50 to-purple-50/50 rounded-2xl border border-indigo-100/80 space-y-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
@@ -573,17 +587,17 @@ export const PersonalizzazioniScuola: React.FC = () => {
                       <School className="w-4 h-4" />
                     </span>
                     <div>
-                      <h4 className="text-xs sm:text-sm font-black text-slate-900">Icona & Logo dell'Istituto</h4>
-                      <p className="text-[11px] text-slate-500">Scegli un'icona tematica o carica lo stemma/logo ufficiale della tua scuola (PNG, JPG, SVG).</p>
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900">1. Stemma / Iconcina Intestazione (Desktop & Menu)</h4>
+                      <p className="text-[11px] text-slate-500">L'iconcina che compare in alto a sinistra accanto al nome della scuola e nel menu di navigazione.</p>
                     </div>
                   </div>
 
-                  {/* ANTEPRIMA LIVE ICONA SCELTA */}
+                  {/* ANTEPRIMA LIVE STEMMA INTERNO */}
                   <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Anteprima:</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Anteprima Barra:</span>
                     <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center overflow-hidden shadow-2xs">
                       {logoTipo === 'CUSTOM_IMAGE' && logoUrl ? (
-                        <img src={logoUrl} alt="Logo Scuola" className="w-full h-full object-cover" />
+                        <img src={logoUrl} alt="Stemma Scuola" className="w-full h-full object-cover" />
                       ) : logoTipo === 'BOOK' ? (
                         <BookOpen className="w-4 h-4 text-white" />
                       ) : logoTipo === 'GRADUATION' ? (
@@ -601,9 +615,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
                   </div>
                 </div>
 
-                {/* OPZIONI DI SCELTA ICONA */}
+                {/* OPZIONI SCELTA STEMMA INTERNO */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 pt-1">
-                  {/* OPZIONE 1: SCUOLA (DEFAULT) */}
                   <button
                     type="button"
                     onClick={() => setLogoTipo('DEFAULT')}
@@ -617,7 +630,6 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     <span className="text-[10px]">Scuola</span>
                   </button>
 
-                  {/* OPZIONE 2: LIBRO */}
                   <button
                     type="button"
                     onClick={() => setLogoTipo('BOOK')}
@@ -631,7 +643,6 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     <span className="text-[10px]">Libro</span>
                   </button>
 
-                  {/* OPZIONE 3: TOGA / LAUREA */}
                   <button
                     type="button"
                     onClick={() => setLogoTipo('GRADUATION')}
@@ -645,7 +656,6 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     <span className="text-[10px]">Studio</span>
                   </button>
 
-                  {/* OPZIONE 4: EDIFICIO */}
                   <button
                     type="button"
                     onClick={() => setLogoTipo('BUILDING')}
@@ -659,7 +669,6 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     <span className="text-[10px]">Campus</span>
                   </button>
 
-                  {/* OPZIONE 5: ARTE / STEMMA */}
                   <button
                     type="button"
                     onClick={() => setLogoTipo('PALETTE')}
@@ -673,7 +682,6 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     <span className="text-[10px]">Arte</span>
                   </button>
 
-                  {/* OPZIONE 6: STEMMA SCUDO */}
                   <button
                     type="button"
                     onClick={() => setLogoTipo('SHIELD')}
@@ -687,12 +695,9 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     <span className="text-[10px]">Stemma</span>
                   </button>
 
-                  {/* OPZIONE 7: CARICA IMMAGINE PERSONALIZZATA */}
                   <button
                     type="button"
-                    onClick={() => {
-                      if (fileLogoRef.current) fileLogoRef.current.click();
-                    }}
+                    onClick={() => fileLogoRef.current?.click()}
                     className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
                       logoTipo === 'CUSTOM_IMAGE' && logoUrl
                         ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
@@ -700,11 +705,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     }`}
                   >
                     <Upload className="w-5 h-5" />
-                    <span className="text-[10px] truncate max-w-full">Carica Logo</span>
+                    <span className="text-[10px] truncate max-w-full">Carica Stemma</span>
                   </button>
                 </div>
 
-                {/* INPUT FILE NASCOSTO PER CARICAMENTO IMMAGINE */}
                 <input
                   ref={fileLogoRef}
                   type="file"
@@ -714,7 +718,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     const file = e.target.files?.[0];
                     if (file) {
                       if (file.size > 2 * 1024 * 1024) {
-                        alert('L\'immagine scelta è troppo grande (massimo 2MB). Si consiglia un\'immagine leggera o un file PNG trasparente.');
+                        alert('L\'immagine scelta è troppo grande (massimo 2MB). Si consiglia un file PNG trasparente.');
                         return;
                       }
                       const reader = new FileReader();
@@ -730,15 +734,14 @@ export const PersonalizzazioniScuola: React.FC = () => {
                   }}
                 />
 
-                {/* BOX DETTAGLIO QUANDO È PRESENTE UN'IMMAGINE PERSONALIZZATA */}
                 {logoTipo === 'CUSTOM_IMAGE' && logoUrl && (
                   <div className="bg-white p-3 rounded-xl border border-indigo-200 flex items-center justify-between gap-3 shadow-2xs animate-in fade-in duration-150">
                     <div className="flex items-center gap-3 min-w-0">
-                      <img src={logoUrl} alt="Logo Scuola Caricato" className="w-10 h-10 rounded-xl object-contain bg-slate-50 p-1 border border-slate-200 shrink-0 shadow-2xs" />
+                      <img src={logoUrl} alt="Stemma Scuola Caricato" className="w-10 h-10 rounded-xl object-contain bg-slate-50 p-1 border border-slate-200 shrink-0 shadow-2xs" />
                       <div className="min-w-0">
-                        <span className="text-xs font-black text-slate-800 block truncate">Logo Personalizzato Attivo</span>
+                        <span className="text-xs font-black text-slate-800 block truncate">Stemma Intestazione Attivo</span>
                         <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                          <CheckCircle className="w-3 h-3 inline" /> Pronto per essere visualizzato su barra, menu e favicon
+                          <CheckCircle className="w-3 h-3 inline" /> Mostrato accanto al nome della scuola
                         </span>
                       </div>
                     </div>
@@ -759,7 +762,187 @@ export const PersonalizzazioniScuola: React.FC = () => {
                           if (fileLogoRef.current) fileLogoRef.current.value = '';
                         }}
                         className="text-[11px] font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2 py-1.5 rounded-lg border border-rose-200 transition cursor-pointer"
-                        title="Rimuovi Logo e torna all'icona predefinita"
+                        title="Rimuovi Stemma"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ========================================================= */}
+              {/* 2. SELEZIONE E CARICAMENTO ICONA APPLICAZIONE (PWA & FAVICON) */}
+              {/* ========================================================= */}
+              <div className="p-4 bg-gradient-to-br from-purple-50/70 via-slate-50 to-indigo-50/50 rounded-2xl border border-purple-100/80 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 bg-purple-600 text-white rounded-lg shadow-2xs">
+                      <Sparkles className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black text-slate-900">2. Icona Principale App (Home Smartphone, Favicon & Browser)</h4>
+                      <p className="text-[11px] text-slate-500">L'icona mostrata sulla schermata Home di iPhone/Android, nella scheda del browser e all'avvio dell'app.</p>
+                    </div>
+                  </div>
+
+                  {/* ANTEPRIMA LIVE ICONA APP */}
+                  <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Anteprima Icona App:</span>
+                    <div className="w-8 h-8 rounded-xl bg-slate-900 flex items-center justify-center overflow-hidden shadow-md border border-slate-700/50">
+                      {appIconTipo === 'CUSTOM_IMAGE' && appIconUrl ? (
+                        <img src={appIconUrl} alt="Icona App" className="w-full h-full object-cover" />
+                      ) : appIconTipo === 'SMART_CLOCK' ? (
+                        <span className="text-base">🕒</span>
+                      ) : appIconTipo === 'TOGA_SHIELD' ? (
+                        <span className="text-base">🎓</span>
+                      ) : appIconTipo === 'SMART_S' ? (
+                        <span className="text-base">⚡</span>
+                      ) : appIconTipo === 'CLOCK_TOWER' ? (
+                        <span className="text-base">🏛️</span>
+                      ) : (
+                        <School className="w-4 h-4 text-indigo-400" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* OPZIONI SCELTA ICONA APP */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setAppIconTipo('DEFAULT')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      appIconTipo === 'DEFAULT'
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <School className="w-5 h-5" />
+                    <span className="text-[10px]">Predefinita</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAppIconTipo('SMART_CLOCK')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      appIconTipo === 'SMART_CLOCK'
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Clock className="w-5 h-5 text-emerald-500" />
+                    <span className="text-[10px]">Smart Clock</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAppIconTipo('TOGA_SHIELD')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      appIconTipo === 'TOGA_SHIELD'
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <GraduationCap className="w-5 h-5 text-indigo-400" />
+                    <span className="text-[10px]">Toga & Libro</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAppIconTipo('SMART_S')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      appIconTipo === 'SMART_S'
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Sparkles className="w-5 h-5 text-cyan-400" />
+                    <span className="text-[10px]">Smart 'S'</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAppIconTipo('CLOCK_TOWER')}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      appIconTipo === 'CLOCK_TOWER'
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Building2 className="w-5 h-5 text-blue-400" />
+                    <span className="text-[10px]">Torre Orario</span>
+                  </button>
+
+                  {/* CARICA ICONA PERSONALIZZATA PER LA HOME / PWA */}
+                  <button
+                    type="button"
+                    onClick={() => fileAppIconRef.current?.click()}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1.5 transition cursor-pointer ${
+                      appIconTipo === 'CUSTOM_IMAGE' && appIconUrl
+                        ? 'bg-purple-600 text-white border-purple-600 shadow-xs'
+                        : 'bg-white text-purple-700 border-purple-200 hover:bg-purple-50/50'
+                    }`}
+                  >
+                    <Upload className="w-5 h-5" />
+                    <span className="text-[10px] truncate max-w-full">Carica Icona</span>
+                  </button>
+                </div>
+
+                <input
+                  ref={fileAppIconRef}
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp, image/svg+xml"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 2 * 1024 * 1024) {
+                        alert('L\'immagine dell\'icona è troppo grande (massimo 2MB). Si consiglia un file PNG o JPG quadrato.');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = (uploadEvent) => {
+                        const base64Str = uploadEvent.target?.result as string;
+                        if (base64Str) {
+                          setAppIconUrl(base64Str);
+                          setAppIconTipo('CUSTOM_IMAGE');
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+
+                {appIconTipo === 'CUSTOM_IMAGE' && appIconUrl && (
+                  <div className="bg-white p-3 rounded-xl border border-purple-200 flex items-center justify-between gap-3 shadow-2xs animate-in fade-in duration-150">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <img src={appIconUrl} alt="Icona App Caricata" className="w-10 h-10 rounded-xl object-cover bg-slate-900 border border-slate-700 shrink-0 shadow-md" />
+                      <div className="min-w-0">
+                        <span className="text-xs font-black text-slate-800 block truncate">Icona App Personalizzata Attiva</span>
+                        <span className="text-[10px] text-purple-600 font-bold flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3 inline" /> Attiva su Schermata Home, Scheda Browser e Favicon
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => fileAppIconRef.current?.click()}
+                        className="text-[11px] font-bold text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 px-2.5 py-1.5 rounded-lg border border-purple-200 transition cursor-pointer"
+                      >
+                        Sostituisci
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAppIconUrl('');
+                          setAppIconTipo('DEFAULT');
+                          if (fileAppIconRef.current) fileAppIconRef.current.value = '';
+                        }}
+                        className="text-[11px] font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2 py-1.5 rounded-lg border border-rose-200 transition cursor-pointer"
+                        title="Rimuovi Icona Personalizzata"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

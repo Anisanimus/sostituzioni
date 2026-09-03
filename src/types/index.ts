@@ -155,8 +155,12 @@ export interface CalendarioGoogleCustom {
 
 export interface ImpostazioniScuola {
   nomeScuola: string;
+  // 1. Iconcina Intestazione Barra & Menu (Interna)
   logoUrl?: string; // Base64 o URL immagine logo personalizzato
   logoTipo?: 'DEFAULT' | 'CUSTOM_IMAGE' | 'BOOK' | 'GRADUATION' | 'BUILDING' | 'PALETTE' | 'SHIELD';
+  // 2. Icona Principale Applicazione (PWA, Home Screen, Favicon Scheda Browser)
+  appIconUrl?: string; // Base64 o URL icona app
+  appIconTipo?: 'DEFAULT' | 'CUSTOM_IMAGE' | 'SMART_CLOCK' | 'TOGA_SHIELD' | 'SMART_S' | 'CLOCK_TOWER';
   tettoMaxPermessiBreviAnno: number;
   tettoMaxAssembleeSindacaliAnno: number;
   vistaTabellonePredefinita: 'GRUPPI_ORA' | 'PER_DOCENTE';

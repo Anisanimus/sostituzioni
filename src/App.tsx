@@ -110,26 +110,23 @@ const MainApp: React.FC = () => {
     );
   };
 
-  // Helper per generare l'SVG Data URI della favicon in base all'icona scelta
+  // Helper per generare l'SVG Data URI della favicon in base all'Icona App scelta
   const generaFaviconDataUri = (tipo: string): string => {
     let svgBody = '';
-    if (tipo === 'BOOK') {
-      // Icona Libro
-      svgBody = `<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 6h10M6 10h10" stroke="white" stroke-width="2" stroke-linecap="round"/>`;
-    } else if (tipo === 'GRADUATION') {
-      // Icona Laurea / Studio
-      svgBody = `<path d="M22 10v6M2 10l10-5 10 5-10 5z" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 12v5c3 3 9 3 12 0v-5" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
-    } else if (tipo === 'BUILDING') {
-      // Icona Campus / Edificio
-      svgBody = `<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4" stroke="white" stroke-width="2" stroke-linecap="round"/>`;
-    } else if (tipo === 'PALETTE') {
-      // Icona Arte
-      svgBody = `<circle cx="13.5" cy="6.5" r=".5" fill="white"/><circle cx="17.5" cy="10.5" r=".5" fill="white"/><circle cx="8.5" cy="7.5" r=".5" fill="white"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.5-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H17c3.3 0 6-2.7 6-6 0-5.9-4.9-10.6-11-10.6Z" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
-    } else if (tipo === 'SHIELD') {
-      // Icona Stemma
-      svgBody = `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    if (tipo === 'SMART_CLOCK') {
+      // Icona Smart Clock (Orologio con lancette e calendario)
+      svgBody = `<circle cx="12" cy="12" r="9" fill="none" stroke="white" stroke-width="2.2"/><polyline points="12 6 12 12 16 14" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/><path d="M4 4l3 3M20 4l-3 3" stroke="#34d399" stroke-width="2" stroke-linecap="round"/>`;
+    } else if (tipo === 'TOGA_SHIELD') {
+      // Icona Toga & Libro
+      svgBody = `<path d="M22 10v6M2 10l10-5 10 5-10 5z" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 12v5c3 3 9 3 12 0v-5" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    } else if (tipo === 'SMART_S') {
+      // Icona Smart 'S'
+      svgBody = `<path d="M17 3L7 14h6l-2 7 10-11h-6l2-7z" fill="white" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    } else if (tipo === 'CLOCK_TOWER') {
+      // Icona Torre dell'Orologio
+      svgBody = `<path d="M12 2l4 4v16H8V6l4-4z" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="10" r="2" fill="white"/>`;
     } else {
-      // Icona Scuola (Default)
+      // Icona Predefinita (Scuola Moderna)
       svgBody = `<path d="m4 6 8-4 8 4M4 6v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6M4 6l8 4 8-4" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 22v-6h4v6M12 2v4" stroke="white" stroke-width="2.2" stroke-linecap="round"/>`;
     }
 
@@ -137,15 +134,15 @@ const MainApp: React.FC = () => {
     return `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`;
   };
 
-  // Aggiorna dinamicamente favicon e titolo del browser quando cambia il logo o il nome scuola
+  // Aggiorna dinamicamente favicon e titolo del browser quando cambia l'icona app o il nome scuola
   React.useEffect(() => {
     if (impostazioniScuola?.nomeScuola) {
       document.title = impostazioniScuola.nomeScuola;
     }
     
-    const tipo = impostazioniScuola?.logoTipo || 'DEFAULT';
-    const customUrl = impostazioniScuola?.logoUrl;
-    const targetIconUrl = (tipo === 'CUSTOM_IMAGE' && customUrl) ? customUrl : generaFaviconDataUri(tipo);
+    const tipoApp = impostazioniScuola?.appIconTipo || 'DEFAULT';
+    const customAppUrl = impostazioniScuola?.appIconUrl;
+    const targetIconUrl = (tipoApp === 'CUSTOM_IMAGE' && customAppUrl) ? customAppUrl : generaFaviconDataUri(tipoApp);
 
     const favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
     if (favicon) {
@@ -155,7 +152,7 @@ const MainApp: React.FC = () => {
     if (appleIcon) {
       appleIcon.href = targetIconUrl;
     }
-  }, [impostazioniScuola?.nomeScuola, impostazioniScuola?.logoUrl, impostazioniScuola?.logoTipo]);
+  }, [impostazioniScuola?.nomeScuola, impostazioniScuola?.appIconUrl, impostazioniScuola?.appIconTipo]);
 
   const todayStr = new Date().toISOString().split('T')[0];
   const nascondiWeekend = impostazioniScuola?.nascondiWeekendCalendario ?? true;

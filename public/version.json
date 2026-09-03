@@ -1,9 +1,14 @@
 {
-  "version": "1.6.1",
-  "buildTime": "2026-09-03T17:48:00Z",
-  "title": "Novità della Versione 1.6.1",
-  "descrizioneGenerale": "Sostituzione dell'icona a forma di lampo (Favicon scheda del browser) con il logo o l'icona scelta per la scuola.",
+  "version": "1.6.2",
+  "buildTime": "2026-09-03T18:12:00Z",
+  "title": "Novità della Versione 1.6.2",
+  "descrizioneGenerale": "Separazione della personalizzazione in due sezioni distinte: Stemma Intestazione interna e Icona Principale App (PWA/Home).",
   "novita": [
+    {
+      "titolo": "Doppio Controllo Indipendente per Loghi e Icone",
+      "descrizione": "In Vicepresidenza > Personalizzazioni > Intestazione Scuola sono ora presenti due riquadri dedicati: uno per lo stemma interno mostrato sulla barra desktop e nel menu, e uno indipendente per l'icona principale dell'applicazione (utilizzata su Home smartphone, richiesta di installazione, splash screen e favicon della scheda del browser).",
+      "tag": "Personalizzazioni & Brand"
+    },
     {
       "titolo": "Favicon Scheda Browser Dinamica",
       "descrizione": "L'icona a forma di lampo nella scheda del browser (Favicon) si aggiorna ora automaticamente in tempo reale con il logo caricato o con l'icona tematica scelta per la scuola nelle Personalizzazioni.",
