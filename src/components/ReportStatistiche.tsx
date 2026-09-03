@@ -306,10 +306,10 @@ export const ReportStatistiche: React.FC = () => {
         <div>
           <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-indigo-600" />
-            <span>Reportistica & Statistiche Avanzate</span>
+            <span>Bilanci & Report</span>
           </h2>
           <p className="text-xs text-slate-500">
-            Analisi dettagliata di equità sostegni, permessi brevi, assemblee sindacali, uscite e coperture.
+            Bilancio debito/credito ore, equità sostegni, permessi brevi, uscite didattiche e coperture.
           </p>
         </div>
 
