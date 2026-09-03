@@ -7,7 +7,7 @@ import {
   BookOpen, GraduationCap, Accessibility, Users, School, FileDown, 
   Printer, CheckSquare, Square, Check, Filter, ExternalLink, CalendarPlus,
   Scale, ArrowDownUp, TrendingDown, TrendingUp, Megaphone, ChevronDown, ChevronUp,
-  Sliders
+  Sliders, Sparkles, HardDriveDownload
 } from 'lucide-react';
 import { 
   getDocentiCollegatiIds, getDocentiUnici, trovaCorrispondenzaDocente, 
@@ -19,6 +19,7 @@ import {
 import { QuadroSostituzioniScuola } from './QuadroSostituzioniScuola';
 import { VistaCalendariGoogle } from './VistaCalendariGoogle';
 import { GiornoSettimana } from '../types';
+import { CURRENT_APP_VERSION } from '../version';
 
 const GIORNI_SETTIMANA: GiornoSettimana[] = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì'];
 
@@ -596,6 +597,50 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                 <li>Tocca <strong>"Aggiungi alla schermata Home"</strong>.</li>
                 <li>Apri l'app dalla Home e premi <strong>Attiva Notifiche</strong>.</li>
               </ol>
+            </div>
+
+            {/* BOX STATO APPLICAZIONE & AGGIORNAMENTI PWA */}
+            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-3 md:col-span-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-black">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-sm text-slate-900">Versione Applicazione & Cache</h4>
+                    <p className="text-xs text-slate-500">
+                      Versione in uso: <strong className="text-slate-800 font-mono font-bold">v{CURRENT_APP_VERSION.version}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      if ('caches' in window) {
+                        const cacheKeys = await caches.keys();
+                        await Promise.all(cacheKeys.map(k => caches.delete(k)));
+                      }
+                      if ('serviceWorker' in navigator) {
+                        const regs = await navigator.serviceWorker.getRegistrations();
+                        await Promise.all(regs.map(r => r.unregister()));
+                      }
+                      window.location.reload();
+                    } catch (e) {
+                      window.location.reload();
+                    }
+                  }}
+                  className="px-3.5 py-2 rounded-xl text-xs font-black bg-purple-600 hover:bg-purple-700 text-white transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Svuota Cache & Ricarica Ultima Versione</span>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Se l'applicazione non mostra le ultime modifiche o funzioni, premi il pulsante per forzare l'aggiornamento della memoria del tuo dispositivo.
+              </p>
             </div>
           </div>
         </div>

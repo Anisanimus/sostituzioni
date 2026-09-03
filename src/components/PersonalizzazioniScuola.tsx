@@ -10,6 +10,7 @@ import {
 import { DEFAULT_IMPOSTAZIONI_SCUOLA, DEFAULT_IMPOSTAZIONI_PRIORITA } from '../context/AppContext';
 import { formatDataItaliana, MODELLI_EMAIL_PREDEFINITI } from '../utils/docentiHelper';
 import { EventoCalendarioCache } from '../types';
+import { CURRENT_APP_VERSION } from '../version';
 
 export const PersonalizzazioniScuola: React.FC = () => {
   const { 
@@ -3162,6 +3163,51 @@ function doGet(e) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* SEZIONE 9: VERSIONE APPLICAZIONE, AGGIORNAMENTO & PULIZIA CACHE */}
+      <div className="bg-white rounded-2xl shadow-2xs border border-slate-200 overflow-visible transition-all duration-200 mt-4">
+        <div className="p-4 sm:p-5 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-purple-50 text-purple-700 rounded-xl shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-black text-slate-900">Stato Versione Software & PWA</h3>
+                <span className="text-[10px] font-mono font-black bg-purple-100 text-purple-900 px-2 py-0.5 rounded-full">
+                  v{CURRENT_APP_VERSION.version}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Verifica lo stato della build o svuota la cache locale del browser per caricare l'ultimo codice aggiornato.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                if ('caches' in window) {
+                  const cacheKeys = await caches.keys();
+                  await Promise.all(cacheKeys.map(k => caches.delete(k)));
+                }
+                if ('serviceWorker' in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(regs.map(r => r.unregister()));
+                }
+                window.location.reload();
+              } catch (e) {
+                window.location.reload();
+              }
+            }}
+            className="px-4 py-2.5 rounded-xl text-xs font-black bg-purple-600 hover:bg-purple-700 text-white transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Svuota Cache & Forza Aggiornamento PWA</span>
+          </button>
+        </div>
       </div>
     </div>
   );
