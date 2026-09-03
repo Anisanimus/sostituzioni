@@ -1471,13 +1471,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const assegnaSostituzione = (nuovaSostituzione: Omit<SostituzioneAssegnata, 'id'>) => {
     setSostituzioni(prev => {
-      // Se si assegna NON_SOSTITUIRE, sostituisce qualsiasi assegnazione pregressa per quell'ora/classe.
-      // Se si assegna un docente, rimuove l'eventuale 'NON_SOSTITUIRE' o la sostituzione dello stesso docente, ma MANTIENE altri docenti aggiunti come co-sostituti.
+      // Se si assegna NON_SOSTITUIRE o SMISTAMENTO_CLASSE, sostituisce qualsiasi assegnazione pregressa per quell'ora/classe.
+      // Se si assegna un docente, rimuove l'eventuale 'NON_SOSTITUIRE' / 'SMISTAMENTO_CLASSE' o la sostituzione dello stesso docente, ma MANTIENE altri docenti aggiunti come co-sostituti.
       const filtrate = prev.filter(s => {
         const isStessoSlot = s.data === nuovaSostituzione.data && s.ora === nuovaSostituzione.ora && s.classe === nuovaSostituzione.classe;
         if (!isStessoSlot) return true;
-        if (nuovaSostituzione.categoria === 'NON_SOSTITUIRE') return false; // sovrascrive tutto
-        if (s.categoria === 'NON_SOSTITUIRE') return false; // rimpiazza il non sostituire
+        if (nuovaSostituzione.categoria === 'NON_SOSTITUIRE' || nuovaSostituzione.categoria === 'SMISTAMENTO_CLASSE') return false; // sovrascrive tutto
+        if (s.categoria === 'NON_SOSTITUIRE' || s.categoria === 'SMISTAMENTO_CLASSE') return false; // rimpiazza non sostituire o smistamento
         return s.docenteSostitutoId !== nuovaSostituzione.docenteSostitutoId; // permette più docenti diversi
       });
 

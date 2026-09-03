@@ -742,6 +742,27 @@ export const TabelloneSostituzioni: React.FC<{
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
+                              ) : sost.categoria === 'SMISTAMENTO_CLASSE' ? (
+                                <div key={sost.id} className="flex items-center gap-1.5 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1 shadow-2xs text-left">
+                                  <div>
+                                    <div className="font-bold text-[11px] text-amber-950 flex items-center gap-1">
+                                      <span>🔀 Smistamento Classe</span>
+                                    </div>
+                                    <span className="text-[9px] text-amber-800 font-medium block">Alunni divisi nelle altre aule</span>
+                                  </div>
+
+                                  {/* CESTINO ANNULLA SMISTAMENTO */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      rimuoviSostituzione(sost.id);
+                                    }}
+                                    className="text-slate-400 hover:text-rose-600 p-1 hover:bg-rose-50 rounded transition ml-0.5 cursor-pointer"
+                                    title="Annulla 'Smistamento Classe'"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
                               ) : (
                                 <div key={sost.id} className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 shadow-2xs text-left">
                                   <div>
@@ -1026,6 +1047,27 @@ export const TabelloneSostituzioni: React.FC<{
                                     }}
                                     className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition ml-0.5 cursor-pointer"
                                     title="Annulla scelta 'Non Sostituire'"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : sost.categoria === 'SMISTAMENTO_CLASSE' ? (
+                                <div key={sost.id} className="flex items-center gap-1.5 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1 shadow-2xs text-left">
+                                  <div>
+                                    <div className="font-bold text-[11px] text-amber-950 flex items-center gap-1">
+                                      <span>🔀 Smistamento Classe</span>
+                                    </div>
+                                    <span className="text-[9px] text-amber-800 font-medium block">Alunni divisi nelle altre aule</span>
+                                  </div>
+
+                                  {/* CESTINO ANNULLA SMISTAMENTO */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      rimuoviSostituzione(sost.id);
+                                    }}
+                                    className="text-slate-400 hover:text-rose-600 p-1 hover:bg-rose-50 rounded transition ml-0.5 cursor-pointer"
+                                    title="Annulla 'Smistamento Classe'"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -1665,25 +1707,49 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
         {/* CONTENUTO SCORREVOLE CANDIDATI IN ORDINE NORMATIVO */}
         <div className="p-4 overflow-y-auto space-y-4 text-xs flex-1">
 
-          {/* OPZIONE SPECIALE: NON SOSTITUIRE (LASCIA SCOPERTA / SENZA SOSTITUTO) */}
-          <div className="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-300 flex items-center justify-between gap-3 transition">
-            <div className="flex items-center gap-2.5">
-              <span className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">
-                🚫
-              </span>
-              <div>
-                <strong className="text-xs font-bold text-slate-800 block">Non Sostituire</strong>
-                <span className="text-[11px] text-slate-500 block">
-                  Segna l'ora come "Non Sostituita" (la classe non necessita di docente o resta scoperta intenzionalmente)
+          {/* OPZIONE SPECIALE: NON SOSTITUIRE & SMISTAMENTO ALUNNI */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {/* 1. NON SOSTITUIRE */}
+            <div className="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-300 flex items-center justify-between gap-2.5 transition">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">
+                  🚫
                 </span>
+                <div className="min-w-0">
+                  <strong className="text-xs font-bold text-slate-800 block truncate">Non Sostituire</strong>
+                  <span className="text-[10.5px] text-slate-500 block leading-tight truncate">
+                    Nessun docente necessario
+                  </span>
+                </div>
               </div>
+              <button
+                onClick={() => onAssegna('', 'NON_SOSTITUIRE', false, false)}
+                className="bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg transition shrink-0 shadow-xs cursor-pointer"
+              >
+                Non Sostituire
+              </button>
             </div>
-            <button
-              onClick={() => onAssegna('', 'NON_SOSTITUIRE', false, false)}
-              className="bg-slate-700 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg transition shrink-0 shadow-xs"
-            >
-              Non Sostituire
-            </button>
+
+            {/* 2. SMISTAMENTO CLASSE */}
+            <div className="p-3 bg-amber-50/80 hover:bg-amber-100/80 rounded-xl border border-amber-300 flex items-center justify-between gap-2.5 transition">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-7 h-7 rounded-lg bg-amber-200 text-amber-900 flex items-center justify-center font-bold text-sm shrink-0">
+                  🔀
+                </span>
+                <div className="min-w-0">
+                  <strong className="text-xs font-bold text-amber-950 block truncate">Smistamento</strong>
+                  <span className="text-[10.5px] text-amber-800/80 block leading-tight truncate">
+                    Alunni divisi in altre classi
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => onAssegna('', 'SMISTAMENTO_CLASSE', false, false)}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg transition shrink-0 shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+              >
+                Smista Classe
+              </button>
+            </div>
           </div>
           
           {/* SEZIONE COMPRESENTI IN CLASSE */}

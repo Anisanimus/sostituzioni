@@ -26,6 +26,7 @@ export function trovaCandidatiSostituzione(
     RECUPERO_GENERICO: [],
     SOSTEGNO: [],
     STRAORDINARIO_D: [],
+    SMISTAMENTO_CLASSE: [],
     NON_SOSTITUIRE: []
   };
 

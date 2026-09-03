@@ -102,6 +102,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
         pubblicata: boolean;
       }>;
       nonSostituita: boolean;
+      smistata: boolean;
     }> = [];
 
     // 1. Assenze ordinarie & Accompagnatori Uscite
@@ -152,6 +153,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                   (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId)
                 );
                 const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE' && s.pubblicata);
+                const smistata = sosts.some(s => s.categoria === 'SMISTAMENTO_CLASSE' && s.pubblicata);
 
                 items.push({
                   ora,
@@ -161,8 +163,9 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                   motivo: assenza.motivo,
                   isUscita: assenza.motivo === 'Uscita',
                   nonSostituita: nonSost,
+                  smistata: smistata,
                   sostituti: sosts
-                    .filter(s => s.categoria !== 'NON_SOSTITUIRE' && s.pubblicata)
+                    .filter(s => s.categoria !== 'NON_SOSTITUIRE' && s.categoria !== 'SMISTAMENTO_CLASSE' && s.pubblicata)
                     .map(s => {
                       const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
                       return {
@@ -1009,6 +1012,10 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                                       </div>
                                     ))}
                                   </div>
+                                ) : r.smistata ? (
+                                  <span className="inline-block bg-amber-100 text-amber-900 font-bold px-1.5 py-0.2 rounded border border-amber-300 text-[9px] sm:text-[10px]">
+                                    🔀 Smistamento
+                                  </span>
                                 ) : r.nonSostituita ? (
                                   <span className="inline-block bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 rounded border border-slate-200 text-[9px] sm:text-[10px]">
                                     Non Sost.
@@ -1171,6 +1178,10 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                                   </div>
                                 ))}
                               </div>
+                            ) : r.smistata ? (
+                              <span className="bg-amber-100 text-amber-950 border border-amber-300 font-black text-xs px-3 py-1.5 rounded-lg shadow-2xs">
+                                🔀 Smistamento Classe
+                              </span>
                             ) : isNonSost ? (
                               <span className="bg-slate-100 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg border border-slate-300">
                                 🚫 Non Sostituire

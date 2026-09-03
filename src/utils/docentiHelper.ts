@@ -848,5 +848,11 @@ export function getDescrizioneCategoriaSostituto(categoria: string | undefined):
   if (catUpper === 'POTENZIAMENTO') {
     return 'potenziamento';
   }
+  if (catUpper === 'SMISTAMENTO_CLASSE' || catUpper === 'SMISTAMENTO') {
+    return 'smistamento';
+  }
+  if (catUpper === 'NON_SOSTITUIRE') {
+    return 'non sostituita';
+  }
   return categoria.replace(/_/g, ' ').toLowerCase();
 }

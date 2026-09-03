@@ -13,15 +13,15 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.6.7',
-  buildTime: '2026-09-03T20:42:00Z',
-  title: 'Novità della Versione 1.6.7',
-  descrizioneGenerale: 'Notifiche Email Personali ai singoli docenti (Riepilogo Mattutino + Notifiche Istantanee 08:00-17:00) e Banner di avviso.',
+  version: '1.6.8',
+  buildTime: '2026-09-03T20:53:00Z',
+  title: 'Novità della Versione 1.6.8',
+  descrizioneGenerale: 'Opzione Smistamento Alunni nelle proposte di sostituzione e nel tabellone scuola.',
   novita: [
     {
-      titolo: 'Email Personali ai Singoli Docenti',
-      descrizione: 'Configurabile nel tab Personalizzazioni: invio automatico al mattino del riepilogo delle ore assegnate al singolo docente e invio istantaneo in tempo reale tra le 08:00 e le 17:00 in caso di nuove assegnazioni o revoche di supplenza.',
-      tag: 'Notifiche & Email'
+      titolo: 'Opzione "Smistamento Classe"',
+      descrizione: 'Nella finestra di assegnazione della supplenza, a fianco di "Non Sostituire", è ora disponibile la scelta "Smistamento" per indicare che la classe è stata suddivisa nelle altre aule con visualizzazione chiara sia nel Tabellone che nel Quadro Scuola ATA.',
+      tag: 'Organizzazione & Tabellone'
     },
     {
       titolo: 'Banner di Avviso Docenti Senza Email',

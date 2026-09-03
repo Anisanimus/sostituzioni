@@ -1354,6 +1354,11 @@ const CATEGORIE_CONFIG: Record<CategoriaSostituto, { label: string; desc: string
     desc: 'Docenti con ora di disposizione (D) senza debito (assegnazione retribuita).',
     icon: '💶'
   },
+  SMISTAMENTO_CLASSE: {
+    label: 'Smistamento Classe',
+    desc: 'Opzione per indicare che gli alunni sono stati smistati e suddivisi in altre classi.',
+    icon: '🔀'
+  },
   NON_SOSTITUIRE: {
     label: 'Non Sostituire',
     desc: 'Opzione per non assegnare alcun docente (classe lasciata scoperta o senza sostituto).',

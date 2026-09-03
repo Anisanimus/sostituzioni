@@ -139,6 +139,7 @@ export type CategoriaSostituto =
   | 'RECUPERO_GENERICO'
   | 'SOSTEGNO'
   | 'STRAORDINARIO_D'
+  | 'SMISTAMENTO_CLASSE'
   | 'NON_SOSTITUIRE';
 
 export interface ImpostazioniPriorita {
