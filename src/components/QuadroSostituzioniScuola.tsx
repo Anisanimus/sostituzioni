@@ -303,73 +303,81 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
   // SCHERMATA QUADRO GIORNALIERO (AUTENTICATO)
   return (
     <div className="space-y-3 sm:space-y-4 max-w-6xl mx-auto">
-      {/* HEADER DELLA PAGINA CON NAVIGAZIONE DATA, SWITCH VISTA E STAMPA */}
-      <div className="bg-white rounded-2xl p-3.5 sm:p-5 shadow-2xs border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+      {/* HEADER DELLA PAGINA CON NAVIGAZIONE DATA E RICERCA */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="bg-indigo-50 text-indigo-700 font-bold text-[10px] uppercase px-2 py-0.5 rounded-md border border-indigo-100">
-              {impostazioniScuola?.nomeScuola || 'Istituto Scolastico'}
-            </span>
-            <span className="bg-emerald-50 text-emerald-700 font-bold text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-100">
-              <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Area Protetta
-            </span>
-          </div>
-          <h2 className="text-base sm:text-xl font-black text-slate-900 flex items-center gap-2">
+          <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <span>📋 Prospetto Giornaliero Sostituzioni</span>
           </h2>
+          <p className="text-xs text-slate-500 mt-0.5 font-medium">
+            Quadro orario delle assenze e delle supplenze per docenti e personale ATA
+          </p>
         </div>
 
-        {/* CONTROLLI DATA & PULSANTE STAMPA */}
+        {/* CONTROLLI DATA E RICERCA IN EVIDENZA */}
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+          {/* SELETTORE DATA GRANDE CON ICONA CALENDARIO E FRECCE */}
+          <div className="flex items-center bg-slate-100 hover:bg-slate-200/80 p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs transition">
             <button
               type="button"
               onClick={() => cambiaGiorno(-1)}
-              className="p-1.5 hover:bg-white rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer"
+              className="p-2 hover:bg-white active:scale-90 rounded-xl text-slate-700 hover:text-indigo-600 transition cursor-pointer shadow-2xs"
               title="Giorno Precedente"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
 
-            <div className="px-2.5 text-center min-w-[105px]">
-              <span className="block text-xs font-black text-slate-900">{giornoSettimana}</span>
-              <span className="text-[10px] text-slate-500 font-mono">{formatDataItaliana(selectedDate)}</span>
+            <div className="px-3.5 sm:px-4 py-1 flex items-center gap-2.5 min-w-[150px] sm:min-w-[180px] justify-center">
+              <Calendar className="w-5 h-5 text-indigo-600 shrink-0" />
+              <div className="text-left leading-tight">
+                <span className="block text-sm sm:text-base font-black text-slate-900 capitalize">
+                  {giornoSettimana}
+                </span>
+                <span className="text-xs font-bold text-indigo-700 font-mono">
+                  {formatDataItaliana(selectedDate)}
+                </span>
+              </div>
             </div>
 
             <button
               type="button"
               onClick={() => cambiaGiorno(1)}
-              className="p-1.5 hover:bg-white rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer"
+              className="p-2 hover:bg-white active:scale-90 rounded-xl text-slate-700 hover:text-indigo-600 transition cursor-pointer shadow-2xs"
               title="Giorno Successivo"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setSelectedDate(todayStr)}
-              className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition cursor-pointer"
+              className={`px-3.5 py-2 font-black text-xs rounded-2xl border transition cursor-pointer shadow-2xs ${
+                selectedDate === todayStr
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+              }`}
+              title="Torna alla data di oggi"
             >
               Oggi
             </button>
 
-            {/* PULSANTE FILTRO RICERCA DOCENTE (ICON-ONLY DISCRETO) */}
+            {/* PULSANTE FILTRO RICERCA DOCENTE CON LENTE */}
             <button
               type="button"
               onClick={() => {
                 setMostraFiltroDocente(!mostraFiltroDocente);
                 if (mostraFiltroDocente) setRicercaDocente('');
               }}
-              className={`p-2 rounded-xl border transition flex items-center justify-center cursor-pointer ${
+              className={`p-2.5 rounded-2xl border transition flex items-center justify-center cursor-pointer active:scale-95 ${
                 mostraFiltroDocente || ricercaDocente
-                  ? 'bg-indigo-50 text-indigo-700 border-indigo-300 ring-2 ring-indigo-200 shadow-2xs'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                  ? 'bg-indigo-600 text-white border-indigo-600 ring-2 ring-indigo-200 shadow-md'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 shadow-2xs'
               }`}
-              title="Filtra per Docente"
+              title="Cerca e filtra per Docente o Sostituto"
             >
-              <Search className="w-4 h-4" />
+              <Search className="w-5 h-5" />
             </button>
           </div>
         </div>
