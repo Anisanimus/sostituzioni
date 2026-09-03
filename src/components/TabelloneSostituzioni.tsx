@@ -970,25 +970,21 @@ export const TabelloneSostituzioni: React.FC<{
                           : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50/80 shadow-2xs'
                       }`}
                     >
-                      {/* Ora e Classe */}
-                      <div className="flex items-center gap-3">
-                        <span className="bg-indigo-100 text-indigo-950 border border-indigo-200 font-black text-xs px-2.5 py-1.5 rounded-lg shrink-0 shadow-2xs">
-                          {os.ora}ª ORA
-                        </span>
-                        
-                        <div className={`w-11 h-9 rounded-lg flex items-center justify-center font-black text-sm border shadow-2xs shrink-0 ${
-                          sosts.length > 0 ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-amber-50 text-amber-900 border-amber-300'
-                        }`}>
-                          {os.classe}
+                      {/* Pillola Unica Fusa Compatta: Ora • Classe | Materia */}
+                      <div className="flex items-center gap-2.5">
+                        <div className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 shadow-2xs overflow-hidden shrink-0">
+                          <span className="bg-indigo-600 text-white font-black text-xs px-2 py-1">
+                            {os.ora}ª • {os.classe}
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-700 px-2 py-1 uppercase bg-white">
+                            {os.docenteAssente.materia}
+                          </span>
                         </div>
 
                         <div>
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 uppercase">
-                              {os.docenteAssente.materia}
-                            </span>
                             {isGraveSostegno && (
-                              <span className="bg-rose-600 text-white font-black px-1.5 py-0.2 rounded text-[9px] flex items-center gap-0.5">
+                              <span className="bg-rose-600 text-white font-black px-1.5 py-0.5 rounded text-[9px] flex items-center gap-0.5 shadow-2xs">
                                 <span>♿</span> GRAVE
                               </span>
                             )}

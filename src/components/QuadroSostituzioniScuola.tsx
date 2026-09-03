@@ -1124,23 +1124,19 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                           key={idx}
                           className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition hover:border-indigo-300"
                         >
-                          {/* Ora, Classe e Dettaglio Materia */}
-                          <div className="flex items-center gap-3">
-                            <span className="bg-indigo-100 text-indigo-950 border border-indigo-200 font-black text-xs px-2.5 py-1.5 rounded-lg shrink-0 shadow-2xs">
-                              {r.ora}ª ORA
-                            </span>
-                            
-                            <div className={`w-11 h-9 rounded-lg flex items-center justify-center font-black text-sm border shadow-2xs shrink-0 ${
-                              isAssegnata ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-amber-50 text-amber-900 border-amber-300'
-                            }`}>
-                              {r.classe}
+                          {/* Pillola Unica Fusa Compatta: Ora • Classe | Materia */}
+                          <div className="flex items-center gap-2.5">
+                            <div className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 shadow-2xs overflow-hidden shrink-0">
+                              <span className="bg-indigo-600 text-white font-black text-xs px-2 py-1">
+                                {r.ora}ª • {r.classe}
+                              </span>
+                              <span className="text-[11px] font-bold text-slate-700 px-2 py-1 uppercase bg-white">
+                                {r.materia}
+                              </span>
                             </div>
 
                             <div className="leading-tight">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="bg-indigo-50 text-indigo-700 text-[11px] font-bold px-2 py-0.5 rounded-md border border-indigo-100 uppercase">
-                                  {r.materia}
-                                </span>
                                 {/* REMIND EDUCATORE IN COMPRESENZA */}
                                 {(() => {
                                   const eds = getEducatoriInClasseNellOra(r.classe, giornoSettimana as any, r.ora, docenti, orariDocenti);
