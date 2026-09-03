@@ -1,4 +1,4 @@
-const SW_VERSION = 'sw_v_1725283750';
+const SW_VERSION = 'sw_v_1725355200_force_update';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
