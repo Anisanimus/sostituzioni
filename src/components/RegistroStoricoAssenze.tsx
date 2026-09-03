@@ -19,10 +19,14 @@ export const RegistroStoricoAssenze: React.FC = () => {
     annullaAssenza, 
     eliminaDefinitivamenteAssenza, 
     nomineSupplenti,
-    rimuoviNominaSupplente
+    rimuoviNominaSupplente,
+    azzeraTuttoStoricoEMovimenti
   } = useApp();
 
   const [assenzaDaAnnullareConferma, setAssenzaDaAnnullareConferma] = useState<AssenzaDocente | null>(null);
+  const [mostraModaleAzzeraTutto, setMostraModaleAzzeraTutto] = useState<boolean>(false);
+  const [confermaTestuale, setConfermaTestuale] = useState<string>('');
+  const [inCorsoAzzeramento, setInCorsoAzzeramento] = useState<boolean>(false);
 
   // Sottomenu interno Registro Storico a 3 sezioni logiche:
   // 1. Sostituzioni & Firme (operativo con firme e assenze)
@@ -165,39 +169,55 @@ export const RegistroStoricoAssenze: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl flex-wrap">
-          <button
-            onClick={() => setSottoTab('SOSTITUZIONI_FIRME')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-              sottoTab === 'SOSTITUZIONI_FIRME'
-                ? 'bg-white text-indigo-700 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Calendar className="w-3.5 h-3.5" />
-            <span>1. Sostituzioni & Firme</span>
-          </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl flex-wrap">
+            <button
+              onClick={() => setSottoTab('SOSTITUZIONI_FIRME')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                sottoTab === 'SOSTITUZIONI_FIRME'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>1. Sostituzioni & Firme</span>
+            </button>
 
-          <button
-            onClick={() => setSottoTab('USCITE_GITE')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-              sottoTab === 'USCITE_GITE'
-                ? 'bg-white text-indigo-700 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>🚌 2. Uscite Didattiche & Gite ({uscite.length})</span>
-          </button>
+            <button
+              onClick={() => setSottoTab('USCITE_GITE')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                sottoTab === 'USCITE_GITE'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span>🚌 2. Uscite Didattiche & Gite ({uscite.length})</span>
+            </button>
 
+            <button
+              onClick={() => setSottoTab('NOMINE_SUPPLENTI')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                sottoTab === 'NOMINE_SUPPLENTI'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span>🧑‍🏫 3. Nomine Supplenti Cattedra ({(nomineSupplenti || []).length})</span>
+            </button>
+          </div>
+
+          {/* PULSANTE AZZERA DATI STORICI & MOVIMENTI */}
           <button
-            onClick={() => setSottoTab('NOMINE_SUPPLENTI')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-              sottoTab === 'NOMINE_SUPPLENTI'
-                ? 'bg-white text-indigo-700 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
+            type="button"
+            onClick={() => {
+              setConfermaTestuale('');
+              setMostraModaleAzzeraTutto(true);
+            }}
+            className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-900 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            title="Azzera tutto lo storico delle assenze, supplenze, firme e movimenti di credito/debito"
           >
-            <span>🧑‍🏫 3. Nomine Supplenti Cattedra ({(nomineSupplenti || []).length})</span>
+            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+            <span>Azzera Dati Storici</span>
           </button>
         </div>
       </div>
@@ -681,6 +701,110 @@ export const RegistroStoricoAssenze: React.FC = () => {
           </div>
         );
       })()}
+
+      {/* ========================================================= */}
+      {/* MODALE DI SICUREZZA PER AZZERAMENTO COMPLETO DATI STORICI */}
+      {/* ========================================================= */}
+      {mostraModaleAzzeraTutto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-rose-200 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
+            
+            {/* Header Modale */}
+            <div className="bg-gradient-to-r from-rose-600 to-rose-700 text-white p-5 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/20 rounded-2xl backdrop-blur-md">
+                  <AlertTriangle className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">Azzeramento Dati Storici</h3>
+                  <p className="text-xs text-rose-100">Operazione irreversibile di pulizia dati</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMostraModaleAzzeraTutto(false)}
+                className="p-1.5 rounded-xl text-white/80 hover:text-white hover:bg-white/20 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Contenuto & Dettagli */}
+            <div className="p-6 space-y-4 text-xs">
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl space-y-2 text-rose-950">
+                <p className="font-bold">
+                  ⚠️ Questa azione effettuerà la pulizia completa dei seguenti dati:
+                </p>
+                <ul className="list-disc pl-5 space-y-1 text-slate-700 font-medium text-[11px]">
+                  <li><strong>Tutte le Assenze registrate</strong> (giornaliere, orarie, visite, 104)</li>
+                  <li><strong>Tutte le Assemblee Sindacali</strong> e le ore cumulate</li>
+                  <li><strong>Tutte le Sostituzioni e le Firme digitali</strong> per presa visione</li>
+                  <li><strong>Tutte le Uscite Didattiche e Gite</strong> registrate</li>
+                  <li><strong>Tutti i Movimenti di Debito/Credito e Storni</strong></li>
+                  <li><strong>Azzeramento debito residuo</strong> su tutti i docenti dell'organico</li>
+                </ul>
+              </div>
+
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-[11px] text-emerald-900 font-medium">
+                ✅ <strong>Cosa NON verrà cancellato:</strong> l'Anagrafica dei Docenti, l'Orario Scolastico Settimanale e le Personalizzazioni della Scuola rimarranno completamente intatti.
+              </div>
+
+              {/* Input di Conferma di Sicurezza */}
+              <div className="space-y-1.5 pt-2">
+                <label className="block text-slate-700 font-bold text-xs">
+                  Per confermare, digita <span className="font-mono text-rose-600 font-black tracking-wider bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">AZZERA</span> nel campo sottostante:
+                </label>
+                <input
+                  type="text"
+                  value={confermaTestuale}
+                  onChange={(e) => setConfermaTestuale(e.target.value.toUpperCase())}
+                  placeholder="AZZERA"
+                  className="w-full text-center tracking-widest font-mono font-black text-sm bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+                />
+              </div>
+            </div>
+
+            {/* Footer Azioni */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                disabled={inCorsoAzzeramento}
+                onClick={() => setMostraModaleAzzeraTutto(false)}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-200/70 transition cursor-pointer"
+              >
+                Annulla
+              </button>
+
+              <button
+                type="button"
+                disabled={confermaTestuale.trim() !== 'AZZERA' || inCorsoAzzeramento}
+                onClick={async () => {
+                  if (confermaTestuale.trim() !== 'AZZERA') return;
+                  setInCorsoAzzeramento(true);
+                  try {
+                    await azzeraTuttoStoricoEMovimenti();
+                    setMostraModaleAzzeraTutto(false);
+                    alert("✅ Dati storici, assenze, supplenze e movimenti di credito/debito azzerati con successo!");
+                  } catch (e) {
+                    alert("Errore durante l'azzeramento dei dati.");
+                  } finally {
+                    setInCorsoAzzeramento(false);
+                  }
+                }}
+                className={`px-5 py-2.5 rounded-xl text-xs font-black shadow-md flex items-center gap-2 transition cursor-pointer ${
+                  confermaTestuale.trim() === 'AZZERA' && !inCorsoAzzeramento
+                    ? 'bg-rose-600 hover:bg-rose-700 text-white hover:scale-105 active:scale-95'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>{inCorsoAzzeramento ? 'Azzeramento in corso...' : 'Conferma e Azzera Tutto'}</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

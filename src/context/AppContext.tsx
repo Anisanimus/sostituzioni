@@ -113,6 +113,7 @@ interface AppContextType {
   updateOrarioDocente: (docenteId: string, nuoveOre: any[]) => void;
   modificaDebitoManuale: (docenteId: string, deltaOre: number, descrizione: string) => void;
   modificaCreditoManuale: (docenteId: string, deltaOre: number, descrizione: string) => void;
+  azzeraTuttoStoricoEMovimenti: () => Promise<void>;
   resetOrarioPredefinito: () => void;
   azzeraDocentiEOrario: () => void;
   importaNuovoOrarioCompleto: (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => void;
@@ -2056,6 +2057,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const azzeraTuttoStoricoEMovimenti = async () => {
+    // 1. Azzera il debito orario su tutti i docenti dell'organico (mantenendo orario e anagrafica intatti)
+    const docentiPuliti = docenti.map(d => ({
+      ...d,
+      oreDebitoPermesso: 0
+    }));
+
+    setDocenti(docentiPuliti);
+    setAssenze([]);
+    setUscite([]);
+    setSostituzioni([]);
+    setMovimentiDebito([]);
+    setNotifiche([]);
+
+    // 2. Aggiorna immediatamente localStorage
+    try {
+      localStorage.setItem('scuola_docenti', JSON.stringify(docentiPuliti));
+      localStorage.setItem('scuola_assenze', JSON.stringify([]));
+      localStorage.setItem('scuola_uscite', JSON.stringify([]));
+      localStorage.setItem('scuola_sostituzioni', JSON.stringify([]));
+      localStorage.setItem('scuola_movimenti_debito', JSON.stringify([]));
+      localStorage.setItem('scuola_notifiche', JSON.stringify([]));
+
+      // 3. Sincronizza su Cloud Firestore
+      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
+      await setDoc(scuolaDocRef, {
+        docenti: docentiPuliti,
+        assenze: [],
+        uscite: [],
+        sostituzioni: [],
+        movimentiDebito: [],
+        notifiche: [],
+        ultimoAggiornamento: new Date().toISOString()
+      }, { merge: true });
+
+      console.log('✅ Storico assenze, supplenze, firme e movimenti debito/credito azzerati con successo!');
+    } catch (e) {
+      console.error('Errore azzeramento storico su Cloud:', e);
+    }
+  };
+
   const azzeraDocentiEOrario = async () => {
     setDocenti([]);
     setOrariDocenti([]);
@@ -2299,6 +2341,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updateOrarioDocente,
       modificaDebitoManuale,
       modificaCreditoManuale,
+      azzeraTuttoStoricoEMovimenti,
       resetOrarioPredefinito,
       azzeraDocentiEOrario,
       importaNuovoOrarioCompleto,

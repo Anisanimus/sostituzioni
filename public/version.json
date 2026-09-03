@@ -1,9 +1,14 @@
 {
-  "version": "1.6.4",
-  "buildTime": "2026-09-03T18:37:00Z",
-  "title": "Novità della Versione 1.6.4",
-  "descrizioneGenerale": "Risoluzione aggiornamento icona Home Smartphone (Apple Touch Icon & Web App Manifest PNG ad alta risoluzione).",
+  "version": "1.6.5",
+  "buildTime": "2026-09-03T19:02:00Z",
+  "title": "Novità della Versione 1.6.5",
+  "descrizioneGenerale": "Pulsante di sicurezza \"Azzera Dati Storici\" aggiunto nel Registro Storico della Vicepresidenza.",
   "novita": [
+    {
+      "titolo": "Azzera Dati Storici & Movimenti (Registro Storico)",
+      "descrizione": "In Vicepresidenza > Registro Storico è ora disponibile il pulsante \"Azzera Dati Storici\" protetto da modale di conferma con digitazione obbligatoria (AZZERA). Consente di resettare tutte le assenze, supplenze, uscite, ore sindacali e movimenti di credito/debito, mantenendo intatti l'organico docenti, l'orario scolastico e le personalizzazioni.",
+      "tag": "Registro Storico & Sicurezza"
+    },
     {
       "titolo": "Icone PNG Native per iPhone e Android (Home Screen)",
       "descrizione": "Generati e collegati i file PNG nativi ad alta risoluzione (apple-touch-icon 180x180, icon-192 e icon-512 nel manifest PWA) per garantire la corretta visualizzazione della nuova icona ufficiale con Scuola & Orologio su tutti gli smartphone iOS e Android.",
