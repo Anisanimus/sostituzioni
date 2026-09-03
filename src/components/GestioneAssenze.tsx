@@ -82,10 +82,13 @@ export const GestioneAssenze: React.FC<{
     setDataDocente(selectedDate);
     setDataDocenteFine(selectedDate);
     setDataGita(selectedDate);
+    setDataGitaFine(selectedDate);
   }, [selectedDate]);
 
   // --- STATO GITA / USCITA ---
   const [dataGita, setDataGita] = useState<string>(selectedDate);
+  const [dataGitaFine, setDataGitaFine] = useState<string>(selectedDate);
+  const [isGitaPeriodo, setIsGitaPeriodo] = useState<boolean>(false);
   const [titoloMeta, setTitoloMeta] = useState('');
   const [classiSelezionate, setClassiSelezionate] = useState<string[]>([]);
   const [tipoDurataGita, setTipoDurataGita] = useState<'GIORNALIERA' | 'ORARIA'>('GIORNALIERA');
@@ -285,31 +288,35 @@ export const GestioneAssenze: React.FC<{
     });
   };
 
-  // Salvataggio Gita con Accompagnatori Atomico
+  // Salvataggio Gita con Accompagnatori Atomico (Supporto Singolo Giorno o Più Giorni / Soggiorni)
   const handleSalvaGita = (e: React.FormEvent) => {
     e.preventDefault();
     if (classiSelezionate.length === 0) return;
 
     const oreInteressate = calcolaOreLezione(tipoDurataGita, oraInizioGita, oraFineGita);
     const metaFormatted = titoloMeta.trim() || 'Uscita Didattica / Gita';
-    const targetGiorno = getGiornoFromDate(dataGita);
+    const dates = isGitaPeriodo ? getDatesInRange(dataGita, dataGitaFine) : [dataGita];
 
-    addUscitaConAccompagnatori({
-      data: dataGita,
-      giorno: targetGiorno,
-      titoloMeta: metaFormatted,
-      classi: classiSelezionate,
-      oraInizio: tipoDurataGita === 'ORARIA' ? oraInizioGita : 8,
-      oraFine: tipoDurataGita === 'ORARIA' ? oraFineGita : 14,
-      ore: oreInteressate,
-      docentiAccompagnatoriIds: accompagnatoriIds,
-      note: tipoDurataGita === 'ORARIA' ? `${oraInizioGita}:00 - ${oraFineGita}:00` : 'Intera Giornata'
+    dates.forEach(dStr => {
+      const targetGiorno = getGiornoFromDate(dStr);
+      addUscitaConAccompagnatori({
+        data: dStr,
+        giorno: targetGiorno,
+        titoloMeta: metaFormatted,
+        classi: classiSelezionate,
+        oraInizio: tipoDurataGita === 'ORARIA' ? oraInizioGita : 8,
+        oraFine: tipoDurataGita === 'ORARIA' ? oraFineGita : 14,
+        ore: oreInteressate,
+        docentiAccompagnatoriIds: accompagnatoriIds,
+        note: tipoDurataGita === 'ORARIA' ? `${oraInizioGita}:00 - ${oraFineGita}:00` : (isGitaPeriodo ? `Soggiorno / Gita (${formatDataItaliana(dataGita)} - ${formatDataItaliana(dataGitaFine)})` : 'Intera Giornata')
+      });
     });
 
     setTitoloMeta('');
     setClassiSelezionate([]);
     setAccompagnatoriIds([]);
     setIsDropdownAccompagnatoriOpen(false);
+    setIsGitaPeriodo(false);
     setModalitaAperta(null);
   };
 
@@ -943,24 +950,63 @@ export const GestioneAssenze: React.FC<{
           </div>
 
           <form onSubmit={handleSalvaGita} className="space-y-3">
-            {/* RIGA 1: DATA + TITOLO/META */}
+            {/* RIGA 1: DATA (O PERIODO) + TITOLO/META */}
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-              <div className="sm:grid-cols-4">
-                <label className="block text-[10px] font-black text-slate-700 uppercase mb-1">Data Gita</label>
-                <input
-                  type="date"
-                  value={dataGita}
-                  onChange={(e) => setDataGita(e.target.value)}
-                  required
-                  className="w-full border border-slate-300 rounded-xl p-2 text-xs font-bold bg-white text-slate-900 outline-none focus:border-amber-500 shadow-2xs"
-                />
+              <div className="sm:col-span-5 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[10px] font-black text-slate-700 uppercase">
+                    {isGitaPeriodo ? 'Data Inizio Soggiorno' : 'Data Gita'}
+                  </label>
+                  <label className="flex items-center gap-1 text-[10px] font-bold text-amber-900 cursor-pointer bg-amber-100/80 px-2 py-0.5 rounded-md hover:bg-amber-200/80 transition">
+                    <input
+                      type="checkbox"
+                      checked={isGitaPeriodo}
+                      onChange={(e) => {
+                        setIsGitaPeriodo(e.target.checked);
+                        if (!e.target.checked) setDataGitaFine(dataGita);
+                        else if (dataGitaFine < dataGita) setDataGitaFine(dataGita);
+                      }}
+                      className="rounded text-amber-600 focus:ring-0"
+                    />
+                    <span>Più giorni / Soggiorno</span>
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <input
+                      type="date"
+                      value={dataGita}
+                      onChange={(e) => {
+                        setDataGita(e.target.value);
+                        if (dataGitaFine < e.target.value) setDataGitaFine(e.target.value);
+                      }}
+                      required
+                      className="w-full border border-slate-300 rounded-xl p-2 text-xs font-bold bg-white text-slate-900 outline-none focus:border-amber-500 shadow-2xs"
+                    />
+                  </div>
+
+                  {isGitaPeriodo && (
+                    <div className="animate-in fade-in duration-150">
+                      <input
+                        type="date"
+                        value={dataGitaFine}
+                        min={dataGita}
+                        onChange={(e) => setDataGitaFine(e.target.value)}
+                        required
+                        title="Data Fine Soggiorno"
+                        className="w-full border border-amber-300 rounded-xl p-2 text-xs font-bold bg-amber-50/50 text-slate-900 outline-none focus:border-amber-500 shadow-2xs"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="sm:grid-cols-8">
+              <div className={isGitaPeriodo ? "sm:col-span-7" : "sm:col-span-7"}>
                 <label className="block text-[10px] font-black text-slate-700 uppercase mb-1">Titolo / Destinazione</label>
                 <input
                   type="text"
-                  placeholder="Es: Visita Museo della Scienza, Teatro, ecc."
+                  placeholder="Es: Viaggio d'Istruzione Roma, Soggiorno Neve, Museo, ecc."
                   value={titoloMeta}
                   onChange={(e) => setTitoloMeta(e.target.value)}
                   className="w-full border border-slate-300 rounded-xl p-2 text-xs bg-white text-slate-900 placeholder:text-slate-400 outline-none focus:border-amber-500 shadow-2xs"
