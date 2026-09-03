@@ -84,14 +84,21 @@ export const PersonalizzazioniScuola: React.FC = () => {
     });
   };
 
-  // Gestione Notifiche Email Gruppo Docenti
+  // Gestione Notifiche Email Gruppo Docenti & Singolo Docente
   const cfgEmail = impostazioniScuola.notificheEmailGruppo;
+  const cfgEmailSingolo = impostazioniScuola.notificheEmailDocenteSingolo;
   const [mailGruppoAbilitato, setMailGruppoAbilitato] = useState(cfgEmail?.abilitato ?? false);
   const [mailGruppoIndirizzo, setMailGruppoIndirizzo] = useState(cfgEmail?.emailGruppo || '');
   const [mailGruppoOrario, setMailGruppoOrario] = useState(cfgEmail?.orarioInvio || '07:45');
   const [mailGruppoOggetto, setMailGruppoOggetto] = useState(cfgEmail?.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta');
   const [mailGruppoCorpo, setMailGruppoCorpo] = useState(cfgEmail?.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`);
   const [mailGruppoWebhookUrl, setMailGruppoWebhookUrl] = useState(cfgEmail?.webhookAppScriptUrl || '');
+  
+  // Email personali al singolo docente
+  const [mailDocenteSingoloAbilitato, setMailDocenteSingoloAbilitato] = useState(cfgEmailSingolo?.abilitato ?? false);
+  const [mailDocenteSingoloRiepilogo, setMailDocenteSingoloRiepilogo] = useState(cfgEmailSingolo?.inviaRiepilogoMattino ?? true);
+  const [mailDocenteSingoloIstantanee, setMailDocenteSingoloIstantanee] = useState(cfgEmailSingolo?.inviaIstantaneeOrarioLavoro ?? true);
+
   const [statoInvioTestMail, setStatoInvioTestMail] = useState<'IDLE' | 'INVIANDO' | 'SUCCESSO' | 'ERRORE'>('IDLE');
   const [messaggioInvioTestMail, setMessaggioInvioTestMail] = useState<string>('');
 
@@ -155,6 +162,13 @@ export const PersonalizzazioniScuola: React.FC = () => {
         setMailGruppoOggetto(emailCfg.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta');
         setMailGruppoCorpo(emailCfg.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`);
         setMailGruppoWebhookUrl(emailCfg.webhookAppScriptUrl || '');
+      }
+
+      const emailSingoloCfg = impostazioniScuola.notificheEmailDocenteSingolo;
+      if (emailSingoloCfg) {
+        setMailDocenteSingoloAbilitato(emailSingoloCfg.abilitato ?? false);
+        setMailDocenteSingoloRiepilogo(emailSingoloCfg.inviaRiepilogoMattino ?? true);
+        setMailDocenteSingoloIstantanee(emailSingoloCfg.inviaIstantaneeOrarioLavoro ?? true);
       }
 
       const calCfg = impostazioniScuola.calendariGoogle;
@@ -281,6 +295,11 @@ export const PersonalizzazioniScuola: React.FC = () => {
         corpoMessaggio: mailGruppoCorpo.trim(),
         webhookAppScriptUrl: mailGruppoWebhookUrl.trim(),
         ultimoInvioData: impostazioniScuola.notificheEmailGruppo?.ultimoInvioData || ''
+      },
+      notificheEmailDocenteSingolo: {
+        abilitato: Boolean(mailDocenteSingoloAbilitato),
+        inviaRiepilogoMattino: Boolean(mailDocenteSingoloRiepilogo),
+        inviaIstantaneeOrarioLavoro: Boolean(mailDocenteSingoloIstantanee)
       },
       calendariGoogle: {
         impegni: calImpegniList.filter(c => c.nome.trim() || c.googleId.trim()),
@@ -1887,14 +1906,14 @@ export const PersonalizzazioniScuola: React.FC = () => {
               )}
 
               <div className="space-y-4 pt-1">
-                {/* TOGGLE ABILITAZIONE */}
+                {/* TOGGLE ABILITAZIONE INVIO GRUPPO */}
                 <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between">
                   <div>
                     <span className="block text-xs font-black text-slate-900">
-                      Abilita Invio Automatico Promemoria Giornaliero
+                      1. Abilita Invio Automatico Promemoria a Gruppo / Mailing List
                     </span>
                     <span className="text-[11px] text-slate-500">
-                      Invia una notifica email all'orario stabilito con il promemoria e il link per firmare sul portale.
+                      Invia una notifica email all'indirizzo collettivo con il riepilogo generale del tabellone.
                     </span>
                   </div>
                   <input
@@ -1903,6 +1922,61 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     onChange={(e) => setMailGruppoAbilitato(e.target.checked)}
                     className="w-5 h-5 text-indigo-600 rounded-lg border-slate-300 focus:ring-indigo-500 cursor-pointer"
                   />
+                </div>
+
+                {/* TOGGLE ABILITAZIONE EMAIL PERSONALI SINGOLO DOCENTE */}
+                <div className="p-4 rounded-2xl border border-indigo-200 bg-indigo-50/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="block text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                        <span>👤 2. Email Personali Dirette al Singolo Docente</span>
+                        <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">Novità</span>
+                      </span>
+                      <span className="text-[11px] text-indigo-900/80">
+                        Invia notifiche email direttamente all'indirizzo istituzionale di ciascun docente assegnatario di supplenza.
+                      </span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={mailDocenteSingoloAbilitato}
+                      onChange={(e) => setMailDocenteSingoloAbilitato(e.target.checked)}
+                      className="w-5 h-5 text-indigo-600 rounded-lg border-indigo-300 focus:ring-indigo-500 cursor-pointer"
+                    />
+                  </div>
+
+                  {mailDocenteSingoloAbilitato && (
+                    <div className="pt-2 border-t border-indigo-100 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-150">
+                      <label className="p-3 bg-white rounded-xl border border-indigo-100 flex items-start gap-2.5 cursor-pointer hover:bg-indigo-50/40 transition">
+                        <input
+                          type="checkbox"
+                          checked={mailDocenteSingoloRiepilogo}
+                          onChange={(e) => setMailDocenteSingoloRiepilogo(e.target.checked)}
+                          className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                        />
+                        <div>
+                          <strong className="block text-xs text-slate-800 font-bold">🌅 Riepilogo Mattutino</strong>
+                          <span className="text-[11px] text-slate-500 leading-tight block">
+                            Invia al mattino a ciascun docente l'elenco delle ore di supplenza a lui assegnate per la giornata.
+                          </span>
+                        </div>
+                      </label>
+
+                      <label className="p-3 bg-white rounded-xl border border-indigo-100 flex items-start gap-2.5 cursor-pointer hover:bg-indigo-50/40 transition">
+                        <input
+                          type="checkbox"
+                          checked={mailDocenteSingoloIstantanee}
+                          onChange={(e) => setMailDocenteSingoloIstantanee(e.target.checked)}
+                          className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                        />
+                        <div>
+                          <strong className="block text-xs text-slate-800 font-bold">⚡ Notifica Istantanea (08:00 – 17:00)</strong>
+                          <span className="text-[11px] text-slate-500 leading-tight block">
+                            Invia immediatamente un'email se durante l'orario scolastico viene assegnata o revocata una supplenza.
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -1,13 +1,18 @@
 {
-  "version": "1.6.6",
-  "buildTime": "2026-09-03T20:05:00Z",
-  "title": "Novità della Versione 1.6.6",
-  "descrizioneGenerale": "Icona dell'applicazione a pieno schermo (Full-bleed) senza cornice nera/scura esterna.",
+  "version": "1.6.7",
+  "buildTime": "2026-09-03T20:42:00Z",
+  "title": "Novità della Versione 1.6.7",
+  "descrizioneGenerale": "Notifiche Email Personali ai singoli docenti (Riepilogo Mattutino + Notifiche Istantanee 08:00-17:00) e Banner di avviso.",
   "novita": [
     {
-      "titolo": "Icona App Full-Bleed (Senza Bordo Scuro)",
-      "descrizione": "Rimossa la cornice scura esterna: lo sfondo con sfumatura blu indaco e verde smeraldo ora riempie interamente l'icona dell'applicazione sia su iPhone/iPad che su dispositivi Android.",
-      "tag": "Icona & Design"
+      "titolo": "Email Personali ai Singoli Docenti",
+      "descrizione": "Configurabile nel tab Personalizzazioni: invio automatico al mattino del riepilogo delle ore assegnate al singolo docente e invio istantaneo in tempo reale tra le 08:00 e le 17:00 in caso di nuove assegnazioni o revoche di supplenza.",
+      "tag": "Notifiche & Email"
+    },
+    {
+      "titolo": "Banner di Avviso Docenti Senza Email",
+      "descrizione": "Se le notifiche email personali sono attive e uno o più docenti in supplenza oggi non hanno un indirizzo email memorizzato, appare un banner in alto nel tabellone con pulsante diretto per compilare l'anagrafica.",
+      "tag": "Vicepresidenza & Sicurezza"
     },
     {
       "titolo": "Azzera Dati Storici & Movimenti (Registro Storico)",

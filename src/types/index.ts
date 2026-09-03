@@ -178,6 +178,11 @@ export interface ImpostazioniScuola {
     webhookAppScriptUrl?: string; // URL Webhook Google Apps Script (per invio 100% invisibile da server Google)
     ultimoInvioData?: string;     // YYYY-MM-DD
   };
+  notificheEmailDocenteSingolo?: {
+    abilitato: boolean;           // Abilita invio email personale ai docenti supplenti
+    inviaRiepilogoMattino: boolean; // Invio al mattino (orario invio gruppo o personalizzato)
+    inviaIstantaneeOrarioLavoro: boolean; // Invio istantaneo tra le 08:00 e le 17:00 per nuove assegnazioni o revoche
+  };
   calendariGoogle?: {
     // Liste dinamiche generiche
     impegni?: CalendarioGoogleCustom[];

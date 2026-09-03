@@ -125,6 +125,11 @@ interface AppContextType {
     corpoOverride?: string,
     webhookOverride?: string
   ) => Promise<{ successo: boolean; modalita: 'APPS_SCRIPT' | 'MAILTO'; messaggio: string }>;
+  inviaEmailDocenteSingolo: (
+    docenteId: string,
+    oggetto: string,
+    corpo: string
+  ) => Promise<{ successo: boolean; modalita: 'APPS_SCRIPT' | 'MAILTO' | 'EMAIL_MANCANTE'; messaggio: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -759,24 +764,66 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { successo: true, modalita: 'MAILTO', messaggio: 'Apertura client di posta completata.' };
   };
 
-  // Timer di verifica automatica dell'orario per invio email a gruppo (con ref per evitare loop di re-render)
+  // Funzione per inviare email personale a un singolo docente
+  const inviaEmailDocenteSingolo = async (
+    docenteId: string,
+    oggetto: string,
+    corpo: string
+  ): Promise<{ successo: boolean; modalita: 'APPS_SCRIPT' | 'MAILTO' | 'EMAIL_MANCANTE'; messaggio: string }> => {
+    const d = docentiRef.current.find(doc => doc.id === docenteId);
+    const emailDest = d?.email?.trim();
+    if (!emailDest) {
+      return { successo: false, modalita: 'EMAIL_MANCANTE', messaggio: `Nessuna email associata al docente ${d ? d.nome : docenteId}` };
+    }
+
+    const cfgGruppo = impostazioniScuolaRef.current?.notificheEmailGruppo;
+    const webhookUrl = cfgGruppo?.webhookAppScriptUrl || '';
+
+    if (webhookUrl && webhookUrl.trim().startsWith('http')) {
+      try {
+        await fetch(webhookUrl.trim(), {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            destinatario: emailDest,
+            oggetto: oggetto,
+            messaggio: corpo,
+            corpo: corpo,
+            timestamp: new Date().toISOString()
+          })
+        });
+        return { successo: true, modalita: 'APPS_SCRIPT', messaggio: `Email inviata a ${emailDest} tramite Google Apps Script` };
+      } catch (err: any) {
+        console.warn('Errore invio via Google Apps Script per docente singolo:', err);
+      }
+    }
+
+    // Se non c'è webhook o fallisce, in background non apriamo popup intrusivi ma segnaliamo
+    return { successo: false, modalita: 'APPS_SCRIPT', messaggio: 'Webhook Apps Script non configurato per invio automatico' };
+  };
+
+  // Timer di verifica automatica dell'orario per invio email a gruppo E per riepilogo mattutino docenti singoli
   const isCheckingMailSchedule = React.useRef(false);
 
   useEffect(() => {
     const checkMailSchedule = async () => {
       if (isCheckingMailSchedule.current) return;
       const currentImpostazioni = impostazioniScuolaRef.current;
-      const cfg = currentImpostazioni?.notificheEmailGruppo;
-      if (!cfg || !cfg.abilitato || !cfg.emailGruppo || !cfg.orarioInvio) return;
+      const cfgGruppo = currentImpostazioni?.notificheEmailGruppo;
+      const cfgSingolo = currentImpostazioni?.notificheEmailDocenteSingolo;
 
+      const orarioTarget = cfgGruppo?.orarioInvio || '07:45';
       const now = new Date();
       const todayStr = now.toISOString().split('T')[0];
       const ore = String(now.getHours()).padStart(2, '0');
       const minuti = String(now.getMinutes()).padStart(2, '0');
       const currentTime = `${ore}:${minuti}`;
 
-      // Verifica se l'orario corrisponde e se per oggi non è ancora stata inviata
-      if (currentTime === cfg.orarioInvio && cfg.ultimoInvioData !== todayStr) {
+      // Verifica se l'orario corrisponde e se per oggi non è ancora stata eseguita la routine del mattino
+      if (currentTime === orarioTarget && cfgGruppo?.ultimoInvioData !== todayStr) {
         const currentSost = sostituzioniRef.current || [];
         const currentAss = assenzeRef.current || [];
         const hasSostituzioniOggi = currentSost.some(s => s.data === todayStr && s.pubblicata);
@@ -785,17 +832,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (hasSostituzioniOggi || hasAssenzeOggi) {
           isCheckingMailSchedule.current = true;
           try {
+            // 1. Invio email a gruppo se abilitato
+            if (cfgGruppo && cfgGruppo.abilitato && cfgGruppo.emailGruppo) {
+              await inviaMailPromemoriaGruppoManuale(cfgGruppo.emailGruppo, cfgGruppo.oggetto, cfgGruppo.corpoMessaggio, cfgGruppo.webhookAppScriptUrl);
+            }
+
+            // 2. Invio email personali di riepilogo a ciascun docente con supplenze oggi se abilitato
+            if (cfgSingolo?.abilitato && cfgSingolo.inviaRiepilogoMattino) {
+              const sostOggi = currentSost.filter(s => s.data === todayStr && s.pubblicata && s.docenteSostitutoId && s.categoria !== 'NON_SOSTITUIRE');
+              const docentiConSostIds = Array.from(new Set(sostOggi.map(s => s.docenteSostitutoId)));
+
+              for (const docId of docentiConSostIds) {
+                const doc = docentiRef.current.find(d => d.id === docId);
+                const docSostituzioni = sostOggi.filter(s => s.docenteSostitutoId === docId).sort((a, b) => a.ora - b.ora);
+                if (doc && doc.email && docSostituzioni.length > 0) {
+                  const dataFmt = formatDataItaliana(todayStr);
+                  const elencoOre = docSostituzioni.map(s => {
+                    const docAss = docentiRef.current.find(d => d.id === s.docenteAssenteId);
+                    const assNome = docAss ? getBaseNomeDocente(docAss.nome) : 'Docente';
+                    return `• ${s.ora}ª ora: Classe ${s.classe} (in sostituzione di ${assNome})`;
+                  }).join('\n');
+
+                  const oggetto = `📋 Le tue ore di supplenza per oggi (${dataFmt}) - ${currentImpostazioni.nomeScuola || 'Scuola'}`;
+                  const corpo = `Gentile Prof. ${getBaseNomeDocente(doc.nome)},\n\nti riepiloghiamo le ore di sostituzione a te assegnate per oggi (${dataFmt}):\n\n${elencoOre}\n\nTi invitiamo ad accedere al Portale Docenti per prendere visione e apporre la firma digitale:\nhttps://sostituzioni-smart.web.app\n\nBuon lavoro,\nLa Vicepresidenza`;
+
+                  await inviaEmailDocenteSingolo(docId, oggetto, corpo);
+                }
+              }
+            }
+
             const updatedImpostazioni: ImpostazioniScuola = {
               ...currentImpostazioni,
               notificheEmailGruppo: {
-                ...cfg,
+                ...(cfgGruppo || {
+                  abilitato: false,
+                  emailGruppo: '',
+                  orarioInvio: '07:45',
+                  oggetto: 'Avviso Supplenze',
+                  corpoMessaggio: ''
+                }),
                 ultimoInvioData: todayStr
               }
             };
             await updateImpostazioniScuola(updatedImpostazioni);
-            await inviaMailPromemoriaGruppoManuale(cfg.emailGruppo, cfg.oggetto, cfg.corpoMessaggio, cfg.webhookAppScriptUrl);
           } catch (e) {
-            console.error('Errore invio automatico programmato email gruppo:', e);
+            console.error('Errore invio automatico programmato mattutino:', e);
           } finally {
             isCheckingMailSchedule.current = false;
           }
@@ -1453,7 +1534,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Se era già pubblicata o firmata, avvisa il sostituto con una notifica di annullamento (se assegnata a un docente reale)
     if ((sost.pubblicata || sost.firmata) && sost.docenteSostitutoId && sost.categoria !== 'NON_SOSTITUIRE') {
       const docenteAssente = docenti.find(d => d.id === sost.docenteAssenteId);
-      const docenteAssenteNome = docenteAssente ? docenteAssente.nome : sost.docenteAssenteId;
+      const docenteAssenteNome = docenteAssente ? getBaseNomeDocente(docenteAssente.nome) : sost.docenteAssenteId;
+      const dataFmt = formatDataItaliana(sost.data);
       const nuovaNotifica: NotificaDocente = {
         id: 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         docenteId: sost.docenteSostitutoId,
@@ -1462,11 +1544,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         classe: sost.classe,
         tipo: 'SOSTITUZIONE_ANNULLATA',
         titolo: 'Supplenza Annullata',
-        messaggio: `L'ora di sostituzione del ${formatDataItaliana(sost.data)} (${sost.ora}ª ora in ${sost.classe} per ${docenteAssenteNome}) è stata annullata dalla Vicepresidenza.`,
+        messaggio: `L'ora di sostituzione del ${dataFmt} (${sost.ora}ª ora in ${sost.classe} per ${docenteAssenteNome}) è stata annullata dalla Vicepresidenza.`,
         letta: false,
         createdAt: new Date().toISOString()
       };
       setNotifiche(prev => [nuovaNotifica, ...prev]);
+
+      // INVIO EMAIL ISTANTANEA DI REVOCA SE ABILITATO IN ORARIO DI LAVORO (08:00 - 17:00)
+      const cfgSingolo = impostazioniScuolaRef.current?.notificheEmailDocenteSingolo;
+      if (cfgSingolo?.abilitato && cfgSingolo.inviaIstantaneeOrarioLavoro) {
+        const docSost = docentiRef.current.find(d => d.id === sost.docenteSostitutoId);
+        if (docSost && docSost.email) {
+          const oggetto = `⚠️ Supplenza Revocata / Annullata (${dataFmt} - ${sost.ora}ª ora) - ${impostazioniScuolaRef.current?.nomeScuola || 'Scuola'}`;
+          const corpo = `Gentile Prof. ${getBaseNomeDocente(docSost.nome)},\n\nti informiamo che la seguente supplenza è stata annullata dalla Vicepresidenza:\n\n• Data: ${dataFmt}\n• Ora: ${sost.ora}ª ora\n• Classe: ${sost.classe}\n• Inizialmente prevista per: ${docenteAssenteNome}\n\nNon è richiesta alcuna azione da parte tua.\n\nCordiali saluti,\nLa Vicepresidenza`;
+          inviaEmailDocenteSingolo(sost.docenteSostitutoId, oggetto, corpo).catch(console.error);
+        }
+      }
     }
 
     if (sost.consumaDebito) {
@@ -1570,6 +1663,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const docAssenteNome = docAssente ? getBaseNomeDocente(docAssente.nome) : 'Docente';
       const materiaAssente = getMateriaDocenteNellOra(s.docenteAssenteId, s.giorno, s.ora, docenti, orariDocenti);
       const dataFmt = formatDataItaliana(s.data);
+
+      // INVIO EMAIL ISTANTANEA SE ABILITATO IN ORARIO DI LAVORO (08:00 - 17:00)
+      const cfgSingolo = impostazioniScuolaRef.current?.notificheEmailDocenteSingolo;
+      if (cfgSingolo?.abilitato && cfgSingolo.inviaIstantaneeOrarioLavoro) {
+        const docSost = docentiRef.current.find(d => d.id === s.docenteSostitutoId);
+        if (docSost && docSost.email) {
+          const oggetto = `🔔 Nuova Supplenza Assegnata (${dataFmt} - ${s.ora}ª ora) - ${impostazioniScuolaRef.current?.nomeScuola || 'Scuola'}`;
+          const corpo = `Gentile Prof. ${getBaseNomeDocente(docSost.nome)},\n\nti comunichiamo che ti è stata assegnata una nuova supplenza:\n\n• Data: ${dataFmt}\n• Ora: ${s.ora}ª ora\n• Classe: ${s.classe}\n• In sostituzione di: ${docAssenteNome} (${materiaAssente || 'Lezione'})\n\nTi invitiamo ad accedere al Portale Docenti per prendere visione e apporre la firma digitale:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`;
+          inviaEmailDocenteSingolo(s.docenteSostitutoId, oggetto, corpo).catch(console.error);
+        }
+      }
+
       return {
         id: 'notif_pub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         docenteId: s.docenteSostitutoId,
@@ -1613,6 +1718,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const docAssenteNome = docAssente ? getBaseNomeDocente(docAssente.nome) : 'Docente';
       const materiaAssente = getMateriaDocenteNellOra(sTarget.docenteAssenteId, sTarget.giorno, sTarget.ora, docenti, orariDocenti);
       const dataFmt = formatDataItaliana(sTarget.data);
+
+      // INVIO EMAIL ISTANTANEA SE ABILITATO IN ORARIO DI LAVORO (08:00 - 17:00)
+      const cfgSingolo = impostazioniScuolaRef.current?.notificheEmailDocenteSingolo;
+      if (cfgSingolo?.abilitato && cfgSingolo.inviaIstantaneeOrarioLavoro) {
+        const docSost = docentiRef.current.find(d => d.id === sTarget.docenteSostitutoId);
+        if (docSost && docSost.email) {
+          const oggetto = `🔔 Nuova Supplenza Assegnata (${dataFmt} - ${sTarget.ora}ª ora) - ${impostazioniScuolaRef.current?.nomeScuola || 'Scuola'}`;
+          const corpo = `Gentile Prof. ${getBaseNomeDocente(docSost.nome)},\n\nti comunichiamo che ti è stata assegnata una nuova supplenza:\n\n• Data: ${dataFmt}\n• Ora: ${sTarget.ora}ª ora\n• Classe: ${sTarget.classe}\n• In sostituzione di: ${docAssenteNome} (${materiaAssente || 'Lezione'})\n\nTi invitiamo ad accedere al Portale Docenti per prendere visione e apporre la firma digitale:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`;
+          inviaEmailDocenteSingolo(sTarget.docenteSostitutoId, oggetto, corpo).catch(console.error);
+        }
+      }
+
       nuoveNotifiche.push({
         id: 'notif_pub_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         docenteId: sTarget.docenteSostitutoId,
@@ -2347,7 +2464,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       importaNuovoOrarioCompleto,
       aggiornaOrarioSenzaCancellareStorico,
       ripristinaBackupCompleto,
-      inviaMailPromemoriaGruppoManuale
+      inviaMailPromemoriaGruppoManuale,
+      inviaEmailDocenteSingolo
     }}>
       {children}
     </AppContext.Provider>

@@ -22,13 +22,13 @@ import { QuadroSostituzioniScuola } from './components/QuadroSostituzioniScuola'
 import { PanoramicaLavori } from './components/PanoramicaLavori';
 import { VistaCalendariGoogle } from './components/VistaCalendariGoogle';
 import { Coachmark } from './components/Coachmark';
-import { getPrimoGiornoScolasticoValido, spostaGiornoScolastico } from './utils/docentiHelper';
+import { getPrimoGiornoScolasticoValido, spostaGiornoScolastico, getBaseNomeDocente } from './utils/docentiHelper';
 import { 
   School, Calendar, Users, History, Lock, Smartphone, 
   ChevronLeft, ChevronRight, UserMinus, Bus, Activity, LayoutDashboard, HelpCircle, Settings,
   Menu, X, Sliders, BarChart3, Sparkles, Building2, LayoutGrid, ShieldCheck, KeyRound, TrendingUp,
   Monitor, Pin, PinOff, PanelLeftClose, PanelLeftOpen, PanelLeft, Scale, ArrowDownUp, RotateCw,
-  BookOpen, GraduationCap, Palette
+  BookOpen, GraduationCap, Palette, AlertTriangle
 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -1586,6 +1586,42 @@ const MainApp: React.FC = () => {
                   </button>
                 </div>
               )}
+
+              {/* AVVISO DOCENTI SUPPLENTI SENZA EMAIL REGISTRATA (SE NOTIFICHE EMAIL ABILITATE) */}
+              {Boolean(impostazioniScuola?.notificheEmailDocenteSingolo?.abilitato) && (() => {
+                const supplentiOggi = sostituzioniOggi.filter(s => s.docenteSostitutoId && s.categoria !== 'NON_SOSTITUIRE');
+                const docentiMancanti = Array.from(new Set(supplentiOggi.map(s => s.docenteSostitutoId)))
+                  .map(id => docenti.find(d => d.id === id))
+                  .filter((d): d is typeof docenti[0] => Boolean(d && !d.email?.trim()));
+
+                if (docentiMancanti.length === 0 || tabVice === 'DOCENTI') return null;
+
+                return (
+                  <div className="bg-rose-50 border-2 border-rose-300 rounded-2xl p-3.5 sm:p-4 shadow-sm flex items-center justify-between gap-3 animate-in fade-in">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                        <AlertTriangle className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-black text-rose-950">
+                          Attenzione: {docentiMancanti.length} docente/i in supplenza oggi non ha l'indirizzo email a sistema!
+                        </h4>
+                        <p className="text-[11px] text-rose-800">
+                          I seguenti docenti non potranno ricevere le email automatiche di notifica: <strong>{docentiMancanti.map(d => getBaseNomeDocente(d.nome)).join(', ')}</strong>.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setTabVice('DOCENTI')}
+                      className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer shrink-0"
+                    >
+                      Aggiungi Email →
+                    </button>
+                  </div>
+                );
+              })()}
 
               {/* VISTA PRINCIPALE A 2 COLONNE CON TABELLONE IN PRIMO PIANO */}
               {tabVice === 'GESTIONE_GIORNALIERA' && (
