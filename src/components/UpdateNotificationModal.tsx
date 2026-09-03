@@ -80,10 +80,10 @@ export const UpdateNotificationModal: React.FC = () => {
 
   return (
     <>
-      {/* BANNER NOTIFICA TOP NON INVASIVO & INTERAMENTE CLICCABILE */}
+      {/* BANNER NOTIFICA TOP CON SUPPORTO IPHONE SAFE AREA (NOTCH & DYNAMIC ISLAND) */}
       <div 
         onClick={() => setMostraModaleDettagli(true)}
-        className="fixed top-0 inset-x-0 z-[9999] bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white px-3 sm:px-4 py-2 shadow-xl animate-in slide-in-from-top-4 duration-300 cursor-pointer hover:brightness-105 transition"
+        className="fixed top-0 inset-x-0 z-[9999] bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white px-3 sm:px-4 py-2 safe-top-banner shadow-xl animate-in slide-in-from-top-4 duration-300 cursor-pointer hover:brightness-105 transition"
       >
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-2.5 text-xs">
           

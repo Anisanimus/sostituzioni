@@ -1465,7 +1465,7 @@ const MainApp: React.FC = () => {
               </div>
 
               {/* FOOTER SIDEBAR FISSO IN FONDO */}
-              <div className="shrink-0 p-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+              <div className="shrink-0 p-3.5 safe-bottom border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
                 <div className="leading-tight">
                   <span className="font-black text-xs text-slate-800 block">Sostituzioni Smart</span>
                   <span className="font-mono text-[10px] text-indigo-700 font-bold">v{CURRENT_APP_VERSION.version}</span>

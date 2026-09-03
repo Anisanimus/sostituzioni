@@ -21,11 +21,23 @@
     }
   }
 
-  /* Supporto Safe Area per iPhone Notch / Dynamic Island / Barra di stato */
+  /* Supporto Safe Area per iPhone Notch / Dynamic Island / Barra di stato iOS */
   .safe-top {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+  }
+  .safe-pt {
+    padding-top: max(8px, env(safe-area-inset-top, 0px));
+  }
+  .safe-mt {
+    margin-top: env(safe-area-inset-top, 0px);
+  }
+  .safe-top-banner {
+    padding-top: max(8px, env(safe-area-inset-top, 0px));
   }
   .safe-bottom {
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+  .safe-pb {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
