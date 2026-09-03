@@ -815,15 +815,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const cfgGruppo = currentImpostazioni?.notificheEmailGruppo;
       const cfgSingolo = currentImpostazioni?.notificheEmailDocenteSingolo;
 
-      const orarioTarget = cfgGruppo?.orarioInvio || '07:45';
+      const orarioTargetGruppo = cfgGruppo?.orarioInvio || '07:45';
+      const orarioTargetSingolo = cfgSingolo?.orarioInvioRiepilogo || cfgGruppo?.orarioInvio || '07:45';
       const now = new Date();
       const todayStr = now.toISOString().split('T')[0];
       const ore = String(now.getHours()).padStart(2, '0');
       const minuti = String(now.getMinutes()).padStart(2, '0');
       const currentTime = `${ore}:${minuti}`;
 
-      // Verifica se l'orario corrisponde e se per oggi non è ancora stata eseguita la routine del mattino
-      if (currentTime === orarioTarget && cfgGruppo?.ultimoInvioData !== todayStr) {
+      // Verifica se uno degli orari corrisponde e se per oggi non è ancora stata eseguita la routine del mattino
+      const isOraGruppo = currentTime === orarioTargetGruppo;
+      const isOraSingolo = currentTime === orarioTargetSingolo;
+
+      if ((isOraGruppo || isOraSingolo) && cfgGruppo?.ultimoInvioData !== todayStr) {
         const currentSost = sostituzioniRef.current || [];
         const currentAss = assenzeRef.current || [];
         const hasSostituzioniOggi = currentSost.some(s => s.data === todayStr && s.pubblicata);
@@ -832,13 +836,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (hasSostituzioniOggi || hasAssenzeOggi) {
           isCheckingMailSchedule.current = true;
           try {
-            // 1. Invio email a gruppo se abilitato
-            if (cfgGruppo && cfgGruppo.abilitato && cfgGruppo.emailGruppo) {
+            // 1. Invio email a gruppo se abilitato ed è l'ora del gruppo
+            if (isOraGruppo && cfgGruppo && cfgGruppo.abilitato && cfgGruppo.emailGruppo) {
               await inviaMailPromemoriaGruppoManuale(cfgGruppo.emailGruppo, cfgGruppo.oggetto, cfgGruppo.corpoMessaggio, cfgGruppo.webhookAppScriptUrl);
             }
 
-            // 2. Invio email personali di riepilogo a ciascun docente con supplenze oggi se abilitato
-            if (cfgSingolo?.abilitato && cfgSingolo.inviaRiepilogoMattino) {
+            // 2. Invio email personali di riepilogo a ciascun docente con supplenze oggi se abilitato ed è l'ora del singolo
+            if (isOraSingolo && cfgSingolo?.abilitato && cfgSingolo.inviaRiepilogoMattino) {
               const sostOggi = currentSost.filter(s => s.data === todayStr && s.pubblicata && s.docenteSostitutoId && s.categoria !== 'NON_SOSTITUIRE');
               const docentiConSostIds = Array.from(new Set(sostOggi.map(s => s.docenteSostitutoId)));
 

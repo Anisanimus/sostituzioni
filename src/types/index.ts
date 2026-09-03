@@ -182,7 +182,10 @@ export interface ImpostazioniScuola {
   notificheEmailDocenteSingolo?: {
     abilitato: boolean;           // Abilita invio email personale ai docenti supplenti
     inviaRiepilogoMattino: boolean; // Invio al mattino (orario invio gruppo o personalizzato)
-    inviaIstantaneeOrarioLavoro: boolean; // Invio istantaneo tra le 08:00 e le 17:00 per nuove assegnazioni o revoche
+    orarioInvioRiepilogo?: string; // es. "07:30" (orario dedicato riepilogo docente)
+    inviaIstantaneeOrarioLavoro: boolean; // Invio istantaneo per nuove assegnazioni o revoche nella fascia oraria
+    orarioInizioIstantanee?: string; // es. "08:00"
+    orarioFineIstantanee?: string;   // es. "17:00"
     modelli?: {
       // 1. Nuova assegnazione istantanea
       assegnazioneOggetto?: string;

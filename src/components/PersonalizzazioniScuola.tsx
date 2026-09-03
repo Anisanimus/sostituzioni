@@ -97,7 +97,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
   // Email personali al singolo docente
   const [mailDocenteSingoloAbilitato, setMailDocenteSingoloAbilitato] = useState(cfgEmailSingolo?.abilitato ?? false);
   const [mailDocenteSingoloRiepilogo, setMailDocenteSingoloRiepilogo] = useState(cfgEmailSingolo?.inviaRiepilogoMattino ?? true);
+  const [mailDocenteSingoloOrarioRiepilogo, setMailDocenteSingoloOrarioRiepilogo] = useState(cfgEmailSingolo?.orarioInvioRiepilogo || '07:30');
   const [mailDocenteSingoloIstantanee, setMailDocenteSingoloIstantanee] = useState(cfgEmailSingolo?.inviaIstantaneeOrarioLavoro ?? true);
+  const [mailDocenteSingoloOrarioInizio, setMailDocenteSingoloOrarioInizio] = useState(cfgEmailSingolo?.orarioInizioIstantanee || '08:00');
+  const [mailDocenteSingoloOrarioFine, setMailDocenteSingoloOrarioFine] = useState(cfgEmailSingolo?.orarioFineIstantanee || '17:00');
 
   // Modelli email personalizzati per casistica
   const modelliSaved = cfgEmailSingolo?.modelli;
@@ -180,7 +183,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
       if (emailSingoloCfg) {
         setMailDocenteSingoloAbilitato(emailSingoloCfg.abilitato ?? false);
         setMailDocenteSingoloRiepilogo(emailSingoloCfg.inviaRiepilogoMattino ?? true);
+        setMailDocenteSingoloOrarioRiepilogo(emailSingoloCfg.orarioInvioRiepilogo || '07:30');
         setMailDocenteSingoloIstantanee(emailSingoloCfg.inviaIstantaneeOrarioLavoro ?? true);
+        setMailDocenteSingoloOrarioInizio(emailSingoloCfg.orarioInizioIstantanee || '08:00');
+        setMailDocenteSingoloOrarioFine(emailSingoloCfg.orarioFineIstantanee || '17:00');
         if (emailSingoloCfg.modelli) {
           if (emailSingoloCfg.modelli.assegnazioneOggetto) setTplAssegnazioneOggetto(emailSingoloCfg.modelli.assegnazioneOggetto);
           if (emailSingoloCfg.modelli.assegnazioneCorpo) setTplAssegnazioneCorpo(emailSingoloCfg.modelli.assegnazioneCorpo);
@@ -319,7 +325,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
       notificheEmailDocenteSingolo: {
         abilitato: Boolean(mailDocenteSingoloAbilitato),
         inviaRiepilogoMattino: Boolean(mailDocenteSingoloRiepilogo),
+        orarioInvioRiepilogo: mailDocenteSingoloOrarioRiepilogo.trim() || '07:30',
         inviaIstantaneeOrarioLavoro: Boolean(mailDocenteSingoloIstantanee),
+        orarioInizioIstantanee: mailDocenteSingoloOrarioInizio.trim() || '08:00',
+        orarioFineIstantanee: mailDocenteSingoloOrarioFine.trim() || '17:00',
         modelli: {
           assegnazioneOggetto: tplAssegnazioneOggetto.trim(),
           assegnazioneCorpo: tplAssegnazioneCorpo.trim(),
@@ -1934,26 +1943,98 @@ export const PersonalizzazioniScuola: React.FC = () => {
               )}
 
               <div className="space-y-4 pt-1">
-                {/* TOGGLE ABILITAZIONE INVIO GRUPPO */}
-                <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between">
-                  <div>
-                    <span className="block text-xs font-black text-slate-900">
-                      1. Abilita Invio Automatico Promemoria a Gruppo / Mailing List
-                    </span>
-                    <span className="text-[11px] text-slate-500">
-                      Invia una notifica email all'indirizzo collettivo con il riepilogo generale del tabellone.
-                    </span>
+                {/* 1. SEZIONE EMAIL GRUPPO / MAILING LIST (COMPLETA SOTTO IL SUO TITOLO) */}
+                <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="block text-xs font-black text-slate-900 flex items-center gap-1.5">
+                        <span>📢 1. Email Promemoria a Gruppo / Mailing List Docenti</span>
+                      </span>
+                      <span className="text-[11px] text-slate-500">
+                        Invia una notifica email all'indirizzo collettivo con il riepilogo generale del tabellone.
+                      </span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={mailGruppoAbilitato}
+                      onChange={(e) => setMailGruppoAbilitato(e.target.checked)}
+                      className="w-5 h-5 text-indigo-600 rounded-lg border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                    />
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={mailGruppoAbilitato}
-                    onChange={(e) => setMailGruppoAbilitato(e.target.checked)}
-                    className="w-5 h-5 text-indigo-600 rounded-lg border-slate-300 focus:ring-indigo-500 cursor-pointer"
-                  />
+
+                  {mailGruppoAbilitato && (
+                    <div className="pt-3 border-t border-slate-200 space-y-3.5 animate-in fade-in duration-150">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        {/* INDIRIZZO EMAIL GRUPPO GOOGLE */}
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-black text-slate-800">
+                            📧 Indirizzo Email Gruppo Docenti / Mailing List
+                          </label>
+                          <input
+                            type="email"
+                            value={mailGruppoIndirizzo}
+                            onChange={(e) => setMailGruppoIndirizzo(e.target.value)}
+                            placeholder="es. docenti@icannafrank.edu.it"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
+                          />
+                          <span className="text-[10px] text-slate-400 block">
+                            Indirizzo del Google Group o lista di distribuzione di tutto il corpo docente.
+                          </span>
+                        </div>
+
+                        {/* ORARIO DI INVIO */}
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-black text-slate-800">
+                            ⏰ Orario di Invio Automatico Mattutino
+                          </label>
+                          <input
+                            type="time"
+                            value={mailGruppoOrario}
+                            onChange={(e) => setMailGruppoOrario(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 transition"
+                          />
+                          <span className="text-[10px] text-slate-400 block">
+                            Orario consigliato prima dell'inizio delle lezioni (es. 07:30 o 07:45).
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* OGGETTO EMAIL GRUPPO */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-black text-slate-800">
+                          ✉️ Oggetto della Mail Collettiva
+                        </label>
+                        <input
+                          type="text"
+                          value={mailGruppoOggetto}
+                          onChange={(e) => setMailGruppoOggetto(e.target.value)}
+                          placeholder="Oggetto dell'email..."
+                          className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-900 outline-none focus:border-indigo-500 transition"
+                        />
+                      </div>
+
+                      {/* CORPO MESSAGGIO GRUPPO */}
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-black text-slate-800">
+                          📝 Testo del Messaggio Collettivo (Completamente Editabile)
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={mailGruppoCorpo}
+                          onChange={(e) => setMailGruppoCorpo(e.target.value)}
+                          placeholder="Scrivi qui il testo della mail..."
+                          className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 transition leading-relaxed"
+                        />
+                        <span className="text-[10px] text-slate-500 block">
+                          Puoi modificare il testo a tuo piacimento. Ricorda di lasciare il link al portale <code>https://sostituzioni-smart.web.app</code> affinché i docenti possano accedere con un click.
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* TOGGLE ABILITAZIONE EMAIL PERSONALI SINGOLO DOCENTE */}
-                <div className="p-4 rounded-2xl border border-indigo-200 bg-indigo-50/50 space-y-3">
+                {/* 2. SEZIONE EMAIL PERSONALI SINGOLO DOCENTE (CON GESTIONE ORARI E TESTI) */}
+                <div className="p-4 rounded-2xl border border-indigo-200 bg-indigo-50/50 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="block text-xs font-black text-indigo-950 flex items-center gap-1.5">
@@ -1974,36 +2055,77 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
                   {mailDocenteSingoloAbilitato && (
                     <>
-                      <div className="pt-2 border-t border-indigo-100 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in fade-in duration-150">
-                        <label className="p-3 bg-white rounded-xl border border-indigo-100 flex items-start gap-2.5 cursor-pointer hover:bg-indigo-50/40 transition">
-                          <input
-                            type="checkbox"
-                            checked={mailDocenteSingoloRiepilogo}
-                            onChange={(e) => setMailDocenteSingoloRiepilogo(e.target.checked)}
-                            className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <div>
-                            <strong className="block text-xs text-slate-800 font-bold">🌅 Riepilogo Mattutino</strong>
-                            <span className="text-[11px] text-slate-500 leading-tight block">
-                              Invia al mattino a ciascun docente l'elenco delle ore di supplenza a lui assegnate per la giornata.
-                            </span>
-                          </div>
-                        </label>
+                      {/* GESTIONE OPZIONI ED ORARI SINGOLO DOCENTE */}
+                      <div className="pt-2 border-t border-indigo-100 grid grid-cols-1 sm:grid-cols-2 gap-3.5 animate-in fade-in duration-150">
+                        {/* BOX RIEPILOGO MATTUTINO CON ORARIO DEDICATO */}
+                        <div className="p-3.5 bg-white rounded-xl border border-indigo-100 space-y-2.5">
+                          <label className="flex items-start gap-2.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={mailDocenteSingoloRiepilogo}
+                              onChange={(e) => setMailDocenteSingoloRiepilogo(e.target.checked)}
+                              className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                            />
+                            <div>
+                              <strong className="block text-xs text-slate-800 font-bold">🌅 Riepilogo Mattutino</strong>
+                              <span className="text-[11px] text-slate-500 leading-tight block">
+                                Invia al mattino a ciascun docente l'elenco delle ore di supplenza del giorno.
+                              </span>
+                            </div>
+                          </label>
 
-                        <label className="p-3 bg-white rounded-xl border border-indigo-100 flex items-start gap-2.5 cursor-pointer hover:bg-indigo-50/40 transition">
-                          <input
-                            type="checkbox"
-                            checked={mailDocenteSingoloIstantanee}
-                            onChange={(e) => setMailDocenteSingoloIstantanee(e.target.checked)}
-                            className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
-                          />
-                          <div>
-                            <strong className="block text-xs text-slate-800 font-bold">⚡ Notifica Istantanea (08:00 – 17:00)</strong>
-                            <span className="text-[11px] text-slate-500 leading-tight block">
-                              Invia immediatamente un'email se durante l'orario scolastico viene assegnata o revocata una supplenza.
-                            </span>
-                          </div>
-                        </label>
+                          {mailDocenteSingoloRiepilogo && (
+                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                              <span className="text-[11px] font-bold text-slate-700">⏰ Orario Invio Riepilogo:</span>
+                              <input
+                                type="time"
+                                value={mailDocenteSingoloOrarioRiepilogo}
+                                onChange={(e) => setMailDocenteSingoloOrarioRiepilogo(e.target.value)}
+                                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* BOX NOTIFICA ISTANTANEA CON FASCIA ORARIA PERSONALIZZABILE */}
+                        <div className="p-3.5 bg-white rounded-xl border border-indigo-100 space-y-2.5">
+                          <label className="flex items-start gap-2.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={mailDocenteSingoloIstantanee}
+                              onChange={(e) => setMailDocenteSingoloIstantanee(e.target.checked)}
+                              className="mt-0.5 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                            />
+                            <div>
+                              <strong className="block text-xs text-slate-800 font-bold">⚡ Notifica Istantanea</strong>
+                              <span className="text-[11px] text-slate-500 leading-tight block">
+                                Invia immediatamente un'email per nuove assegnazioni o revoche durante l'orario scolastico.
+                              </span>
+                            </div>
+                          </label>
+
+                          {mailDocenteSingoloIstantanee && (
+                            <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                              <span className="text-[11px] font-bold text-slate-700 block">⏱️ Fascia Oraria Attiva:</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] text-slate-500">Dalle</span>
+                                <input
+                                  type="time"
+                                  value={mailDocenteSingoloOrarioInizio}
+                                  onChange={(e) => setMailDocenteSingoloOrarioInizio(e.target.value)}
+                                  className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+                                />
+                                <span className="text-[11px] text-slate-500">alle</span>
+                                <input
+                                  type="time"
+                                  value={mailDocenteSingoloOrarioFine}
+                                  onChange={(e) => setMailDocenteSingoloOrarioFine(e.target.value)}
+                                  className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* EDITOR MODELLI DI TESTO EMAIL PERSONALIZZATI PER OGNI CASISTICA */}
@@ -2060,7 +2182,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                             <div className="space-y-3">
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-slate-800">
-                                  Modello: Nuova Supplenza Assegnata (Istantanea 08:00–17:00)
+                                  Modello: Nuova Supplenza Assegnata (Istantanea {mailDocenteSingoloOrarioInizio}–{mailDocenteSingoloOrarioFine})
                                 </span>
                                 <button
                                   type="button"
@@ -2119,7 +2241,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                             <div className="space-y-3">
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-slate-800">
-                                  Modello: Supplenza Annullata / Revocata (Istantanea 08:00–17:00)
+                                  Modello: Supplenza Annullata / Revocata (Istantanea {mailDocenteSingoloOrarioInizio}–{mailDocenteSingoloOrarioFine})
                                 </span>
                                 <button
                                   type="button"
@@ -2178,7 +2300,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                             <div className="space-y-3">
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-slate-800">
-                                  Modello: Riepilogo Supplenze Giornaliere al Mattino
+                                  Modello: Riepilogo Supplenze Giornaliere al Mattino (Ore {mailDocenteSingoloOrarioRiepilogo})
                                 </span>
                                 <button
                                   type="button"
@@ -2236,72 +2358,6 @@ export const PersonalizzazioniScuola: React.FC = () => {
                       </div>
                     </>
                   )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* INDIRIZZO EMAIL GRUPPO GOOGLE */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-black text-slate-800">
-                      📧 Indirizzo Email Gruppo Docenti / Mailing List
-                    </label>
-                    <input
-                      type="email"
-                      value={mailGruppoIndirizzo}
-                      onChange={(e) => setMailGruppoIndirizzo(e.target.value)}
-                      placeholder="es. docenti@icannafrank.edu.it"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
-                    />
-                    <span className="text-[10px] text-slate-400 block">
-                      Indirizzo del Google Group o lista di distribuzione di tutto il corpo docente.
-                    </span>
-                  </div>
-
-                  {/* ORARIO DI INVIO */}
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-black text-slate-800">
-                      ⏰ Orario di Invio Automatico Mattutino
-                    </label>
-                    <input
-                      type="time"
-                      value={mailGruppoOrario}
-                      onChange={(e) => setMailGruppoOrario(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
-                    />
-                    <span className="text-[10px] text-slate-400 block">
-                      Orario consigliato prima dell'inizio delle lezioni (es. 07:30 o 07:45).
-                    </span>
-                  </div>
-                </div>
-
-                {/* OGGETTO EMAIL */}
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-black text-slate-800">
-                    ✉️ Oggetto della Mail
-                  </label>
-                  <input
-                    type="text"
-                    value={mailGruppoOggetto}
-                    onChange={(e) => setMailGruppoOggetto(e.target.value)}
-                    placeholder="Oggetto dell'email..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white transition"
-                  />
-                </div>
-
-                {/* CORPO MESSAGGIO */}
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-black text-slate-800">
-                    📝 Testo del Messaggio (Completamente Editabile)
-                  </label>
-                  <textarea
-                    rows={5}
-                    value={mailGruppoCorpo}
-                    onChange={(e) => setMailGruppoCorpo(e.target.value)}
-                    placeholder="Scrivi qui il testo della mail..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 focus:bg-white transition leading-relaxed"
-                  />
-                  <span className="text-[10px] text-slate-500 block">
-                    Puoi modificare il testo a tuo piacimento. Ricorda di lasciare il link al portale <code>https://sostituzioni-smart.web.app</code> affinché i docenti possano accedere con un click.
-                  </span>
                 </div>
 
                 {/* WEBHOOK GOOGLE APPS SCRIPT PER INVIO AUTOMATICO TOTALE */}

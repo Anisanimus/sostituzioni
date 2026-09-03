@@ -13,15 +13,15 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.7.0',
-  buildTime: '2026-09-03T21:13:00Z',
-  title: 'Novità della Versione 1.7.0',
-  descrizioneGenerale: 'Editor completo per personalizzare testi, oggetti e segnaposto di tutte le email automatiche per ogni casistica.',
+  version: '1.7.1',
+  buildTime: '2026-09-03T21:24:00Z',
+  title: 'Novità della Versione 1.7.1',
+  descrizioneGenerale: 'Layout personalizzazioni email riordinato e gestione orari dedicati per le notifiche del singolo docente.',
   novita: [
     {
-      titolo: 'Editor Personalizzabile Modelli Email',
-      descrizione: 'Nel tab Personalizzazioni puoi ora modificare liberamente l\'oggetto e il corpo del messaggio per tutte le casistiche (Nuova Assegnazione, Revoca/Annullamento e Riepilogo Mattutino) con segnaposto dinamici cliccabili e ripristino valori predefiniti.',
-      tag: 'Notifiche & Email'
+      titolo: 'Layout Sezioni Email Riordinato',
+      descrizione: 'Tutti i campi editabili della mail collettiva (indirizzo, orario mattutino, oggetto e testo) sono ora posizionati in modo ordinato direttamente sotto il titolo della sezione 1. La sezione 2 include la configurazione manuale degli orari dedicati e delle fasce orarie per il singolo docente.',
+      tag: 'Notifiche & Personalizzazioni'
     },
     {
       titolo: 'Banner di Avviso Docenti Senza Email',
