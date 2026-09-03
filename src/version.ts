@@ -13,11 +13,16 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.6.3',
-  buildTime: '2026-09-03T18:18:00Z',
-  title: 'Novità della Versione 1.6.3',
-  descrizioneGenerale: 'Nuova icona ufficiale SVG Sostituzioni Smart integrata come Favicon e icona predefinita PWA.',
+  version: '1.6.4',
+  buildTime: '2026-09-03T18:37:00Z',
+  title: 'Novità della Versione 1.6.4',
+  descrizioneGenerale: 'Risoluzione aggiornamento icona Home Smartphone (Apple Touch Icon & Web App Manifest PNG ad alta risoluzione).',
   novita: [
+    {
+      titolo: 'Icone PNG Native per iPhone e Android (Home Screen)',
+      descrizione: 'Generati e collegati i file PNG nativi ad alta risoluzione (apple-touch-icon 180x180, icon-192 e icon-512 nel manifest PWA) per garantire la corretta visualizzazione della nuova icona ufficiale con Scuola & Orologio su tutti gli smartphone iOS e Android.',
+      tag: 'Smartphone & iOS'
+    },
     {
       titolo: 'Nuova Icona SVG Ufficiale Sostituzioni Smart',
       descrizione: 'Integrata la nuova icona vettoriale SVG in alta definizione (con Scuola, Orologio e Calendario su sfondo blu/verde smeraldo) come icona predefinita dell\'applicazione e favicon di sistema.',
