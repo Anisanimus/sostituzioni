@@ -1337,7 +1337,7 @@ const MainApp: React.FC = () => {
                         </div>
                         <div>
                           <span className="block font-black text-sm">Registro Storico</span>
-                          <span className="text-[11px] text-slate-500 font-normal">Storico assenze, uscite e debiti</span>
+                          <span className="text-[11px] text-slate-500 font-normal">Sostituzioni, firme, uscite e nomine</span>
                         </div>
                       </div>
                       {tabVice === 'STORICO' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
