@@ -1441,12 +1441,12 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                             return (
                               <td key={giorno} className="py-2 px-2 border-r border-slate-200 last:border-r-0 align-top">
                                 <div className="space-y-1">
-                                  <div className="flex items-center justify-center gap-1">
-                                    <span className="inline-block bg-indigo-50 text-indigo-900 border border-indigo-200 font-black px-2 py-0.5 rounded text-xs shadow-2xs">
+                                  <div className="flex items-center justify-center gap-1 w-full">
+                                    <span className="w-full text-center bg-indigo-100/80 hover:bg-indigo-200/80 text-indigo-950 border border-indigo-300/80 font-black py-1 px-2 rounded-lg text-sm shadow-2xs tracking-wide transition">
                                       {val}
                                     </span>
                                     {cella?.isCasoGrave && (
-                                      <span className="bg-rose-600 text-white font-black text-[9px] px-1 py-0.2 rounded" title="Caso Grave">
+                                      <span className="bg-rose-600 text-white font-black text-[10px] px-1.5 py-0.5 rounded shrink-0 shadow-2xs" title="Caso Grave">
                                         ♿
                                       </span>
                                     )}
