@@ -596,7 +596,7 @@ export const TabelloneSostituzioni: React.FC<{
             const totDaFareGruppo = Math.max(0, gruppo.items.length - totCoperteGruppo); // DA FARE
 
             return (
-              <div key={gruppo.ora} className="bg-white rounded-xl shadow-2xs border border-slate-200 overflow-hidden">
+              <div key={gruppo.ora} className="bg-white rounded-xl shadow-2xs border border-indigo-100 overflow-hidden">
                 <button
                   type="button"
                   onClick={() => {
@@ -604,13 +604,14 @@ export const TabelloneSostituzioni: React.FC<{
                       prev.includes(gruppo.ora) ? prev.filter(o => o !== gruppo.ora) : [...prev, gruppo.ora]
                     );
                   }}
-                  className="w-full bg-slate-50/80 hover:bg-slate-100/90 px-3.5 py-2 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left"
+                  className="w-full bg-indigo-50/60 hover:bg-indigo-100/70 px-3.5 py-2 border-b border-indigo-100 flex flex-wrap items-center justify-between gap-2 transition cursor-pointer text-left"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="bg-indigo-600 text-white font-black text-xs px-2 py-0.5 rounded shadow-2xs">
-                      {gruppo.ora}ª ORA
+                    <span className="bg-indigo-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-2xs inline-flex items-center gap-1">
+                      <span>⏰</span>
+                      <span>{gruppo.ora}ª ORA</span>
                     </span>
-                    <span className="text-xs font-bold text-slate-700">
+                    <span className="text-xs font-bold text-indigo-950">
                       {gruppo.items.length} {gruppo.items.length === 1 ? 'sostituzione' : 'sostituzioni'}
                     </span>
                   </div>
@@ -653,7 +654,7 @@ export const TabelloneSostituzioni: React.FC<{
                       </span>
                     )}
 
-                    <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isAperto ? 'rotate-180 text-indigo-600' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-indigo-600 transition-transform duration-200 ${isAperto ? 'rotate-180' : ''}`} />
                   </div>
                 </button>
 
@@ -670,21 +671,19 @@ export const TabelloneSostituzioni: React.FC<{
                       key={idx}
                       id={isFirstUnassigned ? 'targetSlotOraScoperta' : undefined}
                       onClick={() => setSelectedOraScoperta(os)}
-                      className={`px-3.5 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-indigo-50/30 transition cursor-pointer ${
+                      className={`px-3.5 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-indigo-50/40 transition cursor-pointer ${
                         isSelected ? 'bg-indigo-50 ring-1 ring-inset ring-indigo-300' : ''
                       }`}
                     >
-                      {/* Info Classe e Docente Assente */}
+                      {/* Info Classe (Blu) e Docente Assente */}
                       <div className="flex items-center gap-3">
-                        <div className={`w-11 h-9 rounded-lg flex items-center justify-center font-black text-sm border shadow-2xs shrink-0 ${
-                          sosts.length > 0 ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-amber-50 text-amber-900 border-amber-300'
-                        }`}>
+                        <div className="w-10 h-8 rounded-lg flex items-center justify-center font-black text-xs border border-indigo-200 bg-indigo-50/80 text-indigo-950 shadow-2xs shrink-0">
                           {os.classe}
                         </div>
                         <div>
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-bold text-xs text-slate-900">{getBaseNomeDocente(os.docenteAssente.nome)}</span>
-                            <span className="text-[11px] text-slate-400 font-medium">({os.docenteAssente.materia})</span>
+                            <span className="font-black text-xs text-slate-900">{getBaseNomeDocente(os.docenteAssente.nome)}</span>
+                            <span className="text-[11px] text-indigo-600 font-bold">({os.docenteAssente.materia})</span>
                             
                             {/* BADGE ROSSO CASO GRAVE SE SOSTEGNO CON CELLA GRAVE */}
                             {isGraveSostegno && (
@@ -706,8 +705,8 @@ export const TabelloneSostituzioni: React.FC<{
                               ));
                             })()}
                           </div>
-                          <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-2 mt-0.5">
-                            <span>Tipologia: <strong className="text-slate-700">{os.motivo}</strong></span>
+                          <div className="text-[11px] text-slate-500 flex flex-wrap items-center gap-1.5 mt-0.5">
+                            <span className="font-medium text-slate-600">{os.motivo}</span>
                             {os.isUscita && (
                               <span className="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.2 rounded text-[10px] flex items-center gap-1">
                                 <Bus className="w-2.5 h-2.5" /> Accompagnatore
