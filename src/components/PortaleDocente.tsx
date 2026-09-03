@@ -241,15 +241,39 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
     });
   };
 
+  // Ticker per aggiornare la visualizzazione ogni minuto (es. passaggio alle ore 18:00)
+  const [currentTimestamp, setCurrentTimestamp] = useState<number>(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTimestamp(Date.now());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   const mieSostituzioni = React.useMemo(() => {
+    const now = new Date(currentTimestamp);
+    const oggiIso = now.toISOString().split('T')[0];
+    const oraAttuale = now.getHours();
+
     return sostituzioni
-      .filter(s => collegatiIds.includes(s.docenteSostitutoId) && s.pubblicata)
+      .filter(s => {
+        if (!collegatiIds.includes(s.docenteSostitutoId) || !s.pubblicata) return false;
+        
+        const dataSostIso = (s.data || '').split('T')[0];
+        // 1. Se la sostituzione è di un giorno precedente a oggi, non compare più nell'elenco da fare
+        if (dataSostIso < oggiIso) return false;
+        
+        // 2. Se la sostituzione è del giorno odierno ed è superata l'ora limite delle 18:00, scompare dall'elenco
+        if (dataSostIso === oggiIso && oraAttuale >= 18) return false;
+
+        return true;
+      })
       .sort((a, b) => {
         const cmpData = (a.data || '').localeCompare(b.data || '');
         if (cmpData !== 0) return cmpData;
         return (a.ora || 0) - (b.ora || 0);
       });
-  }, [sostituzioni, collegatiIds]);
+  }, [sostituzioni, collegatiIds, currentTimestamp]);
 
   const mieNotificheNonLette = React.useMemo(() => {
     return notifiche
