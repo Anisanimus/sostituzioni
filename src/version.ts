@@ -13,11 +13,16 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.5.1',
-  buildTime: '2026-09-03T16:45:00Z',
-  title: 'Novità della Versione 1.5.1',
-  descrizioneGenerale: 'Miglioramento dell\'ergonomia visiva e orizzontale nella visualizzazione a blocchi.',
+  version: '1.5.2',
+  buildTime: '2026-09-03T17:15:00Z',
+  title: 'Novità della Versione 1.5.2',
+  descrizioneGenerale: 'Aggiornamento delle etichette descrittive per i docenti di sostegno assegnati a supplenze.',
   novita: [
+    {
+      titolo: 'Dicitura "(SOSTITUZIONE)" per Sostegno Spostato',
+      descrizione: 'Quando un docente di sostegno in servizio su un\'altra classe viene assegnato a coprire un\'ora scoperta, nei tabelloni e nei prospetti compare ora la dicitura esatta "(SOSTITUZIONE)".',
+      tag: 'Tabellone & Diciture'
+    },
     {
       titolo: 'Pulsante "+ Aggiungi" a Tutta Larghezza nella Vista a Blocchi',
       descrizione: 'Nella vista a blocchi orari da mobile, il pulsante "+ Aggiungi" sfrutta ora l\'intera larghezza orizzontale della riga con la dicitura chiara ed esplicita per scandire al meglio ogni blocco.',

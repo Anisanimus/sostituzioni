@@ -823,7 +823,7 @@ export function getDescrizioneCategoriaSostituto(categoria: string | undefined):
     return 'recupero';
   }
   if (catUpper === 'SOSTEGNO') {
-    return 'disposizione';
+    return 'sostituzione';
   }
   if (catUpper === 'LIBERATO_STESSA_CLASSE') {
     return 'stessa classe';
