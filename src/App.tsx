@@ -728,8 +728,8 @@ const MainApp: React.FC = () => {
                         <BarChart3 className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="block font-black text-xs">Report & Statistiche</span>
-                        <span className="text-[10px] text-slate-500 font-normal">Equità e monte ore</span>
+                        <span className="block font-black text-xs">Bilanci & Report</span>
+                        <span className="text-[10px] text-slate-500 font-normal">Debito/credito e statistiche</span>
                       </div>
                     </div>
                     {tabVice === 'REPORT' && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
