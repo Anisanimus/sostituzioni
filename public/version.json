@@ -1,9 +1,14 @@
 {
-  "version": "1.6.2",
-  "buildTime": "2026-09-03T18:12:00Z",
-  "title": "Novità della Versione 1.6.2",
-  "descrizioneGenerale": "Separazione della personalizzazione in due sezioni distinte: Stemma Intestazione interna e Icona Principale App (PWA/Home).",
+  "version": "1.6.3",
+  "buildTime": "2026-09-03T18:18:00Z",
+  "title": "Novità della Versione 1.6.3",
+  "descrizioneGenerale": "Nuova icona ufficiale SVG Sostituzioni Smart integrata come Favicon e icona predefinita PWA.",
   "novita": [
+    {
+      "titolo": "Nuova Icona SVG Ufficiale Sostituzioni Smart",
+      "descrizione": "Integrata la nuova icona vettoriale SVG in alta definizione (con Scuola, Orologio e Calendario su sfondo blu/verde smeraldo) come icona predefinita dell'applicazione e favicon di sistema.",
+      "tag": "Brand & Grafica"
+    },
     {
       "titolo": "Doppio Controllo Indipendente per Loghi e Icone",
       "descrizione": "In Vicepresidenza > Personalizzazioni > Intestazione Scuola sono ora presenti due riquadri dedicati: uno per lo stemma interno mostrato sulla barra desktop e nel menu, e uno indipendente per l'icona principale dell'applicazione (utilizzata su Home smartphone, richiesta di installazione, splash screen e favicon della scheda del browser).",
