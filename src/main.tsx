@@ -98,8 +98,8 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-// ID UNIVOCO DELLA BUILD PER FORZARE LO SVUOTAMENTO CACHE SU TUTTI I DISPOSITIVI (INCLUSO IPHONE)
-export const APP_BUILD_ID = `build_${Date.now()}_v006`;
+// ID UNIVOCO DELLA BUILD STATICO PER EVITARE LOOP INFINITI
+export const APP_BUILD_ID = 'build_2026_09_03_v007';
 
 // AUTO-PURGE CACHE & HARD REFRESH SE LA VERSIONE E' CAMBIATA
 (function purgeOldCachesIfNeeded() {
@@ -107,7 +107,6 @@ export const APP_BUILD_ID = `build_${Date.now()}_v006`;
     const savedBuild = localStorage.getItem('app_installed_build_id');
     if (savedBuild !== APP_BUILD_ID) {
       localStorage.setItem('app_installed_build_id', APP_BUILD_ID);
-      // Se era già stata caricata una versione precedente, pulisci le cache e de-registra i vecchi worker
       if (savedBuild) {
         if ('caches' in window) {
           caches.keys().then((keys) => {
@@ -121,7 +120,6 @@ export const APP_BUILD_ID = `build_${Date.now()}_v006`;
             }
           });
         }
-        window.location.reload();
       }
     }
   } catch (e) {}
