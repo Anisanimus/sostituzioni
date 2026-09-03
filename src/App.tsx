@@ -32,6 +32,8 @@ import {
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginScreen } from './components/LoginScreen';
+import { UpdateNotificationModal } from './components/UpdateNotificationModal';
+import { CURRENT_APP_VERSION } from './version';
 import { LogOut } from 'lucide-react';
 
 const MainApp: React.FC = () => {
@@ -167,6 +169,9 @@ const MainApp: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-300/80 text-slate-800 font-sans flex flex-col antialiased">
+      {/* CONTROLLO E NOTIFICA LIVE AGGIORNAMENTI VERSIONE */}
+      <UpdateNotificationModal />
+
       {/* HEADER COMPATTO CON BURGER MENU E SUPPORTO IPHONE NOTCH / DYNAMIC ISLAND */}
       <header className="bg-slate-900 text-white shadow-md sticky top-0 z-40 safe-top">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between">
@@ -845,7 +850,7 @@ const MainApp: React.FC = () => {
             <div className="shrink-0 p-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
               <div className="leading-tight">
                 <span className="font-black text-[11px] text-slate-800 block">Sostituzioni Smart</span>
-                <span className="font-mono text-[9px] text-slate-500 font-bold">v0.0.5</span>
+                <span className="font-mono text-[9px] text-indigo-700 font-black">v{CURRENT_APP_VERSION.version}</span>
               </div>
               <span className="font-bold text-emerald-600 text-[10px] flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
@@ -1489,7 +1494,7 @@ const MainApp: React.FC = () => {
               <div className="shrink-0 p-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
                 <div className="leading-tight">
                   <span className="font-black text-xs text-slate-800 block">Sostituzioni Smart</span>
-                  <span className="font-mono text-[10px] text-slate-500 font-bold">v0.0.5 (RC5)</span>
+                  <span className="font-mono text-[10px] text-indigo-700 font-bold">v{CURRENT_APP_VERSION.version}</span>
                 </div>
                 <span className="font-bold text-emerald-600 text-xs flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Operativo
