@@ -5,15 +5,17 @@ import {
   Save, School, Sliders, ShieldAlert, Sparkles, LayoutGrid, List,
   Download, Upload, Plus, Trash2, ShieldCheck, Database,
   Mail, Send, ExternalLink, Info, HelpCircle, Code2, Copy, X,
-  ChevronDown, ChevronUp, BookOpen, GraduationCap, Palette, Image as ImageIcon
+  ChevronDown, ChevronUp, BookOpen, GraduationCap, Palette, Image as ImageIcon, RefreshCw
 } from 'lucide-react';
 import { DEFAULT_IMPOSTAZIONI_SCUOLA, DEFAULT_IMPOSTAZIONI_PRIORITA } from '../context/AppContext';
 import { formatDataItaliana, MODELLI_EMAIL_PREDEFINITI } from '../utils/docentiHelper';
+import { EventoCalendarioCache } from '../types';
 
 export const PersonalizzazioniScuola: React.FC = () => {
   const { 
     docenti, orariDocenti, assenze, uscite, sostituzioni, movimentiDebito, impostazioniPriorita,
     impostazioniScuola, updateImpostazioniScuola, setImpostazioniScuola, updateImpostazioniPriorita, ripristinaBackupCompleto,
+    eventiCalendariCache, salvaEventiCalendariCache,
     inviaMailPromemoriaGruppoManuale
   } = useApp();
   
@@ -37,8 +39,9 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [nascondiWeekend, setNascondiWeekend] = useState(impostazioniScuola.nascondiWeekendCalendario ?? true);
   const [mostraInfoRegolaMail, setMostraInfoRegolaMail] = useState<boolean>(false);
   const [mostraGuidaWebhook, setMostraGuidaWebhook] = useState<boolean>(false);
-  const [copiatoScript, setCopiatoScript] = useState<boolean>(false);
   const [infoSezioneAperta, setInfoSezioneAperta] = useState<string | null>(null);
+  const [isSyncingCal, setIsSyncingCal] = useState<boolean>(false);
+  const [msgSyncCal, setMsgSyncCal] = useState<{ tipo: 'SUCCESS' | 'ERROR' | 'INFO'; testo: string } | null>(null);
 
   // Gestione Accordion Sezioni (Tutte Chiuse di default)
   const [sezioniAperte, setSezioniAperte] = useState<Record<string, boolean>>({
@@ -2473,12 +2476,13 @@ export const PersonalizzazioniScuola: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            const scriptCode = `function doPost(e) {
+                            const scriptCode = `// GESTIONE INVIO EMAIL AUTOMATICO E SINCRONIZZAZIONE CALENDARI PER ATA
+function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var destinatario = data.destinatario;
     var oggetto = data.oggetto;
-    var corpo = data.corpo;
+    var corpo = data.corpo || data.messaggio;
 
     if (!destinatario || !oggetto) {
       return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Parametri mancanti" }))
@@ -2491,7 +2495,47 @@ export const PersonalizzazioniScuola: React.FC = () => {
       body: corpo
     });
 
-    return ContentService.createTextOutput(JSON.stringify({ status: "ok", message: "Email inviata con successo da " + Session.getActiveUser().getEmail() }))
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", message: "Email inviata con successo" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// SINCRONIZZAZIONE EVENTI CALENDARI PER VISUALIZZAZIONE NATIVA ATA
+function doGet(e) {
+  try {
+    var calId = e.parameter.calId;
+    if (!calId) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "ID Calendario mancante" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var now = new Date();
+    var startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 giorni fa
+    var endTime = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000); // prossimi 6 mesi
+
+    var calendar = CalendarApp.getCalendarById(calId);
+    if (!calendar) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Calendario non trovato o non accessibile" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var events = calendar.getEvents(startTime, endTime);
+    var result = events.map(function(ev) {
+      return {
+        id: ev.getId(),
+        titolo: ev.getTitle(),
+        descrizione: ev.getDescription() || "",
+        luogo: ev.getLocation() || "",
+        dataInizio: ev.isAllDayEvent() ? Utilities.formatDate(ev.getStartTime(), "GMT", "yyyy-MM-dd") : ev.getStartTime().toISOString(),
+        dataFine: ev.isAllDayEvent() ? Utilities.formatDate(ev.getEndTime(), "GMT", "yyyy-MM-dd") : ev.getEndTime().toISOString(),
+        tuttoIlGiorno: ev.isAllDayEvent()
+      };
+    });
+
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", events: result }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
@@ -2499,12 +2543,12 @@ export const PersonalizzazioniScuola: React.FC = () => {
   }
 }`;
                             navigator.clipboard.writeText(scriptCode);
-                            alert("Codice Google Apps Script copiato negli appunti!");
+                            alert("Codice Google Apps Script completo copiato negli appunti!");
                           }}
                           className="absolute right-2.5 top-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-[10px] font-bold px-2 py-1 rounded-md transition cursor-pointer flex items-center gap-1 shadow-xs"
                         >
                           <Copy className="w-3 h-3 text-indigo-400" />
-                          <span>Copia Script</span>
+                          <span>Copia Script Completo</span>
                         </button>
                         <pre className="text-[11px] font-mono leading-tight pr-24 whitespace-pre">
 {`function doPost(e) {
@@ -2512,24 +2556,40 @@ export const PersonalizzazioniScuola: React.FC = () => {
     var data = JSON.parse(e.postData.contents);
     var destinatario = data.destinatario;
     var oggetto = data.oggetto;
-    var corpo = data.corpo;
-
+    var corpo = data.corpo || data.messaggio;
     if (!destinatario || !oggetto) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Parametri mancanti" }))
-        .setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({ status: "error" })).setMimeType(ContentService.MimeType.JSON);
     }
-
-    MailApp.sendEmail({
-      to: destinatario,
-      subject: oggetto,
-      body: corpo
-    });
-
-    return ContentService.createTextOutput(JSON.stringify({ status: "ok", message: "Email inviata con successo da " + Session.getActiveUser().getEmail() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    MailApp.sendEmail({ to: destinatario, subject: oggetto, body: corpo });
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok" })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  try {
+    var calId = e.parameter.calId;
+    if (!calId) return ContentService.createTextOutput(JSON.stringify({ status: "error" })).setMimeType(ContentService.MimeType.JSON);
+    var now = new Date();
+    var startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    var endTime = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
+    var cal = CalendarApp.getCalendarById(calId);
+    if (!cal) return ContentService.createTextOutput(JSON.stringify({ status: "error" })).setMimeType(ContentService.MimeType.JSON);
+    var evs = cal.getEvents(startTime, endTime).map(function(ev) {
+      return {
+        id: ev.getId(),
+        titolo: ev.getTitle(),
+        descrizione: ev.getDescription() || "",
+        luogo: ev.getLocation() || "",
+        dataInizio: ev.isAllDayEvent() ? Utilities.formatDate(ev.getStartTime(), "GMT", "yyyy-MM-dd") : ev.getStartTime().toISOString(),
+        dataFine: ev.isAllDayEvent() ? Utilities.formatDate(ev.getEndTime(), "GMT", "yyyy-MM-dd") : ev.getEndTime().toISOString(),
+        tuttoIlGiorno: ev.isAllDayEvent()
+      };
+    });
+    return ContentService.createTextOutput(JSON.stringify({ status: "ok", events: evs })).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
 }`}
                         </pre>
@@ -2812,6 +2872,127 @@ export const PersonalizzazioniScuola: React.FC = () => {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* 3. SINCRONIZZAZIONE MIRRORING DATABASE PER PERSONALE ATA (SENZA LOGIN GOOGLE) */}
+                <div className="p-4 bg-amber-50/60 rounded-2xl border border-amber-200/80 space-y-3">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">⚡</span>
+                      <div>
+                        <h4 className="font-black text-amber-950 text-xs sm:text-sm uppercase tracking-wider">
+                          3. Mirroring Eventi per Personale ATA (Accesso con PIN)
+                        </h4>
+                        <p className="text-[11px] text-amber-800">
+                          Gli eventi dei calendari vengono copiati nel database protetto della scuola. In questo modo il personale ATA può consultarli direttamente dall'app senza dover accedere con un account Google.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isSyncingCal}
+                      onClick={async () => {
+                        const webhookUrl = mailGruppoWebhookUrl?.trim();
+                        const calendari = [
+                          ...calImpegniList.filter(c => c.googleId?.trim()).map(c => ({ ...c, tipo: 'IMPEGNI' as const })),
+                          ...calRisorseList.filter(r => r.googleId?.trim()).map(r => ({ ...r, tipo: 'RISORSE' as const }))
+                        ];
+
+                        if (calendari.length === 0) {
+                          setMsgSyncCal({ tipo: 'INFO', testo: 'Nessun calendario Google configurato da sincronizzare.' });
+                          return;
+                        }
+
+                        if (!webhookUrl || !webhookUrl.startsWith('http')) {
+                          setMsgSyncCal({ tipo: 'ERROR', testo: 'È necessario configurare il Webhook Apps Script nella Sezione 6 per sincronizzare gli eventi sul database.' });
+                          return;
+                        }
+
+                        setIsSyncingCal(true);
+                        setMsgSyncCal(null);
+
+                        try {
+                          let tuttiEventi: EventoCalendarioCache[] = [];
+
+                          for (const cal of calendari) {
+                            try {
+                              const targetUrl = `${webhookUrl}${webhookUrl.includes('?') ? '&' : '?'}calId=${encodeURIComponent(cal.googleId.trim())}`;
+                              const res = await fetch(targetUrl);
+                              if (res.ok) {
+                                const data = await res.json();
+                                if (data.status === 'ok' && Array.isArray(data.events)) {
+                                  const parsed = data.events.map((ev: any) => ({
+                                    id: ev.id || `ev_${Math.random().toString(36).substr(2, 6)}`,
+                                    calendarioId: cal.googleId.trim(),
+                                    calendarioNome: cal.nome || (cal.tipo === 'IMPEGNI' ? 'Impegno' : 'Risorsa'),
+                                    tipo: cal.tipo,
+                                    titolo: ev.titolo || 'Senza titolo',
+                                    descrizione: ev.descrizione || '',
+                                    luogo: ev.luogo || '',
+                                    dataInizio: ev.dataInizio,
+                                    dataFine: ev.dataFine,
+                                    tuttoIlGiorno: Boolean(ev.tuttoIlGiorno),
+                                    colore: cal.colore
+                                  }));
+                                  tuttiEventi.push(...parsed);
+                                }
+                              }
+                            } catch (errCal) {
+                              console.warn(`Errore sincronizzazione per ${cal.nome}:`, errCal);
+                            }
+                          }
+
+                          if (tuttiEventi.length > 0) {
+                            await salvaEventiCalendariCache(tuttiEventi);
+                            setMsgSyncCal({ 
+                              tipo: 'SUCCESS', 
+                              testo: `Sincronizzazione riuscita! Copiati ${tuttiEventi.length} eventi nel database per gli ATA.` 
+                            });
+                          } else {
+                            setMsgSyncCal({ 
+                              tipo: 'INFO', 
+                              testo: 'Nessun evento futuro/recente trovato nei calendari indicati o permessi Apps Script da verificare.' 
+                            });
+                          }
+                        } catch (err: any) {
+                          setMsgSyncCal({ tipo: 'ERROR', testo: `Errore sincronizzazione: ${err.message || 'Controlla lo script'}` });
+                        } finally {
+                          setIsSyncingCal(false);
+                          setTimeout(() => {
+                            setMsgSyncCal(null);
+                          }, 6000);
+                        }
+                      }}
+                      className="text-xs font-black bg-amber-600 hover:bg-amber-700 text-white px-3.5 py-2 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCal ? 'animate-spin' : ''}`} />
+                      <span>{isSyncingCal ? 'Sincronizzazione in corso...' : 'Sincronizza Eventi Ora'}</span>
+                    </button>
+                  </div>
+
+                  {msgSyncCal && (
+                    <div className={`p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in ${
+                      msgSyncCal.tipo === 'SUCCESS' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+                      msgSyncCal.tipo === 'ERROR' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
+                      'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}>
+                      <span>{msgSyncCal.tipo === 'SUCCESS' ? '✓' : msgSyncCal.tipo === 'ERROR' ? '⚠️' : 'ℹ️'}</span>
+                      <span>{msgSyncCal.testo}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] text-amber-900 bg-white/70 p-2.5 rounded-xl border border-amber-200">
+                    <span>
+                      Eventi attualmente memorizzati nel database: <strong>{eventiCalendariCache.length}</strong>
+                    </span>
+                    {eventiCalendariCache.length > 0 && (
+                      <span className="text-emerald-700 font-bold flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Pronto per consultazione ATA</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente, NominaSupplente, AnnuncioBacheca } from '../types';
+import { Docente, OrarioDocente, AssenzaDocente, UscitaClasse, SostituzioneAssegnata, MovimentoDebito, ImpostazioniPriorita, ImpostazioniScuola, CategoriaSostituto, NotificaDocente, RichiestaAccessoDocente, NominaSupplente, AnnuncioBacheca, EventoCalendarioCache } from '../types';
 import { DOCENTI_PRECARICATI, ORARI_DOCENTI_PRECARICATI } from '../data/initialData';
 import { getDocentiCollegatiIds, getOrarioUnificatoDocente, getBaseNomeDocente, formatDataItaliana, getMateriaDocenteNellOra, MODELLI_EMAIL_PREDEFINITI, componiTestoEmail } from '../utils/docentiHelper';
 import { db, auth } from '../firebase';
@@ -120,6 +120,9 @@ interface AppContextType {
   importaNuovoOrarioCompleto: (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => void;
   aggiornaOrarioSenzaCancellareStorico: (nuoviDocenti: Docente[], nuoviOrari: OrarioDocente[]) => void;
   ripristinaBackupCompleto: (datiBackup: any) => void;
+  eventiCalendariCache: EventoCalendarioCache[];
+  setEventiCalendariCache: React.Dispatch<React.SetStateAction<EventoCalendarioCache[]>>;
+  salvaEventiCalendariCache: (nuoviEventi: EventoCalendarioCache[]) => Promise<void>;
   inviaMailPromemoriaGruppoManuale: (
     destinatarioOverride?: string, 
     oggettoOverride?: string, 
@@ -229,6 +232,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return [];
     }
   });
+
+  const [eventiCalendariCache, setEventiCalendariCache] = useState<EventoCalendarioCache[]>(() => {
+    try {
+      const saved = localStorage.getItem('scuola_eventi_calendari_cache');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  const salvaEventiCalendariCache = async (nuoviEventi: EventoCalendarioCache[]) => {
+    setEventiCalendariCache(nuoviEventi);
+    try {
+      localStorage.setItem('scuola_eventi_calendari_cache', JSON.stringify(nuoviEventi));
+    } catch (e) {}
+    await triggerCloudSync({ eventiCalendariCache: nuoviEventi });
+  };
 
   const [impostazioniPriorita, setImpostazioniPriorita] = useState<ImpostazioniPriorita>(() => {
     try {
@@ -686,6 +706,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
             if (cloudData.richiesteAccessoDocenti && Array.isArray(cloudData.richiesteAccessoDocenti)) {
               setRichiesteAccessoDocenti(cloudData.richiesteAccessoDocenti);
+            }
+            if (cloudData.eventiCalendariCache && Array.isArray(cloudData.eventiCalendariCache)) {
+              setEventiCalendariCache(cloudData.eventiCalendariCache);
+              try {
+                localStorage.setItem('scuola_eventi_calendari_cache', JSON.stringify(cloudData.eventiCalendariCache));
+              } catch (e) {}
             }
             if (cloudData.impostazioniScuola) {
               setImpostazioniScuola(prev => ({ ...prev, ...cloudData.impostazioniScuola }));
@@ -2518,6 +2544,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       importaNuovoOrarioCompleto,
       aggiornaOrarioSenzaCancellareStorico,
       ripristinaBackupCompleto,
+      eventiCalendariCache,
+      setEventiCalendariCache,
+      salvaEventiCalendariCache,
       inviaMailPromemoriaGruppoManuale,
       inviaEmailDocenteSingolo
     }}>

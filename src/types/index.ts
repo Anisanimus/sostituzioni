@@ -154,6 +154,20 @@ export interface CalendarioGoogleCustom {
   colore?: string;     // Colore esadecimale opzionale
 }
 
+export interface EventoCalendarioCache {
+  id: string;
+  calendarioId: string;
+  calendarioNome?: string;
+  tipo: 'IMPEGNI' | 'RISORSE';
+  titolo: string;
+  descrizione?: string;
+  luogo?: string;
+  dataInizio: string; // ISO string o YYYY-MM-DD o YYYY-MM-DDTHH:mm:ss
+  dataFine: string;   // ISO string o YYYY-MM-DD o YYYY-MM-DDTHH:mm:ss
+  tuttoIlGiorno: boolean;
+  colore?: string;
+}
+
 export interface ImpostazioniScuola {
   nomeScuola: string;
   appUrl?: string; // URL pubblico dell'applicazione web/PWA (es. https://sostituzioni-smart.web.app)

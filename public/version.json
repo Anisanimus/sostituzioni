@@ -1,13 +1,18 @@
 {
-  "version": "1.7.2",
-  "buildTime": "2026-09-03T21:35:00Z",
-  "title": "Novità della Versione 1.7.2",
-  "descrizioneGenerale": "Campo Link/URL dell'Applicazione Web (PWA) configurabile nell'Intestazione e sincronizzato con tutte le email.",
+  "version": "1.8.0",
+  "buildTime": "2026-09-03T21:48:00Z",
+  "title": "Novità della Versione 1.8.0",
+  "descrizioneGenerale": "Visualizzazione Nativa e Mirroring dei Calendari Google per il Personale ATA con accesso tramite PIN (senza login Google).",
   "novita": [
     {
-      "titolo": "Link dell'App Configurabile nell'Intestazione",
-      "descrizione": "Nella sezione Intestazione (subito sotto la Denominazione Scuola) è ora presente il campo per impostare l'URL personalizzato dell'Applicazione. Tutte le email (collettive di gruppo, singole assegnazioni, revoche e riepiloghi mattutini) e il segnaposto {LINK_PORTALE} utilizzeranno automaticamente questo indirizzo.",
-      "tag": "Personalizzazioni & Portale"
+      "titolo": "Agenda Nativa per Personale ATA (Senza Account Google)",
+      "descrizione": "I collaboratori scolastici che accedono con il PIN possono ora visualizzare tutti gli impegni della scuola, consigli di classe e occupazione dei laboratori direttamente nell'app tramite una comoda Agenda Nativa cronologica, senza dover effettuare il login con un account Google.",
+      "tag": "ATA & Calendari"
+    },
+    {
+      "titolo": "Mirroring e Sincronizzazione Database",
+      "descrizione": "Aggiunto pulsante di sincronizzazione in Personalizzazioni per copiare istantaneamente gli eventi dei calendari Google in Cloud Firestore (occupazione < 0.1 MB).",
+      "tag": "Cloud & Database"
     },
     {
       "titolo": "Banner di Avviso Docenti Senza Email",
