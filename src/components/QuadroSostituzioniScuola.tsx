@@ -1013,8 +1013,9 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                                     ))}
                                   </div>
                                 ) : r.smistata ? (
-                                  <span className="inline-block bg-amber-100 text-amber-900 font-bold px-1.5 py-0.2 rounded border border-amber-300 text-[9px] sm:text-[10px]">
-                                    🔀 Smistamento
+                                  <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black px-2 py-0.5 rounded-md shadow-xs border border-amber-300 text-[10px] uppercase tracking-wide">
+                                    <span>🔀</span>
+                                    <span>Smistamento</span>
                                   </span>
                                 ) : r.nonSostituita ? (
                                   <span className="inline-block bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 rounded border border-slate-200 text-[9px] sm:text-[10px]">
@@ -1179,8 +1180,9 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                                 ))}
                               </div>
                             ) : r.smistata ? (
-                              <span className="bg-amber-100 text-amber-950 border border-amber-300 font-black text-xs px-3 py-1.5 rounded-lg shadow-2xs">
-                                🔀 Smistamento Classe
+                              <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xs px-3.5 py-1.5 rounded-xl shadow-xs border border-amber-300 flex items-center gap-1.5 uppercase tracking-wide">
+                                <span>🔀</span>
+                                <span>Smistamento Classe</span>
                               </span>
                             ) : isNonSost ? (
                               <span className="bg-slate-100 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg border border-slate-300">

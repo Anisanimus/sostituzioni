@@ -13,14 +13,14 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.6.8',
-  buildTime: '2026-09-03T20:53:00Z',
-  title: 'Novità della Versione 1.6.8',
-  descrizioneGenerale: 'Opzione Smistamento Alunni nelle proposte di sostituzione e nel tabellone scuola.',
+  version: '1.6.9',
+  buildTime: '2026-09-03T20:57:00Z',
+  title: 'Novità della Versione 1.6.9',
+  descrizioneGenerale: 'Smistamento Classe ad alta visibilità (arancio acceso) e pubblicazione immediata sui tabelloni.',
   novita: [
     {
-      titolo: 'Opzione "Smistamento Classe"',
-      descrizione: 'Nella finestra di assegnazione della supplenza, a fianco di "Non Sostituire", è ora disponibile la scelta "Smistamento" per indicare che la classe è stata suddivisa nelle altre aule con visualizzazione chiara sia nel Tabellone che nel Quadro Scuola ATA.',
+      titolo: 'Smistamento Immediatamente Pubblico & Evidenziato',
+      descrizione: 'La selezione dello "Smistamento Classe" diventa immediatamente visibile in tempo reale su tutti i tabelloni e nel Quadro Scuola ATA, con una veste grafica arancio acceso ad alto contrasto per risaltare immediatamente rispetto a tutti gli altri stati.',
       tag: 'Organizzazione & Tabellone'
     },
     {

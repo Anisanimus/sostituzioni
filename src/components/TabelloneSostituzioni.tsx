@@ -743,12 +743,16 @@ export const TabelloneSostituzioni: React.FC<{
                                   </button>
                                 </div>
                               ) : sost.categoria === 'SMISTAMENTO_CLASSE' ? (
-                                <div key={sost.id} className="flex items-center gap-1.5 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1 shadow-2xs text-left">
+                                <div key={sost.id} className="flex items-center gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white rounded-xl px-2.5 py-1.5 shadow-md border-2 border-amber-300 text-left animate-in fade-in">
                                   <div>
-                                    <div className="font-bold text-[11px] text-amber-950 flex items-center gap-1">
-                                      <span>🔀 Smistamento Classe</span>
+                                    <div className="font-black text-xs flex items-center gap-1.5 tracking-wide text-white drop-shadow-xs">
+                                      <span className="text-sm">🔀</span>
+                                      <span>SMISTAMENTO CLASSE</span>
+                                      <span className="bg-white/20 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">Pubblico</span>
                                     </div>
-                                    <span className="text-[9px] text-amber-800 font-medium block">Alunni divisi nelle altre aule</span>
+                                    <span className="text-[10px] text-amber-100 font-semibold block leading-tight mt-0.5">
+                                      Alunni distribuiti nelle altre aule
+                                    </span>
                                   </div>
 
                                   {/* CESTINO ANNULLA SMISTAMENTO */}
@@ -757,7 +761,7 @@ export const TabelloneSostituzioni: React.FC<{
                                       e.stopPropagation();
                                       rimuoviSostituzione(sost.id);
                                     }}
-                                    className="text-slate-400 hover:text-rose-600 p-1 hover:bg-rose-50 rounded transition ml-0.5 cursor-pointer"
+                                    className="text-white/80 hover:text-white p-1 hover:bg-black/20 rounded-lg transition ml-1 cursor-pointer"
                                     title="Annulla 'Smistamento Classe'"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -1052,12 +1056,16 @@ export const TabelloneSostituzioni: React.FC<{
                                   </button>
                                 </div>
                               ) : sost.categoria === 'SMISTAMENTO_CLASSE' ? (
-                                <div key={sost.id} className="flex items-center gap-1.5 bg-amber-50 border border-amber-300 rounded-lg px-2 py-1 shadow-2xs text-left">
+                                <div key={sost.id} className="flex items-center gap-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white rounded-xl px-2.5 py-1.5 shadow-md border-2 border-amber-300 text-left animate-in fade-in">
                                   <div>
-                                    <div className="font-bold text-[11px] text-amber-950 flex items-center gap-1">
-                                      <span>🔀 Smistamento Classe</span>
+                                    <div className="font-black text-xs flex items-center gap-1.5 tracking-wide text-white drop-shadow-xs">
+                                      <span className="text-sm">🔀</span>
+                                      <span>SMISTAMENTO CLASSE</span>
+                                      <span className="bg-white/20 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">Pubblico</span>
                                     </div>
-                                    <span className="text-[9px] text-amber-800 font-medium block">Alunni divisi nelle altre aule</span>
+                                    <span className="text-[10px] text-amber-100 font-semibold block leading-tight mt-0.5">
+                                      Alunni distribuiti nelle altre aule
+                                    </span>
                                   </div>
 
                                   {/* CESTINO ANNULLA SMISTAMENTO */}
@@ -1066,7 +1074,7 @@ export const TabelloneSostituzioni: React.FC<{
                                       e.stopPropagation();
                                       rimuoviSostituzione(sost.id);
                                     }}
-                                    className="text-slate-400 hover:text-rose-600 p-1 hover:bg-rose-50 rounded transition ml-0.5 cursor-pointer"
+                                    className="text-white/80 hover:text-white p-1 hover:bg-black/20 rounded-lg transition ml-1 cursor-pointer"
                                     title="Annulla 'Smistamento Classe'"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -1371,7 +1379,7 @@ export const TabelloneSostituzioni: React.FC<{
               categoria,
               isStraordinario,
               consumaDebito,
-              pubblicata: false,
+              pubblicata: categoria === 'SMISTAMENTO_CLASSE', // Smistamento è immediatamente pubblico sui tabelloni
               firmata: false
             });
             setSelectedOraScoperta(null);
