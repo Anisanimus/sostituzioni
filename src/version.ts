@@ -6,13 +6,12 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.4.3',
-  buildTime: '2026-09-03T15:33:00Z',
-  title: 'Versione 1.4.3',
+  version: '1.4.4',
+  buildTime: '2026-09-03T15:38:00Z',
+  title: 'Versione 1.4.4',
   novita: [
-    'Ottimizzato l\'header per iPhone: tasto Logout sempre visibile e comodo',
-    'Rimosso pulsante ricarica duplicato grazie all\'auto-aggiornamento live',
-    'Ridisegnato Bilanci & Report a 4 reparti con Drawer movimenti',
-    'Supporto a soggiorni e viaggi di istruzione multi-giorno in Aggiungi Gita'
+    'Pulsanti compatti (+ Assente, + Gita, + Nomina): perfetta visualizzazione su tablet',
+    'Tutti i pulsanti azioni e avvisi ora restano perfettamente allineati e visibili',
+    'Ottimizzato l\'header per smartphone: tasto Logout sempre comodo'
   ]
 };

@@ -498,44 +498,42 @@ export const GestioneAssenze: React.FC<{
       
       {/* HEADER PULSANTERIA UNIFICATA PER TUTTI I DISPOSITIVI */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        {/* GRUPPO 1: AGGIUNGI (+ ASSENTE, + GITA, + NOMINA SUPPLENTE) A 3 COLONNE SU MOBILE (PIÙ QUADRATI CON ICONA SOPRA) */}
+        {/* GRUPPO 1: AGGIUNGI (+ ASSENTE, + GITA, + NOMINA) COMPATTI */}
         <div className="grid grid-cols-3 sm:flex sm:items-center gap-1.5 sm:gap-2 flex-1 sm:flex-none">
           <button
             id="targetBtnAssente"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'DOCENTE' ? null : 'DOCENTE')}
-            className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 shadow-2xs border cursor-pointer min-h-[58px] sm:min-h-0 ${
+            className={`p-2 sm:px-2.5 sm:py-2 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 shadow-2xs border cursor-pointer min-h-[54px] sm:min-h-0 ${
               modalitaAperta === 'DOCENTE'
                 ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
                 : 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100'
             }`}
           >
             <UserMinus className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-indigo-600 shrink-0" />
-            <span className="sm:hidden text-[11px] font-black leading-tight text-center">+ Assente</span>
-            <span className="hidden sm:inline">+ Aggiungi Assente</span>
+            <span className="text-[11px] sm:text-xs font-black leading-tight text-center whitespace-nowrap">+ Assente</span>
           </button>
 
           <button
             id="targetBtnGita"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'GITA' ? null : 'GITA')}
-            className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 shadow-2xs border cursor-pointer min-h-[58px] sm:min-h-0 ${
+            className={`p-2 sm:px-2.5 sm:py-2 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 shadow-2xs border cursor-pointer min-h-[54px] sm:min-h-0 ${
               modalitaAperta === 'GITA'
                 ? 'bg-amber-600 text-white border-amber-700 ring-2 ring-amber-300'
                 : 'bg-amber-50 text-amber-950 border-amber-200 hover:bg-amber-100'
             }`}
           >
             <Bus className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-amber-600 shrink-0" />
-            <span className="sm:hidden text-[11px] font-black leading-tight text-center">+ Gita</span>
-            <span className="hidden sm:inline">+ Aggiungi Gita</span>
+            <span className="text-[11px] sm:text-xs font-black leading-tight text-center whitespace-nowrap">+ Gita</span>
           </button>
 
-          {/* 🔥 NUOVO PULSANTE NOMINA SUPPLENTE CATTEDRA (BORDO VERDE EMERALD) */}
+          {/* PULSANTE NOMINA SUPPLENTE */}
           <button
             id="targetBtnNomina"
             type="button"
             onClick={() => setModalitaAperta(modalitaAperta === 'NOMINA' ? null : 'NOMINA')}
-            className={`p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 shadow-2xs border cursor-pointer relative min-h-[58px] sm:min-h-0 ${
+            className={`p-2 sm:px-2.5 sm:py-2 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 shadow-2xs border cursor-pointer relative min-h-[54px] sm:min-h-0 ${
               modalitaAperta === 'NOMINA'
                 ? 'bg-emerald-700 text-white border-emerald-800 ring-2 ring-emerald-300'
                 : 'bg-emerald-50 text-emerald-950 border-emerald-300 hover:bg-emerald-100'
@@ -543,8 +541,7 @@ export const GestioneAssenze: React.FC<{
           >
             <UserCheck className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-emerald-600 shrink-0" />
             <div className="flex items-center gap-1">
-              <span className="sm:hidden text-[11px] font-black leading-tight text-center">+ Nomina</span>
-              <span className="hidden sm:inline">+ Nomina Supplente</span>
+              <span className="text-[11px] sm:text-xs font-black leading-tight text-center whitespace-nowrap">+ Nomina</span>
               {nomineSupplenti.length > 0 && (
                 <span className={`text-[9px] px-1.5 py-0.2 rounded-full font-black ${
                   modalitaAperta === 'NOMINA' ? 'bg-emerald-900 text-white' : 'bg-emerald-200 text-emerald-900'
