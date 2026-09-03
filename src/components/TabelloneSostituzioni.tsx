@@ -700,7 +700,7 @@ export const TabelloneSostituzioni: React.FC<{
                               return eds.map(ed => (
                                 <span key={ed.id} className="bg-teal-50 text-teal-800 border border-teal-300 font-bold px-1.5 py-0.5 rounded text-[9px] flex items-center gap-1 shadow-2xs shrink-0">
                                   <span>🎓</span>
-                                  <span>Educatore: {getBaseNomeDocente(ed.nome)}</span>
+                                  <span><span className="sm:hidden">Ed.:</span><span className="hidden sm:inline">Educatore:</span> {getBaseNomeDocente(ed.nome)}</span>
                                 </span>
                               ));
                             })()}
@@ -996,7 +996,7 @@ export const TabelloneSostituzioni: React.FC<{
                               return eds.map(ed => (
                                 <span key={ed.id} className="bg-teal-50 text-teal-800 border border-teal-300 font-bold px-1.5 py-0.5 rounded text-[9px] flex items-center gap-1 shadow-2xs shrink-0">
                                   <span>🎓</span>
-                                  <span>Educatore: {getBaseNomeDocente(ed.nome)}</span>
+                                  <span><span className="sm:hidden">Ed.:</span><span className="hidden sm:inline">Educatore:</span> {getBaseNomeDocente(ed.nome)}</span>
                                 </span>
                               ));
                             })()}

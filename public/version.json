@@ -1,9 +1,14 @@
 {
-  "version": "1.4.9",
-  "buildTime": "2026-09-03T16:38:00Z",
-  "title": "Novità della Versione 1.4.9",
-  "descrizioneGenerale": "Perfezionamento del pulsante di aggiunta sostituto da smartphone.",
+  "version": "1.5.0",
+  "buildTime": "2026-09-03T16:40:00Z",
+  "title": "Novità della Versione 1.5.0",
+  "descrizioneGenerale": "Ottimizzazioni per la leggibilità e l'ergonomia da smartphone.",
   "novita": [
+    {
+      "titolo": "Dicitura Compatta 'Ed.' per Educatori su Mobile",
+      "descrizione": "Nei tabelloni delle sostituzioni, la presenza dell'educatore in classe mostra ora la sigla compatta '🎓 Ed.: [Nome]' su smartphone, risparmiando spazio prezioso.",
+      "tag": "Mobile & Grafica"
+    },
     {
       "titolo": "Pulsante '+ Aggiungi' a Capo su Mobile",
       "descrizione": "Da smartphone, il pulsante per aggiungere un ulteriore docente sostituto va ora sempre a capo a tutta larghezza, migliorando l'ergonomia del tocco ed evitando qualsiasi sovrapposizione.",
