@@ -21,7 +21,7 @@ export const ReportStatistiche: React.FC = () => {
 
   const [periodo, setPeriodo] = useState<PeriodoFiltro>('ANNO_INTERO');
   const [meseSelezionato, setMeseSelezionato] = useState<string>(currentMonthStr);
-  const [tabReport, setTabReport] = useState<'SOSTEGNI' | 'PERMESSI' | 'ASSENZE' | 'USCITE' | 'STRAORDINARI' | 'NOMINE'>('SOSTEGNI');
+  const [tabReport, setTabReport] = useState<'BILANCIO_ORE' | 'SOSTEGNI' | 'ASSENZE' | 'USCITE'>('BILANCIO_ORE');
 
   // Calcolo range date attivo in base al filtro periodo
   const { dataInizioFiltro, dataFineFiltro } = useMemo(() => {
@@ -287,10 +287,10 @@ export const ReportStatistiche: React.FC = () => {
 
       const dataStraordinari = statisticheStraordinari.lista.map(s => ({
         'Docente': s.nome,
-        'Ore a Pagamento (D)': s.ore
+        'Ore a Credito (D)': s.ore
       }));
       const wsStraordinari = XLSX.utils.json_to_sheet(dataStraordinari);
-      XLSX.utils.book_append_sheet(wb, wsStraordinari, 'Ore Straordinario D');
+      XLSX.utils.book_append_sheet(wb, wsStraordinari, 'Ore a Credito D');
 
       XLSX.writeFile(wb, `Report_Statistiche_Scuola_${dataInizioFiltro}_al_${dataFineFiltro}.xlsx`);
     } catch (err) {
@@ -398,92 +398,171 @@ export const ReportStatistiche: React.FC = () => {
 
         <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-1">
-            <span className="text-[11px] font-bold">Ore Straordinario (D)</span>
+            <span className="text-[11px] font-bold">Ore a Credito (D)</span>
             <Award className="w-4 h-4 text-amber-600" />
           </div>
           <div className="text-xl font-black text-amber-700">{statisticheStraordinari.totOreStraordinario}h</div>
-          <span className="text-[10px] text-slate-400 mt-0.5">ore a pagamento maturate</span>
+          <span className="text-[10px] text-slate-400 mt-0.5">ore a credito maturate</span>
         </div>
       </div>
 
-      {/* TABS DI NAVIGAZIONE INTERNA AL REPORT */}
+      {/* TABS DI NAVIGAZIONE INTERNA AL REPORT A 4 AREE TEMATICHE */}
       <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-200 pb-2">
         <button
           type="button"
+          onClick={() => setTabReport('BILANCIO_ORE')}
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+            tabReport === 'BILANCIO_ORE'
+              ? 'bg-indigo-600 text-white shadow-2xs'
+              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <span>⚖️ 1. Bilancio Debito/Credito Ore</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => setTabReport('SOSTEGNI')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
             tabReport === 'SOSTEGNI'
               ? 'bg-purple-600 text-white shadow-2xs'
               : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
           }`}
         >
-          <span>🤝 Equità Sostegni ({statisticheSostegni.totDocenti})</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTabReport('PERMESSI')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-            tabReport === 'PERMESSI'
-              ? 'bg-indigo-600 text-white shadow-2xs'
-              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <span>⏱️ Permessi & Assemblee Sindacali</span>
+          <span>🤝 2. Equità Sostegni ({statisticheSostegni.totDocenti})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setTabReport('ASSENZE')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
             tabReport === 'ASSENZE'
               ? 'bg-rose-600 text-white shadow-2xs'
               : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
           }`}
         >
-          <span>📋 Quadro Assenze Personale</span>
+          <span>🏥 3. Analisi Assenze Personale</span>
         </button>
 
         <button
           type="button"
           onClick={() => setTabReport('USCITE')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
             tabReport === 'USCITE'
               ? 'bg-amber-600 text-white shadow-2xs'
               : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
           }`}
         >
-          <span>🚌 Uscite Didattiche & Gite</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTabReport('STRAORDINARI')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-            tabReport === 'STRAORDINARI'
-              ? 'bg-slate-900 text-white shadow-2xs'
-              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <span>💶 Ore Straordinario / D</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTabReport('NOMINE')}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-            tabReport === 'NOMINE'
-              ? 'bg-emerald-600 text-white shadow-2xs'
-              : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
-          }`}
-        >
-          <span>🧑‍🏫 Registro Nomine Supplenti ({nomineSupplenti.length})</span>
+          <span>🚌 4. Uscite Didattiche & Gite ({statisticheUscite.totUsciteEffettuate})</span>
         </button>
       </div>
 
-      {/* CONTENUTO SCHEDA 1: EQUITÀ SOSTEGNI */}
+      {/* CONTENUTO SCHEDA 1: BILANCIO DEBITO/CREDITO ORE */}
+      {tabReport === 'BILANCIO_ORE' && (
+        <div className="space-y-4 animate-fadeIn">
+          {/* SEZIONE 1: TABELLA DEBITI & PERMESSI */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+                  <span>⏱️ Monitoraggio Debiti Permessi Brevi & Assemblee Sindacali</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Controllo tetto max permessi brevi ({tettoPermessi}h/anno), assemblee sindacali ({tettoAssemblee}h/anno) e saldo ore da recuperare.
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border-collapse min-w-[700px]">
+                <thead>
+                  <tr className="bg-slate-800 text-white font-bold text-[11px]">
+                    <th className="p-2.5 rounded-tl-xl">Docente</th>
+                    <th className="p-2.5">Materia</th>
+                    <th className="p-2.5 text-center">Permessi Brevi (Tetto {tettoPermessi}h)</th>
+                    <th className="p-2.5 text-center">Assemblee Sindacali (Max {tettoAssemblee}h)</th>
+                    <th className="p-2.5 text-center">Ore Recuperate</th>
+                    <th className="p-2.5 text-center rounded-tr-xl">Debito Residuo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {statistichePermessiEAssemblee.map(p => (
+                    <tr key={p.nome} className="hover:bg-slate-50/70">
+                      <td className="p-2.5 font-bold text-slate-900">{p.nome}</td>
+                      <td className="p-2.5 text-slate-500">{p.materia}</td>
+                      <td className="p-2.5 text-center">
+                        <span className={`font-bold px-2 py-0.5 rounded-lg border ${
+                          p.orePermessiRichieste >= tettoPermessi
+                            ? 'bg-rose-100 text-rose-800 border-rose-300'
+                            : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                        }`}>
+                          {p.orePermessiRichieste}h / {tettoPermessi}h ({p.nPermessi} {p.nPermessi === 1 ? 'richiesta' : 'richieste'})
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center">
+                        <span className={`font-bold px-2 py-0.5 rounded-lg border ${
+                          p.oreAssembleaRichieste >= tettoAssemblee 
+                            ? 'bg-rose-100 text-rose-800 border-rose-300' 
+                            : p.oreAssembleaRichieste >= tettoAssemblee * 0.8
+                              ? 'bg-amber-100 text-amber-800 border-amber-300'
+                              : 'bg-slate-100 text-slate-700 border-slate-200'
+                        }`}>
+                          {p.oreAssembleaRichieste}h / {tettoAssemblee}h max
+                        </span>
+                      </td>
+                      <td className="p-2.5 text-center font-bold text-emerald-700">
+                        +{p.oreRecuperate}h
+                      </td>
+                      <td className="p-2.5 text-center">
+                        {p.debitoAttuale > 0 ? (
+                          <span className="font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
+                            {p.debitoAttuale}h da fare
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-bold">In pari (0h)</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* SEZIONE 2: ORE A CREDITO (D) & STRAORDINARI */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+                  <span>💶 Ore a Credito (D) / Supplenze Oltre Cattedra</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Riepilogo delle ore svolte in disposizione (D) senza debito preesistente, maturate come credito/straordinario per la rendicontazione.
+                </p>
+              </div>
+              <span className="text-xs font-black bg-emerald-50 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-200">
+                Totale Ore a Credito: {statisticheStraordinari.totOreStraordinario}h
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {statisticheStraordinari.lista.map(s => (
+                <div key={s.nome} className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-900">{s.nome}</span>
+                  <span className="font-black text-emerald-800 text-sm">{s.ore} {s.ore === 1 ? 'ora a credito (D)' : 'ore a credito (D)'}</span>
+                </div>
+              ))}
+              {statisticheStraordinari.lista.length === 0 && (
+                <p className="text-xs text-slate-400 italic">Nessuna ora a credito (D) maturata nel periodo selezionato.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONTENUTO SCHEDA 2: EQUITÀ SOSTEGNI */}
       {tabReport === 'SOSTEGNI' && (
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4 animate-fadeIn">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
               <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
@@ -534,84 +613,13 @@ export const ReportStatistiche: React.FC = () => {
         </div>
       )}
 
-      {/* CONTENUTO SCHEDA 2: PERMESSI BREVI E ASSEMBLEE SINDACALI */}
-      {tabReport === 'PERMESSI' && (
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">
-                ⏱️ Permessi Brevi & Monte Ore Assemblee Sindacali
-              </h3>
-              <p className="text-xs text-slate-500">
-                Monitoraggio ore di permesso richieste, ore recuperate e controllo limite 10h/anno per assemblee sindacali.
-              </p>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left border-collapse min-w-[700px]">
-              <thead>
-                <tr className="bg-slate-800 text-white font-bold text-[11px]">
-                  <th className="p-2.5 rounded-tl-xl">Docente</th>
-                  <th className="p-2.5">Materia</th>
-                  <th className="p-2.5 text-center">Permessi Brevi (Tetto {tettoPermessi}h)</th>
-                  <th className="p-2.5 text-center">Assemblee Sindacali (Max {tettoAssemblee}h)</th>
-                  <th className="p-2.5 text-center">Ore Recuperate</th>
-                  <th className="p-2.5 text-center rounded-tr-xl">Debito Residuo</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {statistichePermessiEAssemblee.map(p => (
-                  <tr key={p.nome} className="hover:bg-slate-50/70">
-                    <td className="p-2.5 font-bold text-slate-900">{p.nome}</td>
-                    <td className="p-2.5 text-slate-500">{p.materia}</td>
-                    <td className="p-2.5 text-center">
-                      <span className={`font-bold px-2 py-0.5 rounded-lg border ${
-                        p.orePermessiRichieste >= tettoPermessi
-                          ? 'bg-rose-100 text-rose-800 border-rose-300'
-                          : 'bg-indigo-50 text-indigo-700 border-indigo-200'
-                      }`}>
-                        {p.orePermessiRichieste}h / {tettoPermessi}h ({p.nPermessi} {p.nPermessi === 1 ? 'richiesta' : 'richieste'})
-                      </span>
-                    </td>
-                    <td className="p-2.5 text-center">
-                      <span className={`font-bold px-2 py-0.5 rounded-lg border ${
-                        p.oreAssembleaRichieste >= tettoAssemblee 
-                          ? 'bg-rose-100 text-rose-800 border-rose-300' 
-                          : p.oreAssembleaRichieste >= tettoAssemblee * 0.8
-                            ? 'bg-amber-100 text-amber-800 border-amber-300'
-                            : 'bg-slate-100 text-slate-700 border-slate-200'
-                      }`}>
-                        {p.oreAssembleaRichieste}h / {tettoAssemblee}h max
-                      </span>
-                    </td>
-                    <td className="p-2.5 text-center font-bold text-emerald-700">
-                      +{p.oreRecuperate}h
-                    </td>
-                    <td className="p-2.5 text-center">
-                      {p.debitoAttuale > 0 ? (
-                        <span className="font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200">
-                          {p.debitoAttuale}h da fare
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 font-bold">In pari (0h)</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
       {/* CONTENUTO SCHEDA 3: QUADRO ASSENZE */}
       {tabReport === 'ASSENZE' && (
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4 animate-fadeIn">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
               <h3 className="text-sm sm:text-base font-black text-slate-900">
-                📋 Quadro Assenze Personale & Distribuzione Settimanale
+                🏥 Analisi Assenze Personale & Distribuzione Settimanale
               </h3>
               <p className="text-xs text-slate-500">
                 Classifica docenti con più ore di assenza e picchi di assenza nei giorni della settimana.
@@ -655,7 +663,7 @@ export const ReportStatistiche: React.FC = () => {
 
       {/* CONTENUTO SCHEDA 4: USCITE DIDATTICHE */}
       {tabReport === 'USCITE' && (
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
+        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4 animate-fadeIn">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
               <h3 className="text-sm sm:text-base font-black text-slate-900">
@@ -694,101 +702,6 @@ export const ReportStatistiche: React.FC = () => {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* CONTENUTO SCHEDA 5: STRAORDINARI D */}
-      {tabReport === 'STRAORDINARI' && (
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900">
-                💶 Ore di Straordinario / Pagamento (D)
-              </h3>
-              <p className="text-xs text-slate-500">
-                Riepilogo delle ore di supplenza a pagamento svolte in ora a disposizione (D) senza debito.
-              </p>
-            </div>
-            <span className="text-xs font-black bg-emerald-50 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-200">
-              Totale Ore Straordinario: {statisticheStraordinari.totOreStraordinario}h
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            {statisticheStraordinari.lista.map(s => (
-              <div key={s.nome} className="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-900">{s.nome}</span>
-                <span className="font-black text-emerald-800 text-sm">{s.ore} {s.ore === 1 ? 'ora a pagamento' : 'ore a pagamento'}</span>
-              </div>
-            ))}
-            {statisticheStraordinari.lista.length === 0 && (
-              <p className="text-xs text-slate-400 italic">Nessuna ora di straordinario maturata nel periodo selezionato.</p>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* CONTENUTO SCHEDA 6: REGISTRO NOMINE SUPPLENTI & CATENE */}
-      {tabReport === 'NOMINE' && (
-        <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-2xs border border-slate-200 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-            <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
-                <span>🧑‍🏫 Registro Storico Nomine & Supplenze Cattedra</span>
-              </h3>
-              <p className="text-xs text-slate-500">
-                Storico completo di tutte le nomine temporanee da graduatoria, maternità e sub-supplenze a catena.
-              </p>
-            </div>
-            <span className="text-xs font-black bg-emerald-50 text-emerald-800 px-3 py-1 rounded-xl border border-emerald-200">
-              {nomineSupplenti.length} {nomineSupplenti.length === 1 ? 'Nomina Registrata' : 'Nomine Registrate'}
-            </span>
-          </div>
-
-          <div className="space-y-3">
-            {nomineSupplenti.map((nom, idx) => (
-              <div key={nom.id} className="p-3.5 rounded-2xl border border-emerald-200 bg-emerald-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-2xs">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="w-5 h-5 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
-                      {idx + 1}
-                    </span>
-                    <span className="font-black text-slate-900 text-sm">{nom.supplenteNome}</span>
-                    <span className="text-emerald-800 bg-emerald-100 font-bold px-2 py-0.5 rounded-md border border-emerald-200 text-[11px]">
-                      Supplente su cattedra
-                    </span>
-                    {nom.supplenteEmail && (
-                      <span className="text-indigo-700 bg-indigo-50 font-mono text-[11px] px-2 py-0.5 rounded-md border border-indigo-100">
-                        ✉️ {nom.supplenteEmail}
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-slate-700">
-                    Sostituisce il docente titolare: <strong className="text-slate-900">{nom.docenteTitolareNome}</strong> ({nom.motivo || 'Maternità / Congedo'})
-                  </p>
-
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    🗓️ Presa di servizio dal <strong>{formatDataItaliana(nom.dataInizio)}</strong> fino al <strong>{formatDataItaliana(nom.dataFine)}</strong>
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                  <span className="text-[10px] font-bold text-emerald-800 bg-white border border-emerald-200 px-2.5 py-1 rounded-lg">
-                    Attiva a Sistema
-                  </span>
-                </div>
-              </div>
-            ))}
-
-            {nomineSupplenti.length === 0 && (
-              <div className="text-center py-8 text-slate-400 space-y-2">
-                <Users className="w-8 h-8 mx-auto text-slate-300" />
-                <p className="text-xs italic">Nessuna nomina di supplenza su cattedra registrata.</p>
-                <p className="text-[11px] text-slate-400">Puoi aggiungere una nuova nomina con il pulsante "+ Nomina Supplente" nella Gestione Assenze.</p>
-              </div>
-            )}
           </div>
         </div>
       )}
