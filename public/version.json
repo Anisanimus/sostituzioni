@@ -1,13 +1,13 @@
 {
-  "version": "1.8.0",
-  "buildTime": "2026-09-03T21:50:00Z",
-  "title": "Novità della Versione 1.8.0",
-  "descrizioneGenerale": "Visualizzazione Nativa e Mirroring dei Calendari Google per Portale Docenti e Personale ATA.",
+  "version": "1.8.1",
+  "buildTime": "2026-09-04T07:10:00Z",
+  "title": "Novità della Versione 1.8.1",
+  "descrizioneGenerale": "Ripristino visualizzazione ufficiale Google Calendar per Impegni e Risorse.",
   "novita": [
     {
-      "titolo": "Agenda Nativa per Docenti e Personale ATA",
-      "descrizione": "Tutti gli impegni collegiali, riunioni e prenotazioni laboratori sono ora disponibili sia nel Portale Docenti che per il Personale ATA in una visualizzazione ad Agenda Nativa ultra-veloce e reattiva, con switch rapido su Google Calendar.",
-      "tag": "Docenti, ATA & Calendari"
+      "titolo": "Google Calendar Ufficiale",
+      "descrizione": "Ripristinata l'integrazione diretta e pulita con Google Calendar per la visualizzazione di impegni scolastici e occupazione stanze/risorse.",
+      "tag": "Calendari & Orario"
     },
     {
       "titolo": "Mirroring e Sincronizzazione Database",

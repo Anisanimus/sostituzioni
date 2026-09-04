@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { useAuth } from '../context/AuthContext';
 import { 
-  Calendar, ExternalLink, Layers, Monitor, Info, RefreshCw, Clock, MapPin, AlignLeft, CalendarDays, Sparkles
+  Calendar, ExternalLink, Layers, Monitor, Info, RefreshCw
 } from 'lucide-react';
-import { formatDataItaliana } from '../utils/docentiHelper';
 
 interface VistaCalendariGoogleProps {
   modalita: 'IMPEGNI' | 'RISORSE';
@@ -21,17 +19,10 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
     return trimmed;
   };
 
-  const { impostazioniScuola, eventiCalendariCache } = useApp();
-  const { utenteInfo } = useAuth();
+  const { impostazioniScuola } = useApp();
   const cfg = impostazioniScuola?.calendariGoogle;
 
   const [refreshKey, setRefreshKey] = useState<number>(0);
-
-  // Se l'utente è ATA (senza Google account) o ci sono eventi in cache, default su NATIVA
-  const isAtaUser = utenteInfo?.ruolo === 'PERSONALE_ATA';
-  const [visualizzazione, setVisualizzazione] = useState<'NATIVA' | 'GOOGLE'>(() => {
-    return isAtaUser || (eventiCalendariCache && eventiCalendariCache.length > 0) ? 'NATIVA' : 'GOOGLE';
-  });
 
   // Ottieni la lista dinamica degli impegni o risorse
   const listaCalendari = React.useMemo(() => {
@@ -56,49 +47,6 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
 
   // ID del filtro selezionato ('TUTTI' oppure l'ID del singolo calendario)
   const [filtroSelezionato, setFiltroSelezionato] = useState<string>('TUTTI');
-
-  // Eventi filtrati per la modalità corrente e filtro selezionato
-  const eventiFiltrati = React.useMemo(() => {
-    if (!eventiCalendariCache || eventiCalendariCache.length === 0) return [];
-    
-    // Filtra per tipologia (IMPEGNI o RISORSE)
-    let evs = eventiCalendariCache.filter(e => e.tipo === modalita);
-
-    // Filtra per singolo calendario se selezionato
-    if (filtroSelezionato !== 'TUTTI') {
-      const targetCal = listaCalendari.find(c => c.id === filtroSelezionato || c.googleId === filtroSelezionato);
-      if (targetCal) {
-        evs = evs.filter(e => e.calendarioId === targetCal.googleId);
-      }
-    }
-
-    // Ordina cronologicamente
-    return evs.sort((a, b) => new Date(a.dataInizio).getTime() - new Date(b.dataInizio).getTime());
-  }, [eventiCalendariCache, modalita, filtroSelezionato, listaCalendari]);
-
-  // Eventi raggruppati per data (oggi in avanti)
-  const eventiProssimiRaggruppati = React.useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const filtratiOggiInPoi = eventiFiltrati.filter(e => {
-      const d = new Date(e.dataInizio);
-      return d >= today;
-    });
-
-    const gruppi: { [data: string]: typeof eventiFiltrati } = {};
-    filtratiOggiInPoi.forEach(ev => {
-      const dataIso = ev.dataInizio.split('T')[0];
-      if (!gruppi[dataIso]) gruppi[dataIso] = [];
-      gruppi[dataIso].push(ev);
-    });
-
-    return Object.entries(gruppi).map(([dataStr, items]) => ({
-      data: dataStr,
-      dataFmt: formatDataItaliana(dataStr),
-      items
-    }));
-  }, [eventiFiltrati]);
 
   const generaEmbedUrl = (): string => {
     const baseUrl = 'https://calendar.google.com/calendar/embed?ctz=Europe%2FRome&mode=MONTH&showTitle=0&showNav=1&showDate=1&showPrint=1&showTabs=1&showCalendars=1&showTz=0';
@@ -132,19 +80,6 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
 
   const hasConfigurazione = listaCalendari.length > 0;
 
-  const formatOrarioEvento = (isoStart: string, isoEnd: string, tuttoIlGiorno: boolean) => {
-    if (tuttoIlGiorno || !isoStart.includes('T')) return 'Tutto il giorno';
-    try {
-      const dStart = new Date(isoStart);
-      const dEnd = new Date(isoEnd);
-      const startStr = dStart.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-      const endStr = dEnd.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-      return `${startStr} - ${endStr}`;
-    } catch (e) {
-      return 'Orario definito';
-    }
-  };
-
   return (
     <div className="space-y-4 max-w-6xl mx-auto animate-in fade-in duration-200">
       {/* HEADER DELLA VISTA */}
@@ -154,16 +89,9 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
             {modalita === 'IMPEGNI' ? <Calendar className="w-6 h-6" /> : <Monitor className="w-6 h-6" />}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg sm:text-xl font-black text-slate-900">
-                {modalita === 'IMPEGNI' ? 'Impegni Scolastici & Calendario' : 'Risorse & Spazi Prenotabili'}
-              </h2>
-              {isAtaUser && (
-                <span className="text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <span>🔒 Accesso PIN ATA</span>
-                </span>
-              )}
-            </div>
+            <h2 className="text-lg sm:text-xl font-black text-slate-900">
+              {modalita === 'IMPEGNI' ? 'Impegni Scolastici & Calendario' : 'Risorse & Spazi Prenotabili'}
+            </h2>
             <p className="text-xs text-slate-500">
               {modalita === 'IMPEGNI' 
                 ? "Consigli, riunioni collegiali, dipartimenti e scadenze dell'Istituto"
@@ -172,52 +100,22 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
           </div>
         </div>
 
-        {/* CONTROLLI E SELETTORE VISTA (NATIVA VS GOOGLE IFRAME) */}
+        {/* CONTROLLI E FILTRI CALENDARIO */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Selettore Modalità di Visualizzazione */}
-          <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200">
-            <button
-              type="button"
-              onClick={() => setVisualizzazione('NATIVA')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                visualizzazione === 'NATIVA'
-                  ? modalita === 'IMPEGNI' ? 'bg-indigo-600 text-white shadow-2xs font-black' : 'bg-teal-600 text-white shadow-2xs font-black'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Agenda Nativa (Veloce)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setVisualizzazione('GOOGLE')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                visualizzazione === 'GOOGLE'
-                  ? modalita === 'IMPEGNI' ? 'bg-indigo-600 text-white shadow-2xs font-black' : 'bg-teal-600 text-white shadow-2xs font-black'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>Google Calendar</span>
-            </button>
-          </div>
-
-          {/* FILTRI CALENDARIO (TUTTI O SINGOLO) */}
           {listaCalendari.length > 0 && (
             <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-1 border border-slate-200 flex-wrap">
               {listaCalendari.length > 1 && (
                 <button
                   type="button"
                   onClick={() => setFiltroSelezionato('TUTTI')}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                     filtroSelezionato === 'TUTTI'
-                      ? 'bg-white text-slate-900 shadow-2xs font-black'
+                      ? modalita === 'IMPEGNI' ? 'bg-indigo-600 text-white shadow-2xs font-black' : 'bg-teal-600 text-white shadow-2xs font-black'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
-                  <span>Tutti</span>
+                  <span>{modalita === 'IMPEGNI' ? 'Tutti gli Impegni' : 'Tutte le Risorse'}</span>
                 </button>
               )}
 
@@ -226,9 +124,9 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
                   key={cal.id}
                   type="button"
                   onClick={() => setFiltroSelezionato(cal.id)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
                     filtroSelezionato === cal.id
-                      ? 'bg-white text-slate-900 shadow-2xs font-black'
+                      ? modalita === 'IMPEGNI' ? 'bg-indigo-600 text-white shadow-2xs font-black' : 'bg-teal-600 text-white shadow-2xs font-black'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -243,7 +141,7 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
             type="button"
             onClick={() => setRefreshKey(prev => prev + 1)}
             className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer"
-            title="Ricarica"
+            title="Ricarica Calendario"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -275,97 +173,7 @@ export const VistaCalendariGoogle: React.FC<VistaCalendariGoogleProps> = ({ moda
             <p>3. Scorri fino alla sezione <em>"Integra calendario"</em> e copia il campo <strong>ID Calendario</strong>.</p>
           </div>
         </div>
-      ) : visualizzazione === 'NATIVA' ? (
-        /* ========================================================================= */
-        /* 1. VISUALIZZAZIONE NATIVA AD AGENDA (OTTIMIZZATA PER PERSONALE ATA / PIN) */
-        /* ========================================================================= */
-        <div className="space-y-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span className="text-xs font-black text-slate-800">
-                  Agenda Eventi Sincronizzata ({eventiFiltrati.length} eventi totali registrati)
-                </span>
-              </div>
-
-              <span className="text-[11px] text-slate-500">
-                Visualizzazione diretta senza richiesta di login Google
-              </span>
-            </div>
-
-            {eventiProssimiRaggruppati.length === 0 ? (
-              <div className="text-center py-10 space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-                  <CalendarDays className="w-6 h-6" />
-                </div>
-                <h4 className="text-sm font-black text-slate-700">Nessun evento futuro registrato</h4>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                  Non ci sono impegni o prenotazioni registrate per le prossime giornate nei calendari selezionati.
-                  La Vicepresidenza può premere <em>"Sincronizza Eventi Ora"</em> nel tab Personalizzazioni.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {eventiProssimiRaggruppati.map((gruppo) => (
-                  <div key={gruppo.data} className="space-y-2.5">
-                    {/* INTESTAZIONE GIORNO */}
-                    <div className="flex items-center gap-2 sticky top-0 bg-white/95 backdrop-blur-xs py-1 z-10">
-                      <span className="text-xs font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-100 shadow-2xs">
-                        📅 {gruppo.dataFmt}
-                      </span>
-                      <div className="h-px flex-1 bg-slate-200" />
-                    </div>
-
-                    {/* CARD EVENTI DEL GIORNO */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {gruppo.items.map((ev) => (
-                        <div
-                          key={ev.id}
-                          className="p-3.5 bg-slate-50/80 hover:bg-slate-50 rounded-xl border border-slate-200/80 shadow-2xs transition space-y-2 hover:border-indigo-300"
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="space-y-0.5">
-                              <span className="inline-block text-[10px] font-bold px-2 py-0.5 rounded-md text-white shadow-2xs" style={{ backgroundColor: ev.colore || (modalita === 'IMPEGNI' ? '#039BE5' : '#009688') }}>
-                                {ev.calendarioNome || (modalita === 'IMPEGNI' ? 'Impegno' : 'Risorsa')}
-                              </span>
-                              <h4 className="text-sm font-black text-slate-900 leading-tight">
-                                {ev.titolo}
-                              </h4>
-                            </div>
-
-                            <div className="flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-white px-2 py-1 rounded-lg border border-slate-200 shrink-0">
-                              <Clock className="w-3 h-3 text-indigo-600" />
-                              <span>{formatOrarioEvento(ev.dataInizio, ev.dataFine, ev.tuttoIlGiorno)}</span>
-                            </div>
-                          </div>
-
-                          {ev.luogo && (
-                            <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                              <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                              <span className="font-semibold">{ev.luogo}</span>
-                            </div>
-                          )}
-
-                          {ev.descrizione && (
-                            <div className="flex items-start gap-1.5 text-xs text-slate-500 bg-white p-2 rounded-lg border border-slate-100">
-                              <AlignLeft className="w-3 h-3 text-slate-400 mt-0.5 shrink-0" />
-                              <p className="line-clamp-2 text-[11px] leading-relaxed">{ev.descrizione}</p>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
       ) : (
-        /* ========================================================================= */
-        /* 2. VISUALIZZAZIONE NORMALE IFRAME GOOGLE CALENDAR                          */
-        /* ========================================================================= */
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="p-2 sm:p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs text-slate-600">
             <div className="flex items-center gap-2">
