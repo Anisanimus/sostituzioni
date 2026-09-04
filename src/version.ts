@@ -13,15 +13,15 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.8.1',
-  buildTime: '2026-09-04T07:10:00Z',
-  title: 'Novità della Versione 1.8.1',
-  descrizioneGenerale: 'Ripristino visualizzazione ufficiale Google Calendar per Impegni e Risorse.',
+  version: '1.8.2',
+  buildTime: '2026-09-04T07:22:00Z',
+  title: 'Novità della Versione 1.8.2',
+  descrizioneGenerale: 'Estratto Conto e Dettaglio Movimenti completo con tracciamento delle supplenze a credito.',
   novita: [
     {
-      titolo: 'Google Calendar Ufficiale',
-      descrizione: 'Ripristinata l\'integrazione diretta e pulita con Google Calendar per la visualizzazione di impegni scolastici e occupazione stanze/risorse.',
-      tag: 'Calendari & Orario'
+      titolo: 'Trasparenza Totale Estratto Conto',
+      descrizione: 'Nel popup "Dettaglio" del Bilancio Ore (sia per la Vicepresidenza che per i Docenti) vengono ora elencate puntualmente anche tutte le ore di supplenza a credito/straordinario svolte, con classe, data e ora.',
+      tag: 'Bilancio & Contabilità'
     },
     {
       titolo: 'Mirroring e Sincronizzazione Database',

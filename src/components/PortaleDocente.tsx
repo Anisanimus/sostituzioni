@@ -808,17 +808,32 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
         const oreDebito = docente?.oreDebitoPermesso || 0;
         const saldoNetto = oreCredito - oreDebito;
 
-        const mieiMovimenti = movimentiDebito
-          .filter(m => collegatiIds.includes(m.docenteId))
-          .sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
-
-        const mieSupplenzeCredito = sostituzioni
-          .filter(s => collegatiIds.includes(s.docenteSostitutoId) && (s.isStraordinario || s.categoria === 'STRAORDINARIO_D'))
-          .sort((a, b) => (b.data || '').localeCompare(a.data || ''));
-
-        const mieSupplenzeRecupero = sostituzioni
-          .filter(s => collegatiIds.includes(s.docenteSostitutoId) && s.consumaDebito)
-          .sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+        const mieiMovimenti = [
+          ...movimentiDebito
+            .filter(m => collegatiIds.includes(m.docenteId))
+            .map(m => ({
+              id: m.id,
+              data: m.data,
+              createdAt: m.createdAt,
+              giorno: m.giorno,
+              tipo: m.tipo as string,
+              descrizione: m.descrizione || '',
+              deltaOre: m.deltaOre,
+              isSupplenzaCredito: false
+            })),
+          ...sostituzioni
+            .filter(s => collegatiIds.includes(s.docenteSostitutoId) && (s.isStraordinario || s.categoria === 'STRAORDINARIO_D'))
+            .map(s => ({
+              id: `sost_credito_${s.id}`,
+              data: s.data,
+              createdAt: s.data,
+              giorno: s.giorno,
+              tipo: 'CREDITO_SUPPLENZA',
+              descrizione: `Supplenza a credito in classe ${s.classe || ''} (${s.ora || ''}ª ora)`,
+              deltaOre: 1,
+              isSupplenzaCredito: true
+            }))
+        ].sort((a, b) => (b.data || '').localeCompare(a.data || '') || ((b as any).createdAt || '').localeCompare((a as any).createdAt || ''));
 
         return (
           <div className="space-y-4 animate-fadeIn">
@@ -932,7 +947,7 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                 </span>
               </div>
 
-              {mieiMovimenti.length === 0 && mieSupplenzeCredito.length === 0 ? (
+              {mieiMovimenti.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 space-y-1">
                   <CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto" />
                   <p className="font-bold text-slate-700 text-xs">Nessun movimento registrato a tuo carico</p>
@@ -954,7 +969,12 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                               {m.giorno} {formatDataItaliana(m.data)}
                             </span>
 
-                            {isCompensazione ? (
+                            {m.isSupplenzaCredito ? (
+                              <span className="bg-emerald-100 text-emerald-950 border border-emerald-300 font-black text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                                <span>➕</span>
+                                <span>Ora a Credito (Supplenza)</span>
+                              </span>
+                            ) : isCompensazione ? (
                               <span className="bg-indigo-100 text-indigo-900 border border-indigo-300 font-black text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
                                 <span>⚖️</span>
                                 <span>Compensato da Credito</span>

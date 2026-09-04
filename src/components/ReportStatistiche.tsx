@@ -275,16 +275,61 @@ export const ReportStatistiche: React.FC = () => {
   // =========================================================================
   const movimentiDocenteDrawer = useMemo(() => {
     if (!docenteDrawerDettaglio) return [];
-    return movimentiDebito
+    
+    // 1. Docente selezionato e tutti i suoi ID/alias
+    const docTarget = docenti.find(d => getBaseNomeDocente(d.nome) === docenteDrawerDettaglio || d.nome === docenteDrawerDettaglio || d.id === docenteDrawerDettaglio);
+    const targetBaseName = docTarget ? getBaseNomeDocente(docTarget.nome) : docenteDrawerDettaglio;
+    const collegatiIds = docTarget ? getDocentiCollegatiIds(docTarget.id, docenti) : [docenteDrawerDettaglio];
+
+    // 2. Movimenti debito / storni / recuperi / compensazioni
+    const movs = movimentiDebito
       .filter(m => {
         const inPeriodo = m.data >= dataInizioFiltro && m.data <= dataFineFiltro;
         if (!inPeriodo) return false;
         const dTarget = docenti.find(d => d.id === m.docenteId);
         const nomeM = dTarget ? getBaseNomeDocente(dTarget.nome) : '';
-        return nomeM === docenteDrawerDettaglio || m.docenteId === docenteDrawerDettaglio;
+        return collegatiIds.includes(m.docenteId) || nomeM === targetBaseName || m.docenteId === docenteDrawerDettaglio;
       })
-      .sort((a, b) => (b.data || '').localeCompare(a.data || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
-  }, [docenteDrawerDettaglio, movimentiDebito, dataInizioFiltro, dataFineFiltro, docenti]);
+      .map(m => ({
+        id: m.id,
+        data: m.data,
+        createdAt: m.createdAt,
+        giorno: m.giorno,
+        tipo: m.tipo as string,
+        descrizione: m.descrizione || '',
+        deltaOre: m.deltaOre,
+        isSupplenzaCredito: false,
+        ora: undefined as number | undefined,
+        classe: undefined as string | undefined
+      }));
+
+    // 3. Supplenze a credito / straordinario svolte dal docente
+    const supplenzeCredito = sostituzioniFiltrate
+      .filter(s => {
+        if (!s.docenteSostitutoId || s.categoria === 'NON_SOSTITUIRE') return false;
+        const isStraord = s.isStraordinario || s.categoria === 'STRAORDINARIO_D';
+        if (!isStraord) return false;
+
+        if (collegatiIds.includes(s.docenteSostitutoId)) return true;
+        const docSost = docenti.find(d => d.id === s.docenteSostitutoId);
+        return !!(docSost && getBaseNomeDocente(docSost.nome) === targetBaseName);
+      })
+      .map(s => ({
+        id: `sost_credito_${s.id}`,
+        data: s.data,
+        createdAt: s.data,
+        giorno: s.giorno,
+        tipo: 'CREDITO_SUPPLENZA',
+        descrizione: `Supplenza a credito in classe ${s.classe || ''} (${s.ora || ''}ª ora) - Sostituzione docente assente`,
+        deltaOre: 1,
+        isSupplenzaCredito: true,
+        ora: s.ora,
+        classe: s.classe
+      }));
+
+    return [...movs, ...supplenzeCredito]
+      .sort((a, b) => (b.data || '').localeCompare(a.data || '') || ((b as any).createdAt || '').localeCompare((a as any).createdAt || ''));
+  }, [docenteDrawerDettaglio, movimentiDebito, sostituzioniFiltrate, dataInizioFiltro, dataFineFiltro, docenti]);
 
   // ESPORTAZIONE COMPLETA EXCEL
   const handleExportExcel = () => {
@@ -823,7 +868,12 @@ export const ReportStatistiche: React.FC = () => {
                             {formatDataItaliana(m.data)}
                           </span>
 
-                          {isCompensazione ? (
+                          {m.isSupplenzaCredito ? (
+                            <span className="bg-emerald-100 text-emerald-950 border border-emerald-300 font-bold text-[9px] px-1.5 py-0.2 rounded flex items-center gap-1 shadow-2xs">
+                              <span>➕</span>
+                              <span>Ora a Credito (Supplenza)</span>
+                            </span>
+                          ) : isCompensazione ? (
                             <span className="bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-[9px] px-1.5 py-0.2 rounded">
                               Compensato da Credito
                             </span>
