@@ -2784,6 +2784,42 @@ function eliminaTriggerEsistenti() {
   }
 }
 
+// 4. MENU PERSONALIZZATO AUTOMATICO (PER GOOGLE SHEETS / DOCS O TEST RAPIDO)
+function onOpen() {
+  try {
+    var ui = SpreadsheetApp.getUi();
+    ui.createMenu('⚡ Sostituzioni Smart')
+      .addItem('🚀 Invia Email Riepilogo Oggi Adesso', 'menuInviaOggi')
+      .addSeparator()
+      .addItem('⏰ Attiva / Ripristina Trigger Mattutino Automatico', 'menuAttivaTrigger')
+      .addItem('🛑 Disattiva Trigger Automatico', 'menuDisattivaTrigger')
+      .addToUi();
+  } catch (e) {
+    // Se non è collegato a un foglio di calcolo, ignora
+  }
+}
+
+function menuInviaOggi() {
+  eseguiInvioAutomaticoMattina();
+  try {
+    SpreadsheetApp.getUi().alert('✅ Invio email completato con successo!');
+  } catch(e) {}
+}
+
+function menuAttivaTrigger() {
+  setupIniziale();
+  try {
+    SpreadsheetApp.getUi().alert('⏰ Trigger automatico al minuto esatto programmato con successo!');
+  } catch(e) {}
+}
+
+function menuDisattivaTrigger() {
+  eliminaTriggerEsistenti();
+  try {
+    SpreadsheetApp.getUi().alert('🛑 Tutti i trigger automatici sono stati eliminati.');
+  } catch(e) {}
+}
+
 // Esegui questa funzione una sola volta dall'editor per attivare la schedulazione
 function setupIniziale() {
   pianificaProssimoTrigger("07:30");
