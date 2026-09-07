@@ -201,14 +201,18 @@ export interface ImpostazioniScuola {
     inviaIstantaneeOrarioLavoro: boolean; // Invio istantaneo per nuove assegnazioni o revoche nella fascia oraria
     orarioInizioIstantanee?: string; // es. "08:00"
     orarioFineIstantanee?: string;   // es. "17:00"
+    ultimoInvioData?: string;     // YYYY-MM-DD o YYYY-MM-DD_HH:mm
     modelli?: {
-      // 1. Nuova assegnazione istantanea
+      // 1. Nuova assegnazione istantanea (Singola ora)
       assegnazioneOggetto?: string;
       assegnazioneCorpo?: string;
-      // 2. Supplenza revocata / annullata
+      // 2. Nuova assegnazione cumulativa (Più ore insieme)
+      assegnazioneMultiplaOggetto?: string;
+      assegnazioneMultiplaCorpo?: string;
+      // 3. Supplenza revocata / annullata
       annullamentoOggetto?: string;
       annullamentoCorpo?: string;
-      // 3. Riepilogo mattutino
+      // 4. Riepilogo mattutino
       riepilogoOggetto?: string;
       riepilogoCorpo?: string;
     };
@@ -256,6 +260,7 @@ export interface SostituzioneAssegnata {
   pubblicata: boolean;
   firmata: boolean;
   dataFirma?: string;
+  notaSostituzione?: string; // Campo personalizzato (es. "Entrata posticipata alle 10:00", "Uscita anticipata", "Assemblea sindacale", ecc.)
 }
 
 export interface NotificaDocente {

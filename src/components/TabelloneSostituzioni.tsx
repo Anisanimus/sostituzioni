@@ -722,22 +722,34 @@ export const TabelloneSostituzioni: React.FC<{
                           <div className="flex flex-wrap items-center gap-1.5 md:justify-end">
                             {sosts.map((sost) => (
                               sost.categoria === 'NON_SOSTITUIRE' ? (
-                                <div key={sost.id} className="flex items-center gap-1.5 bg-slate-100 border border-slate-300 rounded-lg px-2 py-1 shadow-2xs text-left">
+                                <div key={sost.id} className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 shadow-2xs text-left border ${
+                                  sost.notaSostituzione 
+                                    ? 'bg-indigo-50 border-indigo-200 text-indigo-950' 
+                                    : 'bg-slate-100 border-slate-300 text-slate-700'
+                                }`}>
                                   <div>
-                                    <div className="font-bold text-[11px] text-slate-700 flex items-center gap-1">
-                                      <span>🚫 Non Sostituita</span>
+                                    <div className="font-bold text-[11px] flex items-center gap-1">
+                                      <span>{sost.notaSostituzione ? '📝' : '🚫'}</span>
+                                      <span className={sost.notaSostituzione ? 'text-indigo-900 font-black' : 'text-slate-700'}>
+                                        {sost.notaSostituzione || 'Non Sostituita'}
+                                      </span>
+                                      {sost.notaSostituzione && (
+                                        <span className="bg-indigo-200 text-indigo-900 text-[8.5px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">Avviso</span>
+                                      )}
                                     </div>
-                                    <span className="text-[9px] text-slate-500 block">Senza sostituto</span>
+                                    <span className="text-[9.5px] text-slate-500 block">
+                                      {sost.notaSostituzione ? 'Disposizione oraria classe' : 'Senza sostituto'}
+                                    </span>
                                   </div>
 
-                                  {/* CESTINO ANNULLA NON SOSTITUIRE */}
+                                  {/* CESTINO ANNULLA NON SOSTITUIRE / NOTA */}
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       rimuoviSostituzione(sost.id);
                                     }}
-                                    className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition ml-0.5 cursor-pointer"
-                                    title="Annulla scelta 'Non Sostituire'"
+                                    className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition ml-1 cursor-pointer"
+                                    title="Annulla scelta"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -751,7 +763,7 @@ export const TabelloneSostituzioni: React.FC<{
                                       <span className="bg-white/20 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">Pubblico</span>
                                     </div>
                                     <span className="text-[10px] text-amber-100 font-semibold block leading-tight mt-0.5">
-                                      Alunni distribuiti nelle altre aule
+                                      {sost.notaSostituzione ? `📝 ${sost.notaSostituzione}` : 'Alunni distribuiti nelle altre aule'}
                                     </span>
                                   </div>
 
@@ -768,23 +780,29 @@ export const TabelloneSostituzioni: React.FC<{
                                   </button>
                                 </div>
                               ) : (
-                                <div key={sost.id} className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 shadow-2xs text-left">
+                                <div key={sost.id} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 shadow-2xs text-left">
                                   <div>
-                                    <div className="font-bold text-[11px] text-slate-900 flex items-center gap-1">
-                                      <span className="text-indigo-700">👤 {getDocenteNome(sost.docenteSostitutoId)}</span>
-                                      <span className="text-[9.5px] font-normal text-slate-500 uppercase">({getDescrizioneCategoriaSostituto(sost.categoria)})</span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-indigo-800 font-black text-xs sm:text-sm">👤 {getDocenteNome(sost.docenteSostitutoId)}</span>
+                                      <span className="text-[10px] font-bold text-slate-500 uppercase">({getDescrizioneCategoriaSostituto(sost.categoria)})</span>
+                                      {sost.notaSostituzione && (
+                                        <span className="bg-indigo-100 text-indigo-900 border border-indigo-200 text-[9.5px] font-black px-1.5 py-0.2 rounded flex items-center gap-0.5 shadow-2xs" title={`Nota: ${sost.notaSostituzione}`}>
+                                          <span>📝</span>
+                                          <span className="max-w-[140px] sm:max-w-[200px] truncate">{sost.notaSostituzione}</span>
+                                        </span>
+                                      )}
                                     </div>
 
                                     {/* TRACKING STATO PRESA VISIONE E CONDIVISIONE RAPIDA */}
                                     <div className="mt-0.5 flex items-center gap-1 flex-wrap">
                                       {sost.firmata ? (
-                                        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-[9px] px-1.5 py-0.5 rounded shadow-2xs">
-                                          <CheckCircle className="w-2.5 h-2.5 text-emerald-600" />
+                                        <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-[10px] sm:text-[9.5px] px-2 py-1 sm:px-1.5 sm:py-0.5 rounded-lg shadow-2xs">
+                                          <CheckCircle className="w-3.5 h-3.5 sm:w-2.5 sm:h-2.5 text-emerald-600" />
                                           <span>Presa visione {sost.dataFirma ? `(${new Date(sost.dataFirma).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}</span>
                                         </span>
                                       ) : sost.pubblicata ? (
-                                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[9px] px-1.5 py-0.5 rounded shadow-2xs">
-                                          <Clock className="w-2.5 h-2.5 text-amber-600 animate-pulse" />
+                                        <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] sm:text-[9.5px] px-2 py-1 sm:px-1.5 sm:py-0.5 rounded-lg shadow-2xs">
+                                          <Clock className="w-3.5 h-3.5 sm:w-2.5 sm:h-2.5 text-amber-600 animate-pulse" />
                                           <span>In attesa presa visione</span>
                                         </span>
                                       ) : (
@@ -794,14 +812,14 @@ export const TabelloneSostituzioni: React.FC<{
                                             e.stopPropagation();
                                             setSostituzionePerInvioSingolo({ sost, oraScoperta: os });
                                           }}
-                                          className="p-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded transition shadow-2xs cursor-pointer flex items-center justify-center"
+                                          className="p-2 sm:p-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg transition shadow-2xs cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0"
                                           title="Invia la richiesta di firma per presa visione a questo singolo docente"
                                         >
-                                          <Send className="w-3 h-3 text-indigo-600" />
+                                          <Send className="w-4 h-4 sm:w-3 sm:h-3 text-indigo-600" />
                                         </button>
                                       )}
 
-                                      {/* PULSANTE WHATSAPP RAPIDO (SOLO ICONA) */}
+                                      {/* PULSANTE WHATSAPP RAPIDO */}
                                       <button
                                         type="button"
                                         onClick={(e) => {
@@ -809,13 +827,14 @@ export const TabelloneSostituzioni: React.FC<{
                                           const nomeSostituto = getDocenteNome(sost.docenteSostitutoId);
                                           const nomeAssente = getBaseNomeDocente(os.docenteAssente.nome);
                                           const dataFmt = formatDataItaliana(selectedDate);
-                                          const testoMsg = `Gentile Prof./Prof.ssa ${nomeSostituto}, Le comunichiamo che il giorno ${dataFmt} è assegnato/a alla ${os.ora}ª ora nella classe ${os.classe} per la sostituzione del Prof. ${nomeAssente}.`;
+                                          const notaAdd = sost.notaSostituzione ? ` [Nota: ${sost.notaSostituzione}]` : '';
+                                          const testoMsg = `Gentile Prof./Prof.ssa ${nomeSostituto}, Le comunichiamo che il giorno ${dataFmt} è assegnato/a alla ${os.ora}ª ora nella classe ${os.classe} per la sostituzione del Prof. ${nomeAssente}.${notaAdd}`;
                                           window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(testoMsg)}`, '_blank');
                                         }}
-                                        className="p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded transition shadow-2xs cursor-pointer flex items-center justify-center"
+                                        className="p-2 sm:p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg transition shadow-2xs cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0"
                                         title="Invia avviso su WhatsApp con messaggio precompilato"
                                       >
-                                        <MessageSquare className="w-3 h-3 text-emerald-600" />
+                                        <MessageSquare className="w-4 h-4 sm:w-3 sm:h-3 text-emerald-600" />
                                       </button>
                                     </div>
                                   </div>
@@ -831,42 +850,44 @@ export const TabelloneSostituzioni: React.FC<{
                                         rimuoviSostituzione(sost.id);
                                       }
                                     }}
-                                    className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition ml-0.5 cursor-pointer"
+                                    className="text-slate-400 hover:text-red-600 p-2 sm:p-1 hover:bg-red-50 rounded-lg transition ml-0.5 cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0"
                                     title="Annulla sostituto assegnato"
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                                   </button>
                                 </div>
                               )
                             ))}
 
-                            {/* PULSANTE AGGIUNGI ALTRO SOSTITUTO (SE NON È NON_SOSTITUIRE) */}
-                            {!sosts.some(s => s.categoria === 'NON_SOSTITUIRE') && (
+                            {/* PULSANTE AGGIUNGI DOCENTE / MODIFICA (SEMPRE DISPONIBILE TRANNE SE SMISTATA) */}
+                            {!sosts.some(s => s.categoria === 'SMISTAMENTO_CLASSE') && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedOraScoperta(os);
                                 }}
-                                className="w-full md:w-auto mt-1 md:mt-0 justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
-                                title="Aggiungi un altro docente per coprire questa classe in compresenza"
+                                className="w-full md:w-auto mt-1 md:mt-0 justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs py-2 px-3 sm:px-2.5 sm:py-1.5 rounded-xl sm:rounded-lg flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
+                                title="Aggiungi o modifica docente/nota per questa classe"
                               >
                                 <span className="text-xs font-black">+</span>
                                 <UserPlus className="w-3.5 h-3.5 text-indigo-600" />
-                                <span className="text-[11px] font-bold">Aggiungi</span>
+                                <span className="text-xs sm:text-[11px] font-bold">
+                                  {sosts.some(s => s.categoria === 'NON_SOSTITUIRE') ? 'Aggiungi Docente' : 'Aggiungi'}
+                                </span>
                               </button>
                             )}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center justify-end w-full md:w-auto gap-2">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedOraScoperta(os);
                               }}
-                              className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                              className="w-full md:w-auto justify-center bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs py-2 px-3.5 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                             >
                               <span>Scegli Sostituto</span>
-                              <ChevronRight className="w-3 h-3" />
+                              <ChevronRight className="w-3.5 h-3.5" />
                             </button>
 
                             {/* CANCELLA QUESTA SINGOLA ORA DAL TABELLONE */}
@@ -877,7 +898,7 @@ export const TabelloneSostituzioni: React.FC<{
                                   rimuoviSingolaOraAssenza(os.docenteAssente.id, selectedDate, os.ora, os.classe);
                                 }
                               }}
-                              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg border border-transparent hover:border-rose-200 transition shadow-2xs"
+                              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 sm:p-1.5 rounded-xl sm:rounded-lg border border-transparent hover:border-rose-200 transition shadow-2xs cursor-pointer shrink-0"
                               title="Cancella solo quest'ora dal tabellone"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1035,22 +1056,34 @@ export const TabelloneSostituzioni: React.FC<{
                           <div className="flex flex-wrap items-center gap-1.5 md:justify-end">
                             {sosts.map((sost) => (
                               sost.categoria === 'NON_SOSTITUIRE' ? (
-                                <div key={sost.id} className="flex items-center gap-1.5 bg-slate-100 border border-slate-300 rounded-lg px-2 py-1 shadow-2xs text-left">
+                                <div key={sost.id} className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 shadow-2xs text-left border ${
+                                  sost.notaSostituzione 
+                                    ? 'bg-indigo-50 border-indigo-200 text-indigo-950' 
+                                    : 'bg-slate-100 border-slate-300 text-slate-700'
+                                }`}>
                                   <div>
-                                    <div className="font-bold text-[11px] text-slate-700 flex items-center gap-1">
-                                      <span>🚫 Non Sostituita</span>
+                                    <div className="font-bold text-[11px] flex items-center gap-1">
+                                      <span>{sost.notaSostituzione ? '📝' : '🚫'}</span>
+                                      <span className={sost.notaSostituzione ? 'text-indigo-900 font-black' : 'text-slate-700'}>
+                                        {sost.notaSostituzione || 'Non Sostituita'}
+                                      </span>
+                                      {sost.notaSostituzione && (
+                                        <span className="bg-indigo-200 text-indigo-900 text-[8.5px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider">Avviso</span>
+                                      )}
                                     </div>
-                                    <span className="text-[9px] text-slate-500 block">Senza sostituto</span>
+                                    <span className="text-[9.5px] text-slate-500 block">
+                                      {sost.notaSostituzione ? 'Disposizione oraria classe' : 'Senza sostituto'}
+                                    </span>
                                   </div>
 
-                                  {/* CESTINO ANNULLA NON SOSTITUIRE */}
+                                  {/* CESTINO ANNULLA NON SOSTITUIRE / NOTA */}
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       rimuoviSostituzione(sost.id);
                                     }}
-                                    className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition ml-0.5 cursor-pointer"
-                                    title="Annulla scelta 'Non Sostituire'"
+                                    className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition ml-1 cursor-pointer"
+                                    title="Annulla scelta"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -1081,23 +1114,29 @@ export const TabelloneSostituzioni: React.FC<{
                                   </button>
                                 </div>
                               ) : (
-                                <div key={sost.id} className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 shadow-2xs text-left">
+                                <div key={sost.id} className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 shadow-2xs text-left">
                                   <div>
-                                    <div className="font-bold text-[11px] text-slate-900 flex items-center gap-1">
-                                      <span className="text-indigo-700">👤 {getDocenteNome(sost.docenteSostitutoId)}</span>
-                                      <span className="text-[9.5px] font-normal text-slate-500 uppercase">({getDescrizioneCategoriaSostituto(sost.categoria)})</span>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-indigo-800 font-black text-xs sm:text-sm">👤 {getDocenteNome(sost.docenteSostitutoId)}</span>
+                                      <span className="text-[10px] font-bold text-slate-500 uppercase">({getDescrizioneCategoriaSostituto(sost.categoria)})</span>
+                                      {sost.notaSostituzione && (
+                                        <span className="bg-indigo-100 text-indigo-900 border border-indigo-200 text-[9.5px] font-black px-1.5 py-0.2 rounded flex items-center gap-0.5 shadow-2xs" title={`Nota: ${sost.notaSostituzione}`}>
+                                          <span>📝</span>
+                                          <span className="max-w-[140px] sm:max-w-[200px] truncate">{sost.notaSostituzione}</span>
+                                        </span>
+                                      )}
                                     </div>
 
                                     {/* TRACKING STATO PRESA VISIONE E CONDIVISIONE RAPIDA */}
                                     <div className="mt-0.5 flex items-center gap-1 flex-wrap">
                                       {sost.firmata ? (
-                                        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-[9px] px-1.5 py-0.5 rounded shadow-2xs">
-                                          <CheckCircle className="w-2.5 h-2.5 text-emerald-600" />
+                                        <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-[10px] sm:text-[9.5px] px-2 py-1 sm:px-1.5 sm:py-0.5 rounded-lg shadow-2xs">
+                                          <CheckCircle className="w-3.5 h-3.5 sm:w-2.5 sm:h-2.5 text-emerald-600" />
                                           <span>Presa visione {sost.dataFirma ? `(${new Date(sost.dataFirma).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}</span>
                                         </span>
                                       ) : sost.pubblicata ? (
-                                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[9px] px-1.5 py-0.5 rounded shadow-2xs">
-                                          <Clock className="w-2.5 h-2.5 text-amber-600 animate-pulse" />
+                                        <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] sm:text-[9.5px] px-2 py-1 sm:px-1.5 sm:py-0.5 rounded-lg shadow-2xs">
+                                          <Clock className="w-3.5 h-3.5 sm:w-2.5 sm:h-2.5 text-amber-600 animate-pulse" />
                                           <span>In attesa presa visione</span>
                                         </span>
                                       ) : (
@@ -1107,14 +1146,14 @@ export const TabelloneSostituzioni: React.FC<{
                                             e.stopPropagation();
                                             setSostituzionePerInvioSingolo({ sost, oraScoperta: os });
                                           }}
-                                          className="p-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded transition shadow-2xs cursor-pointer flex items-center justify-center"
+                                          className="p-2 sm:p-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg transition shadow-2xs cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0"
                                           title="Invia la richiesta di firma per presa visione a questo singolo docente"
                                         >
-                                          <Send className="w-3 h-3 text-indigo-600" />
+                                          <Send className="w-4 h-4 sm:w-3 sm:h-3 text-indigo-600" />
                                         </button>
                                       )}
 
-                                      {/* PULSANTE WHATSAPP RAPIDO (SOLO ICONA) */}
+                                      {/* PULSANTE WHATSAPP RAPIDO */}
                                       <button
                                         type="button"
                                         onClick={(e) => {
@@ -1125,10 +1164,10 @@ export const TabelloneSostituzioni: React.FC<{
                                           const testoMsg = `Gentile Prof./Prof.ssa ${nomeSostituto}, Le comunichiamo che il giorno ${dataFmt} è assegnato/a alla ${os.ora}ª ora nella classe ${os.classe} per la sostituzione del Prof. ${nomeAssente}.`;
                                           window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(testoMsg)}`, '_blank');
                                         }}
-                                        className="p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded transition shadow-2xs cursor-pointer flex items-center justify-center"
+                                        className="p-2 sm:p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg transition shadow-2xs cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0"
                                         title="Invia avviso su WhatsApp con messaggio precompilato"
                                       >
-                                        <MessageSquare className="w-3 h-3 text-emerald-600" />
+                                        <MessageSquare className="w-4 h-4 sm:w-3 sm:h-3 text-emerald-600" />
                                       </button>
                                     </div>
                                   </div>
@@ -1144,42 +1183,44 @@ export const TabelloneSostituzioni: React.FC<{
                                         rimuoviSostituzione(sost.id);
                                       }
                                     }}
-                                    className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition ml-0.5 cursor-pointer"
+                                    className="text-slate-400 hover:text-red-600 p-2 sm:p-1 hover:bg-red-50 rounded-lg transition ml-0.5 cursor-pointer flex items-center justify-center min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0"
                                     title="Annulla sostituzione"
                                   >
-                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <Trash2 className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                                   </button>
                                 </div>
                               )
                             ))}
 
-                            {/* PULSANTE AGGIUNGI ALTRO SOSTITUTO (SE NON È NON_SOSTITUIRE) */}
-                            {!sosts.some(s => s.categoria === 'NON_SOSTITUIRE') && (
+                            {/* PULSANTE AGGIUNGI DOCENTE / MODIFICA (SEMPRE DISPONIBILE TRANNE SE SMISTATA) */}
+                            {!sosts.some(s => s.categoria === 'SMISTAMENTO_CLASSE') && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedOraScoperta(os);
                                 }}
-                                className="w-full md:w-auto mt-1 md:mt-0 justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs p-1.5 sm:px-2.5 sm:py-1 rounded-lg flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
-                                title="Aggiungi un altro docente per coprire questa classe in compresenza"
+                                className="w-full md:w-auto mt-1 md:mt-0 justify-center bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs py-2 px-3 sm:px-2.5 sm:py-1.5 rounded-xl sm:rounded-lg flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
+                                title="Aggiungi o modifica docente/nota per questa classe"
                               >
                                 <span className="text-xs font-black">+</span>
                                 <UserPlus className="w-3.5 h-3.5 text-indigo-600" />
-                                <span className="text-[11px] font-bold">Aggiungi</span>
+                                <span className="text-xs sm:text-[11px] font-bold">
+                                  {sosts.some(s => s.categoria === 'NON_SOSTITUIRE') ? 'Aggiungi Docente' : 'Aggiungi'}
+                                </span>
                               </button>
                             )}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center justify-end w-full md:w-auto gap-2">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedOraScoperta(os);
                               }}
-                              className="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                              className="w-full md:w-auto justify-center bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs py-2 px-3.5 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                             >
                               <span>Scegli Sostituto</span>
-                              <ChevronRight className="w-3 h-3" />
+                              <ChevronRight className="w-3.5 h-3.5" />
                             </button>
 
                             {/* CANCELLA QUESTA SINGOLA ORA DAL TABELLONE */}
@@ -1190,7 +1231,7 @@ export const TabelloneSostituzioni: React.FC<{
                                   rimuoviSingolaOraAssenza(os.docenteAssente.id, selectedDate, os.ora, os.classe);
                                 }
                               }}
-                              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg border border-transparent hover:border-rose-200 transition shadow-2xs"
+                              className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 p-2 sm:p-1.5 rounded-xl sm:rounded-lg border border-transparent hover:border-rose-200 transition shadow-2xs cursor-pointer shrink-0"
                               title="Cancella solo quest'ora dal tabellone"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1368,7 +1409,7 @@ export const TabelloneSostituzioni: React.FC<{
           oraScoperta={selectedOraScoperta}
           isGraveAssente={isDocenteAssenteCasoGraveNellOra(selectedOraScoperta.docenteAssente.id, selectedOraScoperta.ora)}
           onClose={() => setSelectedOraScoperta(null)}
-          onAssegna={(docenteId, categoria, isStraordinario, consumaDebito) => {
+          onAssegna={(docenteId, categoria, isStraordinario, consumaDebito, notaSostituzione) => {
             assegnaSostituzione({
               data: selectedDate,
               giorno: selectedGiorno,
@@ -1379,8 +1420,9 @@ export const TabelloneSostituzioni: React.FC<{
               categoria,
               isStraordinario,
               consumaDebito,
-              pubblicata: categoria === 'SMISTAMENTO_CLASSE', // Smistamento è immediatamente pubblico sui tabelloni
-              firmata: false
+              pubblicata: categoria === 'SMISTAMENTO_CLASSE' || (categoria === 'NON_SOSTITUIRE' && !!notaSostituzione?.trim()), // Smistamento o Disposizione con Testo/Orario è subito pubblico
+              firmata: false,
+              notaSostituzione: notaSostituzione?.trim() || undefined
             });
             setSelectedOraScoperta(null);
           }}
@@ -1605,7 +1647,7 @@ interface ModalSceltaSostitutoProps {
   oraScoperta: OraScoperta;
   isGraveAssente: boolean;
   onClose: () => void;
-  onAssegna: (docenteId: string, categoria: CategoriaSostituto, isStraordinario: boolean, consumaDebito: boolean) => void;
+  onAssegna: (docenteId: string, categoria: CategoriaSostituto, isStraordinario: boolean, consumaDebito: boolean, notaSostituzione?: string) => void;
 }
 
 const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
@@ -1636,6 +1678,17 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
   const [ricercaManuale, setRicercaManuale] = useState<string>('');
   const [docenteManualeSelezionatoId, setDocenteManualeSelezionatoId] = useState<string>('');
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+  
+  // Inizializza con l'eventuale nota già presente per questo slot
+  const notaGiaAssegnata = sostituzioni.find(s => 
+    s.data === selectedDate && 
+    s.ora === oraScoperta.ora && 
+    s.classe === oraScoperta.classe && 
+    !!s.notaSostituzione
+  )?.notaSostituzione || '';
+
+  const [testoPersonalizzato, setTestoPersonalizzato] = useState<string>(notaGiaAssegnata);
+  const [mostraInputPersonalizzato, setMostraInputPersonalizzato] = useState<boolean>(!!notaGiaAssegnata);
 
   const dataIsoOggi = selectedDate.split('T')[0];
   const nomiTitolariSostituiti = new Set<string>();
@@ -1709,54 +1762,156 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
               })()}
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-lg font-bold p-1">✕</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-white text-lg font-bold p-1 cursor-pointer">✕</button>
         </div>
 
         {/* CONTENUTO SCORREVOLE CANDIDATI IN ORDINE NORMATIVO */}
         <div className="p-4 overflow-y-auto space-y-4 text-xs flex-1">
 
-          {/* OPZIONE SPECIALE: NON SOSTITUIRE & SMISTAMENTO ALUNNI */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {/* 1. NON SOSTITUIRE */}
-            <div className="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-300 flex items-center justify-between gap-2.5 transition">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">
-                  🚫
-                </span>
-                <div className="min-w-0">
-                  <strong className="text-xs font-bold text-slate-800 block truncate">Non Sostituire</strong>
-                  <span className="text-[10.5px] text-slate-500 block leading-tight truncate">
-                    Nessun docente necessario
+          {/* OPZIONE SPECIALE: NON SOSTITUIRE & SMISTAMENTO & DISPOSIZIONE / NOTA ORARIA */}
+          <div className="space-y-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {/* 1. NON SOSTITUIRE (STANDARD) */}
+              <div className="p-3 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-300 flex items-center justify-between gap-2.5 transition">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-7 h-7 rounded-lg bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">
+                    🚫
                   </span>
+                  <div className="min-w-0">
+                    <strong className="text-xs font-bold text-slate-800 block truncate">Non Sostituire</strong>
+                    <span className="text-[10.5px] text-slate-500 block leading-tight truncate">
+                      Nessun docente necessario
+                    </span>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => onAssegna('', 'NON_SOSTITUIRE', false, false, testoPersonalizzato.trim() || undefined)}
+                  className="bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg transition shrink-0 shadow-xs cursor-pointer"
+                >
+                  Non Sostituire
+                </button>
               </div>
-              <button
-                onClick={() => onAssegna('', 'NON_SOSTITUIRE', false, false)}
-                className="bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg transition shrink-0 shadow-xs cursor-pointer"
-              >
-                Non Sostituire
-              </button>
+
+              {/* 2. SMISTAMENTO CLASSE */}
+              <div className="p-3 bg-amber-50/80 hover:bg-amber-100/80 rounded-xl border border-amber-300 flex items-center justify-between gap-2.5 transition">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-7 h-7 rounded-lg bg-amber-200 text-amber-900 flex items-center justify-center font-bold text-sm shrink-0">
+                    🔀
+                  </span>
+                  <div className="min-w-0">
+                    <strong className="text-xs font-bold text-amber-950 block truncate">Smistamento</strong>
+                    <span className="text-[10.5px] text-amber-800/80 block leading-tight truncate">
+                      Alunni divisi in altre classi
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onAssegna('', 'SMISTAMENTO_CLASSE', false, false, testoPersonalizzato.trim() || undefined)}
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg transition shrink-0 shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+                >
+                  Smista Classe
+                </button>
+              </div>
             </div>
 
-            {/* 2. SMISTAMENTO CLASSE */}
-            <div className="p-3 bg-amber-50/80 hover:bg-amber-100/80 rounded-xl border border-amber-300 flex items-center justify-between gap-2.5 transition">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-7 h-7 rounded-lg bg-amber-200 text-amber-900 flex items-center justify-center font-bold text-sm shrink-0">
-                  🔀
-                </span>
-                <div className="min-w-0">
-                  <strong className="text-xs font-bold text-amber-950 block truncate">Smistamento</strong>
-                  <span className="text-[10.5px] text-amber-800/80 block leading-tight truncate">
-                    Alunni divisi in altre classi
+            {/* 3. DISPOSIZIONE / NOTA SPECIALE (ENTRATA POSTICIPATA, USCITA ANTICIPATA, INVALSI, ECC.) */}
+            <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-lg bg-indigo-200 text-indigo-800 flex items-center justify-center font-bold text-sm shrink-0">
+                    📝
                   </span>
+                  <div>
+                    <strong className="text-xs font-bold text-indigo-950 block">
+                      Disposizione Oraria / Nota Aggiuntiva
+                    </strong>
+                    <span className="text-[10.5px] text-indigo-700 block leading-tight">
+                      Puoi scriverla da sola oppure selezionare anche un docente sotto per abbinarli!
+                    </span>
+                  </div>
                 </div>
+
+                {!mostraInputPersonalizzato ? (
+                  <button
+                    type="button"
+                    onClick={() => setMostraInputPersonalizzato(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1"
+                  >
+                    <span>+ Inserisci Nota/Disposizione</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMostraInputPersonalizzato(false);
+                      setTestoPersonalizzato('');
+                    }}
+                    className="text-slate-500 hover:text-slate-700 font-bold text-xs px-2 py-1 cursor-pointer"
+                  >
+                    Annulla
+                  </button>
+                )}
               </div>
-              <button
-                onClick={() => onAssegna('', 'SMISTAMENTO_CLASSE', false, false)}
-                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg transition shrink-0 shadow-xs cursor-pointer hover:scale-105 active:scale-95"
-              >
-                Smista Classe
-              </button>
+
+              {/* CAMPO DI TESTO E SUGGERIMENTI RAPIDI */}
+              {mostraInputPersonalizzato && (
+                <div className="space-y-2 pt-1.5 border-t border-indigo-100 animate-in fade-in duration-150">
+                  {/* SUGGERIMENTI RAPIDI PREDEFINITI */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-bold text-indigo-900 uppercase">Suggeriti:</span>
+                    {[
+                      'Uscita anticipata',
+                      'Entrata posticipata',
+                      'INVALSI'
+                    ].map((suggerimento, sIdx) => (
+                      <button
+                        key={sIdx}
+                        type="button"
+                        onClick={() => setTestoPersonalizzato(suggerimento)}
+                        className="bg-white hover:bg-indigo-100/80 border border-indigo-200 text-indigo-900 text-[11px] font-bold px-2.5 py-1 rounded-lg transition cursor-pointer shadow-2xs text-left"
+                      >
+                        {suggerimento}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={testoPersonalizzato}
+                      onChange={(e) => setTestoPersonalizzato(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && testoPersonalizzato.trim()) {
+                          onAssegna('', 'NON_SOSTITUIRE', false, false, testoPersonalizzato.trim());
+                        }
+                      }}
+                      placeholder="Scrivi es: Uscita anticipata, Entrata posticipata, INVALSI..."
+                      className="flex-1 bg-white border border-indigo-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-inner"
+                    />
+                    <button
+                      type="button"
+                      disabled={!testoPersonalizzato.trim()}
+                      onClick={() => {
+                        if (testoPersonalizzato.trim()) {
+                          onAssegna('', 'NON_SOSTITUIRE', false, false, testoPersonalizzato.trim());
+                        }
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-black text-xs px-4 py-2 rounded-xl shadow-md transition shrink-0 cursor-pointer hover:scale-105 active:scale-95"
+                      title="Assegna o aggiorna la nota/disposizione per questa classe"
+                    >
+                      Salva Nota
+                    </button>
+                  </div>
+                  {testoPersonalizzato.trim() && (
+                    <p className="text-[11px] text-indigo-800 font-bold bg-indigo-100/60 p-1.5 rounded-lg">
+                      💡 Nota attiva: <span className="underline">"{testoPersonalizzato.trim()}"</span>. Cliccando su un docente (o su Smistamento), la nota verrà assegnata/aggiornata insieme!
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           
@@ -1797,7 +1952,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                         <button
                           onClick={() => {
                             if (window.confirm(`Attenzione: ${cand.docente.nome} segue un alunno con Caso Grave (♿). Vuoi confermare comunque la compresenza in aula?`)) {
-                              onAssegna(cand.docente.id, 'COMPRESENTE_CLASSE', false, false);
+                              onAssegna(cand.docente.id, 'COMPRESENTE_CLASSE', false, false, testoPersonalizzato.trim() || undefined);
                             }
                           }}
                           className="bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-black px-2.5 py-1.5 rounded-lg shadow-2xs transition shrink-0 flex items-center gap-1"
@@ -1808,7 +1963,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                         </button>
                       ) : (
                         <button
-                          onClick={() => onAssegna(cand.docente.id, 'COMPRESENTE_CLASSE', false, false)}
+                          onClick={() => onAssegna(cand.docente.id, 'COMPRESENTE_CLASSE', false, false, testoPersonalizzato.trim() || undefined)}
                           className="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-2xs transition shrink-0"
                         >
                           Copri con Compresente
@@ -1834,7 +1989,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                     <span className="text-[11px] text-rose-800 block font-medium">{cand.dettagli}</span>
                   </div>
                   <button
-                    onClick={() => onAssegna(cand.docente.id, 'RECUPERO_STESSA_CLASSE', false, true)}
+                    onClick={() => onAssegna(cand.docente.id, 'RECUPERO_STESSA_CLASSE', false, true, testoPersonalizzato.trim() || undefined)}
                     className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer hover:scale-105 active:scale-95"
                   >
                     Recupera Debito (-1h)
@@ -1857,7 +2012,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                     <span className="text-[11px] text-amber-900 block font-medium">{cand.dettagli}</span>
                   </div>
                   <button
-                    onClick={() => onAssegna(cand.docente.id, 'LIBERATO_STESSA_CLASSE', false, false)}
+                    onClick={() => onAssegna(cand.docente.id, 'LIBERATO_STESSA_CLASSE', false, false, testoPersonalizzato.trim() || undefined)}
                     className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded-lg transition shrink-0"
                   >
                     Assegna (Stessa Classe)
@@ -1880,7 +2035,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                     <span className="text-[11px] text-amber-800 block font-medium">{cand.dettagli}</span>
                   </div>
                   <button
-                    onClick={() => onAssegna(cand.docente.id, 'LIBERATO_STESSA_MATERIA', false, false)}
+                    onClick={() => onAssegna(cand.docente.id, 'LIBERATO_STESSA_MATERIA', false, false, testoPersonalizzato.trim() || undefined)}
                     className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded-lg transition shrink-0"
                   >
                     Assegna Materia
@@ -1903,7 +2058,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                     <span className="text-[11px] text-amber-700 block">{cand.dettagli}</span>
                   </div>
                   <button
-                    onClick={() => onAssegna(cand.docente.id, 'LIBERATO_ALTRA_CLASSE', false, false)}
+                    onClick={() => onAssegna(cand.docente.id, 'LIBERATO_ALTRA_CLASSE', false, false, testoPersonalizzato.trim() || undefined)}
                     className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded-lg transition shrink-0"
                   >
                     Assegna Liberato
@@ -1926,7 +2081,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                     <span className="text-[11px] text-emerald-800 block font-medium">{cand.dettagli}</span>
                   </div>
                   <button
-                    onClick={() => onAssegna(cand.docente.id, 'POTENZIAMENTO', false, false)}
+                    onClick={() => onAssegna(cand.docente.id, 'POTENZIAMENTO', false, false, testoPersonalizzato.trim() || undefined)}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-xs"
                   >
                     Assegna Potenziamento
@@ -1949,7 +2104,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                     <span className="text-[11px] text-rose-800 block font-medium">{cand.dettagli}</span>
                   </div>
                   <button
-                    onClick={() => onAssegna(cand.docente.id, 'RECUPERO_GENERICO', false, true)}
+                    onClick={() => onAssegna(cand.docente.id, 'RECUPERO_GENERICO', false, true, testoPersonalizzato.trim() || undefined)}
                     className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-xs cursor-pointer hover:scale-105 active:scale-95"
                   >
                     Recupera Debito (-1h)
@@ -1972,7 +2127,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                     <span className="text-[11px] text-slate-500 block">{cand.dettagli}</span>
                   </div>
                   <button
-                    onClick={() => onAssegna(cand.docente.id, 'SOSTEGNO', false, false)}
+                    onClick={() => onAssegna(cand.docente.id, 'SOSTEGNO', false, false, testoPersonalizzato.trim() || undefined)}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg transition"
                   >
                     Assegna Sostegno
@@ -1995,7 +2150,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                     <span className="text-[11px] text-slate-500 block">{cand.dettagli}</span>
                   </div>
                   <button
-                    onClick={() => onAssegna(cand.docente.id, 'STRAORDINARIO_D', true, false)}
+                    onClick={() => onAssegna(cand.docente.id, 'STRAORDINARIO_D', true, false, testoPersonalizzato.trim() || undefined)}
                     className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1.5 rounded-lg transition"
                   >
                     Assegna Ora a Credito (D)
@@ -2114,7 +2269,7 @@ const ModalSceltaSostituto: React.FC<ModalSceltaSostitutoProps> = ({
                       }
                     }
 
-                    onAssegna(docenteManualeSelezionatoId, 'STRAORDINARIO_D', false, false);
+                    onAssegna(docenteManualeSelezionatoId, 'STRAORDINARIO_D', false, false, testoPersonalizzato.trim() || undefined);
                   }}
                   className={`px-4 py-2.5 rounded-xl font-bold text-xs shrink-0 transition shadow-xs flex items-center justify-center gap-1 ${
                     docenteManualeSelezionatoId

@@ -12,51 +12,65 @@ interface Step {
 const GUIDA_STEPS_VICE: Step[] = [
   {
     targetId: 'targetDataNavigator',
-    titolo: '1. Scelta del Giorno di Lavoro',
-    descrizione: 'Inizia sempre controllando la data. Usa le freccette per muoverti nei giorni della settimana: tutto il tabellone e le risorse si aggiorneranno in tempo reale.',
-    tip: 'Le modifiche e le assegnazioni vengono salvate istantaneamente per la data selezionata.',
+    titolo: '1. Scelta del Giorno & Avanzamento Lavori',
+    descrizione: 'Controlla e seleziona la data di lavoro con le freccette o clicca sulle schede giornaliere. Il tabellone, gli eventi e le risorse si aggiornano all\'istante.',
+    tip: 'Puoi cliccare su "Settimana" o "Mese" (o sull\'icona 📈 da smartphone) per visualizzare il trend delle assenze future.',
     pos: 'bottom'
   },
   {
     targetId: 'targetBtnAssente',
     titolo: '2. Registra un Docente Assente',
-    descrizione: 'Clicca su questo pulsante quando un docente comunica assenza (giornaliera, per periodo o per singole ore/permessi).',
-    tip: 'Il sistema genererà automaticamente gli slot scoperti per tutte le classi di quell\'insegnante.',
+    descrizione: 'Registra rapidamente l\'assenza di un docente: puoi impostarla per l\'intera giornata, per un periodo di date, o per singole ore/permessi brevi.',
+    tip: 'L\'app genera in tempo reale gli slot scoperti per tutte le classi di quell\'insegnante e traccia il monte ore di debito.',
     pos: 'bottom'
   },
   {
     targetId: 'targetBtnGita',
-    titolo: '3. Registra un\'Uscita o Gita Didattica',
-    descrizione: 'Se ci sono classi in gita, inseriscile qui: puoi selezionare più classi contemporaneamente e indicare i docenti accompagnatori.',
-    tip: 'I docenti curricolari rimasti a scuola vengono liberati e messi a disposizione per fare supplenze!',
+    titolo: '3. Registra Uscite & Gite Didattiche',
+    descrizione: 'Registra le uscite didattiche selezionando le classi partecipanti e i docenti accompagnatori.',
+    tip: 'I docenti curricolari rimasti a scuola vengono automaticamente liberati e resi disponibili come risorse per le supplenze!',
     pos: 'bottom'
   },
   {
-    targetId: 'targetSpecchiettoRisorse',
-    titolo: '4. Consulta le Risorse Disponibili',
-    descrizione: 'Questo specchietto riassume ora per ora chi puoi impiegare: docenti in Potenziamento (⚡), docenti liberati da gite (🚌) e disposizioni (⏱️).',
-    tip: 'Cliccando sui filtri colorati in alto puoi visualizzare o nascondere le rispettive categorie di risorse.',
+    targetId: 'targetBtnNomina',
+    titolo: '4. Nomina Supplenti su Cattedra',
+    descrizione: 'Gestisci le supplenze su assenze prolungate: associa un supplente al titolare. Il supplente eredita orario e classi, coprendo il periodo senza generare ore scoperte.',
+    tip: 'Supporta catene ricorsive e proroghe con aggiornamento automatico di anagrafica e orari.',
+    pos: 'bottom'
+  },
+  {
+    targetId: 'targetBtnRisorse',
+    titolo: '5. Consulta le Risorse Disponibili',
+    descrizione: 'Visualizza ora per ora i docenti disponibili a costo zero: docenti in Potenziamento (⚡), docenti liberati da uscite didattiche (🚌) e ore a disposizione (⏱️).',
+    tip: 'Su desktop apre il comodo pannello laterale, su smartphone espande il riepilogo orario.',
+    pos: 'bottom'
+  },
+  {
+    targetId: 'targetSelettoreViste',
+    titolo: '6. Scegli la Vista del Tabellone',
+    descrizione: 'Commuta a piacere tra la visualizzazione "A Blocchi Orari" (1ª, 2ª ora...) e la vista "Per Docente Assente", con il pratico pulsante per espandere o comprimere tutto.',
+    tip: 'Puoi impostare la tua vista predefinita preferita nella sezione Personalizzazioni.',
     pos: 'bottom'
   },
   {
     targetId: 'targetBtnAssegnaTutto',
-    titolo: '5. Assegnazione Automatica (1 Click)',
-    descrizione: 'Premi "Assegna Tutto": l\'algoritmo assegna tutte le supplenze rispettando i criteri stabiliti (compresenze, stessa materia, potenziamento, rotazione).',
-    tip: 'Nella sezione "Personalizzazioni" puoi personalizzare liberamente l\'ordine di priorità dell\'algoritmo in base alle esigenze della tua scuola.',
+    titolo: '7. Assegnazione Automatica Smart (1 Click)',
+    descrizione: 'Premi "Assegna Tutto": l\'algoritmo intelligente assegna istantaneamente tutte le supplenze rispettando compresenze, debiti, potenziamento e rotazione equa.',
+    tip: 'Nella sezione Personalizzazioni puoi riordinare la scala di priorità secondo le regole del tuo istituto.',
     pos: 'bottom'
   },
   {
     targetId: 'targetSlotOraScoperta',
-    titolo: '6. Regolazione Manuale Assistita',
-    descrizione: 'Vuoi scegliere tu il docente? Clicca su qualsiasi slot scoperto: si aprirà l\'elenco con i candidati ideali ordinati per punteggio e priorità.',
-    tip: 'Puoi sempre sovrascrivere o cambiare qualsiasi decisione con un semplice click.',
+    titolo: '8. Assegnazione Manuale, Co-Docenze & Note',
+    descrizione: 'Clicca su uno slot scoperto per scegliere tu il sostituto ideale con punteggio e debito. Puoi assegnare anche co-docenti multipli, smistamenti o note (es. "Uscita anticipata", "Entrata posticipata", "INVALSI").',
+    tip: 'Puoi aggiungere sia docenti che note contemporaneamente sullo stesso slot in qualsiasi ordine.',
     pos: 'bottom'
   },
   {
     targetId: 'targetBtnPubblicaFirme',
-    titolo: '7. Pubblica le Firme per i Docenti',
-    descrizione: 'Quando il tabellone è completo, clicca su "Pubblica Firme": i docenti potranno accedere alla loro area personale con account Google e firmare digitalmente!',
-    tip: 'Azzeri i foglietti di carta e hai la tracciabilità oraria di ogni firma presa visione.',
+    titolo: '9. Pubblica Firme & Notifiche Email',
+    descrizione: 'Quando il quadro è pronto, clicca su "Pubblica Firme": i docenti ricevono notifica (e le email automatiche se attive) e possono firmare digitalmente dal loro portale!',
+    tip: 'Zero carta, tracciabilità legale con marca temporale e monitoraggio firme in tempo reale.',
     pos: 'bottom'
   }
 ];
@@ -64,26 +78,26 @@ const GUIDA_STEPS_VICE: Step[] = [
 const GUIDA_STEPS_DOCENTE: Step[] = [
   {
     titolo: '1. Benvenuto nel Portale Docente',
-    descrizione: 'Qui puoi visualizzare in tempo reale tutte le supplenze assegnate a te per la giornata, il quadro generale della scuola, il tuo orario settimanale e i tuoi impegni.',
-    tip: 'Accedi comodamente da smartphone, tablet o PC usando il tuo account Google istituzionale.',
+    descrizione: 'Qui visualizzi in tempo reale le supplenze a te assegnate, il quadro generale dell\'istituto, il tuo orario settimanale e i tuoi impegni collegiali.',
+    tip: 'Accedi comodamente da smartphone, tablet o PC con il tuo account Google istituzionale.',
     pos: 'center'
   },
   {
     titolo: '2. Presa Visione & Firma Digitale',
-    descrizione: 'Nella scheda "Le Mie Supplenze", trovi le ore di sostituzione che la Vicepresidenza ti ha assegnato. Clicca su "Firma per Presa Visione" per confermare.',
-    tip: 'La firma registra istantaneamente data e ora, eliminando completamente la necessità di firmare fogli cartacei in vicepresidenza.',
+    descrizione: 'Nella scheda "Le Mie Supplenze", trovi le ore di sostituzione assegnate dalla Vicepresidenza. Clicca su "Firma per Presa Visione" per confermare con un click.',
+    tip: 'La firma registra istantaneamente data e ora esatta, eliminando registri e fogli cartacei in vicepresidenza.',
     pos: 'center'
   },
   {
     titolo: '3. Quadro Sostituzioni dell\'Istituto',
-    descrizione: 'Cliccando su "Quadro Sostituzioni", puoi consultare il prospetto generale di tutte le classi e dei colleghi assenti o impegnati per la giornata.',
-    tip: 'Utilissimo per sapere in anticipo come sono coperte le classi adiacenti o i colleghi del proprio team/dipartimento.',
+    descrizione: 'Nella scheda "Quadro Sostituzioni", consulta il prospetto generale di tutte le classi della scuola e dei colleghi assenti o impegnati per la giornata.',
+    tip: 'Ideale per sapere in anticipo come sono coperte le classi vicine o i colleghi del proprio team.',
     pos: 'center'
   },
   {
-    titolo: '4. Orario & Consigli di Classe',
-    descrizione: 'Nelle schede "Orario" e "Consigli di Classe" puoi consultare il tuo orario settimanale, quello di qualsiasi collega o visualizzare la composizione di ciascuna classe.',
-    tip: 'Trovi anche le schede dedicate ai calendari Google degli Impegni Scolastici e delle Risorse & Aule speciali se configurate dalla scuola.',
+    titolo: '4. Orari, Consigli di Classe & Calendari Google',
+    descrizione: 'Consulta il tuo orario personale o quello di qualsiasi collega e classe. Visualizza la composizione dei Consigli di Classe e gli appuntamenti collegiali (consigli, scrutini, collegi) e aule speciali (laboratori, teatro, palestra).',
+    tip: 'Puoi esportare o stampare il tuo orario anche in formato PDF con un click.',
     pos: 'center'
   }
 ];
@@ -91,20 +105,20 @@ const GUIDA_STEPS_DOCENTE: Step[] = [
 const GUIDA_STEPS_ATA: Step[] = [
   {
     titolo: '1. Benvenuto nell\'Area Personale ATA & Collaboratori',
-    descrizione: 'Questa sezione è pensata per il personale ATA e la segreteria: offre una panoramica chiara e immediata delle supplenze e della presenza dei docenti.',
-    tip: 'Puoi accedere rapidamente con il PIN della scuola o con il tuo account autorizzato.',
+    descrizione: 'Questa sezione è dedicata ai collaboratori scolastici e alla segreteria: offre una panoramica chiara e immediata delle presenze e delle supplenze del giorno.',
+    tip: 'Accedi velocemente digitando il PIN numerico della scuola o con account Google autorizzato.',
     pos: 'center'
   },
   {
     titolo: '2. Quadro Generale Sostituzioni del Giorno',
-    descrizione: 'Visualizza ora per ora quali docenti sono assenti, quali classi hanno una variazione e chi è il docente sostituto in aula.',
-    tip: 'Consente ai collaboratori scolastici di piano di sapere esattamente chi si trova in ciascuna aula in ogni momento della giornata.',
+    descrizione: 'Visualizza ora per ora quali docenti sono assenti, quali classi hanno una variazione oraria e chi è il docente sostituto presente in aula.',
+    tip: 'Consente ai collaboratori di piano di sapere esattamente chi si trova in ciascuna aula in ogni momento.',
     pos: 'center'
   },
   {
-    titolo: '3. Consultazione Orari e Consigli di Classe',
-    descrizione: 'Puoi cercare l\'orario di qualsiasi docente o classe e visualizzare l\'elenco degli insegnanti per ciascuna sezione.',
-    tip: 'Tutti i dati si aggiornano in tempo reale non appena la Vicepresidenza effettua modifiche.',
+    titolo: '3. Consultazione Orari, Aule & Impegni',
+    descrizione: 'Cerca istantaneamente l\'orario di qualsiasi docente o classe, l\'elenco insegnanti per sezione e le prenotazioni delle aule speciali.',
+    tip: 'Tutti i dati si aggiornano automaticamente in tempo reale non appena la Vicepresidenza effettua modifiche.',
     pos: 'center'
   }
 ];
@@ -183,27 +197,32 @@ export const Coachmark: React.FC<CoachmarkProps> = ({
     }
 
     let targetId = step.targetId;
-    if (isMobile && step.targetId === 'targetSpecchiettoRisorse') {
-      targetId = 'targetSpecchiettoRisorseMobile';
+    if (isMobileSmall && step.targetId === 'targetDataNavigator') {
+      targetId = 'targetDataNavigatorMobile';
+    } else if (isMobile && step.targetId === 'targetSpecchiettoRisorse') {
+      targetId = 'targetBtnRisorse';
     }
 
-    const targetElem = document.getElementById(targetId);
+    let targetElem = document.getElementById(targetId);
+    if (!targetElem && step.targetId) {
+      targetElem = document.getElementById(step.targetId);
+    }
 
     if (targetElem) {
       targetElem.classList.add('spotlight-active');
 
       // Scroll appropriato
       if (isLandscape) {
-        if (idx <= 3) {
+        if (idx <= 4) {
           targetElem.scrollIntoView({ behavior: 'auto', block: 'start' });
-        } else if (idx === 5) {
+        } else if (idx >= 7) {
           targetElem.scrollIntoView({ behavior: 'auto', block: 'end' });
         } else {
           targetElem.scrollIntoView({ behavior: 'auto', block: 'center' });
         }
-      } else if (isMobileSmall && idx === 5) {
+      } else if (isMobileSmall && idx >= 7) {
         targetElem.scrollIntoView({ behavior: 'auto', block: 'end' });
-      } else if (isMobileSmall && idx < 4) {
+      } else if (isMobileSmall && idx < 5) {
         targetElem.scrollIntoView({ behavior: 'auto', block: 'start' });
       } else {
         targetElem.scrollIntoView({ behavior: 'auto', block: 'center' });
@@ -215,7 +234,7 @@ export const Coachmark: React.FC<CoachmarkProps> = ({
       const cardWidth = cardRect.width || 400;
       const cardHeight = cardRect.height || 200;
 
-      // Mobile Portrait: Bottom Sheet o Top Sheet
+      // Mobile Portrait: Bottom Sheet o Top Sheet dinamico
       if (isMobileSmall && !isLandscape) {
         if (targetRect.top + targetRect.height / 2 > window.innerHeight / 2) {
           setCardPos({ top: 12, bottom: undefined, left: 12, right: 12, width: 'auto', maxWidth: 'calc(100vw - 24px)' });
@@ -255,19 +274,13 @@ export const Coachmark: React.FC<CoachmarkProps> = ({
         }
       }
 
-      // Step specific overrides per visibilità ottimale
-      if (idx === 4 || idx === 6) {
-        if (spaceBelow >= cardHeight + 20) {
-          top = targetRect.bottom + 16;
-        } else {
-          top = Math.max(12, targetRect.top - cardHeight - 16);
-        }
-      } else if (spaceBelow >= cardHeight + 24) {
-        top = targetRect.bottom + 20;
-      } else if (spaceAbove >= cardHeight + 24) {
-        top = targetRect.top - cardHeight - 20;
+      // Posizionamento sopra o sotto il target in base allo spazio
+      if (spaceBelow >= cardHeight + 20) {
+        top = targetRect.bottom + 16;
+      } else if (spaceAbove >= cardHeight + 20) {
+        top = targetRect.top - cardHeight - 16;
       } else {
-        top = spaceBelow > spaceAbove ? targetRect.bottom + 20 : Math.max(12, targetRect.top - cardHeight - 20);
+        top = spaceBelow > spaceAbove ? targetRect.bottom + 16 : Math.max(12, targetRect.top - cardHeight - 16);
       }
 
       setCardPos({ top, left, width: `${cardWidth}px`, maxWidth: '400px' });

@@ -861,7 +861,7 @@ export function getDescrizioneCategoriaSostituto(categoria: string | undefined):
  * Modelli email predefiniti con segnaposto dinamici
  */
 export const MODELLI_EMAIL_PREDEFINITI = {
-  assegnazioneOggetto: '🔔 Nuova Supplenza Assegnata ({DATA} - {ORA}ª ora) - {NOME_SCUOLA}',
+  assegnazioneOggetto: '🔔 Nuova Supplenza ({DATA} - {ORA}ª ora in {CLASSE}) [{TIMESTAMP}] - {NOME_SCUOLA}',
   assegnazioneCorpo: `Gentile Prof. {NOME_DOCENTE},
 
 ti comunichiamo che ti è stata assegnata una nuova supplenza:
@@ -877,7 +877,20 @@ Ti invitiamo ad accedere al Portale Docenti per prendere visione e apporre la fi
 Cordiali saluti,
 La Vicepresidenza`,
 
-  annullamentoOggetto: '⚠️ Supplenza Revocata / Annullata ({DATA} - {ORA}ª ora) - {NOME_SCUOLA}',
+  assegnazioneMultiplaOggetto: '🔔 Nuove Supplenze Assegnate ({DATA} - Ore {ORA}) [{TIMESTAMP}] - {NOME_SCUOLA}',
+  assegnazioneMultiplaCorpo: `Gentile Prof. {NOME_DOCENTE},
+
+ti comunichiamo che ti sono state assegnate le seguenti supplenze per la giornata del {DATA}:
+
+{ELENCO_SOSTITUZIONI}
+
+Ti invitiamo ad accedere al Portale Docenti per prendere visione e apporre la firma digitale:
+{LINK_PORTALE}
+
+Cordiali saluti,
+La Vicepresidenza`,
+
+  annullamentoOggetto: '⚠️ Supplenza Annullata ({DATA} - {ORA}ª ora in {CLASSE}) [{TIMESTAMP}] - {NOME_SCUOLA}',
   annullamentoCorpo: `Gentile Prof. {NOME_DOCENTE},
 
 ti informiamo che la seguente supplenza è stata annullata dalla Vicepresidenza:
@@ -892,7 +905,7 @@ Non è richiesta alcuna azione da parte tua.
 Cordiali saluti,
 La Vicepresidenza`,
 
-  riepilogoOggetto: '📋 Le tue ore di supplenza per oggi ({DATA}) - {NOME_SCUOLA}',
+  riepilogoOggetto: '📋 Riepilogo Supplenze Oggi ({DATA}) [{TIMESTAMP}] - {NOME_SCUOLA}',
   riepilogoCorpo: `Gentile Prof. {NOME_DOCENTE},
 
 ti riepiloghiamo le ore di sostituzione a te assegnate per oggi ({DATA}):
@@ -905,6 +918,20 @@ Ti invitiamo ad accedere al Portale Docenti per prendere visione e apporre la fi
 Buon lavoro,
 La Vicepresidenza`
 };
+
+/**
+ * Genera un timestamp orario formattato in italiano (es. "11:25" o "11:25:30")
+ */
+export function getFormattedCurrentTime(includeSeconds = false): string {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2, '0');
+  const m = String(now.getMinutes()).padStart(2, '0');
+  if (includeSeconds) {
+    const s = String(now.getSeconds()).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  }
+  return `${h}:${m}`;
+}
 
 /**
  * Sostituisce i segnaposto dinamici con i valori effettivi
@@ -921,10 +948,12 @@ export function componiTestoEmail(
     NOME_SCUOLA?: string;
     LINK_PORTALE?: string;
     ELENCO_SOSTITUZIONI?: string;
+    TIMESTAMP?: string;
   }
 ): string {
   if (!template) return '';
   let risultato = template;
+  const currentTs = dati.TIMESTAMP || getFormattedCurrentTime(false);
   const mappa: Record<string, string> = {
     '{NOME_DOCENTE}': dati.NOME_DOCENTE || '',
     '{DATA}': dati.DATA || '',
@@ -934,7 +963,8 @@ export function componiTestoEmail(
     '{MATERIA}': dati.MATERIA || '',
     '{NOME_SCUOLA}': dati.NOME_SCUOLA || 'Scuola',
     '{LINK_PORTALE}': dati.LINK_PORTALE || 'https://sostituzioni-smart.web.app',
-    '{ELENCO_SOSTITUZIONI}': dati.ELENCO_SOSTITUZIONI || ''
+    '{ELENCO_SOSTITUZIONI}': dati.ELENCO_SOSTITUZIONI || '',
+    '{TIMESTAMP}': currentTs
   };
 
   Object.entries(mappa).forEach(([tag, val]) => {

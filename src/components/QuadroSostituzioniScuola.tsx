@@ -102,6 +102,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
         pubblicata: boolean;
       }>;
       nonSostituita: boolean;
+      notaPersonalizzata?: string;
       smistata: boolean;
     }> = [];
 
@@ -152,7 +153,10 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                   s.classe === val &&
                   (collegatiIds.includes(s.docenteAssenteId) || s.docenteAssenteId === assenza.docenteId)
                 );
-                const nonSost = sosts.some(s => s.categoria === 'NON_SOSTITUIRE' && s.pubblicata);
+                const sostPubblicataConNota = sosts.find(s => s.pubblicata && s.notaSostituzione);
+                const sostNonSost = sosts.find(s => s.categoria === 'NON_SOSTITUIRE' && s.pubblicata);
+                const nonSost = !!sostNonSost;
+                const notaPersonalizzata = sostPubblicataConNota?.notaSostituzione || sostNonSost?.notaSostituzione;
                 const smistata = sosts.some(s => s.categoria === 'SMISTAMENTO_CLASSE' && s.pubblicata);
 
                 items.push({
@@ -163,6 +167,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                   motivo: assenza.motivo,
                   isUscita: assenza.motivo === 'Uscita',
                   nonSostituita: nonSost,
+                  notaPersonalizzata: notaPersonalizzata,
                   smistata: smistata,
                   sostituti: sosts
                     .filter(s => s.categoria !== 'NON_SOSTITUIRE' && s.categoria !== 'SMISTAMENTO_CLASSE' && s.pubblicata)
@@ -173,7 +178,8 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                         nomeSostituto: docSost ? getBaseNomeDocente(docSost.nome) : 'Docente Sostituto',
                         categoria: getDescrizioneCategoriaSostituto(s.categoria),
                         firmata: !!s.firmata,
-                        pubblicata: !!s.pubblicata
+                        pubblicata: !!s.pubblicata,
+                        notaSostituzione: s.notaSostituzione
                       };
                     })
                 });
@@ -319,24 +325,24 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
 
         {/* CONTROLLI DATA E RICERCA IN EVIDENZA */}
         <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
-          {/* SELETTORE DATA GRANDE CON ICONA CALENDARIO E FRECCE */}
-          <div className="flex items-center bg-slate-100 hover:bg-slate-200/80 p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs transition">
+          {/* SELETTORE DATA COMPATTO CON ICONA CALENDARIO E FRECCE */}
+          <div className="flex items-center bg-slate-100 hover:bg-slate-200/80 p-1 rounded-2xl border border-slate-200/90 shadow-2xs transition">
             <button
               type="button"
               onClick={() => cambiaGiorno(-1)}
-              className="p-2 hover:bg-white active:scale-90 rounded-xl text-slate-700 hover:text-indigo-600 transition cursor-pointer shadow-2xs"
+              className="p-1.5 hover:bg-white active:scale-90 rounded-xl text-slate-700 hover:text-indigo-600 transition cursor-pointer shadow-2xs"
               title="Giorno Precedente"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
-            <div className="px-3.5 sm:px-4 py-1 flex items-center gap-2.5 min-w-[150px] sm:min-w-[180px] justify-center">
-              <Calendar className="w-5 h-5 text-indigo-600 shrink-0" />
+            <div className="px-2 sm:px-2.5 py-0.5 flex items-center gap-1.5 sm:gap-2 justify-center">
+              <Calendar className="w-4 h-4 text-indigo-600 shrink-0" />
               <div className="text-left leading-tight">
-                <span className="block text-sm sm:text-base font-black text-slate-900 capitalize">
+                <span className="block text-xs sm:text-sm font-black text-slate-900 capitalize">
                   {giornoSettimana}
                 </span>
-                <span className="text-xs font-bold text-indigo-700 font-mono">
+                <span className="text-[11px] sm:text-xs font-bold text-indigo-700 font-mono">
                   {formatDataItaliana(selectedDate)}
                 </span>
               </div>
@@ -345,10 +351,10 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
             <button
               type="button"
               onClick={() => cambiaGiorno(1)}
-              className="p-2 hover:bg-white active:scale-90 rounded-xl text-slate-700 hover:text-indigo-600 transition cursor-pointer shadow-2xs"
+              className="p-1.5 hover:bg-white active:scale-90 rounded-xl text-slate-700 hover:text-indigo-600 transition cursor-pointer shadow-2xs"
               title="Giorno Successivo"
             >
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
 
@@ -1000,7 +1006,7 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                               {/* DOCENTE SOSTITUTO */}
                               <td className="py-2 px-1.5 sm:px-3 align-middle">
                                 {r.sostituti.length > 0 ? (
-                                  <div className="space-y-0.5">
+                                  <div className="space-y-1">
                                     {r.sostituti.map(s => (
                                       <div key={s.id} className="leading-tight">
                                         <span className="font-black text-indigo-950 text-[11px] sm:text-xs block sm:inline truncate">
@@ -1011,16 +1017,37 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                                         </span>
                                       </div>
                                     ))}
+                                    {r.notaPersonalizzata && (
+                                      <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-900 border border-indigo-200 font-bold px-1.5 py-0.2 rounded text-[9.5px] mt-0.5 shadow-2xs">
+                                        <span>📝</span>
+                                        <span>{r.notaPersonalizzata}</span>
+                                      </span>
+                                    )}
                                   </div>
                                 ) : r.smistata ? (
-                                  <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black px-2 py-0.5 rounded-md shadow-xs border border-amber-300 text-[10px] uppercase tracking-wide">
-                                    <span>🔀</span>
-                                    <span>Smistamento</span>
-                                  </span>
+                                  <div className="space-y-1">
+                                    <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black px-2 py-0.5 rounded-md shadow-xs border border-amber-300 text-[10px] uppercase tracking-wide">
+                                      <span>🔀</span>
+                                      <span>Smistamento</span>
+                                    </span>
+                                    {r.notaPersonalizzata && (
+                                      <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-200 font-bold px-1.5 py-0.2 rounded text-[9.5px] block shadow-2xs">
+                                        <span>📝</span>
+                                        <span>{r.notaPersonalizzata}</span>
+                                      </span>
+                                    )}
+                                  </div>
                                 ) : r.nonSostituita ? (
-                                  <span className="inline-block bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 rounded border border-slate-200 text-[9px] sm:text-[10px]">
-                                    Non Sost.
-                                  </span>
+                                  r.notaPersonalizzata ? (
+                                    <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-900 border border-indigo-300 font-bold px-2 py-0.5 rounded-md shadow-2xs text-[10px]">
+                                      <span>📝</span>
+                                      <span>{r.notaPersonalizzata}</span>
+                                    </span>
+                                  ) : (
+                                    <span className="inline-block bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 rounded border border-slate-200 text-[9px] sm:text-[10px]">
+                                      Non Sost.
+                                    </span>
+                                  )
                                 ) : (
                                   <span className="inline-block bg-amber-100 text-amber-900 font-black px-1.5 py-0.2 rounded border border-amber-300 text-[9px] sm:text-[10px] animate-pulse">
                                     In attesa
@@ -1185,9 +1212,16 @@ export const QuadroSostituzioniScuola: React.FC<QuadroSostituzioniScuolaProps> =
                                 <span>Smistamento Classe</span>
                               </span>
                             ) : isNonSost ? (
-                              <span className="bg-slate-100 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg border border-slate-300">
-                                🚫 Non Sostituire
-                              </span>
+                              r.notaPersonalizzata ? (
+                                <span className="bg-indigo-50 text-indigo-900 border border-indigo-300 font-black text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-2xs">
+                                  <span>📝</span>
+                                  <span>{r.notaPersonalizzata}</span>
+                                </span>
+                              ) : (
+                                <span className="bg-slate-100 text-slate-700 font-bold text-xs px-3 py-1.5 rounded-lg border border-slate-300">
+                                  🚫 Non Sostituire
+                                </span>
+                              )
                             ) : (
                               <span className="bg-amber-50 text-amber-900 border border-amber-300 font-black text-xs px-3.5 py-1.5 rounded-lg shadow-2xs animate-pulse">
                                 In attesa di sostituto

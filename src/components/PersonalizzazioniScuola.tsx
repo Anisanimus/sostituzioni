@@ -96,7 +96,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const [mailGruppoIndirizzo, setMailGruppoIndirizzo] = useState(cfgEmail?.emailGruppo || '');
   const [mailGruppoOrario, setMailGruppoOrario] = useState(cfgEmail?.orarioInvio || '07:45');
   const [mailGruppoOggetto, setMailGruppoOggetto] = useState(cfgEmail?.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta');
-  const [mailGruppoCorpo, setMailGruppoCorpo] = useState(cfgEmail?.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`);
+  const [mailGruppoCorpo, setMailGruppoCorpo] = useState(cfgEmail?.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\n{LINK_PORTALE}\n\nCordiali saluti,\nLa Vicepresidenza`);
   const [mailGruppoWebhookUrl, setMailGruppoWebhookUrl] = useState(cfgEmail?.webhookAppScriptUrl || '');
   
   // Email personali al singolo docente
@@ -111,13 +111,15 @@ export const PersonalizzazioniScuola: React.FC = () => {
   const modelliSaved = cfgEmailSingolo?.modelli;
   const [tplAssegnazioneOggetto, setTplAssegnazioneOggetto] = useState(modelliSaved?.assegnazioneOggetto || MODELLI_EMAIL_PREDEFINITI.assegnazioneOggetto);
   const [tplAssegnazioneCorpo, setTplAssegnazioneCorpo] = useState(modelliSaved?.assegnazioneCorpo || MODELLI_EMAIL_PREDEFINITI.assegnazioneCorpo);
+  const [tplAssegnazioneMultiplaOggetto, setTplAssegnazioneMultiplaOggetto] = useState(modelliSaved?.assegnazioneMultiplaOggetto || MODELLI_EMAIL_PREDEFINITI.assegnazioneMultiplaOggetto);
+  const [tplAssegnazioneMultiplaCorpo, setTplAssegnazioneMultiplaCorpo] = useState(modelliSaved?.assegnazioneMultiplaCorpo || MODELLI_EMAIL_PREDEFINITI.assegnazioneMultiplaCorpo);
   const [tplAnnullamentoOggetto, setTplAnnullamentoOggetto] = useState(modelliSaved?.annullamentoOggetto || MODELLI_EMAIL_PREDEFINITI.annullamentoOggetto);
   const [tplAnnullamentoCorpo, setTplAnnullamentoCorpo] = useState(modelliSaved?.annullamentoCorpo || MODELLI_EMAIL_PREDEFINITI.annullamentoCorpo);
   const [tplRiepilogoOggetto, setTplRiepilogoOggetto] = useState(modelliSaved?.riepilogoOggetto || MODELLI_EMAIL_PREDEFINITI.riepilogoOggetto);
   const [tplRiepilogoCorpo, setTplRiepilogoCorpo] = useState(modelliSaved?.riepilogoCorpo || MODELLI_EMAIL_PREDEFINITI.riepilogoCorpo);
 
   // Tab o accordion attivo per l'editor modelli email
-  const [schedaModelloEmail, setSchedaModelloEmail] = useState<'ASSEGNAZIONE' | 'ANNULLAMENTO' | 'RIEPILOGO'>('ASSEGNAZIONE');
+  const [schedaModelloEmail, setSchedaModelloEmail] = useState<'ASSEGNAZIONE' | 'ASSEGNAZIONE_MULTIPLA' | 'ANNULLAMENTO' | 'RIEPILOGO'>('ASSEGNAZIONE');
 
   const [statoInvioTestMail, setStatoInvioTestMail] = useState<'IDLE' | 'INVIANDO' | 'SUCCESSO' | 'ERRORE'>('IDLE');
   const [messaggioInvioTestMail, setMessaggioInvioTestMail] = useState<string>('');
@@ -181,7 +183,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
         setMailGruppoIndirizzo(emailCfg.emailGruppo || '');
         setMailGruppoOrario(emailCfg.orarioInvio || '07:45');
         setMailGruppoOggetto(emailCfg.oggetto || '🔔 Avviso Supplenze del Giorno - Presa Visione Richiesta');
-        setMailGruppoCorpo(emailCfg.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\nhttps://sostituzioni-smart.web.app\n\nCordiali saluti,\nLa Vicepresidenza`);
+        setMailGruppoCorpo(emailCfg.corpoMessaggio || `Gentili docenti,\n\nvi informiamo che sono presenti sostituzioni e variazioni orarie per la giornata odierna.\n\nVi invitiamo a collegarvi al Portale Docenti per prendere visione e firmare le vostre supplenze:\n{LINK_PORTALE}\n\nCordiali saluti,\nLa Vicepresidenza`);
         setMailGruppoWebhookUrl(emailCfg.webhookAppScriptUrl || '');
       }
 
@@ -196,6 +198,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
         if (emailSingoloCfg.modelli) {
           if (emailSingoloCfg.modelli.assegnazioneOggetto) setTplAssegnazioneOggetto(emailSingoloCfg.modelli.assegnazioneOggetto);
           if (emailSingoloCfg.modelli.assegnazioneCorpo) setTplAssegnazioneCorpo(emailSingoloCfg.modelli.assegnazioneCorpo);
+          if (emailSingoloCfg.modelli.assegnazioneMultiplaOggetto) setTplAssegnazioneMultiplaOggetto(emailSingoloCfg.modelli.assegnazioneMultiplaOggetto);
+          if (emailSingoloCfg.modelli.assegnazioneMultiplaCorpo) setTplAssegnazioneMultiplaCorpo(emailSingoloCfg.modelli.assegnazioneMultiplaCorpo);
           if (emailSingoloCfg.modelli.annullamentoOggetto) setTplAnnullamentoOggetto(emailSingoloCfg.modelli.annullamentoOggetto);
           if (emailSingoloCfg.modelli.annullamentoCorpo) setTplAnnullamentoCorpo(emailSingoloCfg.modelli.annullamentoCorpo);
           if (emailSingoloCfg.modelli.riepilogoOggetto) setTplRiepilogoOggetto(emailSingoloCfg.modelli.riepilogoOggetto);
@@ -327,7 +331,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
         oggetto: mailGruppoOggetto.trim(),
         corpoMessaggio: mailGruppoCorpo.trim(),
         webhookAppScriptUrl: mailGruppoWebhookUrl.trim(),
-        ultimoInvioData: impostazioniScuola.notificheEmailGruppo?.ultimoInvioData || ''
+        ultimoInvioData: mailGruppoOrario.trim() !== (impostazioniScuola.notificheEmailGruppo?.orarioInvio || '') ? '' : (impostazioniScuola.notificheEmailGruppo?.ultimoInvioData || '')
       },
       notificheEmailDocenteSingolo: {
         abilitato: Boolean(mailDocenteSingoloAbilitato),
@@ -339,6 +343,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
         modelli: {
           assegnazioneOggetto: tplAssegnazioneOggetto.trim(),
           assegnazioneCorpo: tplAssegnazioneCorpo.trim(),
+          assegnazioneMultiplaOggetto: tplAssegnazioneMultiplaOggetto.trim(),
+          assegnazioneMultiplaCorpo: tplAssegnazioneMultiplaCorpo.trim(),
           annullamentoOggetto: tplAnnullamentoOggetto.trim(),
           annullamentoCorpo: tplAnnullamentoCorpo.trim(),
           riepilogoOggetto: tplRiepilogoOggetto.trim(),
@@ -562,7 +568,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     {infoSezioneAperta === 'sez_intestazione' && (
                       <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between font-bold text-amber-400">
-                          <span className="flex items-center gap-1.5">💡 Intestazione & Accessi</span>
+                          <span className="flex items-center gap-1.5">💡 Intestazione, Loghi & Accessi</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -575,7 +581,12 @@ export const PersonalizzazioniScuola: React.FC = () => {
                           </button>
                         </div>
                         <p className="text-slate-200 text-[11px]">
-                          Personalizza il nome dell'istituto mostrato nella barra superiore, definisce il <strong>PIN numerico</strong> richiesto al personale ATA/segreteria per consultare il quadro e i <strong>domini Google Workspace</strong> autorizzati a fare login.
+                          Configura:
+                          <br />• <strong>Nome Scuola</strong> e <strong>Link Portale</strong> (usato nei pulsanti e nei segnaposto <code>{'{LINK_PORTALE}'}</code> delle email).
+                          <br />• <strong>Stemma Intestazione</strong> (mostrato nella barra superiore) e <strong>Icona App PWA</strong> (mostrata nella scheda browser e sulla schermata Home dello smartphone).
+                          <br />• <strong>PIN Personale ATA / Collaboratori</strong> per l'accesso rapido al tabellone del giorno.
+                          <br />• <strong>Domini Google Workspace</strong> autorizzati al login e <strong>Email Vicepresidenza</strong> con permessi amministrativi completi.
+                          <br />• <strong>Diagnostica Cloud Firebase</strong> per testare lettura/scrittura in tempo reale.
                         </p>
                       </div>
                     )}
@@ -1188,7 +1199,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     {infoSezioneAperta === 'sez_tetti' && (
                       <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between font-bold text-amber-400">
-                          <span className="flex items-center gap-1.5">💡 Tetti Massimi Orari</span>
+                          <span className="flex items-center gap-1.5">💡 Tetti Massimi Orari CCNL</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -1201,7 +1212,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
                           </button>
                         </div>
                         <p className="text-slate-200 text-[11px]">
-                          Imposta i limiti contrattuali CCNL per il monte ore annuo fruibile di <strong>Permessi Brevi</strong> (generalmente pari all'orario settimanale del docente) e di <strong>Assemblee Sindacali</strong> (10h). Permette all'app di avvisare la vicepresidenza in caso di superamento.
+                          Imposta i limiti contrattuali CCNL per il monte ore annuo fruibile:
+                          <br />• <strong>Permessi Brevi</strong>: solitamente pari all'orario settimanale di cattedra (es. 12h o 18h) con obbligo di recupero entro i 2 mesi successivi.
+                          <br />• <strong>Assemblee Sindacali</strong>: limite massimo di 10 ore pro-capite per anno scolastico.
+                          <br />L'app calcola i totali in tempo reale e avvisa la Vicepresidenza con badge e allerte visive in caso di superamento della soglia.
                         </p>
                       </div>
                     )}
@@ -1310,7 +1324,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     {infoSezioneAperta === 'sez_vista' && (
                       <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between font-bold text-amber-400">
-                          <span className="flex items-center gap-1.5">💡 Preferenze Visualizzazione</span>
+                          <span className="flex items-center gap-1.5">💡 Preferenze Visualizzazione & Calendario</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -1323,7 +1337,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
                           </button>
                         </div>
                         <p className="text-slate-200 text-[11px]">
-                          Scegli il layout predefinito del tabellone (a <strong>Blocchi Orari</strong> per ora di lezione, oppure <strong>Per Docente Assente</strong>) e attiva la <strong>Settimana Corta</strong> per nascondere sabato e domenica da tutti i calendari.
+                          Imposta come consultare e organizzare la scuola:
+                          <br />• <strong>Vista a Blocchi Orari (1ª, 2ª, 3ª ora...)</strong>: ideale per la Vicepresidenza durante la giornata per seguire l'andamento cronologico delle lezioni.
+                          <br />• <strong>Vista per Docente Assente</strong>: raggruppa le ore scoperte per insegnante assente con conteggio automatico delle ore coperte/scoperte.
+                          <br />• <strong>Settimana Corta</strong>: nasconde sabato e domenica da tutti i selettori, calendari e panoramiche (dal lunedì al venerdì).
                         </p>
                       </div>
                     )}
@@ -1457,7 +1474,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     {infoSezioneAperta === 'sez_priorita' && (
                       <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between font-bold text-amber-400">
-                          <span className="flex items-center gap-1.5">💡 Algoritmo Sostitutore Smart</span>
+                          <span className="flex items-center gap-1.5">💡 Motore Sostitutore Smart & Priorità</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -1470,7 +1487,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
                           </button>
                         </div>
                         <p className="text-slate-200 text-[11px]">
-                          Configura l'ordine esatto con cui il motore automatico seleziona i candidati ottimali per coprire un'ora scoperta (es. prima <strong>Compresenti</strong>, poi <strong>Recupero debito</strong>, poi <strong>Potenziamento</strong>, ecc.), separato per assenze ordinarie e uscite didattiche.
+                          Definisce l'ordine di preferenza con cui l'algoritmo intelligente propone e ordina i candidati per coprire le ore scoperte:
+                          <br />• <strong>Assenze Ordinarie</strong>: sequenza prioritaria tra Compresenti in classe, Docenti a Debito (stessa classe/generico), Potenziamento, Sostegno (senza caso grave) e Ore a Disposizione/Straordinario.
+                          <br />• <strong>Uscite & Gite Didattiche</strong>: criteri dedicati per riassegnare prioritariamente i docenti liberati dall'uscita (stessa classe, stessa materia o altra classe).
+                          <br />Puoi trascinare o spostare su/giù ogni singola voce per adattare la graduatoria al regolamento del tuo istituto.
                         </p>
                       </div>
                     )}
@@ -1676,7 +1696,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     {infoSezioneAperta === 'sez_festivita' && (
                       <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between font-bold text-amber-400">
-                          <span className="flex items-center gap-1.5">💡 Festività & Chiusure</span>
+                          <span className="flex items-center gap-1.5">💡 Festività, Ponti & Chiusure</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -1689,7 +1709,10 @@ export const PersonalizzazioniScuola: React.FC = () => {
                           </button>
                         </div>
                         <p className="text-slate-200 text-[11px]">
-                          Registra le festività nazionali, i ponti e i periodi di vacanza (Natale, Pasqua). I giorni registrati vengono <strong>saltati dal calendario</strong> e non considerati come giorni di lezione né conteggiati come assenze.
+                          Gestione del calendario scolastico non lavorativo:
+                          <br />• <strong>Giorno Singolo</strong>: per feste patronali, festività nazionali infra-settimanali o chiusure straordinarie.
+                          <br />• <strong>Intero Periodo (Dal... Al...)</strong>: per ponti, vacanze natalizie, pasquali o estive.
+                          <br />I giorni salvati vengono <strong>esclusi automaticamente</strong> dalla generazione di supplenze, dal conteggio delle assenze e dai calendari settimanali.
                         </p>
                       </div>
                     )}
@@ -1872,7 +1895,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     {infoSezioneAperta === 'sez_notifiche_mail' && (
                       <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between font-bold text-amber-400">
-                          <span className="flex items-center gap-1.5">💡 Promemoria Email Mattutino</span>
+                          <span className="flex items-center gap-1.5">💡 Notifiche Email & Webhook Google</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -1885,7 +1908,13 @@ export const PersonalizzazioniScuola: React.FC = () => {
                           </button>
                         </div>
                         <p className="text-slate-200 text-[11px]">
-                          Spedisce ogni mattina all'orario prestabilito un'email al gruppo docenti per ricordare di accedere al portale per firmare le supplenze. L'invio avviene <strong>solo se ci sono supplenze</strong> attive per la giornata.
+                          Sistema integrato di comunicazione email:
+                          <br />• <strong>Mailing List / Gruppo Docenti</strong>: avviso collettivo mattutino solo in caso di supplenze attive.
+                          <br />• <strong>Email Personali ai Singoli Docenti</strong>:
+                          <br />&nbsp;&nbsp;– <em>Istantanee</em>: per nuove ore (singole o multiple raggruppate) o per revoche durante l'orario di lavoro.
+                          <br />&nbsp;&nbsp;– <em>Riepilogo Mattutino</em>: con l'elenco di tutte le supplenze assegnate per la giornata.
+                          <br />• <strong>Personalizzazione Modelli & Segnaposto</strong>: modifica testi e oggetti con segnaposto dinamici (<code>{'{NOME_DOCENTE}'}</code>, <code>{'{DATA}'}</code>, <code>{'{ORA}'}</code>, <code>{'{CLASSE}'}</code>, <code>{'{DOCENTE_SOSTITUITO}'}</code>, <code>{'{MATERIA}'}</code>, <code>{'{ELENCO_SOSTITUZIONI}'}</code>, <code>{'{LINK_PORTALE}'}</code>).
+                          <br />• <strong>Webhook Google Apps Script</strong>: invio server-side silenzioso e trigger al minuto esatto anche a PC spento.
                         </p>
                       </div>
                     )}
@@ -2055,7 +2084,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
 
                       {/* CORPO MESSAGGIO GRUPPO */}
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-black text-slate-800">
+                        <label className="block text-xs font-bold text-slate-800">
                           📝 Testo del Messaggio Collettivo (Completamente Editabile)
                         </label>
                         <textarea
@@ -2066,7 +2095,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                           className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 transition leading-relaxed"
                         />
                         <span className="text-[10px] text-slate-500 block">
-                          Puoi modificare il testo a tuo piacimento. Il link <code>{appUrl || 'https://sostituzioni-smart.web.app'}</code> (o il segnaposto <code>{'{LINK_PORTALE}'}</code>) permetterà ai docenti di accedere direttamente con un click.
+                          Puoi modificare il testo a tuo piacimento. Il segnaposto <code>{'{LINK_PORTALE}'}</code> verrà sostituito automaticamente con il link per accedere direttamente con un click.
                         </span>
                       </div>
                     </div>
@@ -2120,7 +2149,11 @@ export const PersonalizzazioniScuola: React.FC = () => {
                               <input
                                 type="time"
                                 value={mailDocenteSingoloOrarioRiepilogo}
-                                onChange={(e) => setMailDocenteSingoloOrarioRiepilogo(e.target.value)}
+                                onChange={(e) => {
+                                  setMailDocenteSingoloOrarioRiepilogo(e.target.value);
+                                  // Resetta il blocco invio per permettere il test immediato al nuovo orario
+                                  localStorage.removeItem('scuola_last_email_sent_date');
+                                }}
                                 className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
                               />
                             </div>
@@ -2184,35 +2217,46 @@ export const PersonalizzazioniScuola: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => setSchedaModelloEmail('ASSEGNAZIONE')}
-                            className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
                               schedaModelloEmail === 'ASSEGNAZIONE'
                                 ? 'bg-indigo-600 text-white shadow-xs'
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                             }`}
                           >
-                            🔔 Nuova Assegnazione
+                            🔔 Singola Ora
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSchedaModelloEmail('ASSEGNAZIONE_MULTIPLA')}
+                            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                              schedaModelloEmail === 'ASSEGNAZIONE_MULTIPLA'
+                                ? 'bg-indigo-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            }`}
+                          >
+                            🔔 Più Ore Insieme
                           </button>
                           <button
                             type="button"
                             onClick={() => setSchedaModelloEmail('ANNULLAMENTO')}
-                            className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
                               schedaModelloEmail === 'ANNULLAMENTO'
                                 ? 'bg-indigo-600 text-white shadow-xs'
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                             }`}
                           >
-                            ⚠️ Revoca / Annullamento
+                            ⚠️ Revoca
                           </button>
                           <button
                             type="button"
                             onClick={() => setSchedaModelloEmail('RIEPILOGO')}
-                            className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
+                            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
                               schedaModelloEmail === 'RIEPILOGO'
                                 ? 'bg-indigo-600 text-white shadow-xs'
                                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                             }`}
                           >
-                            📋 Riepilogo Mattutino
+                            📋 Riepilogo Mattino
                           </button>
                         </div>
 
@@ -2222,7 +2266,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                             <div className="space-y-3">
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-slate-800">
-                                  Modello: Nuova Supplenza Assegnata (Istantanea {mailDocenteSingoloOrarioInizio}–{mailDocenteSingoloOrarioFine})
+                                  Modello: Nuova Supplenza Singola Ora (Istantanea {mailDocenteSingoloOrarioInizio}–{mailDocenteSingoloOrarioFine})
                                 </span>
                                 <button
                                   type="button"
@@ -2262,11 +2306,70 @@ export const PersonalizzazioniScuola: React.FC = () => {
                                   Segnaposto Dinamici Disponibili (Clicca per inserire):
                                 </span>
                                 <div className="flex flex-wrap gap-1.5">
-                                  {['{NOME_DOCENTE}', '{DATA}', '{ORA}', '{CLASSE}', '{DOCENTE_SOSTITUITO}', '{MATERIA}', '{NOME_SCUOLA}', '{LINK_PORTALE}'].map((tag) => (
+                                  {['{NOME_DOCENTE}', '{DATA}', '{ORA}', '{CLASSE}', '{DOCENTE_SOSTITUITO}', '{MATERIA}', '{TIMESTAMP}', '{NOME_SCUOLA}', '{LINK_PORTALE}'].map((tag) => (
                                     <button
                                       key={tag}
                                       type="button"
                                       onClick={() => setTplAssegnazioneCorpo(prev => prev + ' ' + tag)}
+                                      className="text-[10.5px] bg-white text-indigo-700 border border-indigo-200 font-mono font-bold px-2 py-0.5 rounded-md hover:bg-indigo-50 transition cursor-pointer shadow-2xs"
+                                    >
+                                      {tag}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {schedaModelloEmail === 'ASSEGNAZIONE_MULTIPLA' && (
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-slate-800">
+                                  Modello: Nuove Supplenze Multiple (Quando un docente riceve più ore nella stessa giornata)
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTplAssegnazioneMultiplaOggetto(MODELLI_EMAIL_PREDEFINITI.assegnazioneMultiplaOggetto);
+                                    setTplAssegnazioneMultiplaCorpo(MODELLI_EMAIL_PREDEFINITI.assegnazioneMultiplaCorpo);
+                                  }}
+                                  className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                                >
+                                  <RotateCcw className="w-3 h-3" /> Ripristina Default
+                                </button>
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="block text-[11px] font-bold text-slate-700">Oggetto Email</label>
+                                <input
+                                  type="text"
+                                  value={tplAssegnazioneMultiplaOggetto}
+                                  onChange={(e) => setTplAssegnazioneMultiplaOggetto(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white"
+                                />
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="block text-[11px] font-bold text-slate-700">Corpo del Messaggio</label>
+                                <textarea
+                                  rows={8}
+                                  value={tplAssegnazioneMultiplaCorpo}
+                                  onChange={(e) => setTplAssegnazioneMultiplaCorpo(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs font-mono text-slate-800 outline-none focus:border-indigo-500 focus:bg-white leading-relaxed"
+                                />
+                              </div>
+
+                              {/* TAG SEGNAPOSTO CLICCABILI */}
+                              <div className="space-y-1 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                                <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider block">
+                                  Segnaposto Dinamici Disponibili (Clicca per inserire):
+                                </span>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {['{NOME_DOCENTE}', '{DATA}', '{ORA}', '{CLASSE}', '{ELENCO_SOSTITUZIONI}', '{TIMESTAMP}', '{NOME_SCUOLA}', '{LINK_PORTALE}'].map((tag) => (
+                                    <button
+                                      key={tag}
+                                      type="button"
+                                      onClick={() => setTplAssegnazioneMultiplaCorpo(prev => prev + ' ' + tag)}
                                       className="text-[10.5px] bg-white text-indigo-700 border border-indigo-200 font-mono font-bold px-2 py-0.5 rounded-md hover:bg-indigo-50 transition cursor-pointer shadow-2xs"
                                     >
                                       {tag}
@@ -2321,7 +2424,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                                   Segnaposto Dinamici Disponibili (Clicca per inserire):
                                 </span>
                                 <div className="flex flex-wrap gap-1.5">
-                                  {['{NOME_DOCENTE}', '{DATA}', '{ORA}', '{CLASSE}', '{DOCENTE_SOSTITUITO}', '{NOME_SCUOLA}'].map((tag) => (
+                                  {['{NOME_DOCENTE}', '{DATA}', '{ORA}', '{CLASSE}', '{DOCENTE_SOSTITUITO}', '{TIMESTAMP}', '{NOME_SCUOLA}'].map((tag) => (
                                     <button
                                       key={tag}
                                       type="button"
@@ -2380,7 +2483,7 @@ export const PersonalizzazioniScuola: React.FC = () => {
                                   Segnaposto Dinamici Disponibili (Clicca per inserire):
                                 </span>
                                 <div className="flex flex-wrap gap-1.5">
-                                  {['{NOME_DOCENTE}', '{DATA}', '{ELENCO_SOSTITUZIONI}', '{NOME_SCUOLA}', '{LINK_PORTALE}'].map((tag) => (
+                                  {['{NOME_DOCENTE}', '{DATA}', '{ELENCO_SOSTITUZIONI}', '{TIMESTAMP}', '{NOME_SCUOLA}', '{LINK_PORTALE}'].map((tag) => (
                                     <button
                                       key={tag}
                                       type="button"
@@ -2405,9 +2508,9 @@ export const PersonalizzazioniScuola: React.FC = () => {
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
                       <span className="text-base">🚀</span>
-                      <label className="text-xs font-black text-indigo-950">
-                        Webhook Google Apps Script (Invio Automatico Silenzioso)
-                      </label>
+                      <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wider">
+                        Integrazione Google Apps Script (Invio Automatico Silenzioso & Anti-Thread)
+                      </h4>
                       
                       <button
                         type="button"
@@ -2429,8 +2532,8 @@ export const PersonalizzazioniScuola: React.FC = () => {
                     </button>
                   </div>
 
-                  <p className="text-[11px] text-indigo-900 leading-relaxed">
-                    Inserendo l'URL Web App di uno script Google, le email verranno inviate <strong>in modo totalmente invisibile direttamente dal server di Google</strong> senza aprire finestre del browser o client di posta.
+                  <p className="text-[11.5px] text-slate-600 leading-relaxed">
+                    Copia e incolla questo script nel tuo <strong>Google Apps Script</strong> collegato alla scuola. Gestisce in automatico l'invio sia immediato dall'app sia programmato al minuto esatto a PC spento, con supporto <strong>anti-thread</strong> nativo (timestamp orario).
                   </p>
 
                   <input
@@ -2460,24 +2563,20 @@ export const PersonalizzazioniScuola: React.FC = () => {
                         </button>
                       </div>
 
-                      <ol className="list-decimal list-inside space-y-2 text-[11px] text-slate-300 leading-relaxed">
-                        <li>
-                          Vai su <a href="https://script.google.com" target="_blank" rel="noopener noreferrer" className="text-indigo-400 font-bold underline hover:text-indigo-300">script.google.com</a> con l'account Google da cui vuoi spedire le mail.
-                        </li>
-                        <li>
-                          Clicca su <strong>"Nuovo progetto"</strong> in alto a sinistra.
-                        </li>
-                        <li>
-                          Cancella tutto il codice presente nell'editor e <strong>incolla il codice sottostante</strong>:
-                        </li>
-                      </ol>
-
                       {/* BOX CODICE CON TASTO COPIA RAPIDO */}
                       <div className="relative bg-slate-950 rounded-xl p-3 border border-slate-800 font-mono text-[11px] text-emerald-400 overflow-x-auto">
                         <button
                           type="button"
                           onClick={() => {
-                            const scriptCode = `// GESTIONE INVIO EMAIL AUTOMATICO E SINCRONIZZAZIONE CALENDARI PER ATA
+                            const scriptCode = `/**
+ * SCRIPT GOOGLE APPS SCRIPT PER SOSTITUZIONI SMART (IC ANNA FRANK)
+ * Supporto invio Webhook istantaneo + Trigger automatico a minuto esatto + Anti-thread
+ */
+
+var FIREBASE_PROJECT_ID = "sostutuzioni-smart";
+var SCUOLA_ID = "IC_ANNA_FRANK";
+
+// 1. WEBHOOK POST PER INVIO EMAIL ISTANTANEE DALL'APP (QUANDO SEI AL PC/TABLET)
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
@@ -2486,7 +2585,7 @@ function doPost(e) {
     var corpo = data.corpo || data.messaggio;
 
     if (!destinatario || !oggetto) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Parametri mancanti" }))
+      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Parametri mancanti: destinatario o oggetto assente" }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -2504,44 +2603,190 @@ function doPost(e) {
   }
 }
 
-// SINCRONIZZAZIONE EVENTI CALENDARI PER VISUALIZZAZIONE NATIVA ATA
-function doGet(e) {
+// 2. TRIGGER MATTUTINO AUTOMATICO (INVIO A MINUTO ESATTO ANCHE A COMPUTER SPENTO)
+function eseguiInvioAutomaticoMattina() {
   try {
-    var calId = e.parameter.calId;
-    if (!calId) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "ID Calendario mancante" }))
-        .setMimeType(ContentService.MimeType.JSON);
+    var url = "https://firestore.googleapis.com/v1/projects/" + FIREBASE_PROJECT_ID + "/databases/(default)/documents/scuole_dati/" + SCUOLA_ID;
+    var response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    
+    if (response.getResponseCode() !== 200) {
+      Logger.log("Errore lettura database Firebase: " + response.getContentText());
+      return;
+    }
+    
+    var doc = JSON.parse(response.getContentText());
+    var fields = doc.fields || {};
+    
+    // Funzione di utilità per estrarre valori da campi Firestore REST
+    function getFieldValue(field) {
+      if (!field) return null;
+      if (field.stringValue !== undefined) {
+        try { return JSON.parse(field.stringValue); } catch(e) { return field.stringValue; }
+      }
+      if (field.arrayValue && field.arrayValue.values) {
+        return field.arrayValue.values.map(function(v) {
+          if (v.stringValue) { try { return JSON.parse(v.stringValue); } catch(e) { return v.stringValue; } }
+          if (v.mapValue && v.mapValue.fields) return parseFirestoreMap(v.mapValue.fields);
+          return v;
+        });
+      }
+      if (field.mapValue && field.mapValue.fields) return parseFirestoreMap(field.mapValue.fields);
+      return null;
     }
 
-    var now = new Date();
-    var startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 giorni fa
-    var endTime = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000); // prossimi 6 mesi
-
-    var calendar = CalendarApp.getCalendarById(calId);
-    if (!calendar) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "error", message: "Calendario non trovato o non accessibile" }))
-        .setMimeType(ContentService.MimeType.JSON);
+    function parseFirestoreMap(fMap) {
+      var res = {};
+      Object.keys(fMap).forEach(function(k) {
+        var v = fMap[k];
+        if (v.stringValue !== undefined) {
+          try { res[k] = JSON.parse(v.stringValue); } catch(e) { res[k] = v.stringValue; }
+        } else if (v.booleanValue !== undefined) {
+          res[k] = v.booleanValue;
+        } else if (v.integerValue !== undefined) {
+          res[k] = parseInt(v.integerValue, 10);
+        } else if (v.mapValue && v.mapValue.fields) {
+          res[k] = parseFirestoreMap(v.mapValue.fields);
+        } else if (v.arrayValue && v.arrayValue.values) {
+          res[k] = v.arrayValue.values.map(function(item) {
+            if (item.stringValue) { try { return JSON.parse(item.stringValue); } catch(e) { return item.stringValue; } }
+            if (item.mapValue && item.mapValue.fields) return parseFirestoreMap(item.mapValue.fields);
+            return item;
+          });
+        }
+      });
+      return res;
     }
 
-    var events = calendar.getEvents(startTime, endTime);
-    var result = events.map(function(ev) {
-      return {
-        id: ev.getId(),
-        titolo: ev.getTitle(),
-        descrizione: ev.getDescription() || "",
-        luogo: ev.getLocation() || "",
-        dataInizio: ev.isAllDayEvent() ? Utilities.formatDate(ev.getStartTime(), "GMT", "yyyy-MM-dd") : ev.getStartTime().toISOString(),
-        dataFine: ev.isAllDayEvent() ? Utilities.formatDate(ev.getEndTime(), "GMT", "yyyy-MM-dd") : ev.getEndTime().toISOString(),
-        tuttoIlGiorno: ev.isAllDayEvent()
-      };
+    var impostazioni = getFieldValue(fields.impostazioniScuola) || {};
+    var docenti = getFieldValue(fields.docenti) || [];
+    var sostituzioni = getFieldValue(fields.sostituzioni) || [];
+    var cfgGruppo = impostazioni.notificheEmailGruppo || {};
+    var cfgSingolo = impostazioni.notificheEmailDocenteSingolo || {};
+    var portalUrl = impostazioni.appUrl || "https://sostituzioni-smart.web.app";
+    var nomeScuola = impostazioni.nomeScuola || "Scuola";
+
+    var todayStr = Utilities.formatDate(new Date(), "GMT+1", "yyyy-MM-dd");
+    var todayFormatted = Utilities.formatDate(new Date(), "GMT+1", "dd/MM/yyyy");
+    var nowTimestamp = Utilities.formatDate(new Date(), "GMT+1", "HH:mm");
+
+    // Filtra le sostituzioni pubblicate di oggi con docente assegnato
+    var sostOggi = sostituzioni.filter(function(s) {
+      return s.data === todayStr && s.pubblicata && s.categoria !== 'NON_SOSTITUIRE' && s.docenteSostitutoId;
     });
 
-    return ContentService.createTextOutput(JSON.stringify({ status: "ok", events: result }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    // A. INVIO RIEPILOGO SINGOLI DOCENTI
+    if (cfgSingolo.abilitato && cfgSingolo.inviaRiepilogoMattino && sostOggi.length > 0) {
+      var mapDoc = {};
+      sostOggi.forEach(function(s) {
+        if (!mapDoc[s.docenteSostitutoId]) mapDoc[s.docenteSostitutoId] = [];
+        mapDoc[s.docenteSostitutoId].push(s);
+      });
+
+      Object.keys(mapDoc).forEach(function(docId) {
+        var docObj = docenti.find(function(d) { return d.id === docId; });
+        if (docObj && docObj.email) {
+          var items = mapDoc[docId].sort(function(a, b) { return a.ora - b.ora; });
+          var righe = items.map(function(it) {
+            var assDoc = docenti.find(function(d) { return d.id === it.docenteAssenteId; });
+            var assNome = assDoc ? assDoc.nome : 'Docente';
+            var nota = it.notaSostituzione ? " (Nota: " + it.notaSostituzione + ")" : "";
+            return "  • " + it.ora + "ª ora | Classe " + it.classe + " | Sostituisce: " + assNome + nota;
+          }).join("\\n");
+
+          var docNomeClean = docObj.nome.replace(/\\s*\\([^)]+\\)\\s*$/, '').trim();
+          var tplCorpo = (cfgSingolo.modelli && cfgSingolo.modelli.riepilogoCorpo) || 
+            "Gentile Prof. {NOME_DOCENTE},\\n\\nti riepiloghiamo le ore di sostituzione a te assegnate per oggi ({DATA}):\\n\\n{ELENCO_SOSTITUZIONI}\\n\\nTi invitiamo ad accedere al Portale Docenti per prendere visione e apporre la firma digitale:\\n{LINK_PORTALE}\\n\\nBuon lavoro,\\nLa Vicepresidenza";
+          var tplOggetto = (cfgSingolo.modelli && cfgSingolo.modelli.riepilogoOggetto) || 
+            "📋 Riepilogo Supplenze Oggi ({DATA}) [{TIMESTAMP}] - {NOME_SCUOLA}";
+
+          var corpo = tplCorpo
+            .split('{NOME_DOCENTE}').join(docNomeClean)
+            .split('{DATA}').join(todayFormatted)
+            .split('{ELENCO_SOSTITUZIONI}').join(righe)
+            .split('{TIMESTAMP}').join(nowTimestamp)
+            .split('{NOME_SCUOLA}').join(nomeScuola)
+            .split('{LINK_PORTALE}').join(portalUrl);
+
+          var oggetto = tplOggetto
+            .split('{NOME_DOCENTE}').join(docNomeClean)
+            .split('{DATA}').join(todayFormatted)
+            .split('{TIMESTAMP}').join(nowTimestamp)
+            .split('{NOME_SCUOLA}').join(nomeScuola)
+            .split('{LINK_PORTALE}').join(portalUrl);
+
+          MailApp.sendEmail({
+            to: docObj.email,
+            subject: oggetto,
+            body: corpo
+          });
+          Logger.log("Email inviata al docente: " + docObj.email);
+        }
+      });
+    }
+
+    // B. INVIO PROMEMORIA AL GRUPPO / MAILING LIST GENERALE
+    if (cfgGruppo.abilitato && cfgGruppo.emailGruppo && sostOggi.length > 0) {
+      var corpoGruppo = (cfgGruppo.corpoMessaggio || "Gentili docenti,\\nvi informiamo che sono presenti sostituzioni per la giornata odierna.\\n\\n{LINK_PORTALE}")
+        .split('{LINK_PORTALE}').join(portalUrl)
+        .split('{NOME_SCUOLA}').join(nomeScuola)
+        .split('{TIMESTAMP}').join(nowTimestamp)
+        .split('{DATA}').join(todayFormatted);
+
+      var oggettoGruppo = (cfgGruppo.oggetto || "🔔 Avviso Supplenze del Giorno [{TIMESTAMP}] - {NOME_SCUOLA}")
+        .split('{NOME_SCUOLA}').join(nomeScuola)
+        .split('{TIMESTAMP}').join(nowTimestamp)
+        .split('{DATA}').join(todayFormatted);
+
+      MailApp.sendEmail({
+        to: cfgGruppo.emailGruppo,
+        subject: oggettoGruppo,
+        body: corpoGruppo
+      });
+      Logger.log("Email inviata al gruppo: " + cfgGruppo.emailGruppo);
+    }
+
+    // C. RIPROGRAMMAZIONE TRIGGER AUTOMATICO AL MINUTO ESATTO PER IL GIORNO SUCCESSIVO
+    var orarioConfigurato = (cfgSingolo && cfgSingolo.orarioInvioRiepilogo) || (cfgGruppo && cfgGruppo.orarioInvio) || "07:30";
+    pianificaProssimoTrigger(orarioConfigurato);
+  } catch (e) {
+    Logger.log("Errore esecuzione invio: " + e.toString());
   }
+}
+
+// 3. SCHEDULATORE AL MINUTO ESATTO (AUTO-RIPROGRAMMAZIONE)
+function pianificaProssimoTrigger(orarioStr) {
+  eliminaTriggerEsistenti();
+  var parti = (orarioStr || "07:30").split(":");
+  var ora = parseInt(parti[0], 10) || 7;
+  var min = parseInt(parti[1], 10) || 30;
+
+  var dataTrigger = new Date();
+  dataTrigger.setDate(dataTrigger.getDate() + 1);
+  dataTrigger.setHours(ora, min, 0, 0);
+
+  // Salta il fine settimana se necessario (Sabato -> Lunedì, Domenica -> Lunedì)
+  if (dataTrigger.getDay() === 6) dataTrigger.setDate(dataTrigger.getDate() + 2);
+  if (dataTrigger.getDay() === 0) dataTrigger.setDate(dataTrigger.getDate() + 1);
+
+  ScriptApp.newTrigger("eseguiInvioAutomaticoMattina")
+    .timeBased()
+    .at(dataTrigger)
+    .create();
+  Logger.log("Prossimo trigger pianificato per: " + dataTrigger.toString());
+}
+
+function eliminaTriggerEsistenti() {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === "eseguiInvioAutomaticoMattina") {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+}
+
+// Esegui questa funzione una sola volta dall'editor per attivare la schedulazione
+function setupIniziale() {
+  pianificaProssimoTrigger("07:30");
 }`;
                             navigator.clipboard.writeText(scriptCode);
                             alert("Codice Google Apps Script completo copiato negli appunti!");
@@ -2553,68 +2798,38 @@ function doGet(e) {
                         </button>
                         <pre className="text-[11px] font-mono leading-tight pr-24 whitespace-pre">
 {`function doPost(e) {
-  try {
-    var data = JSON.parse(e.postData.contents);
-    var destinatario = data.destinatario;
-    var oggetto = data.oggetto;
-    var corpo = data.corpo || data.messaggio;
-    if (!destinatario || !oggetto) {
-      return ContentService.createTextOutput(JSON.stringify({ status: "error" })).setMimeType(ContentService.MimeType.JSON);
-    }
-    MailApp.sendEmail({ to: destinatario, subject: oggetto, body: corpo });
-    return ContentService.createTextOutput(JSON.stringify({ status: "ok" })).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
-  }
+  // Webhook: invio email istantanee con un click dall'app
 }
 
-function doGet(e) {
-  try {
-    var calId = e.parameter.calId;
-    if (!calId) return ContentService.createTextOutput(JSON.stringify({ status: "error" })).setMimeType(ContentService.MimeType.JSON);
-    var now = new Date();
-    var startTime = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    var endTime = new Date(now.getTime() + 180 * 24 * 60 * 60 * 1000);
-    var cal = CalendarApp.getCalendarById(calId);
-    if (!cal) return ContentService.createTextOutput(JSON.stringify({ status: "error" })).setMimeType(ContentService.MimeType.JSON);
-    var evs = cal.getEvents(startTime, endTime).map(function(ev) {
-      return {
-        id: ev.getId(),
-        titolo: ev.getTitle(),
-        descrizione: ev.getDescription() || "",
-        luogo: ev.getLocation() || "",
-        dataInizio: ev.isAllDayEvent() ? Utilities.formatDate(ev.getStartTime(), "GMT", "yyyy-MM-dd") : ev.getStartTime().toISOString(),
-        dataFine: ev.isAllDayEvent() ? Utilities.formatDate(ev.getEndTime(), "GMT", "yyyy-MM-dd") : ev.getEndTime().toISOString(),
-        tuttoIlGiorno: ev.isAllDayEvent()
-      };
-    });
-    return ContentService.createTextOutput(JSON.stringify({ status: "ok", events: evs })).setMimeType(ContentService.MimeType.JSON);
-  } catch(err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
-  }
+function eseguiInvioAutomaticoMattina() {
+  // Invio automatico riepilogo singoli docenti e gruppo
+}
+
+function setupIniziale() {
+  // Avvia il trigger al minuto esatto
 }`}
                         </pre>
                       </div>
 
                       <ol start={4} className="list-decimal list-inside space-y-1.5 text-[11px] text-slate-300 leading-relaxed">
                         <li>
-                          Clicca in alto a destra su <strong>"Distribuisci" ➔ "Nuova implementazione"</strong>.
+                          Clicca in alto a destra su <strong>"Distribuisci" ➔ "Nuova implementazione"</strong> (oppure gestisci quella esistente).
                         </li>
                         <li>
-                          Clicca sull'ingranaggio ⚙️ ➔ seleziona <strong>"Applicazione web"</strong>.
-                        </li>
-                        <li>
-                          Imposta:
+                          Clicca sull'ingranaggio ⚙️ ➔ seleziona <strong>"Applicazione web"</strong>:
                           <ul className="list-disc list-inside pl-4 text-slate-400 space-y-0.5 mt-0.5">
-                            <li><strong>Esegui come:</strong> <em>Me stesso (la tua email)</em></li>
-                            <li><strong>Chi può accedere:</strong> <em>Chiunque</em> (fondamentale affinché l'app possa inviare)</li>
+                            <li><strong>Esegui come:</strong> <em>Me stesso</em></li>
+                            <li><strong>Chi può accedere:</strong> <em>Chiunque</em></li>
                           </ul>
                         </li>
                         <li>
-                          Clicca <strong>"Distribuisci"</strong> (autorizza i permessi di invio email con il tuo account Google).
+                          Clicca <strong>"Distribuisci"</strong>, autorizza i permessi dell'account Google e incolla l'URL dell'applicazione web (che finisce con <code>/exec</code>) nel campo qui sopra.
                         </li>
-                        <li>
-                          Copia l'<strong>URL applicazione web</strong> (che finisce con <code>/exec</code>) e incollalo nel campo qui sopra!
+                        <li className="text-amber-300 font-bold">
+                          ⏰ Attivazione automatica al minuto esatto (a computer spento):
+                          <p className="text-[10.5px] text-slate-300 font-normal pl-2 mt-0.5">
+                            Seleziona la funzione <code>setupIniziale</code> nel menu in alto dell'editor di Apps Script e clicca <strong>"Esegui"</strong>. Lo script programmerà automaticamente l'invio mattutino all'orario esatto configurato.
+                          </p>
                         </li>
                       </ol>
                     </div>
@@ -2661,7 +2876,7 @@ function doGet(e) {
                     {infoSezioneAperta === 'sez_calendari_google' && (
                       <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between font-bold text-amber-400">
-                          <span className="flex items-center gap-1.5">💡 Google Calendar & Aule</span>
+                          <span className="flex items-center gap-1.5">💡 Google Calendar & Aule Speciali</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -2674,7 +2889,10 @@ function doGet(e) {
                           </button>
                         </div>
                         <p className="text-slate-200 text-[11px]">
-                          Collega i calendari Google istituzionali di <strong>Impegni Scolastici</strong> (consigli di classe, collegi docenti) e di <strong>Risorse & Spazi</strong> (lab. informatica, teatro, palestra). Le schede appariranno automaticamente nel menu dei docenti solo se compilate.
+                          Integrazione bidirezionale con i calendari istituzionali Google:
+                          <br />• <strong>Impegni Scolastici</strong>: consigli di classe, scrutini, collegi docenti e riunioni dipartimentali.
+                          <br />• <strong>Risorse & Stanze</strong>: prenotazione e disponibilità in tempo reale di laboratori d'informatica, aule multimediali, teatro, palestre.
+                          <br />Puoi aggiungere quante schede desideri con etichette personalizzate: appariranno automaticamente nel menu laterale dei docenti solo se compilate.
                         </p>
                       </div>
                     )}
@@ -2947,7 +3165,7 @@ function doGet(e) {
                   {infoSezioneAperta === 'sez_backup' && (
                     <div className="absolute left-0 sm:left-auto sm:right-auto top-full mt-2 w-72 sm:w-80 bg-slate-900 text-white text-xs p-3.5 rounded-2xl shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 border border-slate-700 leading-relaxed space-y-1.5 cursor-default" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-between font-bold text-amber-400">
-                        <span className="flex items-center gap-1.5">💡 Backup & Ripristino</span>
+                        <span className="flex items-center gap-1.5">💡 Backup Completo & Ripristino</span>
                         <button
                           type="button"
                           onClick={(e) => {
@@ -2960,7 +3178,9 @@ function doGet(e) {
                         </button>
                       </div>
                       <p className="text-slate-200 text-[11px]">
-                        Scarica un file <code>.json</code> contenente tutti i docenti, l'orario scolastico, le assenze, le uscite e le preferenze per metterlo al sicuro sul tuo PC o importalo per ripristinare i dati istantaneamente.
+                        Protezione totale del tuo archivio scolastico:
+                        <br />• <strong>Esporta Backup (.json)</strong>: genera un salvataggio integrale con anagrafica docenti, orari settimanali, assenze, uscite didattiche, sostituzioni pubblicate/firmate, nomine supplenti e impostazioni personalizzate.
+                        <br />• <strong>Ripristina da File</strong>: consente di recuperare istantaneamente lo storico o ripristinare il database a un punto esatto precedente in caso di emergenza.
                       </p>
                     </div>
                   )}

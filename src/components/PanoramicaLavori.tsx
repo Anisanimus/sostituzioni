@@ -267,7 +267,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
       {/* ========================================================================= */}
       <div className="hidden sm:flex sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
         {/* TITOLO + DATA */}
-        <div className="flex items-center gap-2.5">
+        <div id="targetDataNavigator" className="flex items-center gap-2.5">
           <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shadow-2xs shrink-0">
             <TrendingUp className="w-5 h-5" />
           </div>
@@ -348,7 +348,7 @@ export const PanoramicaLavori: React.FC<PanoramicaLavoriProps> = ({ selectedDate
       <div className="sm:hidden space-y-2 pb-1 border-b border-slate-100">
         
         {/* RIGA: TITOLO + DATA (A SINISTRA) | FRECCE SCORRIMENTO + ICONA TREND (A DESTRA) */}
-        <div className="flex items-center justify-between gap-1.5">
+        <div id="targetDataNavigatorMobile" className="flex items-center justify-between gap-1.5">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-base font-black tracking-tight text-slate-900 shrink-0">
               Sostituzioni

@@ -583,6 +583,7 @@ export const GestioneAssenze: React.FC<{
           </button>
 
           <button
+            id="targetBtnRisorse"
             type="button"
             onClick={() => {
               if (window.innerWidth < 640) {
