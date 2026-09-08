@@ -855,8 +855,16 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
             }))
         ].sort((a, b) => (b.data || '').localeCompare(a.data || '') || ((b as any).createdAt || '').localeCompare((a as any).createdAt || ''));
 
+        const mieTutteSostituzioni = sostituzioni
+          .filter(s => collegatiIds.includes(s.docenteSostitutoId) && s.pubblicata && s.categoria !== 'NON_SOSTITUIRE')
+          .sort((a, b) => {
+            const cmp = (b.data || '').localeCompare(a.data || '');
+            if (cmp !== 0) return cmp;
+            return (b.ora || 0) - (a.ora || 0);
+          });
+
         return (
-          <div className="space-y-4 animate-fadeIn">
+          <div className="space-y-5 animate-fadeIn">
             {/* INTESTAZIONE E KPI RIEPILOGATIVI */}
             <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
@@ -953,13 +961,13 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
               </div>
             </div>
 
-            {/* SEZIONE STORICO MOVIMENTI E DETTAGLIO CONTABILE */}
+            {/* SEZIONE 1: STORICO MOVIMENTI E DETTAGLIO CONTABILE */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-5 sm:p-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-indigo-600" />
                   <h4 className="font-black text-slate-900 text-sm sm:text-base">
-                    Cronologia Completa dei Movimenti Contabili
+                    Cronologia Movimenti di Debito & Credito
                   </h4>
                 </div>
                 <span className="text-[11px] font-bold text-slate-500">
@@ -970,11 +978,11 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
               {mieiMovimenti.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 space-y-1">
                   <CheckCircle2 className="w-10 h-10 text-slate-300 mx-auto" />
-                  <p className="font-bold text-slate-700 text-xs">Nessun movimento registrato a tuo carico</p>
+                  <p className="font-bold text-slate-700 text-xs">Nessun movimento contabile registrato a tuo carico</p>
                   <p className="text-[11px]">Tutti i tuoi permessi orari e crediti di supplenza verranno tracciati puntualmente qui.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
+                <div className="divide-y divide-slate-100 max-h-[450px] overflow-y-auto">
                   {/* Elenco movimenti formattati con badge dedicati */}
                   {mieiMovimenti.map((m) => {
                     const isCompensazione = m.descrizione?.includes('[COMPENSAZIONE_STRAORDINARIO]');
@@ -1037,6 +1045,123 @@ export const PortaleDocente: React.FC<PortaleDocenteProps> = ({ currentTab, onTa
                               : 'bg-rose-600 text-white'
                           }`}>
                             {m.deltaOre > 0 ? `+${m.deltaOre}h` : `${m.deltaOre}h`}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* SEZIONE 2: STORICO SOSTITUZIONI EFFETTUATE (DALL'ULTIMA ALLA PRIMA, NUMERATE #) */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <BookOpen className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-slate-900 text-sm sm:text-base flex items-center gap-2">
+                      <span>Storico Sostituzioni Effettuate</span>
+                      <span className="text-xs bg-indigo-100 text-indigo-900 font-bold px-2 py-0.5 rounded-lg border border-indigo-200">
+                        {mieTutteSostituzioni.length} Totali
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Riepilogo cronologico decrescente di tutte le supplenze assegnate e svolte durante l'anno scolastico.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {mieTutteSostituzioni.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 space-y-1">
+                  <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
+                  <p className="font-bold text-slate-700 text-xs">Nessuna sostituzione registrata nello storico</p>
+                  <p className="text-[11px]">Tutte le supplenze che ti verranno assegnate e pubblicate compariranno numerate in questo registro.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
+                  {mieTutteSostituzioni.map((s, idx) => {
+                    // Calcola il numero progressivo (#) dall'ultima alla prima (#1 è la più recente in cima, o progressivo decrescente)
+                    const numeroProgressivo = mieTutteSostituzioni.length - idx;
+                    const docAss = docenti.find(d => d.id === s.docenteAssenteId);
+                    const assNome = docAss ? getBaseNomeDocente(docAss.nome) : 'Docente';
+                    const matAss = getMateriaDocenteNellOra(s.docenteAssenteId, s.giorno, s.ora, docenti, orariDocenti) || 'Lezione';
+                    const descrCat = getDescrizioneCategoriaSostituto(s.categoria);
+
+                    return (
+                      <div key={s.id} className="py-3 px-2 flex flex-wrap items-center justify-between gap-3 text-xs hover:bg-slate-50 transition rounded-2xl">
+                        <div className="flex items-start gap-3">
+                          {/* BADGE NUMERO PROGRESSIVO # */}
+                          <div className="shrink-0 w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center font-black text-xs shadow-2xs">
+                            #{numeroProgressivo}
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="bg-slate-800 text-white font-bold text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
+                                {s.giorno} {formatDataItaliana(s.data)}
+                              </span>
+
+                              <span className="bg-indigo-600 text-white font-black text-[10px] px-2 py-0.5 rounded-md shadow-2xs">
+                                {s.ora}ª Ora • Classe {s.classe}
+                              </span>
+
+                              {/* Categoria di sostituzione */}
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                                s.isStraordinario || s.categoria === 'STRAORDINARIO_D'
+                                  ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                                  : s.consumaDebito
+                                  ? 'bg-amber-50 text-amber-900 border-amber-300'
+                                  : 'bg-slate-100 text-slate-700 border-slate-200'
+                              }`}>
+                                {s.isStraordinario || s.categoria === 'STRAORDINARIO_D'
+                                  ? '➕ A Credito (Straordinario)'
+                                  : s.consumaDebito
+                                  ? '🔄 Recupero Debito'
+                                  : descrCat}
+                              </span>
+
+                              {/* Stato Firma Digitale */}
+                              {s.firmata ? (
+                                <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1">
+                                  <Check className="w-3 h-3 text-emerald-700" />
+                                  <span>Firmata {s.dataFirma ? `(${formatDataItaliana(s.dataFirma.split('T')[0])})` : ''}</span>
+                                </span>
+                              ) : (
+                                <span className="bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[10px] px-2 py-0.5 rounded-md flex items-center gap-1">
+                                  <span>⏳ In attesa di firma</span>
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-slate-800 text-xs font-semibold">
+                              In sostituzione di: <strong className="text-indigo-950 font-black">{assNome}</strong> <span className="text-slate-500 font-normal">({matAss})</span>
+                              {s.notaSostituzione && (
+                                <span className="text-amber-800 font-medium italic block sm:inline sm:ml-2">
+                                  — Nota: "{s.notaSostituzione}"
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Badges laterali di stato */}
+                        <div className="shrink-0 text-right">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-black shadow-2xs ${
+                            s.isStraordinario || s.categoria === 'STRAORDINARIO_D'
+                              ? 'bg-emerald-600 text-white'
+                              : s.consumaDebito
+                              ? 'bg-amber-600 text-white'
+                              : 'bg-indigo-600 text-white'
+                          }`}>
+                            {s.isStraordinario || s.categoria === 'STRAORDINARIO_D'
+                              ? '+1h Credito'
+                              : s.consumaDebito
+                              ? '1h Recupero'
+                              : '1h Servizio'}
                           </span>
                         </div>
                       </div>
