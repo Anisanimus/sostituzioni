@@ -2255,6 +2255,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setDocenti(updatedDocenti);
     setOrariDocenti(updatedOrari);
+    docentiRef.current = updatedDocenti;
+    orariDocentiRef.current = updatedOrari;
     localStorage.setItem('scuola_docenti', JSON.stringify(updatedDocenti));
     localStorage.setItem('scuola_orari', JSON.stringify(updatedOrari));
 
@@ -2271,48 +2273,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const isStessoDoc = (docAss && getBaseNomeDocente(docAss.nome) === titolareBaseNome) ||
                             titolareCollegatiIds.includes(a.docenteId) || 
                             a.docenteId === nuovaNomina.docenteTitolareId;
-        if (!isStessoDoc) return true;
+        if (!isStessoDoc) return true; // Mantieni le assenze di tutti gli altri docenti!
         const dataAss = a.data.split('T')[0];
         // Conserva le assenze antecedenti alla presa di servizio (PASSATO)
         // Rimuove quelle pari o successive (FUTURO coperto dal supplente)
         return dataAss < dataPresaServizio;
       });
+      assenzeRef.current = puliteAssenze;
       localStorage.setItem('scuola_assenze', JSON.stringify(puliteAssenze));
       return puliteAssenze;
     });
 
-    // Salva immediatamente su Cloud Firestore
-    try {
-      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
-      await setDoc(scuolaDocRef, {
-        nomineSupplenti: JSON.parse(JSON.stringify(updatedNomine)),
-        docenti: JSON.parse(JSON.stringify(updatedDocenti)),
-        orariDocenti: JSON.parse(JSON.stringify(updatedOrari)),
-        assenze: JSON.parse(JSON.stringify(puliteAssenze)),
-        ultimoAggiornamento: new Date().toISOString()
-      }, { merge: true });
-      triggerCloudSync();
-      console.log('✅ Nomina supplente salvata, profilo e orario creati su Firestore!');
-    } catch (e) {
-      console.error('Errore salvataggio nomina:', e);
-    }
+    // Salva immediatamente su Cloud Firestore con tutti i dati aggiornati
+    triggerCloudSync({
+      nomineSupplenti: updatedNomine,
+      docenti: updatedDocenti,
+      orariDocenti: updatedOrari,
+      assenze: puliteAssenze
+    });
   };
 
   const rimuoviNominaSupplente = async (nominaId: string) => {
     const updated = (nomineSupplentiRef.current || []).filter(n => n.id !== nominaId);
     setNomineSupplenti(updated);
+    nomineSupplentiRef.current = updated;
     localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(updated));
 
-    try {
-      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
-      await setDoc(scuolaDocRef, {
-        nomineSupplenti: JSON.parse(JSON.stringify(updated)),
-        ultimoAggiornamento: new Date().toISOString()
-      }, { merge: true });
-      triggerCloudSync();
-    } catch (e) {
-      console.error('Errore rimozione nomina:', e);
-    }
+    triggerCloudSync({
+      nomineSupplenti: updated
+    });
   };
 
   const prorogaNominaSupplente = async (nominaId: string, nuovaDataFine: string) => {
@@ -2320,18 +2309,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       n.id === nominaId ? { ...n, dataFine: nuovaDataFine } : n
     );
     setNomineSupplenti(updated);
+    nomineSupplentiRef.current = updated;
     localStorage.setItem('scuola_nomine_supplenti', JSON.stringify(updated));
 
-    try {
-      const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
-      await setDoc(scuolaDocRef, {
-        nomineSupplenti: JSON.parse(JSON.stringify(updated)),
-        ultimoAggiornamento: new Date().toISOString()
-      }, { merge: true });
-      triggerCloudSync();
-    } catch (e) {
-      console.error('Errore proroga nomina:', e);
-    }
+    triggerCloudSync({
+      nomineSupplenti: updated
+    });
   };
 
   // =========================================================================
