@@ -2659,6 +2659,7 @@ function eseguiInvioAutomaticoMattina() {
 
     var impostazioni = getFieldValue(fields.impostazioniScuola) || {};
     var docenti = getFieldValue(fields.docenti) || [];
+    var orariDocenti = getFieldValue(fields.orariDocenti) || [];
     var sostituzioni = getFieldValue(fields.sostituzioni) || [];
     var cfgGruppo = impostazioni.notificheEmailGruppo || {};
     var cfgSingolo = impostazioni.notificheEmailDocenteSingolo || {};
@@ -2668,6 +2669,32 @@ function eseguiInvioAutomaticoMattina() {
     var todayStr = Utilities.formatDate(new Date(), "Europe/Rome", "yyyy-MM-dd");
     var todayFormatted = Utilities.formatDate(new Date(), "Europe/Rome", "dd/MM/yyyy");
     var nowTimestamp = Utilities.formatDate(new Date(), "Europe/Rome", "HH:mm");
+
+    // Funzione per ricavare la materia del docente nell'ora
+    function getMateriaDoc(docId, giorno, ora) {
+      if (!docId) return "Lezione";
+      var doc = docenti.find(function(d) { return d.id === docId; });
+      if (!doc) return "Lezione";
+      var baseNome = (doc.nome || "").replace(/\\s*\\([^)]+\\)\\s*$/, '').trim().toUpperCase();
+      var profili = docenti.filter(function(d) {
+        var b = (d.nome || "").replace(/\\s*\\([^)]+\\)\\s*$/, '').trim().toUpperCase();
+        return b === baseNome;
+      });
+      for (var p = 0; p < profili.length; p++) {
+        var prof = profili[p];
+        var ord = orariDocenti.find(function(o) { return o.docenteId === prof.id; });
+        if (ord && ord.ore) {
+          var cella = ord.ore.find(function(c) { return c.giorno === giorno && c.ora === ora; });
+          if (cella && cella.valore && cella.valore.trim() !== '') {
+            if (prof.isAlternativa || (prof.nome && prof.nome.toUpperCase().indexOf('ALTERNATIVA') !== -1)) return 'Alternativa';
+            if (prof.isPotenziamento || (prof.nome && prof.nome.toUpperCase().indexOf('POTENZIAMENTO') !== -1)) return 'Potenziamento';
+            if (prof.isSostegno || (prof.nome && prof.nome.toUpperCase().indexOf('SOSTEGNO') !== -1)) return 'Sostegno';
+            if (prof.materia && prof.materia.trim() !== '') return prof.materia;
+          }
+        }
+      }
+      return doc.materia || "Lezione";
+    }
 
     // Filtra le sostituzioni pubblicate di oggi con docente assegnato
     var sostOggi = sostituzioni.filter(function(s) {
@@ -2688,9 +2715,10 @@ function eseguiInvioAutomaticoMattina() {
           var items = mapDoc[docId].sort(function(a, b) { return a.ora - b.ora; });
           var righe = items.map(function(it) {
             var assDoc = docenti.find(function(d) { return d.id === it.docenteAssenteId; });
-            var assNome = assDoc ? assDoc.nome : 'Docente';
+            var assNome = assDoc ? (assDoc.nome || "").replace(/\\s*\\([^)]+\\)\\s*$/, '').trim() : 'Docente';
+            var matAss = getMateriaDoc(it.docenteAssenteId, it.giorno, it.ora);
             var nota = it.notaSostituzione ? " (Nota: " + it.notaSostituzione + ")" : "";
-            return "  • " + it.ora + "ª ora | Classe " + it.classe + " | Sostituisce: " + assNome + nota;
+            return "  • " + it.ora + "ª ora | Classe " + it.classe + " | Sostituisce: " + assNome + " (" + matAss + ")" + nota;
           }).join("\\n");
 
           var docNomeClean = docObj.nome.replace(/\\s*\\([^)]+\\)\\s*$/, '').trim();

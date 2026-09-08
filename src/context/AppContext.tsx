@@ -939,7 +939,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     const docAss = docentiRef.current.find(d => d.id === s.docenteAssenteId);
                     const assNome = docAss ? getBaseNomeDocente(docAss.nome) : 'Docente';
                     const matAss = getMateriaDocenteNellOra(s.docenteAssenteId, s.giorno, s.ora, docentiRef.current, orariDocentiRef.current) || 'Lezione';
-                    return `  • ${s.ora}ª ora | Classe ${s.classe} | Sostituisce: ${assNome} (${matAss})`;
+                    const notaItem = s.notaSostituzione ? ` (Nota: ${s.notaSostituzione})` : '';
+                    return `  • ${s.ora}ª ora | Classe ${s.classe} | Sostituisce: ${assNome} (${matAss})${notaItem}`;
                   }).join('\n');
 
                   const tplObj = cfgSingolo.modelli?.riepilogoOggetto || MODELLI_EMAIL_PREDEFINITI.riepilogoOggetto;
