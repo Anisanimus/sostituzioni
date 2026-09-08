@@ -13,19 +13,34 @@ export interface AppVersionInfo {
 }
 
 export const CURRENT_APP_VERSION: AppVersionInfo = {
-  version: '1.8.6',
-  buildTime: '2026-09-04T11:12:00Z',
-  title: 'Novità della Versione 1.8.6',
-  descrizioneGenerale: 'Disposizioni orarie personalizzate per le classi (Entrata posticipata, Uscita anticipata, Assemblea Sindacale).',
+  version: '1.8.7',
+  buildTime: '2026-09-08T08:45:00Z',
+  title: 'Novità della Versione 1.8.7',
+  descrizioneGenerale: 'Storico sostituzioni numerato nel Portale Docente, materia in email e perfezionamento gestione nomine.',
   novita: [
     {
+      titolo: 'Storico Sostituzioni Effettuate Numerato (#)',
+      descrizione: 'Nel Portale Docente (sezione "Bilancio Ore & Movimenti") è ora disponibile il registro cronologico decrescente di tutte le supplenze assegnate e svolte, numerate progressivamente (#1, #2, ...), con data, ora, classe, docente sostituito, materia, note di servizio e stato della firma digitale.',
+      tag: 'Portale Docente'
+    },
+    {
+      titolo: 'Materia nei Riepiloghi Email {ELENCO_SOSTITUZIONI}',
+      descrizione: 'Il segnaposto dinamico {ELENCO_SOSTITUZIONI} include ora la materia specifica dell\'ora di lezione per ciascun docente sostituito (es. "2ª ora | Classe 3B | Sostituisce: ROSSI MARIO (MATEMATICA)"). Aggiornato anche il generatore Google Apps Script.',
+      tag: 'Email & Notifiche'
+    },
+    {
+      titolo: 'Pulizia Totale Nomine & Supplenti in "Azzera Dati Storici"',
+      descrizione: 'La funzione di azzeramento dati storici del registro rimuove ora in modo completo anche tutte le nomine a cattedra e i profili supplenti temporaneamente creati, ripristinando l\'organico di partenza.',
+      tag: 'Vicepresidenza & Sicurezza'
+    },
+    {
       titolo: 'Campo Testo Personalizzato & Disposizioni Orarie',
-      descrizione: 'Nel popup di assegnazione del sostituto è ora possibile inserire un testo o avviso personalizzato (es. "Entrata posticipata alle 10:00", "Uscita anticipata alle 12:00", per Assemblea Sindacale o attività speciali) con pulsanti di testo rapido precompilati.',
+      descrizione: 'Nel popup di assegnazione del sostituto è possibile inserire un testo o avviso personalizzato (es. "Entrata posticipata alle 10:00", "Uscita anticipata alle 12:00", per Assemblea Sindacale o attività speciali) con pulsanti di testo rapido precompilati.',
       tag: 'Vicepresidenza & Tabellone'
     },
     {
       titolo: 'Filtro Rigido Fascia Oraria Email Istantanee',
-      descrizione: 'Le email istantanee di nuova supplenza o revoca vengono ora spedite esclusivamente all\'interno della fascia oraria di lavoro impostata (default 08:00 - 17:00). Eventuali assegnazioni serali o notturne non generano email istantanee fuori orario, ma verranno incluse nel riepilogo mattutino.',
+      descrizione: 'Le email istantanee di nuova supplenza o revoca vengono spedite esclusivamente all\'interno della fascia oraria di lavoro impostata (default 08:00 - 17:00).',
       tag: 'Email & Vicepresidenza'
     },
     {
@@ -42,26 +57,6 @@ export const CURRENT_APP_VERSION: AppVersionInfo = {
       titolo: 'Anti-Duplicazione Email & Lock Atomico',
       descrizione: 'Eliminato l\'invio multiplo delle email di riepilogo e avviso: introdotto un blocco atomico del timer che impedisce la ripetizione della chiamata durante il minuto di scadenza e raggruppa tutte le ore assegnate al docente in 1 sola email cumulativa.',
       tag: 'Notifiche & Email'
-    },
-    {
-      titolo: 'Trasparenza Totale Estratto Conto',
-      descrizione: 'Nel popup "Dettaglio" del Bilancio Ore (sia per la Vicepresidenza che per i Docenti) vengono ora elencate puntualmente anche tutte le ore di supplenza a credito/straordinario svolte, con classe, data e ora.',
-      tag: 'Bilancio & Contabilità'
-    },
-    {
-      titolo: 'Mirroring e Sincronizzazione Database',
-      descrizione: 'Aggiunto pulsante di sincronizzazione in Personalizzazioni per copiare istantaneamente gli eventi dei calendari Google in Cloud Firestore (occupazione < 0.1 MB).',
-      tag: 'Cloud & Database'
-    },
-    {
-      titolo: 'Banner di Avviso Docenti Senza Email',
-      descrizione: 'Se le notifiche email personali sono attive e uno o più docenti in supplenza oggi non hanno un indirizzo email memorizzato, appare un banner in alto nel tabellone con pulsante diretto per compilare l\'anagrafica.',
-      tag: 'Vicepresidenza & Sicurezza'
-    },
-    {
-      titolo: 'Azzera Dati Storici & Movimenti (Registro Storico)',
-      descrizione: 'In Vicepresidenza > Registro Storico è ora disponibile il pulsante "Azzera Dati Storici" protetto da modale di conferma con digitazione obbligatoria (AZZERA). Consente di resettare tutte le assenze, supplenze, uscite, ore sindacali e movimenti di credito/debito, mantenendo intatti l\'organico docenti, l\'orario scolastico e le personalizzazioni.',
-      tag: 'Registro Storico & Sicurezza'
     },
     {
       titolo: 'Icone PNG Native per iPhone e Android (Home Screen)',
@@ -89,26 +84,6 @@ export const CURRENT_APP_VERSION: AppVersionInfo = {
       tag: 'Personalizzazioni & Brand'
     },
     {
-      titolo: 'Ripristino Spazio Compatto Safari & Spaziatura Menu',
-      descrizione: 'Eliminato lo spazio vuoto in eccesso su Safari quando si naviga normalmente. Il gap superiore è ora circoscritto solo al banner degli aggiornamenti, mentre la testata del menu principale si apre leggermente più in basso per consentire la lettura immediata di tutte le scritte e la chiusura con la X.',
-      tag: 'Ergonomia & iPhone'
-    },
-    {
-      titolo: 'Storno e Aggiunta Manuale Ore a Credito e a Debito',
-      descrizione: 'In Bilanci e Report, la Vicepresidenza può ora registrare manualmente storni o aggiunte di ore a credito e debito con causale personalizzata, sia dal riquadro principale che dall\'estratto conto del singolo docente.',
-      tag: 'Bilanci & Vicepresidenza'
-    },
-    {
-      titolo: 'Storno e Aggiunta Manuale Ore a Credito e a Debito',
-      descrizione: 'In Bilanci e Report, la Vicepresidenza può ora registrare manualmente storni o aggiunte di ore a credito e debito con causale personalizzata, sia dal riquadro principale che dall\'estratto conto del singolo docente.',
-      tag: 'Bilanci & Vicepresidenza'
-    },
-    {
-      titolo: 'Storno e Aggiunta Manuale Ore a Credito e a Debito',
-      descrizione: 'In Bilanci e Report, la Vicepresidenza può ora registrare manualmente storni o aggiunte di ore a credito e debito con causale personalizzata, sia dal riquadro principale che dall\'estratto conto del singolo docente.',
-      tag: 'Bilanci & Vicepresidenza'
-    },
-    {
       titolo: 'Dicitura "(SOSTITUZIONE)" per Sostegno Spostato',
       descrizione: 'Quando un docente di sostegno in servizio su un\'altra classe viene assegnato a coprire un\'ora scoperta, nei tabelloni e nei prospetti compare ora la dicitura esatta "(SOSTITUZIONE)".',
       tag: 'Tabellone & Diciture'
@@ -117,46 +92,6 @@ export const CURRENT_APP_VERSION: AppVersionInfo = {
       titolo: 'Pulsante "+ Aggiungi" a Tutta Larghezza nella Vista a Blocchi',
       descrizione: 'Nella vista a blocchi orari da mobile, il pulsante "+ Aggiungi" sfrutta ora l\'intera larghezza orizzontale della riga con la dicitura chiara ed esplicita per scandire al meglio ogni blocco.',
       tag: 'Tabellone a Blocchi'
-    },
-    {
-      titolo: 'Dicitura Compatta "Ed." per Educatori su Mobile',
-      descrizione: 'Nei tabelloni delle sostituzioni, la presenza dell\'educatore in classe mostra ora la sigla compatta "🎓 Ed.: [Nome]" su smartphone, risparmiando spazio prezioso.',
-      tag: 'Mobile & Grafica'
-    },
-    {
-      titolo: 'Pulsante "+ Aggiungi" a Capo su Mobile',
-      descrizione: 'Da smartphone, il pulsante per aggiungere un ulteriore docente sostituto va ora sempre a capo a tutta larghezza, migliorando l\'ergonomia del tocco ed evitando qualsiasi sovrapposizione.',
-      tag: 'Mobile & Ergonomia'
-    },
-    {
-      titolo: 'Layout Compatto e Allineato per Più Sostituti',
-      descrizione: 'Risolto ogni spostamento a zig-zag: le classi e i docenti assenti restano perfettamente allineati a sinistra, mentre le card dei docenti sostituti sono compatte e ordinate con poco padding.',
-      tag: 'Grafica & Tabellone'
-    },
-    {
-      titolo: 'Banner Aggiornamenti Interamente Cliccabile',
-      descrizione: 'Toccando ovunque sulla barra viola in alto o sul nuovo pulsante "📖 Leggi Novità" si apre istantaneamente il pannello con tutte le spiegazioni delle nuove versioni.',
-      tag: 'Notifiche'
-    },
-    {
-      titolo: 'Diciture Semplificate nei Tabelloni',
-      descrizione: 'Nelle celle di sostituzione ora compaiono termini uniformi e immediati: "disposizione" (per ore a credito/straordinario D e sostegno), "compresente" (senza la parola classe), e "recupero".',
-      tag: 'Tabellone & Chiarezza'
-    },
-    {
-      titolo: 'Pulsante "+ Sostituto" Compatto su Mobile e Tablet',
-      descrizione: 'Nel tabellone delle sostituzioni (sia vista a blocchi che per docente), il pulsante per aggiungere un sostituto o una compresenza mostra ora solo il simbolo "+" e l\'icona della persona, garantendo la massima pulizia grafica.',
-      tag: 'Tabellone & Tablet'
-    },
-    {
-      titolo: 'Layout e Pulsanti ad Alta Risoluzione per Tablet e Mobile',
-      descrizione: 'I pulsanti d\'azione (+ Assente, + Gita, + Nomina) sono stati compattati per garantire che tutti gli strumenti (Eventi, Risorse, Avviso Bacheca) restino allineati su una sola riga senza uscire dallo schermo.',
-      tag: 'Grafica & Tablet'
-    },
-    {
-      titolo: 'Tasto Logout ed Header Ottimizzati per Smartphone',
-      descrizione: 'L\'intestazione dell\'app è stata ripulita dagli elementi superflui su schermi stretti, garantendo che il pulsante Esci/Logout sia sempre immediatamente a portata di dito.',
-      tag: 'Mobile iPhone/Android'
     },
     {
       titolo: 'Supporto a Soggiorni e Gite di Più Giorni',
