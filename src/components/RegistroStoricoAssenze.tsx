@@ -740,6 +740,7 @@ export const RegistroStoricoAssenze: React.FC = () => {
                   <li><strong>Tutte le Assemblee Sindacali</strong> e le ore cumulate</li>
                   <li><strong>Tutte le Sostituzioni e le Firme digitali</strong> per presa visione</li>
                   <li><strong>Tutte le Uscite Didattiche e Gite</strong> registrate</li>
+                  <li><strong>Tutte le Nomine Supplenti e i relativi docenti supplenti</strong> creati</li>
                   <li><strong>Tutti i Movimenti di Debito/Credito e Storni</strong></li>
                   <li><strong>Azzeramento debito residuo</strong> su tutti i docenti dell'organico</li>
                 </ul>

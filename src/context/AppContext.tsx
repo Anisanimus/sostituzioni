@@ -2453,41 +2453,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const azzeraTuttoStoricoEMovimenti = async () => {
-    // 1. Azzera il debito orario su tutti i docenti dell'organico (mantenendo orario e anagrafica intatti)
-    const docentiPuliti = docenti.map(d => ({
-      ...d,
-      oreDebitoPermesso: 0
-    }));
+    // 1. Rimuovi i docenti supplenti creati dalle nomine (id che inizia con doc_suppl_) e azzera il debito orario sui docenti titolari rimasti
+    const docentiPuliti = docentiRef.current
+      .filter(d => !d.id.startsWith('doc_suppl_'))
+      .map(d => ({
+        ...d,
+        oreDebitoPermesso: 0
+      }));
+
+    // 2. Rimuovi anche gli orari associati ai supplenti rimossi
+    const docentiPulitiIds = new Set(docentiPuliti.map(d => d.id));
+    const orariPuliti = orariDocentiRef.current.filter(o => docentiPulitiIds.has(o.docenteId));
 
     setDocenti(docentiPuliti);
+    setOrariDocenti(orariPuliti);
     setAssenze([]);
     setUscite([]);
     setSostituzioni([]);
     setMovimentiDebito([]);
     setNotifiche([]);
+    setNomineSupplenti([]);
 
-    // 2. Aggiorna immediatamente localStorage
+    docentiRef.current = docentiPuliti;
+    orariDocentiRef.current = orariPuliti;
+    assenzeRef.current = [];
+    usciteRef.current = [];
+    sostituzioniRef.current = [];
+    movimentiDebitoRef.current = [];
+    notificheRef.current = [];
+    nomineSupplentiRef.current = [];
+
+    // 3. Aggiorna immediatamente localStorage
     try {
       localStorage.setItem('scuola_docenti', JSON.stringify(docentiPuliti));
+      localStorage.setItem('scuola_orari', JSON.stringify(orariPuliti));
       localStorage.setItem('scuola_assenze', JSON.stringify([]));
       localStorage.setItem('scuola_uscite', JSON.stringify([]));
       localStorage.setItem('scuola_sostituzioni', JSON.stringify([]));
       localStorage.setItem('scuola_movimenti_debito', JSON.stringify([]));
       localStorage.setItem('scuola_notifiche', JSON.stringify([]));
+      localStorage.setItem('scuola_nomine_supplenti', JSON.stringify([]));
 
-      // 3. Sincronizza su Cloud Firestore
+      // 4. Sincronizza su Cloud Firestore (rimuovendo anche nomineSupplenti e aggiornando docenti/orari)
       const scuolaDocRef = doc(db, 'scuole_dati', SCUOLA_FIRESTORE_ID);
       await setDoc(scuolaDocRef, {
         docenti: docentiPuliti,
+        orariDocenti: orariPuliti,
         assenze: [],
         uscite: [],
         sostituzioni: [],
         movimentiDebito: [],
         notifiche: [],
+        nomineSupplenti: [],
         ultimoAggiornamento: new Date().toISOString()
       }, { merge: true });
 
-      console.log('✅ Storico assenze, supplenze, firme e movimenti debito/credito azzerati con successo!');
+      console.log('✅ Storico assenze, supplenze, firme, movimenti debito/credito e nomine supplenti azzerati con successo!');
     } catch (e) {
       console.error('Errore azzeramento storico su Cloud:', e);
     }
