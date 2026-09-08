@@ -2665,9 +2665,9 @@ function eseguiInvioAutomaticoMattina() {
     var portalUrl = impostazioni.appUrl || "https://sostituzioni-smart.web.app";
     var nomeScuola = impostazioni.nomeScuola || "Scuola";
 
-    var todayStr = Utilities.formatDate(new Date(), "GMT+1", "yyyy-MM-dd");
-    var todayFormatted = Utilities.formatDate(new Date(), "GMT+1", "dd/MM/yyyy");
-    var nowTimestamp = Utilities.formatDate(new Date(), "GMT+1", "HH:mm");
+    var todayStr = Utilities.formatDate(new Date(), "Europe/Rome", "yyyy-MM-dd");
+    var todayFormatted = Utilities.formatDate(new Date(), "Europe/Rome", "dd/MM/yyyy");
+    var nowTimestamp = Utilities.formatDate(new Date(), "Europe/Rome", "HH:mm");
 
     // Filtra le sostituzioni pubblicate di oggi con docente assegnato
     var sostOggi = sostituzioni.filter(function(s) {
